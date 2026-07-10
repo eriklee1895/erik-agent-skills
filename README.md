@@ -13,5 +13,5 @@ Each skill is a self-contained directory with a `SKILL.md` file and optional
 
 ## Status
 
-Repository skeleton initialized. Skills will be added through explicit
-promotion from their source repositories.
+The first seed set of 23 writing skills has been promoted from
+`writing-agent-harness`.
