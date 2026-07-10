@@ -13,3 +13,4 @@ evals/**/outputs/
 **/.artifacts/
 skills/**/output/
 .DS_Store
+output/

@@ -1,28 +1,5 @@
 {
-  "prompt": "适合 GitHub README hero banner 的 16:9 横幅视觉身份海报，现代独立杂志封面与 surreal cut-paper collage 风格，鲜明但高级，具有个人品牌记忆点。满幅深钴蓝背景，带细微纸张颗粒与 risograph 套色质感；左上角放一行小号奶油白大写无衬线英文署名「ERIK LEE」，逐字准确、字距舒展；左侧中部放两行巨大的奶油白粗体 condensed sans-serif 英文主标题「AGENT」「SKILLS」，逐字准确，左对齐，清晰锐利。右侧是一个原创的抽象个人视觉符号：一座不对称的珊瑚红纸张拱门/portal，中央穿过一条明黄色纸带，纸带在空中折叠成一个小小的四角星，周围有两三个薄荷绿和暖橙色的纸片形状，形成像个人签名一样独特的构图；所有形状都是平面纸张剪贴与手工印刷边缘，不是 logo 设计，不是 UI，不是科技图解。整体像一张有艺术感的独立杂志封面，活泼、聪明、温暖、可辨识，颜色为深钴蓝、珊瑚红、明黄、薄荷绿、奶油白，画面简洁，右侧视觉集中，左侧文字清晰。除了「ERIK LEE」「AGENT」「SKILLS」外绝对不要任何文字、字母、数字、乱码、logo、水印；不要中国风、不要山水、不要印章、不要祥云、不要龙凤、不要机器人、不要芯片、不要代码、不要照片写实、不要 3D、不要渐变、不要复杂背景。",
+  "prompt": "16:9 GitHub README hero banner, translucent color-film collage. Deep navy background, overlapping transparent coral, cyan, yellow and lavender organic sheets forming a luminous abstract emblem on the right. Exact \"AGENT SKILLS\" in huge heavy white bold sans-serif on the left. Exact \"Erik Lee\" in bold navy sans-serif inside a translucent pale-yellow rectangular label with a sharp border. Sophisticated, layered, modern, no extra text, no watermark, no robots, no code, 1792x1024.",
   "model": "doubao-seedream-5-0-pro-260628",
-  "model_label": "Seedream 5.0 Pro (2026-06-28 build)",
-  "size": "1792x1024",
-  "output_format": "png",
-  "watermark": false,
-  "web_search": false,
-  "optimize_prompt": null,
-  "reference_images_count": 0,
-  "reference_images_are_data_urls": false,
-  "negative_prompt": "模糊, 低质量, 错字, 乱码, 额外文字, logo, 水印, 中国风, 山水, 印章, 祥云, 龙凤, 机器人, 芯片, 代码, UI, 摄影, 3D, 渐变, 复杂背景",
-  "response_format": "b64_json",
-  "marker_rects": [],
-  "outpaint": [],
-  "base_url": "https://ark.cn-beijing.volces.com/api/v3",
-  "image_path": "/Users/eriklee/code/my_project/erik-agent-skills/assets/erik-agent-skills-cover-candidate-04.png",
-  "created_at": "2026-07-10T14:12:41",
-  "dry_run": false,
-  "reported_size": "1792x1024",
-  "elapsed_ms": 80678,
-  "usage": {
-    "input_images": 0,
-    "generated_images": 1,
-    "output_tokens": 7168,
-    "total_tokens": 7168
-  }
+  "size": "1792x1024"
 }
