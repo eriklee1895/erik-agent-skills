@@ -1,0 +1,17 @@
+{
+  "title": "erik-agent-skills-readme-cover",
+  "prompt": "A refined wide editorial hero illustration for a personal repository of reusable AI agent skills. An elegant midnight-indigo workshop-library viewed from a gentle oblique top-down angle: a modular field of tactile paper and ceramic skill tiles, delicate golden connector lines flowing between them like a quiet constellation, one restrained coral accent, subtle warm paper grain and precise technical drafting marks. Sophisticated, calm, handcrafted yet systematic, modern editorial art direction, ample breathing room, polished but human. Absolutely no words, letters, numbers, logos, code, UI panels, robots, brains, neon cyberpunk, watermark, or text.",
+  "model": "openai/gpt-image-2",
+  "base_url": "https://api.ofox.io/v1",
+  "size": "1792x1024",
+  "quality": "high",
+  "background": "opaque",
+  "output_format": "png",
+  "n": 1,
+  "image_path": "/Users/eriklee/code/my_project/erik-agent-skills/assets/erik-agent-skills-cover.png",
+  "downscale_path": null,
+  "downscale_max_dim": null,
+  "reference_images": [],
+  "created_at": "2026-07-10T13:25:13",
+  "dry_run": false
+}
