@@ -1,6 +1,6 @@
 # erik-agent-skills
 
-![An editorial illustration of a modular agent-skill workbench](assets/erik-agent-skills-cover.png)
+![Erik Lee Agent Skills surreal cut-paper collage banner](assets/erik-agent-skills-cover.png)
 
 Erik's personal Agent Skills repository.
 
