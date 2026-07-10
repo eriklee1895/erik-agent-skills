@@ -1,0 +1,8 @@
+# Local agent discovery adapters; canonical content lives in skills/.
+/.agents/skills
+/.claude/skills
+
+# Local evaluation and runtime artifacts.
+.local-memory/
+.skill-work/
+evals/**/outputs/
