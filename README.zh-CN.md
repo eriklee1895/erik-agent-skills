@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.png)
+![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.jpg)
 
 <p align="center">
   <a href="docs/skills-catalog.zh-CN.md"><img alt="24 个精选 Skills" src="https://img.shields.io/badge/COLLECTION-24_SKILLS-0B1F3A?style=for-the-badge"></a>
