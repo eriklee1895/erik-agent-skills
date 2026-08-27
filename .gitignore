@@ -12,5 +12,13 @@ evals/**/outputs/
 **/*.pyc
 **/.artifacts/
 skills/**/output/
+
+# Generated audio from the Volcano audio/TTS skills (default --output-dir).
+**/seedaudio-output/
+**/tts-output/
+*.mp3
+*.wav
+*.pcm
+*.ogg
 .DS_Store
 output/
