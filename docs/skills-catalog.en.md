@@ -40,6 +40,7 @@ discovered, linked, and installed consistently.
 | [article-video-clip](../skills/article-video-clip/) | Turn selected source footage into a lightly packaged, article-ready video clip. |
 | [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | Generate instrumental background music for video and article media workflows. |
 | [volcengine-tts](../skills/volcengine-tts/) | Synthesize speech audio with Volcano Engine's text-to-speech models. |
+| [seed-audio-gen](../skills/seed-audio-gen/) | Generate complete mixed audio scenes (voice + SFX + BGM) with the generative seed-audio-1.0 model; multi-reference voice cloning, sound effects, and directed dialogue in one call. |
 
 ## Tools & Integrations
 

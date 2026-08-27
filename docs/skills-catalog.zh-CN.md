@@ -39,6 +39,7 @@
 | [article-video-clip](../skills/article-video-clip/) | 将选定的源视频片段加工为轻包装、可直接用于文章的视频。 |
 | [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | 为视频和文章媒体工作流生成无人声背景音乐。 |
 | [volcengine-tts](../skills/volcengine-tts/) | 使用火山引擎语音合成模型生成语音音频。 |
+| [seed-audio-gen](../skills/seed-audio-gen/) | 用生成式 seed-audio-1.0 模型一次生成人声+音效+BGM 的完整音频场景；支持多参考音色克隆、音效和导演式对白。 |
 
 ## 工具与集成
 
