@@ -1,6 +1,20 @@
 ---
 name: seedream-image-gen
-description: ByteDance Seedream 5.0 Pro/Lite image model. Generate and edit images: text-to-image, mask-free marker-based editing (draw a colored rectangle on an image and describe the change in natural language to swap titles/objects/materials or add/remove elements), outpaint to extend canvas, and batch generation. Production-grade Chinese/English/mixed-language text rendering for graphic design (posters, covers, banners, logos, labels, slogans), strong 国潮/水墨/24节气 Chinese aesthetic fluency, product/e-commerce photography, 3D/icons/isometric illustrations, and editorial infographics (hero photo + frosted-glass data cards in National Geographic / Bloomberg data-journalism style). Use this whenever you need to create or edit visuals with embedded text, Chinese-style art (节气/节日/水墨/新中式/国潮), product shots, editorial or marketing imagery, data explainers / infographic posters, character-consistent series, or modify existing images with title/object swaps and local edits.
+description: >
+  ByteDance Seedream 5.0 Pro/Lite image model. Generate and edit images:
+  text-to-image, mask-free marker-based editing (draw a colored rectangle on
+  an image and describe the change in natural language to swap
+  titles/objects/materials or add/remove elements), outpaint to extend canvas,
+  and batch generation. Production-grade Chinese/English/mixed-language text
+  rendering for graphic design (posters, covers, banners, logos, labels,
+  slogans), strong 国潮/水墨/24节气 Chinese aesthetic fluency,
+  product/e-commerce photography, 3D/icons/isometric illustrations, and
+  editorial infographics (hero photo + frosted-glass data cards in National
+  Geographic / Bloomberg data-journalism style). Use this whenever you need
+  to create or edit visuals with embedded text, Chinese-style art
+  (节气/节日/水墨/新中式/国潮), product shots, editorial or marketing
+  imagery, data explainers / infographic posters, character-consistent series,
+  or modify existing images with title/object swaps and local edits.
 ---
 
 # seedream-image-gen

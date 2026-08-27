@@ -5,7 +5,7 @@
 ![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.png)
 
 <p align="center">
-  <a href="docs/skills-catalog.en.md"><img alt="23 curated skills" src="https://img.shields.io/badge/COLLECTION-23_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="docs/skills-catalog.en.md"><img alt="24 curated skills" src="https://img.shields.io/badge/COLLECTION-24_SKILLS-0B1F3A?style=for-the-badge"></a>
   <a href="docs/skills-catalog.en.md"><img alt="4 skill categories" src="https://img.shields.io/badge/CATEGORIES-4-6750A4?style=for-the-badge"></a>
   <a href="https://developers.openai.com/codex/skills"><img alt="Codex ready" src="https://img.shields.io/badge/CODEX-READY-0F9D88?style=for-the-badge&logo=openai&logoColor=white"></a>
   <a href="README.zh-CN.md"><img alt="English and Chinese documentation" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
@@ -15,19 +15,33 @@
 Erik Lee's curated library of reusable Agent Skills for writing, publishing,
 media creation, and tool-driven workflows.
 
+## Install
+
+Install the complete collection or choose individual skills with the Skills
+CLI. See the [full installation guide](docs/installation.en.md) for project-
+level, global, and agent-specific options.
+
+```bash
+# Install all skills
+npx skills add eriklee1895/erik-agent-skills --all
+
+# Install one skill
+npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen
+```
+
 ## Skills
 
-The repository currently includes 23 skills across four areas:
+The repository currently includes 24 skills across four areas:
 
 | Area | Skills | Focus |
 | --- | ---: | --- |
 | Writing | 4 | Ideation, polishing, readiness checks, and closeout |
 | Publishing & Channels | 7 | WeChat, blog, Notion, and Feishu workflows |
-| Media | 9 | Image, video, speech, music, and media preparation |
+| Media | 10 | Image, video, speech, music, and media preparation |
 | Tools & Integrations | 3 | Reusable CLIs, documentation retrieval, and web search |
 
 Browse the [English skills catalog](docs/skills-catalog.en.md) for the complete
-categorized list and descriptions.
+categorized list, descriptions, and per-skill install commands.
 
 ## Repository layout
 

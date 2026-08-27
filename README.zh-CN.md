@@ -5,7 +5,7 @@
 ![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.png)
 
 <p align="center">
-  <a href="docs/skills-catalog.zh-CN.md"><img alt="23 个精选 Skills" src="https://img.shields.io/badge/COLLECTION-23_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="docs/skills-catalog.zh-CN.md"><img alt="24 个精选 Skills" src="https://img.shields.io/badge/COLLECTION-24_SKILLS-0B1F3A?style=for-the-badge"></a>
   <a href="docs/skills-catalog.zh-CN.md"><img alt="4 个 Skills 分类" src="https://img.shields.io/badge/CATEGORIES-4-6750A4?style=for-the-badge"></a>
   <a href="https://developers.openai.com/codex/skills"><img alt="Codex Ready" src="https://img.shields.io/badge/CODEX-READY-0F9D88?style=for-the-badge&logo=openai&logoColor=white"></a>
   <a href="README.md"><img alt="中英文文档" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
@@ -14,18 +14,30 @@
 
 Erik Lee 的个人 Agent Skills 仓库，收录可跨项目复用的写作、发布、媒体创作与工具型工作流。
 
+## 安装
+
+使用 Skills CLI 安装完整集合，或选择单个 skill。完整说明见[安装指南](docs/installation.zh-CN.md)，其中包括项目级、全局和指定 Agent 的安装方式。
+
+```bash
+# 安装全部 skills
+npx skills add eriklee1895/erik-agent-skills --all
+
+# 单独安装一个 skill
+npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen
+```
+
 ## Skills
 
-仓库目前收录 23 个 skills，分为四类：
+仓库目前收录 24 个 skills，分为四类：
 
 | 分类 | 数量 | 能力范围 |
 | --- | ---: | --- |
 | 写作 | 4 | 选题构思、文章润色、发布前检查与任务收尾 |
 | 发布与渠道 | 7 | 微信公众号、博客、Notion 与飞书工作流 |
-| 媒体 | 9 | 图片、视频、语音、音乐与媒体素材处理 |
+| 媒体 | 10 | 图片、视频、语音、音乐与媒体素材处理 |
 | 工具与集成 | 3 | 可复用 CLI、文档抓取与联网搜索 |
 
-完整分类、skill 清单及用途说明见[中文 Skills 目录](docs/skills-catalog.zh-CN.md)。
+完整分类、skill 清单、用途说明及单独安装命令见[中文 Skills 目录](docs/skills-catalog.zh-CN.md)。
 
 ## 仓库结构
 
