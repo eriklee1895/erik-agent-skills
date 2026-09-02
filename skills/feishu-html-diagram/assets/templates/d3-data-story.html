@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="use-iframe" content="true">
+  <meta name="html-box-height-mode" content="auto">
+  <meta name="description" content="A progressively enhanced time-series story showing automation and review quality rising together, with a static summary and complete data table when D3 is unavailable.">
+  <title>D3 Progressive Data Story</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #596579;
+      --paper: #f2f5f9;
+      --surface: #ffffff;
+      --line: #d8dfeb;
+      --grid: #e7ebf2;
+      --blue: #1d5cc6;
+      --blue-soft: #eaf1ff;
+      --orange: #a44b14;
+      --orange-soft: #fff0e6;
+      --focus: #7a32c9;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-width: 0; }
+
+    body {
+      padding: clamp(12px, 3vw, 28px);
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    .story {
+      width: 100%;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      padding: clamp(18px, 4vw, 36px);
+      border: 1px solid #dce2ec;
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: 0 16px 44px rgba(31, 48, 75, .1);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(220px, .85fr);
+      gap: clamp(18px, 4vw, 42px);
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--blue);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 18ch;
+      font-size: clamp(1.65rem, 4.5vw, 2.75rem);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+      text-wrap: balance;
+    }
+
+    .insight {
+      margin: 0;
+      padding: 15px 16px;
+      border-left: 4px solid var(--orange);
+      background: var(--orange-soft);
+      color: #613216;
+      font-size: .9rem;
+    }
+
+    .insight strong { display: block; margin-bottom: 4px; color: #43210e; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      margin: 22px 0 10px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 700;
+    }
+
+    .legend span { display: inline-flex; gap: 8px; align-items: center; }
+    .legend i { display: inline-block; width: 30px; border-top: 3px solid var(--blue); }
+    .legend .quality i { border-top-color: var(--orange); border-top-style: dashed; }
+
+    .chart-shell {
+      min-width: 0;
+      padding: clamp(10px, 2.5vw, 20px);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fbfcfe;
+    }
+
+    .chart-stage {
+      width: 100%;
+      min-height: 300px;
+    }
+
+    .chart-stage svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .chart-stage text { font-family: inherit; }
+    .chart-stage .axis text { fill: var(--muted); font-size: 12px; }
+    .chart-stage .axis path, .chart-stage .axis line { stroke: #aab5c6; }
+    .chart-stage .grid line { stroke: var(--grid); }
+    .chart-stage .grid path { display: none; }
+    .chart-stage .series-line { fill: none; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-stage .automation-line { stroke: var(--blue); }
+    .chart-stage .quality-line { stroke: var(--orange); stroke-dasharray: 8 6; }
+    .chart-stage .automation-point { fill: var(--surface); stroke: var(--blue); stroke-width: 3; }
+    .chart-stage .quality-point { fill: var(--orange-soft); stroke: var(--orange); stroke-width: 3; }
+    .chart-stage [tabindex="0"] { cursor: pointer; }
+    .chart-stage [tabindex="0"]:focus { outline: none; filter: drop-shadow(0 0 4px rgba(122, 50, 201, .85)); stroke: var(--focus); stroke-width: 4; }
+    .chart-stage .direct-label { font-size: 12px; font-weight: 800; }
+
+    .detail {
+      min-height: 45px;
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #edf2f8;
+      color: #344056;
+      font-size: .8rem;
+    }
+
+    .dependency-status {
+      margin: 8px 0 0;
+      color: #765027;
+      font-size: .74rem;
+    }
+
+    .dependency-status[hidden] { display: none; }
+
+    .data-region {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    .data-region h2 { margin: 0; font-size: 1rem; }
+    .data-note { margin: 4px 0 12px; color: var(--muted); font-size: .78rem; }
+
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: .8rem; }
+    th, td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--muted); font-size: .7rem; letter-spacing: .05em; text-transform: uppercase; }
+    td { position: relative; }
+    .bar-cell { isolation: isolate; }
+    .bar-cell::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      right: 5px;
+      top: 25%;
+      width: calc(var(--value, 0) * 1%);
+      max-width: calc(100% - 10px);
+      height: 50%;
+      border-radius: 5px;
+      background: var(--blue-soft);
+    }
+    .bar-cell.quality::before { background: var(--orange-soft); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .story { padding: 18px 12px; border-radius: 18px; }
+      header { grid-template-columns: 1fr; }
+      .chart-shell { padding: 8px 5px 10px; }
+      .chart-stage { min-height: 220px; }
+      table { font-size: .73rem; }
+      th, td { padding: 8px 4px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="story" aria-labelledby="story-title">
+    <header>
+      <div>
+        <p class="eyebrow">Quarterly operating signal · 2025</p>
+        <h1 id="story-title">Automation grew without trading away review quality</h1>
+      </div>
+      <p class="insight" id="chart-summary"><strong>The useful pattern</strong>Automation coverage rose from 18% to 72% while review quality increased from 61 to 87 points. The largest joint gain arrived after the Q2 policy gate.</p>
+    </header>
+
+    <div class="legend" aria-label="Chart legend">
+      <span><i aria-hidden="true"></i>Automation coverage · percent</span>
+      <span class="quality"><i aria-hidden="true"></i>Review quality · score</span>
+    </div>
+
+    <section class="chart-shell" aria-label="Quarterly automation and quality trend" aria-describedby="chart-summary">
+      <div id="chart" class="chart-stage"></div>
+      <p id="point-detail" class="detail" aria-live="polite">Static view: both measures rise across the year. When enhanced, focus a point and press Enter or Space for its exact value.</p>
+      <p id="dependency-status" class="dependency-status" role="status" hidden>D3 enhancement is unavailable; the static chart and complete table remain active.</p>
+    </section>
+
+    <!-- ===== EDIT SAMPLE DATA START: edit these rows; the static and D3 views read this table ===== -->
+    <section class="data-region" aria-labelledby="data-title">
+      <h2 id="data-title">Source data</h2>
+      <p class="data-note">Values are sample percentages / index points. The table is the accessible fallback and the single data source for both chart modes.</p>
+      <table id="source-data">
+        <thead><tr><th scope="col">Quarter</th><th scope="col">Automation</th><th scope="col">Review quality</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Q1</th><td class="bar-cell">18</td><td class="bar-cell quality">61</td></tr>
+          <tr><th scope="row">Q2</th><td class="bar-cell">31</td><td class="bar-cell quality">67</td></tr>
+          <tr><th scope="row">Q3</th><td class="bar-cell">56</td><td class="bar-cell quality">79</td></tr>
+          <tr><th scope="row">Q4</th><td class="bar-cell">72</td><td class="bar-cell quality">87</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <!-- ===== EDIT SAMPLE DATA END ===== -->
+  </main>
+
+  <script>
+    (() => {
+      const NS = 'http://www.w3.org/2000/svg';
+      const chart = document.getElementById('chart');
+      const detail = document.getElementById('point-detail');
+      const dependencyStatus = document.getElementById('dependency-status');
+      const rows = Array.from(document.querySelectorAll('#source-data tbody tr'));
+      const data = rows.map((row) => ({
+        quarter: row.cells[0].textContent.trim(),
+        automation: Number(row.cells[1].textContent),
+        quality: Number(row.cells[2].textContent)
+      }));
+
+      rows.forEach((row, index) => {
+        row.cells[1].style.setProperty('--value', data[index].automation);
+        row.cells[2].style.setProperty('--value', data[index].quality);
+      });
+
+      function node(name, attributes = {}) {
+        const element = document.createElementNS(NS, name);
+        Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+        return element;
+      }
+
+      function staticChart() {
+        const width = Math.min(720, Math.max(320, Math.round(chart.getBoundingClientRect().width)));
+        const height = width < 500 ? 280 : 330;
+        const left = width < 500 ? 40 : 52;
+        const right = width < 500 ? 22 : 44;
+        const top = 28;
+        const bottom = 44;
+        const x = (index) => left + index * ((width - left - right) / (data.length - 1));
+        const y = (value) => top + (100 - value) * ((height - top - bottom) / 100);
+        const svg = node('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-labelledby': 'static-title static-desc' });
+        const title = node('title', { id: 'static-title' });
+        title.textContent = 'Static quarterly trend chart';
+        const desc = node('desc', { id: 'static-desc' });
+        desc.textContent = 'Automation and review quality both rise from Q1 through Q4. Exact values are in the table below.';
+        svg.append(title, desc);
+
+        [0, 25, 50, 75, 100].forEach((tick) => {
+          const tickY = y(tick);
+          svg.append(node('line', { x1: left, x2: width - right, y1: tickY, y2: tickY, stroke: '#e7ebf2' }));
+          const label = node('text', { x: left - 10, y: tickY + 4, 'text-anchor': 'end', fill: '#596579', 'font-size': '12' });
+          label.textContent = tick;
+          svg.append(label);
+        });
+
+        data.forEach((item, index) => {
+          const label = node('text', { x: x(index), y: height - 17, 'text-anchor': 'middle', fill: '#596579', 'font-size': '12' });
+          label.textContent = item.quarter;
+          svg.append(label);
+        });
+
+        const automationPoints = data.map((item, index) => `${x(index)},${y(item.automation)}`).join(' ');
+        const qualityPoints = data.map((item, index) => `${x(index)},${y(item.quality)}`).join(' ');
+        svg.append(node('polyline', { points: automationPoints, fill: 'none', stroke: '#1d5cc6', 'stroke-width': '4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+        svg.append(node('polyline', { points: qualityPoints, fill: 'none', stroke: '#a44b14', 'stroke-width': '4', 'stroke-dasharray': '8 6', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+
+        data.forEach((item, index) => {
+          svg.append(node('circle', { cx: x(index), cy: y(item.automation), r: 5, fill: '#fff', stroke: '#1d5cc6', 'stroke-width': '3' }));
+          svg.append(node('rect', { x: x(index) - 5, y: y(item.quality) - 5, width: 10, height: 10, rx: 2, fill: '#fff0e6', stroke: '#a44b14', 'stroke-width': '3' }));
+        });
+
+        chart.replaceChildren(svg);
+      }
+
+      function showDetail(item, series, value) {
+        detail.textContent = `${item.quarter}: ${series} is ${value}${series === 'Automation coverage' ? '%' : ' points'}.`;
+      }
+
+      window.showD3Fallback = () => {
+        dependencyStatus.hidden = false;
+      };
+
+      window.enhanceWithD3 = () => {
+        if (!window.d3) return window.showD3Fallback();
+        const d3 = window.d3;
+        const width = Math.min(720, Math.max(320, Math.round(chart.getBoundingClientRect().width)));
+        const height = width < 500 ? 290 : 340;
+        const margin = width < 500
+          ? { top: 30, right: 22, bottom: 44, left: 40 }
+          : { top: 30, right: 46, bottom: 48, left: 52 };
+        const x = d3.scalePoint().domain(data.map((item) => item.quarter)).range([margin.left, width - margin.right]);
+        const y = d3.scaleLinear().domain([0, 100]).range([height - margin.bottom, margin.top]);
+        const line = (key) => d3.line().x((item) => x(item.quarter)).y((item) => y(item[key])).curve(d3.curveMonotoneX);
+        const svg = d3.create('svg').attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img').attr('aria-labelledby', 'd3-title d3-desc');
+        svg.append('title').attr('id', 'd3-title').text('Enhanced quarterly automation and review quality chart');
+        svg.append('desc').attr('id', 'd3-desc').text('Two upward time-series. Each data point is keyboard focusable; exact values also remain in the table.');
+
+        svg.append('g').attr('class', 'grid').attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(width - margin.left - margin.right)).tickFormat(''));
+        svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${height - margin.bottom})`).call(d3.axisBottom(x).tickSizeOuter(0));
+        svg.append('g').attr('class', 'axis').attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(4).tickSizeOuter(0));
+        svg.append('text').attr('x', margin.left).attr('y', 14).attr('fill', '#596579').attr('font-size', 11).attr('font-weight', 700).text('PERCENT / SCORE');
+
+        svg.append('path').datum(data).attr('class', 'series-line automation-line').attr('d', line('automation'));
+        svg.append('path').datum(data).attr('class', 'series-line quality-line').attr('d', line('quality'));
+
+        function makeInteractive(selection, series, key) {
+          selection
+            .attr('tabindex', 0)
+            .attr('role', 'button')
+            .attr('aria-label', (item) => `${item.quarter}, ${series}, ${item[key]}${key === 'automation' ? ' percent' : ' points'}`)
+            .on('focus pointerenter click', (_, item) => showDetail(item, series, item[key]))
+            .on('keydown', (event, item) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                showDetail(item, series, item[key]);
+              } else if (event.key === 'Escape') {
+                detail.textContent = 'Focus any chart point or use the source table for exact values.';
+                event.currentTarget.blur();
+              }
+            });
+        }
+
+        const circles = svg.append('g').selectAll('circle').data(data).join('circle')
+          .attr('class', 'automation-point').attr('cx', (item) => x(item.quarter)).attr('cy', (item) => y(item.automation)).attr('r', 6);
+        makeInteractive(circles, 'Automation coverage', 'automation');
+
+        const squares = svg.append('g').selectAll('rect').data(data).join('rect')
+          .attr('class', 'quality-point').attr('x', (item) => x(item.quarter) - 6).attr('y', (item) => y(item.quality) - 6).attr('width', 12).attr('height', 12).attr('rx', 2);
+        makeInteractive(squares, 'Review quality', 'quality');
+
+        const last = data[data.length - 1];
+        svg.append('text').attr('class', 'direct-label').attr('x', x(last.quarter) - 8).attr('y', y(last.automation) + 24).attr('text-anchor', 'end').attr('fill', '#1d5cc6').text('Automation 72%');
+        svg.append('text').attr('class', 'direct-label').attr('x', x(last.quarter) - 8).attr('y', y(last.quality) - 14).attr('text-anchor', 'end').attr('fill', '#a44b14').text('Quality 87');
+
+        chart.replaceChildren(svg.node());
+        detail.textContent = 'Enhanced view ready. Focus a point and press Enter or Space for its exact value; Escape returns to the overview.';
+        dependencyStatus.hidden = true;
+      };
+
+      staticChart();
+      window.setTimeout(() => {
+        if (!window.d3) window.showD3Fallback();
+      }, 6000);
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" defer onload="window.enhanceWithD3()" onerror="window.showD3Fallback()"></script>
+</body>
+</html>
