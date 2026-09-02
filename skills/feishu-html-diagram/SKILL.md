@@ -34,7 +34,7 @@ Templates are optional inspiration, never a whitelist. Invent a new visual gramm
 
 ## Third-party code and data
 
-Prefer a self-contained document with no network dependency. If a third-party library, font, image, or data source materially improves the visual, work on two tracks: retain a self-contained or local fallback for the essential reading experience, and separately verify the enhanced external-resource experience in Feishu. External resources are uncertain at embed time; disclose that uncertainty and never put credentials, tokens, private URLs, or other secrets in the HTML.
+The default embedded artifact must be self-contained, with no network dependency, and must provide an understandable static reading experience inside the Feishu document. If a third-party library, font, image, or data source materially improves the visual, treat it as an optional enhancement: retain that in-document static fallback when the enhancement does not load, then separately verify the enhanced external-resource experience in Feishu. External resources are uncertain at embed time; disclose that uncertainty and never put credentials, tokens, private URLs, or other secrets in the HTML.
 
 ## Execution boundary
 
