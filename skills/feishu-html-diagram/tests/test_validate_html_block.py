@@ -49,6 +49,11 @@ class ValidateHtmlBlockTests(unittest.TestCase):
         self.assertIn("invalid-height-mode", {finding.code for finding in result.findings})
         self.assertFalse(result.ok)
 
+    def test_missing_height_mode_is_an_error(self):
+        result = self.validate(VALID.replace('<meta name="html-box-height-mode" content="auto">\n', ""))
+        self.assertIn("invalid-height-mode", {finding.code for finding in result.findings})
+        self.assertFalse(result.ok)
+
     def test_remote_script_is_a_warning_not_an_error(self):
         result = self.validate(VALID.replace("</body>", '<script src="https://example.com/a.js"></script></body>'))
         self.assertIn("external-resource", {finding.code for finding in result.findings})
