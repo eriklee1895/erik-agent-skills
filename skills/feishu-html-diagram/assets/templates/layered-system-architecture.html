@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="use-iframe" content="true">
+  <meta name="html-box-height-mode" content="auto">
+  <meta name="description" content="A four-layer architecture showing how user channels, orchestration, intelligence, and trusted data form a governed request path.">
+  <title>Layered System Architecture</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #132238;
+      --muted: #526177;
+      --paper: #f4f7fb;
+      --surface: #ffffff;
+      --line: #cfd8e6;
+      --blue: #175cd3;
+      --blue-soft: #e9f1ff;
+      --teal: #087e8b;
+      --teal-soft: #e6f7f6;
+      --violet: #7047b7;
+      --violet-soft: #f1ebfb;
+      --amber: #9a5b00;
+      --amber-soft: #fff3d6;
+      --shadow: 0 14px 34px rgba(33, 50, 79, .09);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; min-width: 0; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+      padding: clamp(12px, 3vw, 28px);
+    }
+
+    .diagram {
+      width: 100%;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      border: 1px solid #dce3ed;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 92% 4%, rgba(23, 92, 211, .08), transparent 30%),
+        var(--surface);
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 4vw, 36px);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow,
+    .layer-index {
+      margin: 0 0 7px;
+      color: var(--blue);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 18ch;
+      font-size: clamp(1.65rem, 4.8vw, 2.8rem);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin: 12px 0 0;
+      max-width: 64ch;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .legend {
+      margin: 2px 0 0;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .architecture { margin-top: 24px; }
+
+    /* ===== EDIT SAMPLE CONTENT: layers and component cards ===== */
+    .layer {
+      --accent: var(--blue);
+      --tint: var(--blue-soft);
+      display: grid;
+      grid-template-columns: minmax(150px, .28fr) minmax(0, 1fr);
+      gap: clamp(14px, 3vw, 28px);
+      align-items: stretch;
+    }
+
+    .layer--orchestration { --accent: var(--teal); --tint: var(--teal-soft); }
+    .layer--intelligence { --accent: var(--violet); --tint: var(--violet-soft); }
+    .layer--data { --accent: var(--amber); --tint: var(--amber-soft); }
+
+    .layer-label {
+      min-width: 0;
+      padding: 17px 4px 17px 18px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .layer-index { color: var(--accent); }
+
+    .layer h2 {
+      margin: 0;
+      font-size: clamp(1rem, 2.4vw, 1.25rem);
+      line-height: 1.25;
+      overflow-wrap: normal;
+      word-break: normal;
+    }
+
+    .layer-label p:last-child {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .card {
+      min-width: 0;
+      padding: 15px;
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, white);
+      border-radius: 14px;
+      background: linear-gradient(145deg, var(--surface), var(--tint));
+    }
+
+    .card strong {
+      display: block;
+      font-size: .94rem;
+      line-height: 1.3;
+    }
+
+    .card span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.4;
+    }
+
+    .connector {
+      display: grid;
+      grid-template-columns: minmax(150px, .28fr) minmax(0, 1fr);
+      gap: clamp(14px, 3vw, 28px);
+      min-height: 38px;
+      color: var(--muted);
+    }
+
+    .connector-track {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .connector-track::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      border-left: 2px dashed #aab7c8;
+    }
+
+    .direction {
+      position: relative;
+      z-index: 1;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .direction::after {
+      content: "↓";
+      margin-left: 7px;
+      color: var(--blue);
+    }
+
+    .guardrail {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      margin-top: 24px;
+      padding: 14px 16px;
+      border: 1px solid #b9c5d6;
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+    .guardrail-mark {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      font-size: .75rem;
+      font-weight: 900;
+    }
+
+    .guardrail strong { display: block; font-size: .9rem; }
+    .guardrail span { color: var(--muted); font-size: .8rem; }
+
+    @media (max-width: 680px) {
+      body { padding: 10px; }
+      .diagram { border-radius: 18px; padding: 18px 14px; }
+      header { grid-template-columns: 1fr; }
+      .legend { justify-self: start; white-space: normal; }
+      .layer { grid-template-columns: 1fr; gap: 8px; }
+      .layer-label { padding: 4px 0 4px 14px; }
+      .cards { grid-template-columns: 1fr; }
+      .connector { grid-template-columns: 1fr; min-height: 46px; }
+      .connector > span { display: none; }
+      .connector-track::before { left: 20px; }
+      .connector-track { justify-content: flex-start; padding-left: 4px; }
+      .direction { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="diagram" aria-labelledby="architecture-title">
+    <header>
+      <div>
+        <p class="eyebrow">Reference architecture · request path</p>
+        <h1 id="architecture-title">A governed intelligence platform</h1>
+        <p class="lede">Requests move downward from human intent to trusted records. Policy, identity, and observability span every layer so the system can explain what happened.</p>
+      </div>
+      <p class="legend">Top → bottom: intent becomes evidence</p>
+    </header>
+
+    <div class="architecture">
+      <!-- ===== EDIT SAMPLE CONTENT START: rename layers, cards, and cues freely ===== -->
+      <section class="layer layer--experience" aria-labelledby="layer-1-title">
+        <div class="layer-label">
+          <p class="layer-index">Layer 01 · Intent</p>
+          <h2 id="layer-1-title">Experience</h2>
+          <p>Where people ask, inspect, and decide.</p>
+        </div>
+        <div class="cards">
+          <article class="card"><strong>Workspace</strong><span>Structured briefs and durable context</span></article>
+          <article class="card"><strong>Conversation</strong><span>Natural-language requests and review</span></article>
+          <article class="card"><strong>Operations view</strong><span>Status, approvals, and exceptions</span></article>
+        </div>
+      </section>
+
+      <div class="connector" aria-label="Requests and live status flow between experience and orchestration">
+        <span aria-hidden="true"></span><div class="connector-track"><span class="direction">request · status</span></div>
+      </div>
+
+      <section class="layer layer--orchestration" aria-labelledby="layer-2-title">
+        <div class="layer-label">
+          <p class="layer-index">Layer 02 · Control</p>
+          <h2 id="layer-2-title">Orchestration</h2>
+          <p>Turns intent into bounded, recoverable work.</p>
+        </div>
+        <div class="cards">
+          <article class="card"><strong>Task planner</strong><span>Breaks work into explicit checkpoints</span></article>
+          <article class="card"><strong>Policy gate</strong><span>Checks identity, scope, and approval</span></article>
+          <article class="card"><strong>Run ledger</strong><span>Persists state, retries, and outcomes</span></article>
+        </div>
+      </section>
+
+      <div class="connector" aria-label="Bounded tool calls and results flow between orchestration and intelligence">
+        <span aria-hidden="true"></span><div class="connector-track"><span class="direction">tools · results</span></div>
+      </div>
+
+      <section class="layer layer--intelligence" aria-labelledby="layer-3-title">
+        <div class="layer-label">
+          <p class="layer-index">Layer 03 · Reason</p>
+          <h2 id="layer-3-title">Intelligence</h2>
+          <p>Selects models, tools, and retrieval paths.</p>
+        </div>
+        <div class="cards">
+          <article class="card"><strong>Model router</strong><span>Matches capability, latency, and cost</span></article>
+          <article class="card"><strong>Retrieval engine</strong><span>Builds grounded working context</span></article>
+          <article class="card"><strong>Tool runtime</strong><span>Executes typed actions in isolation</span></article>
+        </div>
+      </section>
+
+      <div class="connector" aria-label="Queries and evidence flow between intelligence and trusted data">
+        <span aria-hidden="true"></span><div class="connector-track"><span class="direction">query · evidence</span></div>
+      </div>
+
+      <section class="layer layer--data" aria-labelledby="layer-4-title">
+        <div class="layer-label">
+          <p class="layer-index">Layer 04 · Record</p>
+          <h2 id="layer-4-title">Trusted data</h2>
+          <p>The authoritative sources behind every answer.</p>
+        </div>
+        <div class="cards">
+          <article class="card"><strong>Knowledge index</strong><span>Searchable, versioned source material</span></article>
+          <article class="card"><strong>Systems of record</strong><span>Business objects and permissions</span></article>
+          <article class="card"><strong>Event archive</strong><span>Immutable inputs, outputs, and traces</span></article>
+        </div>
+      </section>
+      <!-- ===== EDIT SAMPLE CONTENT END ===== -->
+    </div>
+
+    <aside class="guardrail" aria-label="Cross-cutting guardrails">
+      <span class="guardrail-mark" aria-hidden="true">360°</span>
+      <div><strong>Cross-cutting guardrails</strong><span>Identity · policy · telemetry · cost controls · human approval</span></div>
+    </aside>
+  </main>
+</body>
+</html>
