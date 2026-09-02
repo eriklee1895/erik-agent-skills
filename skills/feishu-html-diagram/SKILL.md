@@ -1,61 +1,127 @@
 ---
 name: feishu-html-diagram
-description: Use when 飞书文档（Feishu Docx）需要用 HTML 图表表达动态架构/数据流、交互式说明或可编程数据可视化，且 Mermaid、飞书画板、表格或静态图片难以满足需求。
+description: Use when 需要在飞书文档（Feishu Docx）中创建并嵌入可编程 HTML Diagram，使用 HTML/CSS/SVG/Canvas/JavaScript/D3 实现高自由度布局、动态数据流、交互说明或数据可视化；尤其适合 Mermaid、飞书画板、表格或静态图片难以表达的场景，不适用于独立 Web App 或必须原生协作编辑的画板。
 metadata:
   author: liyuheng.erik
 ---
 
-# 飞书文档 HTML 图表
+# 飞书文档 HTML Diagram
 
-## 核心原则
+## 它是什么
 
-把 `html5-block` 视为嵌在飞书文档中的可编程微型网页。Agent 已具备 HTML、CSS、SVG、JavaScript 和 D3 能力；用这些能力让文档的论点更容易理解和审阅，而不是把文档变成一个应用。
+`html5-block` 是飞书 Docx XML 中引用 HTML 文件的嵌入块。Agent 在任务工作区创建一个完整的单文件 HTML，再通过 `<html5-block path="@./diagram.html"/>` 写入文档；飞书把文件保存为文档引用资源，并在隔离的 iframe 中渲染。
 
-## 适用场景与路由边界
+它不是截图，也不是一种受限的画图 DSL，而是“长在文档里的小网页”：DOM 文本可以保持清晰与可选择，CSS 可以自由排版，SVG/Canvas 可以绘制几何和数据，JavaScript 与 D3 可以表达状态、流向、交互和动态数据叙事。
 
-当视觉表达需要精确布局、动态、交互，或需要 Mermaid、画板、表格、静态图片难以清晰表达的视觉语法时，使用本技能。需要可编辑飞书画板时转交 `lark-whiteboard`；普通图表若不需要文档原生的定制体验，转交表格或图片/图表流程；独立 Web 产品则转交 Web 开发流程。
+## Quick Start
 
-## 八步工作流
+### 1. 在任务工作区创建 HTML
 
-严格按以下顺序执行。不能因为 HTML 看起来合理就跳过证据收集。
+从这个最小骨架开始，再自由设计页面：
 
-1. **识别机会。** 明确这个视觉表达必须帮助读者理解的论点或决策。
-2. **建模信息。** 确定实体、关系、顺序、数量、状态，以及哪些内容必须一眼可读。
-3. **选择媒介与 Web 原语。** 先确认 `html5-block` 是合适的媒介，再选择最自然、最简单的原语：卡片和层级优先使用文档流 HTML/CSS；连接线、拓扑或精确几何使用 SVG；密集像素或自定义绘制使用 Canvas；只有数据驱动布局或交互确实值得增加复杂度时才使用 D3；JavaScript 只承载有意义的状态或交互。
-4. **创建单文件 HTML 文档。** 初始/默认状态必须完整、有用，不能依赖点击才成立。嵌入或更新 HTML 文件前，先阅读 [html5-block 规范](references/html5-block-contract.md)。
-5. **本地验证。** 作出任何完成声明前，先阅读 [验证指南](references/validation.md)，并收集适用的本地证据。
-6. **写入 XML。** 获得指定 Feishu Docx 的编辑授权后，按平台 XML 规范嵌入本地文件。
-7. **回读。** 写入后重新读取文档并检查 `reference_map`；不能把 XML 占位符当作 HTML 本体。
-8. **在飞书中验证。** 在适用的 Feishu Web 和/或桌面客户端检查实际渲染的 `html5-block`，并报告已达到的证据状态。
+```html
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="use-iframe" content="true">
+  <meta name="html-box-height-mode" content="auto">
+  <meta name="description" content="这张图向读者解释什么">
+  <title>图表标题</title>
+</head>
+<body>
+  <!-- 使用 HTML/CSS/SVG/Canvas/JavaScript/D3 创作 -->
+</body>
+</html>
+```
 
-## 设计自由
+普通文档图默认使用 `auto`，让内容按文档流自然撑高；只有仪表盘、编辑器等明确需要单屏视口和内部滚动的内容才使用 `viewport`。高度模式的边缘行为见 [html5-block 细节](references/html5-block-contract.md)。
 
-模板只提供可选灵感，绝不是白名单。只要更有助于解释信息，就应设计新的视觉语法：因果回路、运行模型、渐进披露、状态机、系统地图或其他为论点定制的形式，都可能比熟悉的图表类型更清晰。一个视觉表达只聚焦一个主要论点；只有在交互或动态能够揭示静态视图无法表达的状态、顺序或比较时才加入它们。
+### 2. 写入前做轻量预检
+
+将脚本路径解析为相对于本 `SKILL.md` 的 `scripts/validate_html_block.py`，然后运行：
+
+```bash
+python3 /resolved/skill-dir/scripts/validate_html_block.py /absolute/path/to/diagram.html
+```
+
+这个脚本只检查飞书嵌入边界，不评价设计，也不限制动画、交互、D3、网络请求或内联数据。Error 必须先修复；warning 需要结合实际用途判断。
+
+### 3. 写入飞书 Docx XML
+
+在用户授权的目标章节插入：
+
+```xml
+<html5-block path="@./diagram.html"/>
+```
+
+`@./` 指向本次文档写入携带的本地文件。修改已有 HTML block 时，需要保留并按文档写入能力要求提供原有 `data-ref` 的引用映射；细节见 [html5-block 细节](references/html5-block-contract.md)。
+
+### 4. 回读并验证
+
+写入成功不等于内容已经正确关联或渲染。重新读取文档，确认 block 位于目标章节。回读 XML 通常只显示：
+
+```xml
+<html5-block data-ref="html5_1"></html5-block>
+```
+
+真正的 HTML 在 `document.reference_map["html5-block"]["html5_1"].data`，或者该引用给出的本地资源路径中。核对它与预期文件一致，再到实际飞书 Web/桌面端查看布局、动效和交互。
+
+## 为什么选择 HTML Diagram
+
+- **排版自由。** CSS Grid、Flex、卡片、分层、标签和响应式布局可以做出 Mermaid 难以控制的信息层级。
+- **表达上限高。** SVG 适合连线、拓扑和动态路径；Canvas 适合密集或自定义绘制；D3 适合数据驱动布局、过渡和探索。
+- **动态有语义。** 流动箭头、状态迁移、时间演进和逐步解释可以直接展示静态图无法表达的过程。
+- **可以交互。** Tab、筛选、切换、展开和可重放演示能承载渐进披露，同时保留完整默认状态。
+- **适合文档阅读。** 图与正文处于同一阅读流，不需要跳转到外部网页；源码仍是可维护、可复用、可版本管理的 HTML。
+
+## 适用场景与边界
+
+| 需求重点 | 优先选择 |
+| --- | --- |
+| 文档内高自由度架构图、数据流、状态机、动态叙事或交互图解 | 本 skill |
+| 标准流程、时序或依赖关系，重视简洁文本语法 | Mermaid |
+| 多人拖拽、贴便签、现场共创和飞书内原生编辑 | `lark-whiteboard` |
+| 数据计算、筛选、透视和普通统计图 | 飞书表格/图表 |
+| 展示真实 UI、现场证据或追求最大静态兼容性 | 图片/截图 |
+| 认证、持久状态、多页面路由、公开 URL 或完整业务操作 | 独立 Web 开发流程 |
+
+## 创作方法
+
+Agent 已经擅长 Web 创作；本 skill 不提供生成器，也不规定图表语法。先明确读者需要理解的论点、实体、关系、顺序、数量和状态，再选择最自然的 Web 原语：
+
+- 卡片、分层、对比和说明性排版优先使用 HTML/CSS。
+- 精确连接、拓扑、路径动画和复杂空间关系使用 SVG。
+- 大量像素、自定义渲染或高频绘制使用 Canvas。
+- 数据驱动布局、探索和过渡可使用 D3 或其他合适的 H5/JS 库。
+- JavaScript 只需服务于真实的状态、交互或叙事，不必为了“动态”而动态。
+
+模板只是灵感，不是白名单。因果回路、运行模型、渐进披露、地图、时间演进或尚未命名的新视觉语法都可以使用，只要更有助于读者理解。
+
+## 最低平台护栏
+
+- HTML 文件不超过 500 KiB；大图片、字体或数据集应评估体积和加载方式。
+- 根布局使用 `width: 100%`、`max-width: 100%` 和 `box-sizing: border-box`，不要假设宽屏画布。
+- `auto` 模式避免固定根高度和根级 `overflow: hidden`；动态追加内容不会可靠触发 block 重新测高。
+- 默认状态必须有意义，不能只有点击或依赖加载成功后才出现核心信息。
+- 外部库、字体、图片、接口和数据源可以使用，但它们是需要在实际飞书客户端验证的运行时依赖。
+- 不要在 HTML、注释或内嵌数据中写入凭证、token、私有签名 URL 或其他敏感信息。
+- 持续动效应考虑阅读干扰、暂停/重置和 reduced-motion；这些是设计判断，不是 preflight 脚本的硬编码策略。
+
+## 验证与交付
+
+验证分为四个事实层级，不必为了流程而制造形式：
+
+1. **文件契约：** preflight 没有 error，warning 已人工判断。
+2. **本地体验：** 在正常文档宽度和更窄宽度检查默认状态、console、必要的交互和动效。
+3. **飞书写入：** 回读 XML、位置和 `reference_map`，确认关联的是预期 HTML。
+4. **飞书体验：** 在实际承诺的 Web 和/或桌面端由人检查最终阅读与交互效果。
+
+只报告真正完成的层级；本地预览或 XML 写入成功不能证明飞书客户端体验。需要正式评测或排查时再阅读 [详细验证指南](references/validation.md)。
 
 ## 可选起点
 
-可以把 [分层系统架构](assets/templates/layered-system-architecture.html)、[动态数据流](assets/templates/animated-data-flow.html)、[标签页式说明](assets/templates/tabbed-explainer.html) 或 [D3 数据叙事](assets/templates/d3-data-story.html) 作为可选的探索样例。它们只演示可能的原语，不构成白名单；从读者的问题出发，当其他视觉语法表达得更好时就重新设计。
+[分层系统架构](assets/templates/layered-system-architecture.html)、[动态数据流](assets/templates/animated-data-flow.html)、[标签页式说明](assets/templates/tabbed-explainer.html) 和 [D3 数据叙事](assets/templates/d3-data-story.html) 是可拆解的起点。可以借用局部原语，也可以完全重新设计。
 
-## 第三方代码与数据
-
-默认嵌入产物必须自包含、没有网络依赖，并在飞书文档内提供可理解的静态阅读体验。若第三方库、字体、图片或数据源能实质提升视觉效果，应把它作为可选增强：增强内容未加载时，仍保留文档内的静态降级方案；再单独验证依赖 `external-resource` 的增强体验在飞书中的实际表现。外部资源在嵌入时具有不确定性，必须披露这一点；不得在 HTML、注释或内嵌数据中放入凭证、token、私有 URL 或其他敏感信息。
-
-## 执行边界
-
-创建本地 HTML 只是准备工作。写入或更新飞书文档属于外部变更：只能操作用户授权的文档与章节，保留无关的文档内容；如果目标文档、替换范围或所需外部访问不明确，必须停止并请求指示。不能仅凭本地预览或成功写入就声称已在飞书中正确渲染。
-
-## 交付报告
-
-说明面向读者的目的、所选原语，以及 `html5-block` 是静态、动态还是交互式。列出本地 HTML 和目标文档/章节，再报告实际达到的最高证据状态：`contract-valid`、`local-render-valid`、`feishu-write-valid` 或 `feishu-experience-valid`。所有尚未测试的客户端、外部依赖、交互或人工评测项都要列为剩余工作。
-
-## 常见失败模式
-
-- 把模板当成允许使用的图表集合，而不是围绕读者的问题建模。
-- 明明文档流 HTML/CSS 更清晰、更易维护，却选择炫技的原语。
-- 交付空白、被裁切或必须点击后才有意义的默认状态。
-- 在 `auto` 模式使用固定高度、在根容器隐藏 overflow，或布局只能适配宽屏本地视口。
-- 把本地截图、XML 写入成功或回读到的 `data-ref` 当作 Feishu 客户端体验有效的证据。
-- 加入没有语义价值、忽略 reduced-motion 需求，或交互后无法重置的动态。
-- 依赖未经验证的外部资源，或在文档产物中嵌入敏感信息。
-
-每次嵌入或更新 HTML 前都要阅读 [html5-block 规范](references/html5-block-contract.md)。声称本地或飞书侧完成前，必须阅读 [验证指南](references/validation.md)。
+交付时说明图的读者目的、HTML 文件位置、目标文档章节、使用了哪些动态/交互/外部依赖，以及哪些本地或飞书端验证已经实际完成。
