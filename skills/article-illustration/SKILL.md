@@ -78,9 +78,15 @@ Size presets:
 
 ## Authentication
 
-- Read `OPENAI_API_KEY` from the current shell first.
-- Read `OPENAI_BASE_URL` from the current shell second.
-- If `OPENAI_API_KEY` is missing for a live generation run, prompt temporarily in an interactive shell or tell the user to export the environment variable.
+Environment variables, in priority order:
+
+1. `CUSTOM_OPENAI_API_KEY` / `CUSTOM_OPENAI_BASE_URL` — preferred pair; use when the user configured custom OpenAI-compatible credentials.
+2. `OPENAI_API_KEY` / `OPENAI_BASE_URL` — standard OpenAI pair; fallback when the custom pair is absent.
+
+Read rules:
+
+- API key and base URL resolve independently: if only one `CUSTOM_OPENAI_*` variable is set, it takes priority for its field while the `OPENAI_*` counterpart (or absence) fills the other.
+- If no API key is found for a live generation run, prompt temporarily in an interactive shell or tell the user to export the environment variable.
 - Do not write credentials to disk.
 
 ## Model selection

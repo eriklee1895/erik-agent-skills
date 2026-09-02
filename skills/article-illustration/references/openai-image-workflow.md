@@ -8,10 +8,18 @@
 
 ## Authentication
 
-- Read `OPENAI_API_KEY` from the current shell environment first.
-- Read `OPENAI_BASE_URL` from the current shell environment second.
-- If `OPENAI_API_KEY` is missing and the script is attached to a TTY, prompt securely for a temporary key.
-- If `OPENAI_API_KEY` is missing and the script is not attached to a TTY, fail with a clear `export OPENAI_API_KEY=...` example.
+Environment variables, in priority order:
+
+1. `CUSTOM_OPENAI_API_KEY` / `CUSTOM_OPENAI_BASE_URL` — preferred pair.
+2. `OPENAI_API_KEY` / `OPENAI_BASE_URL` — standard OpenAI pair; fallback.
+
+Read rules:
+
+- The script reads `CUSTOM_OPENAI_API_KEY` first and falls back to `OPENAI_API_KEY`; the same independent precedence applies to `CUSTOM_OPENAI_BASE_URL` / `OPENAI_BASE_URL`.
+- API key and base URL resolve independently per field: a set `CUSTOM_OPENAI_*` variable overrides only its own field, and the `OPENAI_*` counterpart (or absence) fills the other.
+- Values may also come from a `.env` file in the current working directory (already-exported shell values win).
+- If no API key is found and the script is attached to a TTY, prompt securely for a temporary key.
+- If no API key is found and the script is not attached to a TTY, fail with export examples for both variable pairs.
 - Do not write credentials to disk.
 - Do not modify `~/.zshrc` or any `.env` file automatically.
 

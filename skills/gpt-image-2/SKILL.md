@@ -69,18 +69,21 @@ The script writes a sibling `*.json` next to each output image with the resolved
 
 ## Authentication
 
-Loaded in this order, first non-empty wins:
+Environment variables, in priority order (first non-empty wins per field):
 
-1. `OPENAI_API_KEY` and `OPENAI_BASE_URL` from the current shell.
-2. The same keys from `.env` in the current working directory (lines like `OPENAI_API_KEY=...` and `OPENAI_BASE_URL=...`; comments and blank lines are ignored; values are only set if not already in the environment).
-3. Interactive prompt (only when stdin and stderr are both a TTY) — temporary input, never echoed or written to disk.
+1. `CUSTOM_OPENAI_API_KEY` / `CUSTOM_OPENAI_BASE_URL` — preferred pair; use when the user configured custom OpenAI-compatible credentials.
+2. `OPENAI_API_KEY` / `OPENAI_BASE_URL` — standard OpenAI pair; fallback when the custom pair is absent.
+3. The same keys from `.env` in the current working directory (lines like `CUSTOM_OPENAI_API_KEY=...` or `OPENAI_API_KEY=...`; comments and blank lines are ignored; values are only set if not already in the environment).
+4. Interactive prompt (only when stdin and stderr are both a TTY) — temporary input, never echoed or written to disk.
+
+API key and base URL resolve independently: if only one `CUSTOM_OPENAI_*` variable is set, it takes priority for its field while the `OPENAI_*` counterpart (or absence) fills the other.
 
 Do not commit credentials. The skill never writes credentials to disk.
 
 ## Model selection
 
 - Default: `gpt-image-2` (snapshot `gpt-image-2-2026-04-21`, SOTA as of 2026/06 per the official cookbook).
-- When `OPENAI_BASE_URL` matches a known gateway, the model name is automatically namespaced:
+- When the resolved base URL (`CUSTOM_OPENAI_BASE_URL` or `OPENAI_BASE_URL`) matches a known gateway, the model name is automatically namespaced:
   - `https://api.ofox.io/v1` → `openai/gpt-image-2`
   - everything else → `gpt-image-2`
 - Override with `--model <name>` if your gateway expects a different identifier.
