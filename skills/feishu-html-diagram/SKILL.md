@@ -1,6 +1,6 @@
 ---
 name: feishu-html-diagram
-description: Use when 需要在飞书文档（Feishu Docx）中创建并嵌入可编程 HTML Diagram，使用 HTML/CSS/SVG/Canvas/JavaScript/D3 实现高自由度布局、动态数据流、交互说明或数据可视化；尤其适合 Mermaid、飞书画板、表格或静态图片难以表达的场景，不适用于独立 Web App 或必须原生协作编辑的画板。
+description: Use when 需要在飞书文档中创建并嵌入可编程 HTML Diagram，使用 HTML/CSS/SVG/Canvas/JavaScript/D3 实现高自由度布局、动态数据流、交互说明或数据可视化；尤其适合 Mermaid、飞书画板、表格或静态图片难以表达的场景，不适用于独立 Web App 或必须原生协作编辑的画板。
 metadata:
   author: liyuheng.erik
 ---
@@ -120,7 +120,7 @@ Agent 已经擅长 Web 创作；本 skill 不提供生成器，也不规定图�
 
 只报告真正完成的层级；本地预览或 XML 写入成功不能证明飞书客户端体验。需要正式评测或排查时再阅读 [详细验证指南](references/validation.md)。
 
-## 可选起点
+## 可选起点（参考样例）
 
 [分层系统架构](assets/templates/layered-system-architecture.html)、[动态数据流](assets/templates/animated-data-flow.html)、[标签页式说明](assets/templates/tabbed-explainer.html) 和 [D3 数据叙事](assets/templates/d3-data-story.html) 是可拆解的起点。可以借用局部原语，也可以完全重新设计。
 
