@@ -78,6 +78,33 @@
       font-size: .88rem;
     }
 
+    .motion-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px 14px;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    .motion-toggle {
+      min-height: 44px;
+      padding: 9px 15px;
+      border: 1px solid #58708f;
+      border-radius: 999px;
+      background: #182944;
+      color: var(--ink);
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .motion-toggle:hover { border-color: var(--cyan); }
+    .motion-toggle:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    .motion-toggle[aria-disabled="true"] { cursor: default; color: var(--muted); }
+    .motion-status { color: var(--muted); font-size: .76rem; }
+
     .topology {
       position: relative;
       width: 100%;
@@ -123,30 +150,23 @@
     .line-d { stroke: var(--violet); }
 
     .flow-particle {
+      display: none;
       r: 6px;
       filter: drop-shadow(0 0 7px currentColor);
       animation: particle-travel 3.4s linear infinite;
       offset-rotate: 0deg;
     }
 
-    .particle-a {
-      color: var(--cyan); fill: var(--cyan);
-      offset-path: path("M 180 125 L 540 125");
-    }
-    .particle-b {
-      color: var(--amber); fill: var(--amber);
-      offset-path: path("M 585 170 L 585 350");
-      animation-delay: -.85s;
-    }
-    .particle-c {
-      color: var(--coral); fill: var(--coral);
-      offset-path: path("M 540 395 L 180 395");
-      animation-delay: -1.7s;
-    }
-    .particle-d {
-      color: var(--violet); fill: var(--violet);
-      offset-path: path("M 135 350 L 135 170");
-      animation-delay: -2.55s;
+    .motion-ready .flow-particle { display: block; }
+
+    .particle-a { color: var(--cyan); fill: var(--cyan); }
+    .particle-b { color: var(--amber); fill: var(--amber); animation-delay: -.85s; }
+    .particle-c { color: var(--coral); fill: var(--coral); animation-delay: -1.7s; }
+    .particle-d { color: var(--violet); fill: var(--violet); animation-delay: -2.55s; }
+
+    .flow-story[data-motion="paused"] .flow-line,
+    .flow-story[data-motion="paused"] .flow-particle {
+      animation-play-state: paused;
     }
 
     .node-box { fill: var(--panel-2); stroke-width: 2; }
@@ -190,7 +210,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .flow-line, .flow-particle { animation: none !important; }
-      .flow-particle { display: none; }
+      .motion-ready .flow-particle { display: none; }
     }
 
     @media (max-width: 620px) {
@@ -198,6 +218,7 @@
       .flow-story { padding: 18px 12px; border-radius: 18px; }
       header { grid-template-columns: 1fr; gap: 14px; }
       .summary { max-width: 55ch; }
+      .motion-toolbar { justify-content: flex-start; }
       .topology { border-radius: 14px; }
       svg { min-height: 260px; }
       .node-kicker, .node-copy, .center-copy { display: none; }
@@ -212,7 +233,7 @@
   </style>
 </head>
 <body>
-  <main class="flow-story" aria-labelledby="flow-title">
+  <main class="flow-story" data-motion="running" aria-labelledby="flow-title">
     <header>
       <div>
         <p class="eyebrow">Continuous learning loop</p>
@@ -220,6 +241,11 @@
       </div>
       <p class="summary" id="flow-summary">A closed loop captures events, interprets context, acts through policy, and returns measured outcomes as the next signal.</p>
     </header>
+
+    <div class="motion-toolbar">
+      <button class="motion-toggle" id="motion-toggle" type="button" aria-pressed="false">Pause motion</button>
+      <span class="motion-status" id="motion-status" aria-live="polite">Flow animation is running.</span>
+    </div>
 
     <!-- ===== EDIT SAMPLE CONTENT: stage labels, descriptions, and path meaning ===== -->
     <section class="topology" aria-labelledby="flow-title" aria-describedby="flow-summary">
@@ -233,15 +259,17 @@
           <marker id="arrow-violet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#a58cff"/></marker>
         </defs>
 
+        <!-- Route geometry has one source of truth: edit these d attributes only.
+             Each particle's data-path is bound to the matching d value by the script below. -->
         <path id="path-a" class="flow-line line-a" d="M 180 125 L 540 125" marker-end="url(#arrow-cyan)"/>
         <path id="path-b" class="flow-line line-b" d="M 585 170 L 585 350" marker-end="url(#arrow-amber)"/>
         <path id="path-c" class="flow-line line-c" d="M 540 395 L 180 395" marker-end="url(#arrow-coral)"/>
         <path id="path-d" class="flow-line line-d" d="M 135 350 L 135 170" marker-end="url(#arrow-violet)"/>
 
-        <circle class="flow-particle particle-a" cx="0" cy="0"/>
-        <circle class="flow-particle particle-b" cx="0" cy="0"/>
-        <circle class="flow-particle particle-c" cx="0" cy="0"/>
-        <circle class="flow-particle particle-d" cx="0" cy="0"/>
+        <circle class="flow-particle particle-a" data-path="path-a" cx="0" cy="0"/>
+        <circle class="flow-particle particle-b" data-path="path-b" cx="0" cy="0"/>
+        <circle class="flow-particle particle-c" data-path="path-c" cx="0" cy="0"/>
+        <circle class="flow-particle particle-d" data-path="path-d" cx="0" cy="0"/>
 
         <g transform="translate(45 70)">
           <rect class="node-box node-a" width="180" height="100" rx="16"/>
@@ -286,5 +314,49 @@
     </ol>
     <!-- ===== EDIT SAMPLE CONTENT END ===== -->
   </main>
+  <script>
+    const story = document.querySelector(".flow-story");
+    const motionToggle = document.querySelector("#motion-toggle");
+    const motionStatus = document.querySelector("#motion-status");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let userPaused = false;
+
+    document.querySelectorAll(".flow-particle[data-path]").forEach((particle) => {
+      const path = document.getElementById(particle.dataset.path);
+      if (!path) return;
+      particle.style.offsetPath = `path(${JSON.stringify(path.getAttribute("d"))})`;
+    });
+    document.documentElement.classList.add("motion-ready");
+
+    function syncMotionState() {
+      const reduced = reducedMotion.matches;
+      const paused = reduced || userPaused;
+      story.dataset.motion = paused ? "paused" : "running";
+      motionToggle.setAttribute("aria-pressed", String(paused));
+
+      if (reduced) {
+        motionToggle.textContent = "Motion reduced";
+        motionToggle.setAttribute("aria-disabled", "true");
+        motionStatus.textContent = "Continuous motion is off for your reduced-motion preference.";
+        return;
+      }
+
+      motionToggle.removeAttribute("aria-disabled");
+      motionToggle.textContent = userPaused ? "Resume motion" : "Pause motion";
+      motionStatus.textContent = userPaused ? "Flow animation is paused." : "Flow animation is running.";
+    }
+
+    motionToggle.addEventListener("click", () => {
+      if (reducedMotion.matches) return;
+      userPaused = !userPaused;
+      syncMotionState();
+    });
+    if (typeof reducedMotion.addEventListener === "function") {
+      reducedMotion.addEventListener("change", syncMotionState);
+    } else {
+      reducedMotion.addListener(syncMotionState);
+    }
+    syncMotionState();
+  </script>
 </body>
 </html>
