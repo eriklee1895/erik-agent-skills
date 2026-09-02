@@ -80,8 +80,9 @@ def validate_html(path: Path) -> ValidationResult:
         if parser.meta.get(name) != expected:
             findings.append(_finding("error", "missing-meta", f'Meta {name!r} must be {expected!r}'))
     height_mode = parser.meta.get("html-box-height-mode")
-    if height_mode is not None and height_mode not in HEIGHT_MODES:
-        findings.append(_finding("error", "invalid-height-mode", f"Unknown height mode: {height_mode}"))
+    if height_mode not in HEIGHT_MODES:
+        message = "Missing html-box-height-mode meta" if height_mode is None else f"Unknown height mode: {height_mode}"
+        findings.append(_finding("error", "invalid-height-mode", message))
     if not parser.meta.get("description", "").strip():
         findings.append(_finding("error", "missing-description", "Document must declare a description"))
 
