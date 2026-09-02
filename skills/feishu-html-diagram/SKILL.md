@@ -1,6 +1,6 @@
 ---
 name: feishu-html-diagram
-description: Use when 飞书文档（Feishu Docx）需要用 HTML 图表表达动态架构/数据流、交互式说明或可编程数据可视化，且 Mermaid、whiteboard、table 或 image 难以满足。
+description: Use when 飞书文档（Feishu Docx）需要用 HTML 图表表达动态架构/数据流、交互式说明或可编程数据可视化，且 Mermaid、飞书画板、表格或静态图片难以满足需求。
 metadata:
   author: liyuheng.erik
 ---
@@ -34,11 +34,11 @@ metadata:
 
 ## 可选起点
 
-可以把 [分层系统架构](assets/templates/layered-system-architecture.html)、[动态数据流](assets/templates/animated-data-flow.html)、[Tab 说明器](assets/templates/tabbed-explainer.html) 或 [D3 数据叙事](assets/templates/d3-data-story.html) 作为可选探针。它们只演示可能的原语，不构成白名单；从读者的问题出发，当其他视觉语法表达得更好时就重新设计。
+可以把 [分层系统架构](assets/templates/layered-system-architecture.html)、[动态数据流](assets/templates/animated-data-flow.html)、[标签页式说明](assets/templates/tabbed-explainer.html) 或 [D3 数据叙事](assets/templates/d3-data-story.html) 作为可选的探索样例。它们只演示可能的原语，不构成白名单；从读者的问题出发，当其他视觉语法表达得更好时就重新设计。
 
 ## 第三方代码与数据
 
-默认嵌入产物必须自包含、没有网络依赖，并在飞书文档内提供可理解的静态阅读体验。若第三方库、字体、图片或数据源能实质提升视觉效果，应把它作为可选增强：增强内容未加载时，仍保留文档内的静态降级方案；再单独验证 `external-resource` 增强在飞书中的实际体验。外部资源在嵌入时具有不确定性，必须披露这一点；不得在 HTML、注释或内嵌数据中放入凭证、token、私有 URL 或其他敏感信息。
+默认嵌入产物必须自包含、没有网络依赖，并在飞书文档内提供可理解的静态阅读体验。若第三方库、字体、图片或数据源能实质提升视觉效果，应把它作为可选增强：增强内容未加载时，仍保留文档内的静态降级方案；再单独验证依赖 `external-resource` 的增强体验在飞书中的实际表现。外部资源在嵌入时具有不确定性，必须披露这一点；不得在 HTML、注释或内嵌数据中放入凭证、token、私有 URL 或其他敏感信息。
 
 ## 执行边界
 
