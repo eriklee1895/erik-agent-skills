@@ -1,61 +1,61 @@
 ---
 name: feishu-html-diagram
-description: Use when a Feishu Docx needs a high-fidelity architecture diagram, animated data flow, interactive explainer, or programmable data visualization beyond Mermaid, whiteboard, table, or image constraints.
+description: Use when 飞书文档（Feishu Docx）需要用 HTML 图表表达动态架构/数据流、交互式说明或可编程数据可视化，且 Mermaid、whiteboard、table 或 image 难以满足。
 metadata:
   author: liyuheng.erik
 ---
 
-# Feishu HTML Diagram
+# 飞书文档 HTML 图表
 
-## Core principle
+## 核心原则
 
-Treat an HTML5 block as a programmable mini-webpage living inside a Feishu Docx. The agent already knows HTML, CSS, SVG, JavaScript, and D3; use that capability to make the document's argument easier to inspect, not to turn a document into an application.
+把 `html5-block` 视为嵌在飞书文档中的可编程微型网页。Agent 已具备 HTML、CSS、SVG、JavaScript 和 D3 能力；用这些能力让文档的论点更容易理解和审阅，而不是把文档变成一个应用。
 
-## Use and route boundaries
+## 适用场景与路由边界
 
-Use this skill when the visual needs controlled layout, motion, interaction, or a visual grammar that Mermaid, a whiteboard, a table, or a static image cannot express well. Route a request for an editable Feishu canvas to `lark-whiteboard`; route ordinary charts that need no document-native custom experience to a table or image/chart workflow; route a standalone web product to a web-development workflow.
+当视觉表达需要精确布局、动态、交互，或需要 Mermaid、画板、表格、静态图片难以清晰表达的视觉语法时，使用本技能。需要可编辑飞书画板时转交 `lark-whiteboard`；普通图表若不需要文档原生的定制体验，转交表格或图片/图表流程；独立 Web 产品则转交 Web 开发流程。
 
-## Eight-step workflow
+## 八步工作流
 
-Follow this sequence. Do not skip evidence just because the HTML looks plausible.
+严格按以下顺序执行。不能因为 HTML 看起来合理就跳过证据收集。
 
-1. **Recognize the opportunity.** Identify the claim or decision the visual must help a reader understand.
-2. **Model the information.** Decide the entities, relationships, sequence, quantities, states, and what must remain readable at a glance.
-3. **Choose the medium and Web primitive.** Confirm that an HTML5 block is the right medium, then choose the simplest natural primitive: document-flow HTML/CSS for cards and hierarchy; SVG for connectors, topology, or precise geometry; Canvas for dense pixels or custom drawing; D3 when data-driven layout or interaction earns its complexity; JavaScript only for meaningful state or interaction.
-4. **Create a single-file HTML document.** Make the initial/default state complete and useful without a click. When an HTML file will be embedded or updated, read [the HTML5 block contract](references/html5-block-contract.md) first.
-5. **Validate locally.** Before any completion claim, read [the validation guide](references/validation.md) and collect the applicable local evidence.
-6. **Write the XML.** With authorization to edit the specified Feishu Docx, embed the local file using the platform XML contract.
-7. **Fetch back.** Read the document after the write and inspect its `reference_map`; do not treat an XML placeholder as the HTML itself.
-8. **Validate in Feishu.** Check the rendered block in the applicable Feishu Web and/or desktop client and report the achieved evidence state.
+1. **识别机会。** 明确这个视觉表达必须帮助读者理解的论点或决策。
+2. **建模信息。** 确定实体、关系、顺序、数量、状态，以及哪些内容必须一眼可读。
+3. **选择媒介与 Web 原语。** 先确认 `html5-block` 是合适的媒介，再选择最自然、最简单的原语：卡片和层级优先使用文档流 HTML/CSS；连接线、拓扑或精确几何使用 SVG；密集像素或自定义绘制使用 Canvas；只有数据驱动布局或交互确实值得增加复杂度时才使用 D3；JavaScript 只承载有意义的状态或交互。
+4. **创建单文件 HTML 文档。** 初始/默认状态必须完整、有用，不能依赖点击才成立。嵌入或更新 HTML 文件前，先阅读 [html5-block 规范](references/html5-block-contract.md)。
+5. **本地验证。** 作出任何完成声明前，先阅读 [验证指南](references/validation.md)，并收集适用的本地证据。
+6. **写入 XML。** 获得指定 Feishu Docx 的编辑授权后，按平台 XML 规范嵌入本地文件。
+7. **回读。** 写入后重新读取文档并检查 `reference_map`；不能把 XML 占位符当作 HTML 本体。
+8. **在飞书中验证。** 在适用的 Feishu Web 和/或桌面客户端检查实际渲染的 `html5-block`，并报告已达到的证据状态。
 
-## Design freedom
+## 设计自由
 
-Templates are optional inspiration, never a whitelist. Invent a new visual grammar whenever it better explains the information: a causal loop, operating model, progressive disclosure, state machine, systems map, or another purpose-built form may be clearer than a familiar diagram type. Keep one visual focused on one main argument; add interaction or motion only when it reveals state, sequence, or comparison that a static view cannot.
+模板只提供可选灵感，绝不是白名单。只要更有助于解释信息，就应设计新的视觉语法：因果回路、运行模型、渐进披露、状态机、系统地图或其他为论点定制的形式，都可能比熟悉的图表类型更清晰。一个视觉表达只聚焦一个主要论点；只有在交互或动态能够揭示静态视图无法表达的状态、顺序或比较时才加入它们。
 
-## Optional starters
+## 可选起点
 
-Use [layered system architecture](assets/templates/layered-system-architecture.html), [animated data flow](assets/templates/animated-data-flow.html), [tabbed explainer](assets/templates/tabbed-explainer.html), or [D3 data story](assets/templates/d3-data-story.html) as optional probes. They demonstrate possible primitives, not a whitelist; start from the reader's question and invent a different visual grammar when it communicates better.
+可以把 [分层系统架构](assets/templates/layered-system-architecture.html)、[动态数据流](assets/templates/animated-data-flow.html)、[Tab 说明器](assets/templates/tabbed-explainer.html) 或 [D3 数据叙事](assets/templates/d3-data-story.html) 作为可选探针。它们只演示可能的原语，不构成白名单；从读者的问题出发，当其他视觉语法表达得更好时就重新设计。
 
-## Third-party code and data
+## 第三方代码与数据
 
-The default embedded artifact must be self-contained, with no network dependency, and must provide an understandable static reading experience inside the Feishu document. If a third-party library, font, image, or data source materially improves the visual, treat it as an optional enhancement: retain that in-document static fallback when the enhancement does not load, then separately verify the enhanced external-resource experience in Feishu. External resources are uncertain at embed time; disclose that uncertainty and never put credentials, tokens, private URLs, or other secrets in the HTML.
+默认嵌入产物必须自包含、没有网络依赖，并在飞书文档内提供可理解的静态阅读体验。若第三方库、字体、图片或数据源能实质提升视觉效果，应把它作为可选增强：增强内容未加载时，仍保留文档内的静态降级方案；再单独验证 `external-resource` 增强在飞书中的实际体验。外部资源在嵌入时具有不确定性，必须披露这一点；不得在 HTML、注释或内嵌数据中放入凭证、token、私有 URL 或其他敏感信息。
 
-## Execution boundary
+## 执行边界
 
-Creating local HTML is preparation. Writing or updating a Feishu document is an external mutation: perform it only for the user-authorized document and section, preserve unrelated document content, and stop for direction if the target document, replacement scope, or required external access is unclear. Do not claim Feishu rendering from a local preview or a successful write alone.
+创建本地 HTML 只是准备工作。写入或更新飞书文档属于外部变更：只能操作用户授权的文档与章节，保留无关的文档内容；如果目标文档、替换范围或所需外部访问不明确，必须停止并请求指示。不能仅凭本地预览或成功写入就声称已在飞书中正确渲染。
 
-## Delivery report
+## 交付报告
 
-State the reader-facing purpose, selected primitive, and whether the block is static, animated, or interactive. Name the local HTML and target document/section, then state the highest evidence level actually reached: `contract-valid`, `local-render-valid`, `feishu-write-valid`, or `feishu-experience-valid`. List any untested client, external dependency, interaction, or human-evaluation item as remaining work.
+说明面向读者的目的、所选原语，以及 `html5-block` 是静态、动态还是交互式。列出本地 HTML 和目标文档/章节，再报告实际达到的最高证据状态：`contract-valid`、`local-render-valid`、`feishu-write-valid` 或 `feishu-experience-valid`。所有尚未测试的客户端、外部依赖、交互或人工评测项都要列为剩余工作。
 
-## Common failure modes
+## 常见失败模式
 
-- Treating a template as the set of permitted diagrams instead of modelling the reader's question.
-- Choosing a flashy primitive when document-flow HTML/CSS would be clearer and more maintainable.
-- Shipping an empty, clipped, or click-required default state.
-- Fixed-height layouts in `auto` mode, overflow hidden at the root, or a layout that only works on a wide local viewport.
-- Calling a local screenshot, XML write, or fetched `data-ref` proof that the Feishu client experience works.
-- Adding motion that has no semantic meaning, ignores reduced-motion needs, or cannot be reset after interaction.
-- Depending on unverified external resources or embedding secrets in a document artifact.
+- 把模板当成允许使用的图表集合，而不是围绕读者的问题建模。
+- 明明文档流 HTML/CSS 更清晰、更易维护，却选择炫技的原语。
+- 交付空白、被裁切或必须点击后才有意义的默认状态。
+- 在 `auto` 模式使用固定高度、在根容器隐藏 overflow，或布局只能适配宽屏本地视口。
+- 把本地截图、XML 写入成功或回读到的 `data-ref` 当作 Feishu 客户端体验有效的证据。
+- 加入没有语义价值、忽略 reduced-motion 需求，或交互后无法重置的动态。
+- 依赖未经验证的外部资源，或在文档产物中嵌入敏感信息。
 
-Read [the HTML5 block contract](references/html5-block-contract.md) whenever embedding or updating HTML. Read [the validation guide](references/validation.md) before claiming local or Feishu completion.
+每次嵌入或更新 HTML 前都要阅读 [html5-block 规范](references/html5-block-contract.md)。声称本地或飞书侧完成前，必须阅读 [验证指南](references/validation.md)。
