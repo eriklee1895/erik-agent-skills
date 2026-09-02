@@ -32,6 +32,10 @@ Follow this sequence. Do not skip evidence just because the HTML looks plausible
 
 Templates are optional inspiration, never a whitelist. Invent a new visual grammar whenever it better explains the information: a causal loop, operating model, progressive disclosure, state machine, systems map, or another purpose-built form may be clearer than a familiar diagram type. Keep one visual focused on one main argument; add interaction or motion only when it reveals state, sequence, or comparison that a static view cannot.
 
+## Optional starters
+
+Use [layered system architecture](assets/templates/layered-system-architecture.html), [animated data flow](assets/templates/animated-data-flow.html), [tabbed explainer](assets/templates/tabbed-explainer.html), or [D3 data story](assets/templates/d3-data-story.html) as optional probes. They demonstrate possible primitives, not a whitelist; start from the reader's question and invent a different visual grammar when it communicates better.
+
 ## Third-party code and data
 
 The default embedded artifact must be self-contained, with no network dependency, and must provide an understandable static reading experience inside the Feishu document. If a third-party library, font, image, or data source materially improves the visual, treat it as an optional enhancement: retain that in-document static fallback when the enhancement does not load, then separately verify the enhanced external-resource experience in Feishu. External resources are uncertain at embed time; disclose that uncertainty and never put credentials, tokens, private URLs, or other secrets in the HTML.

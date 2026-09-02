@@ -8,8 +8,8 @@ Score each dimension from 1 to 5. The descriptions below anchor the score; asses
 | --- | --- | --- | --- |
 | Comprehension speed | The main claim, entities, or relationships cannot be understood without explanation or prolonged decoding. | A reader can identify the main claim and key relationships with modest effort. | The main claim and the most important relationships are apparent at a glance; hierarchy guides the reader naturally. |
 | Professional visual quality | Layout, typography, connectors, spacing, colour, or contrast look unfinished or undermine trust. | Layout is consistent and legible, with minor roughness that does not obscure meaning. | Deliberate hierarchy, spacing, type, contrast, and visual restraint make the visual report-ready. |
-| Semantic motion | Motion is absent when it is necessary to explain the claim, or is decorative, distracting, or inaccessible. | Any motion mostly represents a relevant flow or transition and does not prevent reading. | Motion precisely reveals state, sequence, or causality, remains restrained, respects reduced-motion needs where applicable, and has a clear reset path. |
-| Interaction discoverability | Important interaction is hidden, confusing, inaccessible, stuck, or required to reveal core content. | Available interaction has visible affordances and can return to the initial state; the default carries the essential message. | Interaction is obvious, keyboard-operable where relevant, clearly communicates state, and adds useful progressive disclosure without burdening the default view. |
+| Semantic motion | When motion is present or necessary, it is decorative, distracting, inaccessible, uncontrollable, or absent despite being needed to explain the claim. | Present motion mostly represents a relevant flow or transition, does not prevent reading, and has applicable pause/reset behaviour. An intentionally static diagram is understandable without motion. | Motion precisely reveals state, sequence, or causality, remains restrained, respects reduced-motion needs, and has clear applicable pause/resume/reset controls; or the diagram is intentionally static because motion would not improve understanding. |
+| Interaction discoverability | When interaction is present or necessary, it is hidden, confusing, inaccessible, stuck, or required to reveal core content. | Present interaction has visible affordances and can return to the initial state; the default carries the essential message. An intentionally non-interactive diagram needs no controls. | Interaction is obvious, keyboard-operable where relevant, clearly communicates state, and adds useful progressive disclosure without burdening the default view; or the diagram is intentionally non-interactive because controls would not improve the complete default view. |
 | Default-zoom readability | At normal document reading width, text or relationships are clipped, overlapping, too small, or require zoom/scroll to understand the core. | The core remains readable at default zoom and expected document width, with non-critical density trade-offs. | Core content is immediately readable at default zoom and remains coherent at a narrower document width without relying on a desktop-wide canvas. |
 | Integration with the surrounding document | The block feels detached from the document, repeats or contradicts context, or lacks an accessible reader-facing purpose. | The block has a clear purpose and fits the surrounding section with understandable framing. | The block advances the document's specific argument, uses a useful description/alt text, and feels intentionally composed for document reading rather than transplanted from an app. |
 
@@ -19,7 +19,7 @@ Any of the following blocks acceptance regardless of the average score:
 
 - Clipping or overlap that hides core content at the assessed document width or default state.
 - A console error during the assessed local or client interaction path.
-- Unusable interaction: a required control is undiscoverable, cannot be operated as intended, cannot return to an understandable initial state, or traps the reader away from core content.
+- Unusable interaction when interaction is present or required: a control is undiscoverable, cannot be operated as intended, cannot return to an understandable initial state, or traps the reader away from core content.
 - Missing core content after an optional dependency fails, including an external script, font, image, data source, or library.
 - A score below 3 on any dimension.
 
@@ -30,7 +30,7 @@ Record the failure, surface, viewport/document width where relevant, and evidenc
 Record the highest evidence state separately from the quality scores:
 
 - `contract-valid`: structural and safety checks only.
-- `local-render-valid`: locally rendered and exercised at approximately 820px and a narrower width.
+- `local-render-valid`: locally rendered and exercised at the exact recorded normal and narrower widths.
 - `feishu-write-valid`: authorized write, fetch-back, target placement, and recovered artifact match verified.
 - `feishu-experience-valid`: human evaluation completed in the actual promised Feishu Web and/or desktop surface; name every evaluated and untested surface.
 
@@ -42,7 +42,7 @@ Neither an XML writer response nor a local browser score is evidence of Feishu c
 | --- | --- |
 | Artifact and reader-facing purpose | |
 | Evaluator and date | |
-| Evaluated surface(s) and document width | |
+| Evaluated surface(s) and exact tested width(s) | |
 | Highest evidence state | |
 | Comprehension speed (1–5) | |
 | Professional visual quality (1–5) | |
