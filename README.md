@@ -5,7 +5,7 @@
 ![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.png)
 
 <p align="center">
-  <a href="docs/skills-catalog.en.md"><img alt="23 curated skills" src="https://img.shields.io/badge/COLLECTION-23_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="docs/skills-catalog.en.md"><img alt="25 curated skills" src="https://img.shields.io/badge/COLLECTION-25_SKILLS-0B1F3A?style=for-the-badge"></a>
   <a href="docs/skills-catalog.en.md"><img alt="4 skill categories" src="https://img.shields.io/badge/CATEGORIES-4-6750A4?style=for-the-badge"></a>
   <a href="https://developers.openai.com/codex/skills"><img alt="Codex ready" src="https://img.shields.io/badge/CODEX-READY-0F9D88?style=for-the-badge&logo=openai&logoColor=white"></a>
   <a href="README.zh-CN.md"><img alt="English and Chinese documentation" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
@@ -17,13 +17,13 @@ media creation, and tool-driven workflows.
 
 ## Skills
 
-The repository currently includes 23 skills across four areas:
+The repository currently includes 25 skills across four areas:
 
 | Area | Skills | Focus |
 | --- | ---: | --- |
 | Writing | 4 | Ideation, polishing, readiness checks, and closeout |
-| Publishing & Channels | 7 | WeChat, blog, Notion, and Feishu workflows |
-| Media | 9 | Image, video, speech, music, and media preparation |
+| Publishing & Channels | 8 | WeChat, blog, Notion, and Feishu workflows |
+| Media | 10 | Image, video, speech, music, and media preparation |
 | Tools & Integrations | 3 | Reusable CLIs, documentation retrieval, and web search |
 
 Browse the [English skills catalog](docs/skills-catalog.en.md) for the complete

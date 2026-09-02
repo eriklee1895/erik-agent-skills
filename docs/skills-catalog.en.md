@@ -21,6 +21,7 @@ discovered, linked, and installed consistently.
 | --- | --- |
 | [article-to-notion](../skills/article-to-notion/) | Capture and clean web articles into Notion while preserving useful metadata and assets. |
 | [markdown-article-to-feishu-doc](../skills/markdown-article-to-feishu-doc/) | Convert local Markdown into a structured Feishu document with media and Mermaid support. |
+| [feishu-html-diagram](../skills/feishu-html-diagram/) | Create high-fidelity, animated, or interactive diagrams inside Feishu Docx using HTML5 blocks when Mermaid, whiteboards, tables, or images are too restrictive. |
 | [erik-blog-publish-workflow](../skills/erik-blog-publish-workflow/) | Sync finalized articles to Erik's Astro blog and validate assets, taxonomy, builds, and deployment handoff. |
 | [wechat-article-fetcher](../skills/wechat-article-fetcher/) | Extract a WeChat article into structured Markdown and local assets for research or reuse. |
 | [wechat-article-renderer](../skills/wechat-article-renderer/) | Render Markdown into polished, WeChat-ready inline HTML previews. |

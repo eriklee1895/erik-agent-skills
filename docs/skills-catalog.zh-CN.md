@@ -20,6 +20,7 @@
 | --- | --- |
 | [article-to-notion](../skills/article-to-notion/) | 抓取和清洗网页文章，连同有价值的元数据与素材整理进 Notion。 |
 | [markdown-article-to-feishu-doc](../skills/markdown-article-to-feishu-doc/) | 将本地 Markdown 转为结构完整的飞书文档，并支持图片与 Mermaid。 |
+| [feishu-html-diagram](../skills/feishu-html-diagram/) | 在 Mermaid、画板、表格或图片表达受限时，用 HTML5 块在飞书 Docx 中创建高保真、动态或交互式图表。 |
 | [erik-blog-publish-workflow](../skills/erik-blog-publish-workflow/) | 将正式文章同步到 Erik 的 Astro 博客，并校验素材、分类、构建与部署交接。 |
 | [wechat-article-fetcher](../skills/wechat-article-fetcher/) | 将微信公众号文章提取为结构化 Markdown 和本地素材，用于研究或复用。 |
 | [wechat-article-renderer](../skills/wechat-article-renderer/) | 将 Markdown 渲染为适合微信公众号的精美内联 HTML 预览。 |
