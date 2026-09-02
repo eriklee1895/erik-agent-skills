@@ -153,6 +153,55 @@ class ValidateHtmlBlockTests(unittest.TestCase):
         self.assertIn("external-resource", codes)
         self.assertTrue(result.ok)
 
+    def test_remote_svg_image_href_is_a_warning_not_an_error(self):
+        result = self.validate(
+            VALID.replace(
+                "</body>",
+                '<svg><image href="https://example.com/a.png"/></svg></body>',
+            )
+        )
+        self.assertIn(
+            "external-resource", {finding.code for finding in result.findings}
+        )
+        self.assertTrue(result.ok)
+
+    def test_relative_svg_use_href_is_a_warning_not_an_error(self):
+        result = self.validate(
+            VALID.replace(
+                "</body>",
+                '<svg><use href="./icons.svg#symbol"/></svg></body>',
+            )
+        )
+        self.assertIn(
+            "relative-resource", {finding.code for finding in result.findings}
+        )
+        self.assertTrue(result.ok)
+
+    def test_svg_feimage_xlink_href_is_checked_case_insensitively(self):
+        result = self.validate(
+            VALID.replace(
+                "</body>",
+                '<svg><filter><feImage xlink:href="https://example.com/filter.png"/></filter></svg></body>',
+            )
+        )
+        self.assertIn(
+            "external-resource", {finding.code for finding in result.findings}
+        )
+        self.assertTrue(result.ok)
+
+    def test_internal_svg_fragment_hrefs_are_not_resource_warnings(self):
+        html = VALID.replace(
+            "</body>",
+            '<svg><symbol id="symbol"/><filter id="filter"/>'
+            '<image href="#symbol"/><use xlink:href="#symbol"/>'
+            '<feImage href="#filter"/></svg></body>',
+        )
+        result = self.validate(html)
+        codes = {finding.code for finding in result.findings}
+        self.assertNotIn("external-resource", codes)
+        self.assertNotIn("relative-resource", codes)
+        self.assertTrue(result.ok)
+
     def test_css_url_and_import_are_resource_warnings(self):
         css = """<style>
         @import "https://example.com/theme.css";
