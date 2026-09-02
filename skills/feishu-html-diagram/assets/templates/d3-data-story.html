@@ -192,6 +192,7 @@
         <p class="eyebrow">Quarterly operating signal · 2025</p>
         <h1 id="story-title">Automation grew without trading away review quality</h1>
       </div>
+      <!-- EDIT NARRATIVE SUMMARY SEPARATELY when source-table values or their meaning change. -->
       <p class="insight" id="chart-summary"><strong>The useful pattern</strong>Automation coverage rose from 18% to 72% while review quality increased from 61 to 87 points. The largest joint gain arrived after the Q2 policy gate.</p>
     </header>
 
@@ -209,7 +210,7 @@
     <!-- ===== EDIT SAMPLE DATA START: edit these rows; the static and D3 views read this table ===== -->
     <section class="data-region" aria-labelledby="data-title">
       <h2 id="data-title">Source data</h2>
-      <p class="data-note">Values are sample percentages / index points. The table is the accessible fallback and the single data source for both chart modes.</p>
+      <p class="data-note">Values are sample percentages / index points. The table drives both chart modes; update the narrative insight above separately when these values or their meaning change.</p>
       <table id="source-data">
         <thead><tr><th scope="col">Quarter</th><th scope="col">Automation</th><th scope="col">Review quality</th></tr></thead>
         <tbody>
@@ -347,8 +348,8 @@
         makeInteractive(squares, 'Review quality', 'quality');
 
         const last = data[data.length - 1];
-        svg.append('text').attr('class', 'direct-label').attr('x', x(last.quarter) - 8).attr('y', y(last.automation) + 24).attr('text-anchor', 'end').attr('fill', '#1d5cc6').text('Automation 72%');
-        svg.append('text').attr('class', 'direct-label').attr('x', x(last.quarter) - 8).attr('y', y(last.quality) - 14).attr('text-anchor', 'end').attr('fill', '#a44b14').text('Quality 87');
+        svg.append('text').attr('class', 'direct-label').attr('x', x(last.quarter) - 8).attr('y', y(last.automation) + 24).attr('text-anchor', 'end').attr('fill', '#1d5cc6').text(`Automation ${last.automation}%`);
+        svg.append('text').attr('class', 'direct-label').attr('x', x(last.quarter) - 8).attr('y', y(last.quality) - 14).attr('text-anchor', 'end').attr('fill', '#a44b14').text(`Quality ${last.quality}`);
 
         chart.replaceChildren(svg.node());
         detail.textContent = 'Enhanced view ready. Focus a point and press Enter or Space for its exact value; Escape returns to the overview.';
