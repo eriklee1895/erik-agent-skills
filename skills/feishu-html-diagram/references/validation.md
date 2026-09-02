@@ -1,22 +1,28 @@
-# Validation and evidence states
+# 详细验证指南
 
-Validation is a chain of evidence, not a single checkbox. Use the highest state whose evidence has actually been collected; later states do not erase limitations in earlier ones.
+普通任务按 [SKILL.md](../SKILL.md) 的四层验证即可。本页用于正式评测、复杂交互或出现客户端差异时。
 
-| Evidence state | Required evidence | Failure class it catches | Allowed completion claim |
-| --- | --- | --- | --- |
-| `contract-valid` | The single HTML file passes structural checks: required head metadata, a valid `auto` or `viewport` mode, size at or below 500 KiB, and a useful description. Review every warning and either resolve it or explicitly record why it is accepted; investigate every secret-like finding, and an actual secret blocks this state. | Invalid embed contract, oversize artifact, missing accessibility description, unreviewed resource/secret warnings, and unsafe packaging. | “The HTML is contract-valid for an HTML5 block.” It does **not** claim a local render or Feishu write. |
-| `local-render-valid` | Render the local artifact at a normal document width and a narrower width, and record the exact tested widths. Inspect the default state and check the console for errors. When interaction is present, exercise every intended control and its applicable reset path. When motion is present, confirm that it communicates a stated transition or flow, honours reduced-motion needs, and can be paused, resumed, or reset as the motion model requires. Static and intentionally non-interactive diagrams do not need motion or controls. | Clipping, overlap, unreadable narrow layouts, broken default state, runtime errors, decorative or uncontrollable motion, stuck interaction state. | “The HTML is locally render-valid at the tested widths.” It does **not** claim that Feishu wrote or rendered it. |
-| `feishu-write-valid` | Write the authorized XML block, fetch the intended document back, and confirm the target block identity and location from the fetched XML: it must appear in the intended section with the expected surrounding blocks. Find its `html5-block` reference and recover its HTML through `reference_map` (or its fetched resource path). Verify that the recovered artifact is the intended version. | Wrong document, section, block identity, or placement; failed or stale write; lost reference mapping; wrong artifact association. | “The HTML5 block write is Feishu-write-valid.” It does **not** claim that a reader can use it in a client. |
-| `feishu-experience-valid` | A human evaluates the actual block in each promised Feishu surface: Web, desktop, or both. The evaluator checks readable layout at the exact recorded document width and a complete default state. Meaningful motion plus pause/resume/reset checks apply only when motion is present; working/resettable interaction checks apply only when interaction is present. Record the surface and result. | Iframe/client rendering differences, blocked external resources, client-specific CSS/JS behaviour, real reading and interaction failures. | “The block is Feishu-experience-valid on Feishu Web and/or desktop as recorded.” Name any surface not evaluated. |
+## Preflight
 
-## How to collect the evidence
+`scripts/validate_html_block.py` 是轻量平台预检，不是 HTML/CSS/JS linter。
 
-Use a deterministic HTML-contract check before rendering. It should reject invalid UTF-8, incomplete document structure, contract metadata outside `<head>`, a charset other than `utf-8`, missing required metadata, an invalid height mode, and files over 500 KiB. It should surface relative or remote resource attributes, CSS resources, JavaScript network calls, inline data, secret-like content, and motion without reduced-motion handling for human review. The repository's validator warns when a JSON or CSV script block is at least 50 KiB, a deliberately conservative threshold within the 500 KiB total limit. The repository's `scripts/validate_html_block.py` provides these checks. A passing result is necessary but not sufficient: resolve or explicitly accept every warning, and do not claim `contract-valid` if review finds an actual secret.
+它把以下问题视为 error：文件不存在、不是 UTF-8、超过 500 KiB、缺少 HTML/head/body 主结构、charset 不是 UTF-8、`use-iframe` 不是 `true`、高度模式不是 `auto` 或 `viewport`。
 
-For local rendering, use any browser-capable renderer or preview that can set viewport width, expose console errors, and exercise JavaScript. Record every exact tested viewport width rather than saying only “wide” or “mobile.” Inspect both the default and every promised state; do not accept a visual that becomes meaningful only after a click. When controls exist, test their keyboard or button paths and the applicable pause/resume/reset path. When motion exists, verify why it exists (for example, an explicit data-flow direction or state transition), whether it distracts from reading, and the reduced-motion behaviour. For a static or intentionally non-interactive diagram, record that those checks were not applicable rather than inventing motion or controls.
+以下问题只产生 warning：缺少 HTML5 doctype、响应式 viewport、标题或读者描述；使用外部资源或可能无法随 block 携带的相对资源；出现疑似敏感信息。Warning 需要结合实际内容复核，不代表图表不可用。
 
-For Feishu, a successful writer response is not enough. Fetch the intended document after the write, inspect the returned XML to confirm the block identity and its intended section/surrounding placement, then inspect `reference_map` as described in [the HTML5 block contract](html5-block-contract.md). Then run a Human Eval in the actual Feishu client surfaces promised to the user. If only Web or only desktop was checked, say so; the untested surface remains below `feishu-experience-valid`.
+脚本不会评价视觉质量，也不会禁止动画、网络调用、内联数据、Canvas、D3 或其他创作方式。
 
-## Reporting an incomplete chain
+## 本地体验
 
-Report evidence precisely. For example: “contract-valid and local-render-valid; the authorized Feishu write has not run,” or “feishu-write-valid; Web and desktop Human Eval remain required.” Never compress these statements into “validated in Feishu” unless the relevant client experience has been evaluated.
+- 记录正常文档宽度和至少一个更窄宽度，检查裁切、重叠、字号和连接关系。
+- 检查默认状态和 console。核心论点不应依赖首次点击才能理解。
+- 有交互时走完承诺的状态和返回路径；有持续动效时检查阅读干扰以及适用的暂停、重置和 reduced-motion 行为。
+- 有外部依赖时检查成功、加载中和失败状态；是否需要静态降级由内容用途决定。
+
+## 飞书写入与体验
+
+写入后 fetch 目标文档，确认 block 在正确章节，并按 [html5-block 细节](html5-block-contract.md) 从 `reference_map` 恢复 HTML。Writer 成功响应只能证明请求成功，不能证明文档位置、资源关联或客户端渲染正确。
+
+最终体验需要在实际承诺的 Feishu Web、桌面端或两者中检查。报告已测试的 surface、关键交互和发现的问题；没有检查的 surface 保持未验证。
+
+正式评测可以使用 `evals/human-eval-rubric.md`，但普通交付不必强制输出 `contract-valid` 等术语。
