@@ -122,6 +122,6 @@ Agent 已经擅长 Web 创作；本 skill 不提供生成器，也不规定图�
 
 ## 可选起点（参考样例）
 
-[分层系统架构](assets/templates/layered-system-architecture.html)、[动态数据流](assets/templates/animated-data-flow.html)、[标签页式说明](assets/templates/tabbed-explainer.html) 和 [D3 数据叙事](assets/templates/d3-data-story.html) 是可拆解的起点。可以借用局部原语，也可以完全重新设计。
+[分层系统架构](assets/templates/layered-system-architecture.html)、[动态数据流](assets/templates/animated-data-flow.html)、[标签页式说明](assets/templates/tabbed-explainer.html)、[D3 数据叙事](assets/templates/d3-data-story.html)、[多标签动态架构](assets/templates/tabbed-animated-architecture.html) 和 [Three.js 嵌入场景](assets/templates/threejs-embedded-scene.html) 是可拆解的起点。后两个样例用于复用容易出错的动画生命周期与三维嵌入骨架；它们不是图表类型白名单。可以借用局部原语，也可以完全重新设计。
 
 交付时说明图的读者目的、HTML 文件位置、目标文档章节、使用了哪些动态/交互/外部依赖，以及哪些本地或飞书端验证已经实际完成。
