@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="use-iframe" content="true">
+  <meta name="html-box-height-mode" content="auto">
+  <meta name="description" content="A keyboard-accessible three-tab explainer comparing the system journey from fragmented intake to governed orchestration and measurable operations.">
+  <title>Tabbed System Explainer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17223b;
+      --muted: #5b667b;
+      --paper: #f5f6fa;
+      --surface: #ffffff;
+      --navy: #14264a;
+      --blue: #2458c6;
+      --blue-soft: #eaf0ff;
+      --mint: #147d73;
+      --mint-soft: #e8f6f2;
+      --orange: #a14b16;
+      --orange-soft: #fff0e6;
+      --line: #d9deea;
+      --focus: #9b4dff;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-width: 0; }
+
+    body {
+      padding: clamp(12px, 3vw, 28px);
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    .explainer {
+      width: 100%;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      border: 1px solid #dde2ec;
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: 0 16px 42px rgba(28, 44, 73, .1);
+      overflow: clip;
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      padding: clamp(20px, 4vw, 34px);
+      background: linear-gradient(145deg, #14264a 0%, #1d3971 100%);
+      color: #fff;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: #a9c5ff;
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 18ch;
+      font-size: clamp(1.6rem, 4.5vw, 2.7rem);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+      text-wrap: balance;
+    }
+
+    .intro-note {
+      max-width: 25ch;
+      margin: 0;
+      color: #d6e1f6;
+      font-size: .84rem;
+    }
+
+    .tabs-shell { padding: clamp(16px, 3.5vw, 30px); }
+
+    [role="tablist"] {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #f2f4f8;
+    }
+
+    [role="tab"] {
+      min-width: 0;
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: .85rem;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+
+    [role="tab"]:hover { color: var(--ink); background: rgba(255,255,255,.7); }
+    [role="tab"][aria-selected="true"] {
+      background: var(--surface);
+      color: var(--blue);
+      box-shadow: 0 3px 12px rgba(28, 44, 73, .11);
+    }
+
+    [role="tab"]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .panel {
+      margin-top: 22px;
+      animation: panel-enter .28s cubic-bezier(.2,.7,.25,1) both;
+    }
+
+    .panel[hidden] { display: none; }
+
+    .panel-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(220px, .9fr);
+      gap: clamp(16px, 4vw, 36px);
+      align-items: end;
+    }
+
+    .stage {
+      margin: 0 0 5px;
+      color: var(--blue);
+      font-size: .73rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.35rem, 3.7vw, 2.1rem);
+      line-height: 1.12;
+      letter-spacing: -.025em;
+      text-wrap: balance;
+    }
+
+    .explanation { margin: 0; color: var(--muted); font-size: .9rem; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #fafbfc;
+    }
+
+    .metric span { display: block; color: var(--muted); font-size: .72rem; font-weight: 700; }
+    .metric strong { display: block; margin-top: 5px; font-size: clamp(1.05rem, 3vw, 1.45rem); font-variant-numeric: tabular-nums; }
+
+    .diagram-region {
+      min-width: 0;
+      padding: clamp(14px, 3vw, 24px);
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background:
+        linear-gradient(#eef1f6 1px, transparent 1px),
+        linear-gradient(90deg, #eef1f6 1px, transparent 1px),
+        #fbfcfe;
+      background-size: 24px 24px;
+    }
+
+    .diagram-caption { margin: 0 0 13px; color: var(--muted); font-size: .76rem; font-weight: 700; }
+
+    .fragment-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .fragment-column { display: grid; gap: 9px; }
+    .fragment-label { color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .fragment-item { padding: 11px; border: 1px solid #c6ccda; border-radius: 10px; background: #fff; font-size: .78rem; font-weight: 700; }
+    .fragment-item:nth-child(3) { transform: translateX(5px); border-style: dashed; }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, auto));
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pipeline-node {
+      min-width: 0;
+      padding: 14px 10px;
+      border: 1px solid #91a9de;
+      border-radius: 12px;
+      background: var(--blue-soft);
+      color: #183c88;
+      font-size: .77rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .pipeline-node.gate { border-color: #80b9b1; background: var(--mint-soft); color: #075e56; }
+    .pipeline-arrow { color: var(--blue); font-weight: 900; text-align: center; }
+
+    .feedback-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 126px;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .feedback-track {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .feedback-track::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 12%;
+      right: 12%;
+      border-top: 2px solid #7ca69f;
+    }
+
+    .feedback-node {
+      position: relative;
+      padding: 14px 8px;
+      border: 1px solid #83bdb5;
+      border-radius: 12px;
+      background: var(--mint-soft);
+      color: #075e56;
+      font-size: .76rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .feedback-score {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      border: 8px solid #c8e8e2;
+      border-top-color: var(--mint);
+      border-right-color: var(--mint);
+      border-radius: 50%;
+      background: #fff;
+      color: #075e56;
+      font-size: 1.3rem;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @keyframes panel-enter {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+
+    @media (max-width: 650px) {
+      body { padding: 10px; }
+      .explainer { border-radius: 18px; }
+      .intro { grid-template-columns: 1fr; }
+      .intro-note { max-width: 60ch; }
+      .tabs-shell { padding: 14px; }
+      [role="tablist"] { grid-template-columns: 1fr; }
+      .panel-heading { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      .fragment-grid { grid-template-columns: 1fr; }
+      .fragment-item:nth-child(3) { transform: none; }
+      .pipeline { grid-template-columns: 1fr; }
+      .pipeline-arrow { transform: rotate(90deg); }
+      .feedback-layout { grid-template-columns: 1fr; }
+      .feedback-score { width: 112px; justify-self: center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="explainer" aria-labelledby="explainer-title">
+    <header class="intro">
+      <div>
+        <p class="eyebrow">Operating model · three views</p>
+        <h1 id="explainer-title">From scattered work to an observable system</h1>
+      </div>
+      <p class="intro-note">Choose a view. Arrow keys, Home, and End also move between tabs.</p>
+    </header>
+
+    <section class="tabs-shell">
+      <div role="tablist" aria-label="System transformation views">
+        <button type="button" role="tab" id="tab-before" aria-selected="true" aria-controls="panel-before" tabindex="0">01 · Fragmented intake</button>
+        <button type="button" role="tab" id="tab-system" aria-selected="false" aria-controls="panel-system" tabindex="-1">02 · Governed system</button>
+        <button type="button" role="tab" id="tab-loop" aria-selected="false" aria-controls="panel-loop" tabindex="-1">03 · Learning loop</button>
+      </div>
+
+      <!-- ===== EDIT SAMPLE CONTENT START: each panel owns its title, copy, metrics, and diagram ===== -->
+      <div class="panels">
+        <article class="panel" role="tabpanel" id="panel-before" aria-labelledby="tab-before" tabindex="0">
+          <div class="panel-heading">
+            <div><p class="stage">Current state</p><h2>Work arrives faster than context can follow</h2></div>
+            <p class="explanation">Requests enter through disconnected channels. Ownership and evidence live in separate tools, so every handoff reconstructs the story.</p>
+          </div>
+          <div class="metrics" aria-label="Fragmented intake metrics">
+            <div class="metric"><span>Intake channels</span><strong>7</strong></div>
+            <div class="metric"><span>Manual handoffs</span><strong>11 / run</strong></div>
+            <div class="metric"><span>Trace coverage</span><strong>28%</strong></div>
+          </div>
+          <div class="diagram-region" aria-label="Three disconnected work streams">
+            <p class="diagram-caption">Information fragments across channels, owners, and evidence</p>
+            <div class="fragment-grid">
+              <div class="fragment-column"><span class="fragment-label">Channels</span><span class="fragment-item">Chat request</span><span class="fragment-item">Email detail</span></div>
+              <div class="fragment-column"><span class="fragment-label">Owners</span><span class="fragment-item">Product queue</span><span class="fragment-item">Ops spreadsheet</span></div>
+              <div class="fragment-column"><span class="fragment-label">Evidence</span><span class="fragment-item">Run log</span><span class="fragment-item">Review notes</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel" role="tabpanel" id="panel-system" aria-labelledby="tab-system" tabindex="0" hidden>
+          <div class="panel-heading">
+            <div><p class="stage">Target state</p><h2>One control plane carries context end to end</h2></div>
+            <p class="explanation">A durable work item links intent, execution, permissions, and verification. Teams can recover a run without guessing what the previous step knew.</p>
+          </div>
+          <div class="metrics" aria-label="Governed system metrics">
+            <div class="metric"><span>Canonical work item</span><strong>1</strong></div>
+            <div class="metric"><span>Policy checkpoints</span><strong>3</strong></div>
+            <div class="metric"><span>Recoverable steps</span><strong>100%</strong></div>
+          </div>
+          <div class="diagram-region" aria-label="Governed orchestration pipeline">
+            <p class="diagram-caption">Context and evidence remain attached through every controlled transition</p>
+            <div class="pipeline">
+              <span class="pipeline-node">Intent</span><span class="pipeline-arrow" aria-hidden="true">→</span>
+              <span class="pipeline-node gate">Policy gate</span><span class="pipeline-arrow" aria-hidden="true">→</span>
+              <span class="pipeline-node">Task run</span><span class="pipeline-arrow" aria-hidden="true">→</span>
+              <span class="pipeline-node gate">Verified result</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel" role="tabpanel" id="panel-loop" aria-labelledby="tab-loop" tabindex="0" hidden>
+          <div class="panel-heading">
+            <div><p class="stage">Operating loop</p><h2>Every outcome improves the next decision</h2></div>
+            <p class="explanation">Structured outcomes reveal where work stalls, which policies fire, and whether automation actually helps. Improvement becomes measurable, not anecdotal.</p>
+          </div>
+          <div class="metrics" aria-label="Learning loop metrics">
+            <div class="metric"><span>Median cycle time</span><strong>−42%</strong></div>
+            <div class="metric"><span>Human review yield</span><strong>+31%</strong></div>
+            <div class="metric"><span>Evidence completeness</span><strong>94%</strong></div>
+          </div>
+          <div class="diagram-region" aria-label="Measure review and improve feedback loop">
+            <p class="diagram-caption">Operational evidence moves from measurement to review to a bounded change</p>
+            <div class="feedback-layout">
+              <div class="feedback-track"><span class="feedback-node">Measure</span><span class="feedback-node">Review</span><span class="feedback-node">Improve</span></div>
+              <div class="feedback-score" aria-label="94 percent evidence completeness">94%</div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <!-- ===== EDIT SAMPLE CONTENT END ===== -->
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+      const panels = tabs.map((tab) => document.getElementById(tab.getAttribute('aria-controls')));
+
+      function activate(index, moveFocus) {
+        tabs.forEach((tab, tabIndex) => {
+          const selected = tabIndex === index;
+          tab.setAttribute('aria-selected', String(selected));
+          tab.tabIndex = selected ? 0 : -1;
+          panels[tabIndex].hidden = !selected;
+        });
+        if (moveFocus) tabs[index].focus();
+      }
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activate(index, false));
+        tab.addEventListener('keydown', (event) => {
+          let next = index;
+          if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % tabs.length;
+          else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index - 1 + tabs.length) % tabs.length;
+          else if (event.key === 'Home') next = 0;
+          else if (event.key === 'End') next = tabs.length - 1;
+          else return;
+          event.preventDefault();
+          activate(next, true);
+        });
+      });
+
+      activate(0, false);
+    })();
+  </script>
+</body>
+</html>
