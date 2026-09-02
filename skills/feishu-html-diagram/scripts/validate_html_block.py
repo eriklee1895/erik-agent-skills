@@ -36,7 +36,9 @@ VOID_ELEMENTS = {
 RESOURCE_ATTRIBUTES = {
     "audio": ("src",),
     "embed": ("src",),
+    "feimage": ("href", "xlink:href"),
     "iframe": ("src",),
+    "image": ("href", "xlink:href"),
     "img": ("src", "srcset"),
     "input": ("src",),
     "link": ("href",),
@@ -44,6 +46,7 @@ RESOURCE_ATTRIBUTES = {
     "script": ("src",),
     "source": ("src", "srcset"),
     "track": ("src",),
+    "use": ("href", "xlink:href"),
     "video": ("src", "poster"),
 }
 INLINE_DATASET_TYPES = {
