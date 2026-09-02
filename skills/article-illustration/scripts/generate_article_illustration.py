@@ -176,18 +176,24 @@ def slugify(text: str) -> str:
 
 
 def get_api_settings(require_key: bool) -> tuple[str | None, str | None]:
-    api_key = os.getenv("OPENAI_API_KEY")
-    base_url = os.getenv("OPENAI_BASE_URL")
+    api_key = os.getenv("CUSTOM_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+    base_url = os.getenv("CUSTOM_OPENAI_BASE_URL") or os.getenv("OPENAI_BASE_URL")
+    missing_key_name = (
+        "CUSTOM_OPENAI_API_KEY" if os.getenv("CUSTOM_OPENAI_BASE_URL") else "OPENAI_API_KEY"
+    )
     if api_key:
         return api_key, base_url
     if not require_key:
         return None, base_url
     if sys.stdin.isatty() and sys.stderr.isatty():
-        api_key = getpass.getpass("OPENAI_API_KEY is missing. Enter a temporary key: ").strip()
+        api_key = getpass.getpass(f"{missing_key_name} is missing. Enter a temporary key: ").strip()
         if api_key:
             return api_key, base_url
     raise SystemExit(
-        "Error: OPENAI_API_KEY is required. Set it in your shell, for example:\n"
+        f"Error: {missing_key_name} is required. Set it in your shell, for example:\n"
+        "  export CUSTOM_OPENAI_API_KEY='sk-...'\n"
+        "  export CUSTOM_OPENAI_BASE_URL='https://your-proxy.example/v1'  # optional\n"
+        "  # or standard OpenAI variables:\n"
         "  export OPENAI_API_KEY='sk-...'\n"
         "  export OPENAI_BASE_URL='https://your-proxy.example/v1'  # optional"
     )
