@@ -96,6 +96,7 @@ fi
 
 python3 - "$create_json" <<'PY'
 import json, sys
+from pathlib import Path
 raw = sys.argv[1]
 start = raw.find("{")
 data = json.loads(raw[start:])
@@ -112,4 +113,72 @@ for block in blocks:
     print(f"BLOCK\t{block.get('block_type')}\t{block.get('block_id')}\t{block.get('block_token')}")
 if data.get("data", {}).get("warnings"):
     print("WARNINGS=" + json.dumps(data["data"]["warnings"], ensure_ascii=False))
+Path("/tmp/feishu-human-eval-create.env").write_text(
+    f"DOC_URL={url}\nDOC_ID={doc_id}\n",
+    encoding="utf-8",
+)
 PY
+# shellcheck disable=SC1091
+source /tmp/feishu-human-eval-create.env
+if [ -z "${DOC_URL:-}" ]; then
+  echo "ERROR: create succeeded but no document URL" >&2
+  exit 5
+fi
+
+echo "Fetching document back with ids"
+mkdir -p /tmp/feishu-human-eval
+lark-cli docs +fetch --doc "$DOC_URL" --detail with-ids --as user --doc-format xml --format json \
+  > /tmp/feishu-human-eval/fetch.json
+python3 <<'PY'
+import json
+from pathlib import Path
+raw = Path("/tmp/feishu-human-eval/fetch.json").read_text(encoding="utf-8")
+start = raw.find("{")
+data = json.loads(raw[start:])
+if not data.get("ok"):
+    raise SystemExit(f"fetch failed: {raw[:1000]}")
+payload = data.get("data") or {}
+content = payload.get("content") or payload.get("xml") or ""
+text = content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)
+whiteboard = text.count("<whiteboard")
+html5 = text.count("<html5-block")
+print(f"FETCH_WHITEBOARDS={whiteboard}")
+print(f"FETCH_HTML5={html5}")
+blocks = payload.get("document", {}).get("new_blocks") or payload.get("blocks") or []
+tokens = []
+if isinstance(blocks, list):
+    for block in blocks:
+        if isinstance(block, dict) and block.get("block_token"):
+            tokens.append((block.get("block_type"), block.get("block_token")))
+# also scan json for board tokens
+blob = json.dumps(data, ensure_ascii=False)
+import re
+found = re.findall(r'"block_token":\s*"(board[^"]+|wbcn[^"]+)"', blob)
+print(f"BOARD_TOKENS={len(found)}")
+for token in found[:12]:
+    print(f"BOARD_TOKEN\t{token}")
+Path("/tmp/feishu-human-eval/board-tokens.txt").write_text("\n".join(found) + "\n", encoding="utf-8")
+if whiteboard < 1 and not found:
+    raise SystemExit("fetch-back did not find whiteboard blocks")
+PY
+
+export_dir=/tmp/feishu-human-eval/previews
+mkdir -p "$export_dir"
+if [ -s /tmp/feishu-human-eval/board-tokens.txt ]; then
+  i=0
+  while IFS= read -r token; do
+    [ -z "$token" ] && continue
+    i=$((i + 1))
+    [ "$i" -gt 6 ] && break
+    echo "Exporting preview $i $token"
+    lark-cli whiteboard +export \
+      --whiteboard-token "$token" \
+      --output-type preview \
+      --output "$export_dir/board-$i.png" \
+      --overwrite \
+      --as user || true
+  done < /tmp/feishu-human-eval/board-tokens.txt
+fi
+
+echo "HUMAN_EVAL_DOC_URL=$DOC_URL"
+echo "OK: created and fetched. Previews in $export_dir"
