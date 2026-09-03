@@ -50,7 +50,7 @@ categorized list, descriptions, and per-skill install commands.
 - `assets/` contains repository-level visual assets.
 
 Each skill is a self-contained directory with a required `SKILL.md` and optional
-`scripts/`, `references/`, `assets/`, `evals/`, and `agents/` directories.
+`scripts/`, `references/`, `guides/`, `assets/`, `evals/`, and `agents/` directories.
 
 ## Related project
 
