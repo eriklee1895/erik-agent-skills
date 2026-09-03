@@ -55,13 +55,19 @@ bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh
 | ID | 文件 | 介质 | 你要确认的事 |
 |---|---|---|---|
 | 01 | `01-layered-strip.svg` | SVG 画板 | 四层等宽，职责/边界成列，上下行 API 分色 |
-| 02 | `02-task-loop.svg` | SVG 画板 | 胶囊 + 一个菱形；回填是紫虚线，接到判断，不是接到加载上下文 |
-| 03 | `03-learning-loop.svg` | SVG 画板 | 「否」有结束；门禁写扫描/去重/质量；下一轮回到任务完成 |
-| 04 | `04-multicolumn-runtime.svg` | SVG 画板 | 上请求向右、下事件向左，页脚四句边界 |
-| 05 | `05-recovery-layers.svg` | SVG 画板 | 01–03 编号签，右侧每层一个问题，页脚 threadId+turnId+itemId |
-| 06 | `06-sequence.mmd` | Mermaid 直传 | 只写 Mermaid，飞书自动转画板；不要改画成 SVG 架构 |
-| 07 | `07-packet-flow.html` | html5-block | **不是画板**；暂停/重放可用，静止时也能读完四层 |
-| 08 | blank | 空白画板 | 能拖便签；不要和 01–05 精排图混成一张 |
+| 02 | `02-task-loop.svg` | SVG 流水线+分叉 | 工具回路放大；短虚线回填，不绕场 |
+| 03 | `03-learning-loop.svg` | SVG 门禁+三列 | 三列写满对比项；下一轮是标签 |
+| 04 | `04-multicolumn-runtime.svg` | SVG 多列 | 运行时最大；请求向右、事件向左 |
+| 05 | `05-recovery-layers.svg` | SVG 编号层级 | 右侧每层一个问题 |
+| 06 | `06-sequence.mmd` | Mermaid 直传 | 飞书自动转画板 |
+| 07 | `07-packet-flow.html` | html5-block | 不是画板 |
+| 08 | blank | 空白共创 | 能拖便签 |
+| 09 | `09-comparison.svg` | SVG 对比列 | 钴色是该行去处 |
+| 10 | `10-hub.svg` | SVG 枢纽 | Agent Loop 最大，线不穿字 |
+| 11 | `11-timeline.svg` | SVG 时间线 · Coral | completed 是高潮 |
+| 12 | `12-swimlane.svg` | SVG 泳道 | Agent 车道上色 |
+| 13 | `13-quadrant.svg` | SVG 四象限 · Grove | 右上 SKILL.md 最大 |
+| 14 | `14-focus-detail.svg` | SVG 焦点+细节 · Avocado | 左边判断最大 |
 
 ## 记分卡
 

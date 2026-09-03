@@ -1,6 +1,6 @@
 ---
 name: feishu-whiteboard-diagram
-description: Use when 需要在飞书文档中插入可二次编辑的精美画板图表（分层架构、任务循环、多列运行图、编号层级、学习闭环等）。本 skill 是叠在 lark-whiteboard 上的文档精排方法论，不教画板 CLI。不适用于动画/交互 HTML Diagram，也不替代 lark-whiteboard / lark-doc / lark-shared。
+description: Use when 需要在飞书文档中插入可二次编辑的精美画板图表（分层、循环、分叉、对比列、枢纽、时间线、泳道、四象限、焦点+细节等）。本 skill 是叠在 lark-whiteboard 上的文档精排方法论，不教画板 CLI。不适用于动画/交互 HTML Diagram，也不替代 lark-whiteboard / lark-doc / lark-shared。
 metadata:
   author: liyuheng.erik
   requires:
@@ -20,8 +20,9 @@ metadata:
 
 - 不是 `lark-whiteboard` 的替代品，不复制其 CLI、scene 骨架和身份分流表。
 - 不是 `feishu-html-diagram`：不需要动画、Tab、D3 时，不要用 HTML5 冒充画板。
-- 不是社区 35 套换肤色板，也不自己实现 Mermaid 渲染。`<whiteboard type="mermaid">` 交给飞书服务端转成画板。
-- 社区 `beautiful-feishu-whiteboard` / `feishu-whiteboard-pro` 只吸收 **介质硬规则 + 构图纪律**（原生形状、焦点靠尺寸、反均等卡片），不搬 35 套 `design.md`。
+- 不是社区 35 套 `design.md` 文件仓库。色板只精选 6 套，见 [palettes.md](references/palettes.md)。
+- 不是只会画浅色胶囊流程图。按关系选原型：分叉、对比列、枢纽、时间线、泳道、四象限、焦点+细节；默认奶油底 + 墨边 + 单焦点，见 [composition.md](references/composition.md)。
+- `<whiteboard type="mermaid">` 交给飞书服务端转成画板，本 skill 不渲染 Mermaid。
 
 ## 适用 / 不适用
 
@@ -66,21 +67,25 @@ bash /resolved/skill-dir/scripts/preflight.sh
 
 ### 1. 先写论点，再选语法
 
-每张图只回答一个问题。把实体、关系、顺序、状态写成短列表，对到 [布局语法](references/grammars.md) 的一种：
+每张图只回答一个问题。把实体、关系、顺序、状态写成短列表，对到 [布局语法](references/grammars.md) 和 [构图原型](references/composition.md) 的一种：
 
 1. 分层条带（职责 / 边界）
-2. 任务循环（判断 + 回填）
-3. 学习闭环（并行落盘）
+2. 任务循环 / 流水线分叉（判断 + 放大的工具回路）
+3. 学习闭环（上门禁 + 下三列对比）
 4. 多列运行架构（请求向右 / 事件向左）
 5. 编号层级（恢复粒度）
+6. 对比列（谁在这一行更优）
+7. 枢纽（一个核心带 N 个方面）
+8. 时间线（高潮在哪一段）
+9. 泳道（多角色握手）
+10. 四象限（两个维度、四个去处）
+11. 焦点+细节（一块大卡 + 右侧支持）
 
-没有合适的就用「标题 + 分区卡片 + 少量语义连线 + 页脚结论条」现编，不要硬套。
+没有合适的就用「标题 + 分区卡片 + 少量语义连线 + 页脚结论条」现编，不要硬套成均等胶囊流程图。
 
 ### 2. 按文档精排上色，并先定焦点
 
-见 [视觉系统](references/visual-system.md) 和 [构图](references/composition.md)。最低要求：浅底 + 同色深边框分组；组内白卡片；蓝=动作、紫=上下文、橙=判断、绿=产出；默认连线灰，只有上行/下行/是/否/回填才彩色；标题是论点，页脚是结论；画布上不要出现 prompt 或风格名。
-
-构图先定 **哪一个节点最大**。染色但和邻居一样大，读者看起来仍是草稿流程图。回填/下一轮用最短正交虚线，不要绕画板外框。列容器高度跟着内容走，不要先画高壳再把卡片贴在顶和底。
+见 [视觉系统](references/visual-system.md)、[色板](references/palettes.md) 和 [构图](references/composition.md)。循环 / 分叉 / 枢纽默认 **Riso Brut**；对比列用 **Riptide Cobalt**；时间线可用 **Coral**；四象限用 **Grove**；焦点+细节可用 **Avocado Press**。分层条带才用浅色分组。不要浅灰外框套均等胶囊。
 
 ### 3. 写 SVG（精排默认路径）
 
@@ -119,13 +124,13 @@ npx -y @larksuite/whiteboard-cli@^0.2.13 -i /absolute/path/to/diagram.svg -o /ab
 ## 相关文件
 
 - [`references/medium.md`](references/medium.md) — 画板 / Mermaid / HTML5 / 图片，以及和官方 skill 的分工
-- [`references/grammars.md`](references/grammars.md) — 五种文档精排布局语法
+- [`references/grammars.md`](references/grammars.md) — 文档精排布局语法（含社区原型）
 - [`references/composition.md`](references/composition.md) — 间距、字号阶梯、焦点靠尺寸、反套路
-- [`references/visual-system.md`](references/visual-system.md) — 色板、字号、间距
+- [`references/palettes.md`](references/palettes.md) — 6 套社区精选色板，按气质选用
 - [`references/constraints.md`](references/constraints.md) — 社区经验 + 实测映射
 - [`references/write-verify.md`](references/write-verify.md) — 本地验和证据层；写入命令回官方 skill
 - [`scripts/lint_svg.py`](scripts/lint_svg.py) — SVG 介质预检
 - [`scripts/preflight.sh`](scripts/preflight.sh) — 运行时依赖
 - [`evals/scenarios.md`](evals/scenarios.md) — 行为场景
 - [`evals/human-eval.md`](evals/human-eval.md) — 飞书 Web/桌面记分卡
-- [`evals/fixtures/human-eval/`](evals/fixtures/human-eval/) — 五种语法 + Mermaid/HTML/空白板评测包
+- [`evals/fixtures/human-eval/`](evals/fixtures/human-eval/) — 分层/循环/分叉/对比/枢纽/时间线/泳道/四象限/焦点+细节 + Mermaid/HTML/空白板评测包

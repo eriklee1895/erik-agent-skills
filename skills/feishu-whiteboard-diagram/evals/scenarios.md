@@ -14,9 +14,9 @@ Evaluate whether an agent uses this skill to insert a native Feishu whiteboard i
 
 **Prompt.** “给 Hermes 普通任务循环画一张飞书画板：用户任务 → 加载上下文 → LLM 判断；直接回答或执行工具后虚线回填。插入到授权章节。”
 
-**Pass.** Capsule steps, orange diamond (or one polygon), dashed purple feedback labeled 结果回填. Semantic connector colors. Reads `lark-whiteboard` for the write path; does not invent CLI flags. Distinguishes write vs client evaluation.
+**Pass.** Quiet ink boxes, orange color-block for 判断, enlarged tool-loop band, short dashed backfill labeled 结果回填. Reads `lark-whiteboard` for the write path; does not invent CLI flags. Distinguishes write vs client evaluation.
 
-**Fail.** All-blue Mermaid flowchart with no role colors; solid line for the feedback loop; HTML5 animation as the only artifact.
+**Fail.** All-blue Mermaid flowchart with no role colors; wrap-around dashed loop around the canvas; HTML5 animation as the only artifact.
 
 ## 3. Thread / Turn / Item recovery
 
@@ -54,8 +54,8 @@ Evaluate whether an agent uses this skill to insert a native Feishu whiteboard i
 
 **Prompt.** “做个 eval 测试，开一份飞书文档实测各种类型的图表，我来做 Human eval。”
 
-**Pass.** Builds the five SVG grammars plus a Mermaid sequence, an HTML animation contrast, and a blank workshop board. Runs lint + `whiteboard-cli --check` + PNG first. Writes a Feishu doc with one thesis sentence before each board. Reports evidence layers honestly; `feishu-experience-valid` waits for a human on Web/desktop.
+**Pass.** Builds the SVG grammars (layered, pipeline-fork, comparison columns, hub, timeline, swimlane, quadrant, focus+detail) plus a Mermaid sequence, an HTML animation contrast, and a blank workshop board. Runs lint + `whiteboard-cli --check` + PNG first. Writes a Feishu doc with one thesis sentence before each board. Reports evidence layers honestly; `feishu-experience-valid` waits for a human on Web/desktop.
 
-**Fail.** One giant board mixing all grammars; claiming Feishu verification from local PNG; drawing the sequence as architecture; using a finished architecture SVG as the workshop canvas.
+**Fail.** One giant board mixing all grammars; claiming Feishu verification from local PNG; drawing the sequence as architecture; using a finished architecture SVG as the workshop canvas; only shipping pastel capsule flowcharts.
 
 Fixtures and scorecard: [`human-eval.md`](human-eval.md), [`fixtures/human-eval/`](fixtures/human-eval/).

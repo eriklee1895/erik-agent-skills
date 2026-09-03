@@ -5,19 +5,15 @@ Remaining: `feishu-experience-valid` (open the live doc in Feishu Web and/or des
 
 Live document: https://bytedance.my.larkoffice.com/docx/MoiudXbwaonw61xo2Uem0E9qyQg
 
-Fetch-back found 7 `<whiteboard>` blocks (five SVG grammars, one Mermaid sequence **direct-upload**, one blank workshop board) and 1 `html5-block`. 02/03/04 were redrawn after Human eval: denser layout, larger focal nodes, no wrap-around dashed loops, no empty column shells. Exported Feishu previews match the local PNG composition for 01–06; board 07 is blank as intended.
+Human-eval feedback: 02/03 的浅色胶囊流程图观感不够；社区画板也不是只有这几种骨架。
 
-Mermaid (06) is not rendered by this skill — Feishu converts `<whiteboard type="mermaid">` to board nodes.
+This revision:
 
-| Artifact | lint / check | Feishu write |
-|---|---|---|
-| 01 layered strip | local-render-valid | whiteboard in doc |
-| 02 task loop | local-render-valid | whiteboard in doc |
-| 03 learning loop | local-render-valid | whiteboard in doc |
-| 04 multi-column | local-render-valid | whiteboard in doc |
-| 05 recovery layers | local-render-valid | whiteboard in doc |
-| 06 sequence mermaid | local-render-valid | whiteboard type=mermaid |
-| 07 packet-flow HTML | html5-block validator | html5-block recovered |
-| 08 blank workshop | n/a | blank whiteboard |
+- 02 is a pipeline-fork: quiet prep, short direct-answer branch, **enlarged tool-loop band**, short dashed backfill (no wrap-around).
+- 03 is a gate + **three filled comparison columns**; 「下一轮」is a start tag, not a canvas-edge dashed loop.
+- 04 is cream+ink with **Agent Loop as the largest saturated column**.
+- 11 uses **Coral**; 13 uses **Grove**; 14 uses **Avocado Press**.
+- Added community archetypes: 12 swimlane, 13 2×2 quadrant, 14 focus+detail.
+- Skill docs now pick by relationship (fork / swimlane / quadrant / focus+detail), not five pastel capsules.
 
 Do not treat exported JPG previews as `feishu-experience-valid`.
