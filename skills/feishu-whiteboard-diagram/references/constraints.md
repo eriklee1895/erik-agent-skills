@@ -1,6 +1,6 @@
-# 介质硬约束（实测）
+# 介质硬约束（社区经验 + 实测）
 
-以下约束来自 `@larksuite/whiteboard-cli@0.2.13` 的 SVG → OpenAPI 转换，并对照官方 parser 说明与社区踩坑。本地 `--check` 能抓溢出和重叠，不能证明飞书客户端体验。
+DSL 字段和官方 parser 清单以 `lark-whiteboard` 的 `elements/`、`routes/svg.md` 为准。本页只保留精排时容易踩错、且已用 `whiteboard-cli@0.2.13` 对过的映射。本地 `--check` 能抓溢出和重叠，不能证明飞书客户端体验。
 
 ## SVG：可识别 vs 降级
 

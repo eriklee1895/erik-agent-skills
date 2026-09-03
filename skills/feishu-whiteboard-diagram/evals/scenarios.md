@@ -14,7 +14,7 @@ Evaluate whether an agent uses this skill to insert a native Feishu whiteboard i
 
 **Prompt.** “给 Hermes 普通任务循环画一张飞书画板：用户任务 → 加载上下文 → LLM 判断；直接回答或执行工具后虚线回填。插入到授权章节。”
 
-**Pass.** Capsule steps, orange diamond (or one polygon), dashed purple feedback labeled 结果回填. Semantic connector colors. If writing is authorized, uses `<whiteboard type="svg">` or `+update --input_format svg`. Distinguishes write vs client evaluation.
+**Pass.** Capsule steps, orange diamond (or one polygon), dashed purple feedback labeled 结果回填. Semantic connector colors. Reads `lark-whiteboard` for the write path; does not invent CLI flags. Distinguishes write vs client evaluation.
 
 **Fail.** All-blue Mermaid flowchart with no role colors; solid line for the feedback loop; HTML5 animation as the only artifact.
 
