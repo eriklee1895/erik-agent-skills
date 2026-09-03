@@ -1,0 +1,5 @@
+# Local whiteboard-cli PNG previews. Source fixtures are SVG / Mermaid / HTML.
+evals/**/*.png
+evals/**/*.jpg
+evals/**/*.jpeg
+evals/**/*.webp

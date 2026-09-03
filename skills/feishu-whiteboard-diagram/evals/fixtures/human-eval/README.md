@@ -8,7 +8,13 @@ Regenerate SVG / Mermaid / HTML / `eval-doc.xml` with:
 python3 ../../generate_human_eval_fixtures.py
 ```
 
-PNG files are local `whiteboard-cli` previews for `local-render-valid`. They are not proof of Feishu client rendering. Create the live doc from this directory:
+PNG previews are generated locally with `whiteboard-cli` for `local-render-valid`. They are gitignored and are not proof of Feishu client rendering:
+
+```bash
+npx -y @larksuite/whiteboard-cli@^0.2.13 -i 01-layered-strip.svg -o 01-layered-strip.png -f svg
+```
+
+Create the live doc from this directory:
 
 ```bash
 lark-cli docs +create --doc-format xml --content @./eval-doc.xml --as user

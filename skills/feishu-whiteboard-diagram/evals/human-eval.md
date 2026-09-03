@@ -14,12 +14,14 @@
 
 后续改构图或默认色板，先对照这套 fixtures 和飞书文档，再动 [composition.md](../references/composition.md) / [palettes.md](../references/palettes.md)。
 
-配套产物：[`fixtures/human-eval/`](fixtures/human-eval/)。再生：
+配套产物：[`fixtures/human-eval/`](fixtures/human-eval/)（入库的是 SVG / Mermaid / HTML；PNG 预览本地生成，不提交）。再生：
 
 ```bash
 python3 evals/generate_human_eval_fixtures.py
 python3 scripts/lint_svg.py evals/fixtures/human-eval/01-layered-strip.svg
 npx -y @larksuite/whiteboard-cli@^0.2.13 -i evals/fixtures/human-eval/01-layered-strip.svg -f svg --check
+# 可选：本地 PNG 预览（gitignored）
+npx -y @larksuite/whiteboard-cli@^0.2.13 -i evals/fixtures/human-eval/01-layered-strip.svg -o evals/fixtures/human-eval/01-layered-strip.png -f svg
 ```
 
 写入飞书时，登录后在仓库根目录执行：
