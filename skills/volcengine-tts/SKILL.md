@@ -27,8 +27,10 @@ uv run scripts/volcengine-tts.py --batch '[{"text":"第一句","speaker":"zh_fem
 # Math/education narration — always use the LaTeX parser trio
 uv run scripts/volcengine-tts.py "根据公式 $a^2 + b^2 = c^2$ 可知..." --latex --latex-parser v2 --strip-markdown
 
-# List available speakers
+# List available speakers (local table, no API call)
 uv run scripts/volcengine-tts.py --list-speakers
+uv run scripts/volcengine-tts.py --list-speakers --filter type=bigtts --sort heat
+uv run scripts/volcengine-tts.py --list-speakers --filter scene=教学场景
 ```
 
 ## Script
@@ -48,6 +50,8 @@ To set up permanently:
 ```bash
 echo 'VOLC_SPEECH_API_KEY=your-key-here' >> ~/.volcengine.env
 ```
+
+`--list-speakers` reads `references/speakers.json` and does **not** need `VOLC_SPEECH_API_KEY`. Synthesis still requires the API key and `X-Api-Resource-Id: seed-tts-2.0` (the script sets the latter).
 
 ## CLI Reference
 
@@ -93,7 +97,9 @@ Output: JSON array of results, each with the same fields as single mode. Failed 
 | `--no-subtitle` | _(subtitle on by default)_ | Turn off word-level timestamps. Saves ~600ms of tail latency for real-time / conversational use cases. Offline narration pipelines should leave subtitles **on** (the default) — downstream subtitle generation, B-roll alignment, and forced cuts all need word timestamps. |
 | `--strip-markdown` | — | Remove Markdown syntax (e.g. `**bold**` → "bold") |
 | `--strip-emoji` | — | Remove emoji characters before TTS |
-| `--list-speakers` | — | Fetch and display available voices, then exit |
+| `--list-speakers` | — | List speakers from the local table (no API call) |
+| `--filter <k=v>` | — | Filter speakers: `scene=教学场景`, `type=bigtts`, `lang=ja` |
+| `--sort heat` | — | Sort speakers by heat (popularity) |
 
 ### Math and Education Narration
 
@@ -193,7 +199,11 @@ Notes from the official docs (2026-06-29):
 
 ## Voice Selection
 
-For the complete voice catalog, read `references/volcengine-speakers.md`. Quick picks:
+**Query the catalog with `--list-speakers`** (reads a local ListSpeakers snapshot, no API call). Do **not** read `references/speakers.json` into context — it is ~220KB / 444 voices, the same official catalog that `seed-audio-gen` uses. `references/speakers.md` is a short curated shortlist (Top 5 per scene, with trial links). TTS-specific scenario picks and `context_texts` notes live in `references/volcengine-speakers.md`.
+
+### Common-scene quick picks
+
+For the usual narration jobs, reach for these defaults first; otherwise browse `references/speakers.md` or `--list-speakers --filter type=bigtts`:
 
 | Scenario | Speaker ID | Description |
 |----------|-----------|-------------|
@@ -203,8 +213,32 @@ For the complete voice catalog, read `references/volcengine-speakers.md`. Quick 
 | 悬疑解说 (Suspense) | `zh_male_xuanyijieshuo_uranus_bigtts` | 悬疑解说 2.0 — dramatic male |
 | 英语旁白 (English) | `en_female_dacey_uranus_bigtts` | Dacey — natural American female |
 | 英语男声 (English male) | `en_male_tim_uranus_bigtts` | Tim — natural American male |
+| 教育讲解 | `zh_female_yingyujiaoxue_uranus_bigtts` | Tina老师 2.0 — patient bilingual |
+| ICL / 角色音色 | `--list-speakers --filter type=icl` | `_tob` IDs; pass `--model seed-tts-2.0-standard` if synthesis fails |
 
-Use `--list-speakers` to fetch the current full list from the API.
+Browse by scene/type/heat:
+
+```bash
+# Full catalog
+uv run scripts/volcengine-tts.py --list-speakers
+
+# Official seed-tts-2.0 public voices only (safest default for this skill)
+uv run scripts/volcengine-tts.py --list-speakers --filter type=bigtts --sort heat
+
+# Filter by scene
+uv run scripts/volcengine-tts.py --list-speakers --filter scene=教学场景
+
+# Filter by language
+uv run scripts/volcengine-tts.py --list-speakers --filter lang=ja --sort heat
+```
+
+To refresh the speaker table when new voices are released, run:
+
+```bash
+uv run scripts/refresh-speakers.py
+```
+
+This requires AK/SK (`VOLC_ACCESSKEY`/`VOLC_SECRETKEY`) and the internal Volcano SDK; the ListSpeakers OpenAPI uses a different auth system than everyday synthesis. After a refresh, copy the new `speakers.json` into `seed-audio-gen` as well (same catalog).
 
 ## Error Handling
 

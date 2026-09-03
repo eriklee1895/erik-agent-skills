@@ -62,7 +62,7 @@ To set up permanently:
 echo 'VOLC_SPEECH_API_KEY=your-key-here' >> ~/.volcengine.env
 ```
 
-Note: Unlike `volcengine-tts`, this skill does **not** require `X-Api-Resource-Id` or AK/SK. Only `VOLC_SPEECH_API_KEY` (X-Api-Key) is needed for everyday use. The `--list-speakers` command reads from a local table and does not call the API.
+Note: Unlike `volcengine-tts` synthesis (which sends `X-Api-Resource-Id: seed-tts-2.0`), this skill does **not** require `X-Api-Resource-Id` or AK/SK. Only `VOLC_SPEECH_API_KEY` (X-Api-Key) is needed for everyday use. Both skills' `--list-speakers` commands read the same local ListSpeakers snapshot and do not call the API.
 
 ## CLI Reference
 

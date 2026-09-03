@@ -12,6 +12,8 @@ Official documentation links and error code reference for the Doubao Speech Synt
 | 异步长文本接口文档 | https://www.volcengine.com/docs/6561/1829010 |
 | 模型列表 | https://www.volcengine.com/docs/6561/2499930 |
 | 音色列表 (seed-tts-2.0) | https://www.volcengine.com/docs/6561/1257544 |
+| ListSpeakers (控制台新接口，AK/SK) | https://www.volcengine.com/docs/6561/2160690 |
+| 音频生成 HTTP (seed-audio-1.0，复用同一套 speaker 目录) | https://www.volcengine.com/docs/6561/2550782 |
 | SSML 标记语言 | https://www.volcengine.com/docs/6561/1330194 |
 | 错误码查询 | https://www.volcengine.com/docs/6561/2534853 |
 | 语音指令与标签 | https://www.volcengine.com/docs/6561/1871062 |
@@ -57,6 +59,10 @@ Non-retryable errors (all `4xxxxxxx` except rate-limit variants) are returned im
 ### Debugging
 
 Always include the `log_id` from the error response when contacting Volcengine support. The log ID is returned in both the `X-Tt-Logid` response header and the JSON error output.
+
+## Speaker catalog (`--list-speakers`)
+
+`--list-speakers` does **not** call OpenAPI. ListSpeakers is a signed console API (`Action=ListSpeakers`, AK/SK via `volcenginesdkspeechsaasprod`); it cannot be called with `VOLC_SPEECH_API_KEY` alone. The CLI reads `references/speakers.json` (the same snapshot as `seed-audio-gen`). Refresh it with `uv run scripts/refresh-speakers.py`.
 
 ## Request Headers
 

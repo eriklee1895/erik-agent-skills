@@ -15,9 +15,9 @@ volcenginesdkcore / volcenginesdkspeechsaasprod 为内部 SDK 包，需预先从
 用法:
     uv run scripts/refresh-speakers.py
 
-The ListSpeakers snapshot is the same official catalog that volcengine-tts
+The ListSpeakers snapshot is the same official catalog that seed-audio-gen
 uses. Keep the two speakers.json files in sync when refreshing; only the
-curated speakers.md scene order differs (this skill leads with 角色扮演).
+curated speakers.md scene order differs (TTS leads with 教学/客服).
 """
 from __future__ import annotations
 
@@ -35,23 +35,23 @@ from dotenv import load_dotenv
 # short-listing aid, not a complete dump.
 TOP_VOICES_PER_SCENE = 5
 
-# seed-audio is a creative (voice-acting / scene-audio) skill, so the default
-# and most-used voices come first — unlike volcengine-tts, which leads with
-# 客服/教学 service voices. 其他 (uncategorized) sorts last.
+# volcengine-tts is a narration / service-voice skill, so teaching and
+# customer-service voices come before character-acting scenes — unlike
+# seed-audio-gen, which leads with 角色扮演. 其他 (uncategorized) sorts last.
 _SCENE_ORDER = [
-    "通用场景",   # default narration / warm旁白 (Vivi 2.0 lives here)
-    "角色扮演",   # multi-character / radio drama / game NPC (156 voices)
+    "通用场景",   # default narration (Vivi 2.0 lives here)
+    "教学场景",   # education / explainer — high priority for this skill
+    "客服场景",   # customer-service / brand read
     "视频配音",   # film / ad dubbing
     "有声阅读",   # audiobook narration
-    "趣味口音",   # accented / character voices
     "多语种",     # non-Chinese
-    "教学场景",   # pure-TTS service scenes, lower priority for this skill
-    "客服场景",
+    "趣味口音",   # accented / character voices
+    "角色扮演",   # multi-character / drama (large, browse via --filter)
 ]
 
 
 def _scene_sort_key(scene: str) -> tuple[int, str]:
-    """Creative-first scene ordering for seed-audio; unknown scenes sorted
+    """Narration-first scene ordering for TTS; unknown scenes sorted
     after the known ones, with 其他 pinned last."""
     if scene in _SCENE_ORDER:
         return (_SCENE_ORDER.index(scene), scene)
@@ -60,32 +60,39 @@ def _scene_sort_key(scene: str) -> tuple[int, str]:
     return (900, scene)
 
 
-def build_speakers_md(speakers: list[dict[str, Any]]) -> str:
+def build_speakers_md(
+    speakers: list[dict[str, Any]],
+    *,
+    as_of: str | None = None,
+) -> str:
     """Build a CURATED speakers.md quick reference: Top-N voices per scene.
 
     This is intentionally not a full dump of speakers.json — it is a short,
-    low-context shortlist with trial links. The full 444-voice catalog is
-    queried via `--list-speakers`; agents should not read speakers.json into
-    context (it is ~220KB)."""
+    low-context shortlist with trial links. The full catalog is queried via
+    `--list-speakers`; agents should not read speakers.json into context
+    (it is ~220KB). `as_of` is the catalog snapshot date; defaults to today
+    (used when refreshing from ListSpeakers)."""
     bigtts_count = sum(1 for s in speakers if s["type"] == "bigtts")
     icl_count = sum(1 for s in speakers if s["type"] == "icl")
     total = len(speakers)
-    today = date.today().isoformat()
+    today = as_of or date.today().isoformat()
 
     lines: list[str] = [
-        "# seed-audio-1.0 音色速查（精选）",
+        "# seed-tts-2.0 音色速查（精选）",
         "",
         f"> 本表为**精选速查**：每场景按热度列 Top {TOP_VOICES_PER_SCENE}，带试听链接。"
         f"全量 {total} 个音色（{bigtts_count} bigtts + {icl_count} ICL，截至 {today}）在 `speakers.json`，"
-        f"请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。",
+        f"请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。"
+        f"与 seed-audio-gen 共用同一份 ListSpeakers 快照；ICL/`_tob` 音色合成时通常要加 `--model seed-tts-2.0-standard`。",
         "",
         "```bash",
-        "uv run scripts/seed-audio-gen.py --list-speakers                          # 全量",
-        "uv run scripts/seed-audio-gen.py --list-speakers --filter scene=视频配音   # 按场景",
-        "uv run scripts/seed-audio-gen.py --list-speakers --filter lang=ja --sort heat",
+        "uv run scripts/volcengine-tts.py --list-speakers                          # 全量",
+        "uv run scripts/volcengine-tts.py --list-speakers --filter type=bigtts     # 官方 2.0 公有音色",
+        "uv run scripts/volcengine-tts.py --list-speakers --filter scene=教学场景   # 按场景",
+        "uv run scripts/volcengine-tts.py --list-speakers --filter lang=ja --sort heat",
         "```",
         "",
-        "需要某个场景的全量音色（如全部 156 个角色扮演音）时，跑 `--list-speakers --filter scene=<场景>`。",
+        "需要某个场景的全量音色时，跑 `--list-speakers --filter scene=<场景>`。日常旁白优先 `type=bigtts`。",
         "",
     ]
 
@@ -293,6 +300,18 @@ def write_speakers_json(speakers: list[dict[str, Any]], path: Path) -> None:
     )
 
 
+def rebuild_speakers_md_from_json(
+    path: Path = SPEAKERS_JSON,
+    *,
+    as_of: str | None = None,
+) -> str:
+    """Rebuild speakers.md from an existing speakers.json snapshot (no API)."""
+    speakers = json.loads(path.read_text(encoding="utf-8"))
+    md_content = build_speakers_md(speakers, as_of=as_of)
+    SPEAKERS_MD.write_text(md_content, encoding="utf-8")
+    return md_content
+
+
 def main() -> None:
     ak, sk = load_credentials()
     print("Fetching all speakers from ListSpeakers API...")
@@ -302,11 +321,9 @@ def main() -> None:
     processed = process_speakers(raw)
     print(f"Processed: {len(processed)} speakers")
 
-    # Write speakers.json
     write_speakers_json(processed, SPEAKERS_JSON)
     print(f"Wrote {SPEAKERS_JSON}")
 
-    # Write speakers.md
     md_content = build_speakers_md(processed)
     SPEAKERS_MD.write_text(md_content, encoding="utf-8")
     print(f"Wrote {SPEAKERS_MD}")
