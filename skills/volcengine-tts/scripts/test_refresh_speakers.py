@@ -1,62 +1,69 @@
-# .agents/skills/seed-audio-gen/scripts/test_refresh_speakers.py
+# skills/volcengine-tts/scripts/test_refresh_speakers.py
 """Tests for refresh-speakers.build_speakers_md curated quick reference."""
 import importlib.util
 from pathlib import Path
 
 _MODULE_PATH = Path(__file__).parent / "refresh-speakers.py"
-spec = importlib.util.spec_from_file_location("refresh_speakers", str(_MODULE_PATH))
+spec = importlib.util.spec_from_file_location("refresh_speakers_tts", str(_MODULE_PATH))
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 
 
-def _spk(vt, scene, heat=0, name=None):
+def _spk(vt, scene, heat=0, name=None, typ="bigtts", langs=None):
     return {
-        "voice_type": vt, "name": name or vt, "type": "bigtts",
+        "voice_type": vt, "name": name or vt, "type": typ,
         "gender": "女", "age": "", "scene": scene, "description": "d",
-        "languages": [], "trial_url": "https://example.com/t.wav",
+        "languages": langs or [], "trial_url": "https://example.com/t.wav",
         "heat": heat, "status": "online", "emoji": "",
     }
 
 
-def test_scene_order_creative_first():
-    """通用场景排第一，角色扮演随后，客服/教学靠后，其他垫底"""
+def test_scene_order_narration_first():
+    """客服/教学靠前，角色扮演靠后，其他垫底（与 seed-audio 创作向相反）"""
     speakers = [
-        _spk("a", "客服场景"), _spk("b", "通用场景", heat=5),
-        _spk("c", "角色扮演"), _spk("d", "教学场景"),
+        _spk("a", "角色扮演"), _spk("b", "通用场景", heat=5),
+        _spk("c", "客服场景"), _spk("d", "教学场景"),
         _spk("e", "其他"), _spk("f", "视频配音"),
     ]
     md = mod.build_speakers_md(speakers)
     headers = [line for line in md.splitlines() if line.startswith("## ")]
     scene_names = [h.split("（")[0].replace("## ", "") for h in headers]
-    assert scene_names[0] == "通用场景"
-    assert scene_names[1] == "角色扮演"
+    assert scene_names[0] == "客服场景"
+    assert scene_names[1] == "教学场景"
     assert scene_names.index("其他") == len(scene_names) - 1
-    assert scene_names.index("通用场景") < scene_names.index("视频配音") < scene_names.index("教学场景") < scene_names.index("客服场景")
+    assert scene_names.index("客服场景") < scene_names.index("教学场景") < scene_names.index("通用场景")
+    assert scene_names.index("通用场景") < scene_names.index("视频配音") < scene_names.index("角色扮演")
 
 
 def test_top_n_truncation_per_scene():
     """每个场景最多列 TOP_VOICES_PER_SCENE 行，但标注总数"""
-    speakers = [_spk(f"v{i}", "角色扮演", heat=100 - i) for i in range(12)]
+    speakers = [_spk(f"v{i}", "教学场景", heat=100 - i) for i in range(12)]
     md = mod.build_speakers_md(speakers)
-    # 标注本场景共 12 个
     assert "本场景共 12 个" in md
-    # 只列 Top 5
     assert f"列 Top {mod.TOP_VOICES_PER_SCENE}" in md
     rows = [l for l in md.splitlines() if l.startswith("| v")]
     assert len(rows) == mod.TOP_VOICES_PER_SCENE
-    # 按 heat 降序，最高热的在前
     assert "v0" in rows[0]
 
 
 def test_curated_header_does_not_claim_full():
-    """头部声明精选速查、全量在 json 且勿读，不再自称全量表格"""
+    """头部声明精选速查、全量在 json 且勿读，不再自称 full voice list"""
     md = mod.build_speakers_md([_spk("a", "通用场景")])
-    assert md.startswith("# seed-tts-2.0 音色速查（精选）")
     assert "精选" in md
     assert "speakers.json" in md
-    # 不应再出现旧的「共 N 个音色」全量自称句
-    assert "音色速查表\n" not in md  # 旧标题已改为「音色速查（精选）」
+    assert "请勿把 speakers.json 读进上下文" in md
+    assert "volcengine-tts.py --list-speakers" in md
+    assert "Full voice list" not in md
     assert "（精选）" in md
+
+
+def test_source_note_override():
+    md = mod.build_speakers_md(
+        [_spk("a", "通用场景")],
+        source_note="数据来源：seed-audio 2026-08-27 快照，待 refresh",
+    )
+    assert "seed-audio 2026-08-27" in md
+    assert "待 refresh" in md
 
 
 def test_list_speakers_request_pins_seed_tts_2():
@@ -96,7 +103,11 @@ def test_curated_md_file_is_seed_tts_2():
     assert text.startswith("# seed-tts-2.0 音色速查（精选）")
     assert "ResourceID=seed-tts-2.0" in text
     assert "尚未按" not in text
-    assert "seed-audio-1.0 音色" not in text
+
+
+def test_md_filename_is_volcengine_speakers():
+    assert mod.SPEAKERS_MD.name == "volcengine-speakers.md"
+    assert mod.SPEAKERS_JSON.name == "speakers.json"
 
 
 def test_description_newlines_collapsed_in_table():

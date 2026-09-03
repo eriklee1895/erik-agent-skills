@@ -7,14 +7,16 @@
 #   "python-dotenv>=1.0",
 # ]
 # ///
-"""refresh-speakers.py — 从 ListSpeakers API 拉全量音色并更新 speakers.json + speakers.md。
+"""refresh-speakers.py — 从 ListSpeakers API 拉全量音色并更新 speakers.json + volcengine-speakers.md。
 
 低频手动运行，需 VOLC_ACCESSKEY / VOLC_SECRETKEY（AK/SK 鉴权，非合成接口的 VOLC_SPEECH_API_KEY）。
 volcenginesdkcore / volcenginesdkspeechsaasprod 为内部 SDK 包，需预先从内部 registry 安装。
 
+本脚本自包含于 volcengine-tts，不 import seed-audio-gen。运行时两个 skill 各自读自己的 references/。
+
 用法:
     uv run scripts/refresh-speakers.py              # 打 API 写 json + 精选 md
-    uv run scripts/refresh-speakers.py --from-json  # 仅从本地 json 过滤 2.0 并重建精选 md
+    uv run scripts/refresh-speakers.py --from-json  # 过滤本地 json 为 2.0 并重建精选 md（不打 API）
 """
 from __future__ import annotations
 
@@ -26,18 +28,15 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-# Per-scene cap in the curated speakers.md quick reference. The full catalog
-# lives in speakers.json and is queried via `--list-speakers`; the md file is a
-# short-listing aid, not a complete dump.
+# Per-scene cap in the curated volcengine-speakers.md quick reference. The full
+# catalog lives in speakers.json and is queried via `--list-speakers`; the md
+# file is a short-listing aid, not a complete dump. TTS-specific capability
+# notes (--context / SSML / LaTeX) live in SKILL.md so refresh can overwrite
+# this md without wiping them.
 TOP_VOICES_PER_SCENE = 5
 
 # SDK field is resource_ids (JSON key ResourceIDs). Always pin seed-tts-2.0.
 LIST_RESOURCE_IDS = ["seed-tts-2.0"]
-
-
-def list_speakers_request_kwargs(page: int) -> dict[str, Any]:
-    """Kwargs for volcenginesdkspeechsaasprod.ListSpeakersRequest."""
-    return {"page": page, "resource_ids": list(LIST_RESOURCE_IDS)}
 
 
 def is_seed_tts_2_voice(voice_type: str) -> bool:
@@ -51,26 +50,30 @@ def is_seed_tts_2_voice(voice_type: str) -> bool:
 def filter_seed_tts_2_voices(speakers: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [s for s in speakers if is_seed_tts_2_voice(str(s.get("voice_type", "")))]
 
-
-# seed-audio is a creative (voice-acting / scene-audio) skill, so the default
-# and most-used voices come first. volcengine-tts shares the same local-table
-# + --filter/--sort CLI, but its curated shortlist leads with 客服/教学
-# narration voices. 其他 (uncategorized) sorts last.
+# Narration-first scene ordering for volcengine-tts (pure voiceover / teaching /
+# customer-service reads). This is intentionally the opposite of seed-audio-gen's
+# creative order (通用/角色扮演/视频配音 first). Unknown scenes sort after the
+# known ones, with 其他 pinned last.
 _SCENE_ORDER = [
-    "通用场景",   # default narration / warm旁白 (Vivi 2.0 lives here)
-    "角色扮演",   # multi-character / radio drama / game NPC
-    "视频配音",   # film / ad dubbing
-    "有声阅读",   # audiobook narration
-    "趣味口音",   # accented / character voices
-    "多语种",     # non-Chinese
-    "教学场景",   # pure-TTS service scenes, lower priority for this skill
     "客服场景",
+    "教学场景",
+    "通用场景",
+    "有声阅读",
+    "视频配音",
+    "多语种",
+    "趣味口音",
+    "角色扮演",
 ]
 
 
+def list_speakers_request_kwargs(page: int) -> dict[str, Any]:
+    """Kwargs for volcenginesdkspeechsaasprod.ListSpeakersRequest."""
+    return {"page": page, "resource_ids": list(LIST_RESOURCE_IDS)}
+
+
 def _scene_sort_key(scene: str) -> tuple[int, str]:
-    """Creative-first scene ordering for seed-audio; unknown scenes sorted
-    after the known ones, with 其他 pinned last."""
+    """Narration-first scene ordering for TTS; unknown scenes sorted after
+    the known ones, with 其他 pinned last."""
     if scene in _SCENE_ORDER:
         return (_SCENE_ORDER.index(scene), scene)
     if scene == "其他":
@@ -78,37 +81,47 @@ def _scene_sort_key(scene: str) -> tuple[int, str]:
     return (900, scene)
 
 
-def build_speakers_md(speakers: list[dict[str, Any]]) -> str:
-    """Build a CURATED speakers.md quick reference: Top-N voices per scene.
+def build_speakers_md(
+    speakers: list[dict[str, Any]],
+    *,
+    source_note: str | None = None,
+) -> str:
+    """Build a CURATED volcengine-speakers.md quick reference: Top-N per scene.
 
     This is intentionally not a full dump of speakers.json — it is a short,
     low-context shortlist with trial links. The full catalog is queried via
     `--list-speakers`; agents should not read speakers.json into context
-    (it is ~220KB)."""
+    (it is ~220KB). TTS capability notes belong in SKILL.md, not this file.
+    """
     bigtts_count = sum(1 for s in speakers if s["type"] == "bigtts")
     icl_count = sum(1 for s in speakers if s["type"] == "icl")
     total = len(speakers)
     today = date.today().isoformat()
+    if source_note:
+        provenance = source_note.rstrip("。") + "。"
+    else:
+        provenance = f"截至 {today}，ListSpeakers ResourceID=seed-tts-2.0。"
 
     lines: list[str] = [
         "# seed-tts-2.0 音色速查（精选）",
         "",
         f"> 本表为**精选速查**：每场景按热度列 Top {TOP_VOICES_PER_SCENE}，带试听链接。"
-        f"全量 {total} 个音色（{bigtts_count} bigtts + {icl_count} ICL，截至 {today}，"
-        f"ListSpeakers ResourceID=seed-tts-2.0）在 `speakers.json`，"
-        f"请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。",
+        f"全量 {total} 个音色（{bigtts_count} bigtts + {icl_count} ICL）在 `speakers.json`。"
+        f"{provenance}"
+        "请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。"
+        "`--context` / SSML / LaTeX 说明见 SKILL.md。",
         "",
         "```bash",
-        "uv run scripts/seed-audio-gen.py --list-speakers                          # 全量",
-        "uv run scripts/seed-audio-gen.py --list-speakers --filter scene=视频配音   # 按场景",
-        "uv run scripts/seed-audio-gen.py --list-speakers --filter lang=ja --sort heat",
+        "uv run scripts/volcengine-tts.py --list-speakers                          # 全量",
+        "uv run scripts/volcengine-tts.py --list-speakers --filter scene=教学场景   # 按场景",
+        "uv run scripts/volcengine-tts.py --list-speakers --filter lang=ja --sort heat",
         "```",
         "",
-        "需要某个场景的全量音色时，跑 `--list-speakers --filter scene=<场景>`。",
+        "需要某个场景的全量音色时，跑 `--list-speakers --filter scene=<场景>`。"
+        "ICL（`type=icl`）会出现在 list 里；合成时不要假设列表里有就能无参数调用，见 SKILL.md。",
         "",
     ]
 
-    # Group by scene
     by_scene: dict[str, list[dict[str, Any]]] = {}
     for s in speakers:
         scene = s.get("scene", "其他")
@@ -142,7 +155,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 REFERENCES_DIR = SKILL_DIR / "references"
 SPEAKERS_JSON = REFERENCES_DIR / "speakers.json"
-SPEAKERS_MD = REFERENCES_DIR / "speakers.md"
+SPEAKERS_MD = REFERENCES_DIR / "volcengine-speakers.md"
 
 
 def die(msg: str, code: int = 1) -> None:
@@ -206,7 +219,6 @@ def fetch_all_speakers(ak: str, sk: str) -> list[dict[str, Any]]:
 
         result = resp.get("Result") if isinstance(resp, dict) else {}
         if not result:
-            # Try attribute access (SDK may return object)
             result = getattr(resp, "Result", None) if hasattr(resp, "Result") else None
             if result is None:
                 die(f"Unexpected response shape on page {page}: {type(resp)}")
@@ -221,7 +233,6 @@ def fetch_all_speakers(ak: str, sk: str) -> list[dict[str, Any]]:
         if not speakers:
             break
 
-        # Normalize each speaker to dict
         for s in speakers:
             if isinstance(s, dict):
                 all_speakers.append(s)
@@ -316,14 +327,30 @@ def write_speakers_json(speakers: list[dict[str, Any]], path: Path) -> None:
     )
 
 
+def write_speakers_md(
+    speakers: list[dict[str, Any]],
+    *,
+    source_note: str | None = None,
+) -> None:
+    SPEAKERS_MD.write_text(
+        build_speakers_md(speakers, source_note=source_note),
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Refresh seed-audio-gen speaker catalog (speakers.json + curated md)",
+        description="Refresh volcengine-tts speaker catalog (speakers.json + curated md)",
     )
     parser.add_argument(
         "--from-json",
         action="store_true",
-        help="Filter local speakers.json to seed-tts-2.0 and rebuild speakers.md (no API)",
+        help="Filter local speakers.json to seed-tts-2.0 and rebuild curated md (no API)",
+    )
+    parser.add_argument(
+        "--source-note",
+        default=None,
+        help="Override the provenance sentence in the markdown header",
     )
     args = parser.parse_args()
 
@@ -336,7 +363,7 @@ def main() -> None:
         before = len(processed)
         processed = filter_seed_tts_2_voices(processed)
         write_speakers_json(processed, SPEAKERS_JSON)
-        SPEAKERS_MD.write_text(build_speakers_md(processed), encoding="utf-8")
+        write_speakers_md(processed, source_note=args.source_note)
         print(
             f"Wrote {SPEAKERS_JSON} and {SPEAKERS_MD} "
             f"(kept {len(processed)}, dropped {before - len(processed)})"
@@ -354,10 +381,10 @@ def main() -> None:
     write_speakers_json(processed, SPEAKERS_JSON)
     print(f"Wrote {SPEAKERS_JSON}")
 
-    SPEAKERS_MD.write_text(build_speakers_md(processed), encoding="utf-8")
+    write_speakers_md(processed, source_note=args.source_note)
     print(f"Wrote {SPEAKERS_MD}")
 
-    print(f"\nDone. {len(processed)} speakers written to speakers.json + speakers.md")
+    print(f"\nDone. {len(processed)} speakers written to speakers.json + volcengine-speakers.md")
 
 
 if __name__ == "__main__":
