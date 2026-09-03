@@ -7,7 +7,9 @@
 .skill-work/
 evals/**/outputs/
 
-# Generated skill artifacts and Python runtime files.
+# Python virtual environments and runtime files.
+.venv/
+venv/
 **/__pycache__/
 **/*.pyc
 **/.artifacts/

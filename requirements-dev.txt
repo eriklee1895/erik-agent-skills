@@ -1,0 +1,37 @@
+# Aggregated development / test dependencies for erik-agent-skills.
+#
+# Each skill under skills/ declares its own runtime dependencies inline via
+# PEP 723 metadata and is normally executed with `uv run <script>.py`, which
+# resolves those dependencies automatically and per-script.
+#
+# This file is dev/CI tooling only: it unions every skill's declared
+# dependencies (plus the test runner) into a single environment so the whole
+# test suite can be exercised with one `pip install -r requirements-dev.txt`.
+# It is NOT a published skill artifact.
+
+# --- Test runner ---
+pytest>=8.0
+
+# --- HTTP clients ---
+requests>=2.34
+httpx>=0.28.0
+
+# --- HTML / Markdown processing ---
+beautifulsoup4>=4.15
+lxml>=6.1
+markdownify>=1.1
+playwright>=1.60
+
+# --- Media / audio metadata ---
+mutagen>=1.47
+pillow>=10.0.0
+
+# --- Config / serialization ---
+python-dotenv>=1.0
+pyyaml>=6.0
+
+# --- Model / provider SDKs ---
+openai>=1.76.0
+# Provides the volcenginesdkcore / volcenginesdkspeechsaasprod modules imported
+# by skills/seed-audio-gen/scripts/refresh-speakers.py.
+volcengine-python-sdk>=1.0
