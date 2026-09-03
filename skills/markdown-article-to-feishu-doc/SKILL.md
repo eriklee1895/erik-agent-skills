@@ -159,6 +159,7 @@ lark-cli docs +update --api-version v2 --doc <doc_id> --command overwrite \
 
 - [`lark-doc`](https://github.com/larksuite/cli):docx 创建 / 更新 / fetch / 媒体插入 / XML 规范
 - [`lark-whiteboard`](https://github.com/larksuite/cli):若 mermaid 直传失败,降级路径(本 skill v1 默认不走)
+- [`feishu-whiteboard-diagram`](../feishu-whiteboard-diagram/):文档内精美架构/流程图应走原生画板 SVG/DSL,而不是把复杂图塞进 mermaid 直传
 - [`lark-shared`](https://github.com/larksuite/cli):认证、`auth login`、`--as user/bot` 切换
 
 ## 相关文件
