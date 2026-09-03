@@ -297,7 +297,7 @@ Seedance 是原子能力 skill：**输入是 prompt + 可选素材 + 参数，�
   - 需要首帧/概念图：由调用方自行准备，可用 `article-illustration` / `seedream-image-gen` / `gpt-image-2` 等生图 skill，但具体选择是上层编排的事
   - 需要 BGM/音效/旁白音频：由调用方准备，可用 `volcengine-bigmusic-bgm` / `volcengine-tts`
   - 长视频分镜、多 shot 编排、首尾帧链式续写：应由专门的长视频编排 skill 负责（当前 repo 尚未有），它负责拆 shot、准备素材、调用 Seedance、拼接
-- **下游**（消费 Seedance 产出的 video.mp4 的 skill）：
-  - 剪辑/拼接/加字幕 → `article-video-clip`
-  - 视频插入微信公众号 → `wechat-article-renderer` + `wechat-publish-workflow`
-  - 任务收尾归档 → `writing-task-closeout`
+- **下游**（消费 Seedance 产出的 video.mp4 的环节；剪辑/发布/归档类 skill 随 [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness) 项目提供，不在本 repo）：
+  - 剪辑/拼接/加字幕 → writing-agent-harness 的 `article-video-clip`
+  - 视频插入微信公众号 → writing-agent-harness 的发布工作流
+  - 任务收尾归档 → writing-agent-harness 的 `writing-task-closeout`
