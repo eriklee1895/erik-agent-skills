@@ -27,7 +27,7 @@ uv run scripts/volcengine-tts.py --batch '[{"text":"第一句","speaker":"zh_fem
 # Math/education narration — always use the LaTeX parser trio
 uv run scripts/volcengine-tts.py "根据公式 $a^2 + b^2 = c^2$ 可知..." --latex --latex-parser v2 --strip-markdown
 
-# List available speakers
+# List available speakers (local table, no API call)
 uv run scripts/volcengine-tts.py --list-speakers
 ```
 
@@ -93,7 +93,9 @@ Output: JSON array of results, each with the same fields as single mode. Failed 
 | `--no-subtitle` | _(subtitle on by default)_ | Turn off word-level timestamps. Saves ~600ms of tail latency for real-time / conversational use cases. Offline narration pipelines should leave subtitles **on** (the default) — downstream subtitle generation, B-roll alignment, and forced cuts all need word timestamps. |
 | `--strip-markdown` | — | Remove Markdown syntax (e.g. `**bold**` → "bold") |
 | `--strip-emoji` | — | Remove emoji characters before TTS |
-| `--list-speakers` | — | Fetch and display available voices, then exit |
+| `--list-speakers` | — | List speakers from local table (no API call) |
+| `--filter <k=v>` | — | Filter speakers: `scene=教学场景`, `type=bigtts`, `lang=ja` (repeatable) |
+| `--sort heat` | — | Sort speakers by heat (popularity) |
 
 ### Math and Education Narration
 
@@ -193,18 +195,51 @@ Notes from the official docs (2026-06-29):
 
 ## Voice Selection
 
-For the complete voice catalog, read `references/volcengine-speakers.md`. Quick picks:
+**Query the catalog with `--list-speakers`** (reads a local table, no API call). Do **not** read `references/speakers.json` into context — it is ~220KB / 444 voices. `references/volcengine-speakers.md` is a short curated shortlist (Top 5 per scene, narration/教学/客服 first, with trial links), not the full list.
 
-| Scenario | Speaker ID | Description |
-|----------|-----------|-------------|
-| 通用旁白 (General narration) | `zh_female_vv_uranus_bigtts` | Vivi 2.0 — warm, versatile female |
-| 技术解说 (Tech explainer) | `zh_male_m191_uranus_bigtts` | 云舟 2.0 — clear, professional male |
-| 故事讲述 (Storytelling) | `zh_female_wenroumama_uranus_bigtts` | 温柔妈妈 2.0 — warm, gentle |
-| 悬疑解说 (Suspense) | `zh_male_xuanyijieshuo_uranus_bigtts` | 悬疑解说 2.0 — dramatic male |
-| 英语旁白 (English) | `en_female_dacey_uranus_bigtts` | Dacey — natural American female |
-| 英语男声 (English male) | `en_male_tim_uranus_bigtts` | Tim — natural American male |
+### Common-scene quick picks
 
-Use `--list-speakers` to fetch the current full list from the API.
+For the usual narration scenes, reach for these defaults first; otherwise browse `references/volcengine-speakers.md` or `--list-speakers`:
+
+| Scenario | Voice | voice_type |
+|---|---|---|
+| General narration (default female) | Vivi 2.0 · warm, calm (heat 100) | `zh_female_vv_uranus_bigtts` |
+| Customer service / IVR | 暖阳女声 2.0 | `zh_female_kefunvsheng_uranus_bigtts` |
+| Teaching / education (use with `--latex` as needed) | Tina老师 2.0 | `zh_female_yingyujiaoxue_uranus_bigtts` |
+| Tech explainer (male) | 云舟 2.0 · clear, professional | `zh_male_m191_uranus_bigtts` |
+| Story narration (warm female) | 温柔妈妈 2.0 | `zh_female_wenroumama_uranus_bigtts` |
+| Suspense / dramatic narration (male) | 悬疑解说 2.0 | `zh_male_xuanyijieshuo_uranus_bigtts` |
+| English content | Dacey (f) / Tim (m) | `en_female_dacey_uranus_bigtts` / `en_male_tim_uranus_bigtts` |
+
+Browse by scene/heat:
+
+```bash
+# Full catalog
+uv run scripts/volcengine-tts.py --list-speakers
+
+# Filter by scene (JSON scene names, e.g. 教学场景 not 教育场景)
+uv run scripts/volcengine-tts.py --list-speakers --filter scene=教学场景
+
+# Official catalog only, sorted by heat
+uv run scripts/volcengine-tts.py --list-speakers --filter type=bigtts --sort heat
+
+# Filter by language, sorted by heat
+uv run scripts/volcengine-tts.py --list-speakers --filter lang=ja --sort heat
+```
+
+`--list-speakers` may include ICL voices (`type=icl`, IDs containing `ICL_` or `_tob`). Seeing them in the local table does **not** mean they synthesize with the default public-catalog call. Official `_bigtts` voices work with Resource-Id `seed-tts-2.0` and do **not** need `--model`. Registered ICL/`_tob` voices typically need `--model seed-tts-2.0-standard`. Creating a new cloned voice is a different skill, not this list.
+
+To refresh the speaker table when new voices are released, run:
+
+```bash
+uv run scripts/refresh-speakers.py
+```
+
+This requires AK/SK (`VOLC_ACCESSKEY`/`VOLC_SECRETKEY`) and the internal Volcano SDK preinstalled; the ListSpeakers API uses a different auth system than everyday synthesis, and always sends `ResourceIDs=["seed-tts-2.0"]`. To rebuild only the curated markdown from the local json (no API):
+
+```bash
+uv run scripts/refresh-speakers.py --from-json
+```
 
 ## Error Handling
 

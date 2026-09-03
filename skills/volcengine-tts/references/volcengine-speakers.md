@@ -1,267 +1,97 @@
-# Volcengine TTS Speaker Catalog (seed-tts-2.0)
+# seed-tts-2.0 音色速查（精选）
 
-Full voice list for the 豆包语音合成模型2.0, sourced from the official documentation and `--list-speakers` API.
+> 本表为**精选速查**：每场景按热度列 Top 5，带试听链接。全量 444 个音色（244 bigtts + 200 ICL）在 `speakers.json`。数据来源：拷贝自 seed-audio 2026-08-27 快照（444 条），尚未按 ResourceID=seed-tts-2.0 重新拉取；下次 uv run scripts/refresh-speakers.py 会过滤。请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。`--context` / SSML / LaTeX 说明见 SKILL.md。
 
-Last updated: 2026-06-16.
-Source: https://www.volcengine.com/docs/6561/1257544
-
-## Table of Contents
-
-- [Voice Recommendation by Scenario](#voice-recommendation-by-scenario)
-- [Chinese Female Voices](#chinese-female-voices)
-- [Chinese Male Voices](#chinese-male-voices)
-- [English Voices](#english-voices)
-- [Dialect and Multi-language Voices](#dialect-and-multi-language-voices)
-- [Voice Capabilities](#voice-capabilities)
-- [Using Voice Instructions (context_texts)](#using-voice-instructions-contexttexts)
-
----
-
-## Voice Recommendation by Scenario
-
-### AI Video Voiceover / 旁白配音
-
-| Use Case | Recommended Speaker | ID |
-|----------|-------------------|-----|
-| 技术解说 / Tech explainer | 云舟 2.0 | `zh_male_m191_uranus_bigtts` |
-| 故事旁白 / Story narration | 温柔妈妈 2.0 | `zh_female_wenroumama_uranus_bigtts` |
-| 悬疑/侦探 / Suspense | 悬疑解说 2.0 | `zh_male_xuanyijieshuo_uranus_bigtts` |
-| 广告营销 / Commercial | 广告解说 2.0 | `zh_male_guanggaojieshuo_uranus_bigtts` |
-| 纪录片 / Documentary | 磁性解说男声 2.0 | `zh_male_cixingjieshuonan_uranus_bigtts` |
-| 温柔文艺 / Literary | Vivi 2.0 | `zh_female_vv_uranus_bigtts` |
-| 情感鸡汤 / Inspirational | 鸡汤女 2.0 | `zh_female_jitangnv_uranus_bigtts` |
-
-### Podcast / 播客
-
-| Use Case | Recommended Speaker | ID |
-|----------|-------------------|-----|
-| 深夜播客 / Late-night | 深夜播客 2.0 | `zh_male_shenyeboke_uranus_bigtts` |
-| 文化对谈 / Culture talk | 儒雅逸辰 2.0 | `zh_male_ruyayichen_uranus_bigtts` |
-| 女性视角 / Female POV | 知性女声 2.0 | `zh_female_zhixingnv_uranus_bigtts` |
-
-### Educational / 教育
-
-| Use Case | Recommended Speaker | ID |
-|----------|-------------------|-----|
-| 英语教学 / English teaching | Tina老师 2.0 | `zh_female_yingyujiaoxue_uranus_bigtts` |
-| 少儿内容 / Kids content | 少儿故事 2.0 | `zh_female_shaoergushi_uranus_bigtts` |
-
-### Character Voices / 角色配音
-
-| Use Case | Recommended Speaker | ID |
-|----------|-------------------|-----|
-| 孙悟空 / Monkey King | 猴哥 2.0 | `zh_male_sunwukong_uranus_bigtts` |
-| 猪八戒 | 猪八戒 2.0 | `zh_male_zhubajie_uranus_bigtts` |
-| 唐僧 | 唐僧 2.0 | `zh_male_tangseng_uranus_bigtts` |
-| 儿童角色 / Child | 佩奇猪 2.0 | `zh_female_peiqi_uranus_bigtts` |
-| 古装角色 / Period drama | 古风少御 2.0 | `zh_female_gufengshaoyu_uranus_bigtts` |
-| 霸道总裁 | 傲娇霸总 2.0 | `zh_male_aojiaobazong_uranus_bigtts` |
-
-### English Voiceover
-
-| Use Case | Recommended Speaker | ID |
-|----------|-------------------|-----|
-| 通用美式女声 / General US female | Dacey | `en_female_dacey_uranus_bigtts` |
-| 通用美式男声 / General US male | Tim | `en_male_tim_uranus_bigtts` |
-| 替代美式女声 / Alternative US female | Stokie | `en_female_stokie_uranus_bigtts` |
-
----
-
-## Chinese Female Voices
-
-### 通用场景 (General Purpose)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| Vivi 2.0 | `zh_female_vv_uranus_bigtts` | Multi-language (zh/ja/id/es-mx), dialects (Sichuan/Shaanxi/Dongbei) |
-| 小何 2.0 | `zh_female_xiaohe_uranus_bigtts` | |
-| 魅力苏菲 2.0 | `zh_female_sophie_uranus_bigtts` | |
-| 清新女声 2.0 | `zh_female_qingxinnvsheng_uranus_bigtts` | |
-| 甜美小源 2.0 | `zh_female_tianmeixiaoyuan_uranus_bigtts` | |
-| 甜美桃子 2.0 | `zh_female_tianmeitaozi_uranus_bigtts` | |
-| 爽快思思 2.0 | `zh_female_shuangkuaisisi_uranus_bigtts` | |
-| 邻家女孩 2.0 | `zh_female_linjianvhai_uranus_bigtts` | |
-| 魅力女友 2.0 | `zh_female_meilinvyou_uranus_bigtts` | |
-| 温柔妈妈 2.0 | `zh_female_wenroumama_uranus_bigtts` | Warm, motherly tone |
-| TVB女声 2.0 | `zh_female_tvbnv_uranus_bigtts` | Cantonese-style female |
-| 俏皮女声 2.0 | `zh_female_qiaopinv_uranus_bigtts` | Playful |
-| 高冷御姐 2.0 | `zh_female_gaolengyujie_uranus_bigtts` | Cool, mature |
-| 温柔淑女 2.0 | `zh_female_wenroushunv_uranus_bigtts` | Gentle, elegant |
-| 萌丫头/Cutey 2.0 | `zh_female_mengyatou_uranus_bigtts` | Cute |
-| 贴心女声/Candy 2.0 | `zh_female_tiexinnvsheng_uranus_bigtts` | Sweet |
-| 鸡汤妹妹/Hope 2.0 | `zh_female_jitangmei_uranus_bigtts` | Inspirational |
-| 开朗姐姐 2.0 | `zh_female_kailangjiejie_uranus_bigtts` | Cheerful |
-| 娇喘女声 2.0 | `zh_female_jiaochuannv_uranus_bigtts` | Breathless/ASMR |
-| 谄媚女声 2.0 | `zh_female_chanmeinv_uranus_bigtts` | Flattering |
-| 亲切女声 2.0 | `zh_female_qinqienv_uranus_bigtts` | Warm, familiar |
-| 文静毛毛 2.0 | `zh_female_wenjingmaomao_uranus_bigtts` | Quiet, gentle |
-| 知性女声 2.0 | `zh_female_zhixingnv_uranus_bigtts` | Intellectual |
-| 清澈梓梓 2.0 | `zh_female_qingchezizi_uranus_bigtts` | Clear, pure |
-| 甜美悦悦 2.0 | `zh_female_tianmeiyueyue_uranus_bigtts` | Sweet |
-| 心灵鸡汤 2.0 | `zh_female_xinlingjitang_uranus_bigtts` | Inspirational |
-| 柔美女友 2.0 | `zh_female_roumeinvyou_uranus_bigtts` | Soft, gentle |
-| 温柔小雅 2.0 | `zh_female_wenrouxiaoya_uranus_bigtts` | Gentle, refined |
-| 婆婆 2.0 | `zh_female_popo_uranus_bigtts` | Elderly female |
-
-### 视频配音 (Video Dubbing)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| 佩奇猪 2.0 | `zh_female_peiqi_uranus_bigtts` | Douyin/TikTok, Doubao, Jianying |
-| 鸡汤女 2.0 | `zh_female_jitangnv_uranus_bigtts` | |
-| 黑猫侦探社咪仔 2.0 | `zh_female_mizai_uranus_bigtts` | |
-| 流畅女声 2.0 | `zh_female_liuchangnv_uranus_bigtts` | Smooth, flowing |
-
-### 角色扮演 (Character)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| 知性灿灿 2.0 | `zh_female_cancan_uranus_bigtts` | |
-| 撒娇学妹 2.0 | `zh_female_sajiaoxuemei_uranus_bigtts` | |
-| 直率英子 2.0 | `zh_female_zhishuaiyingzi_uranus_bigtts` | Douyin, Doubao, Jianying |
-| 樱桃丸子 2.0 | `zh_female_yingtaowanzi_uranus_bigtts` | Douyin, Doubao, Jianying |
-| 古风少御 2.0 | `zh_female_gufengshaoyu_uranus_bigtts` | Ancient style |
-| 林潇 2.0 | `zh_female_linxiao_uranus_bigtts` | Douyin, Doubao, Jianying |
-| 玲玲姐姐 2.0 | `zh_female_lingling_uranus_bigtts` | Douyin, Doubao, Jianying |
-| 春日部姐姐 2.0 | `zh_female_chunribu_uranus_bigtts` | Douyin, Doubao, Jianying |
-| 感冒电音姐姐 2.0 | `zh_female_ganmaodianyin_uranus_bigtts` | Douyin, Jianying |
-| 女雷神 2.0 | `zh_female_nvleishen_uranus_bigtts` | Jianying, Doubao |
-| 武则天 2.0 | `zh_female_wuzetian_uranus_bigtts` | Jianying |
-| 顾姐 2.0 | `zh_female_gujie_uranus_bigtts` | Douyin, Jianying |
-
-### 教育场景 (Education)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| Tina老师 2.0 | `zh_female_yingyujiaoxue_uranus_bigtts` | Chinese + British English |
-
-### 客服场景 (Customer Service)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| 暖阳女声 2.0 | `zh_female_kefunvsheng_uranus_bigtts` | |
-
-### 有声阅读 (Audiobook)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| 儿童绘本 2.0 | `zh_female_xiaoxue_uranus_bigtts` | |
-| 少儿故事 2.0 | `zh_female_shaoergushi_uranus_bigtts` | |
-
----
-
-## Chinese Male Voices
-
-### 通用场景 (General Purpose)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| 云舟 2.0 | `zh_male_m191_uranus_bigtts` | Clear, professional |
-| 小天 2.0 | `zh_male_taocheng_uranus_bigtts` | |
-| 刘飞 2.0 | `zh_male_liufei_uranus_bigtts` | |
-| 少年梓辛/Brayan 2.0 | `zh_male_shaonianzixin_uranus_bigtts` | Youthful |
-| 邻家男孩 2.0 | `zh_male_linjiananhai_uranus_bigtts` | |
-| 儒雅青年 2.0 | `zh_male_ruyaqingnian_uranus_bigtts` | Elegant youth |
-| 温暖阿虎/Alvin 2.0 | `zh_male_wennuanahu_uranus_bigtts` | |
-| 奶气萌娃 2.0 | `zh_male_naiqimengwa_uranus_bigtts` | Child-like |
-| 傲娇霸总 2.0 | `zh_male_aojiaobazong_uranus_bigtts` | Dominant CEO type |
-| 反卷青年 2.0 | `zh_male_fanjuanqingnian_uranus_bigtts` | Anti-hustle youth |
-| 活力小哥 2.0 | `zh_male_huolixiaoge_uranus_bigtts` | Energetic |
-| 磁性解说男声/Morgan 2.0 | `zh_male_cixingjieshuonan_uranus_bigtts` | Magnetic, deep |
-| 亮嗓萌仔 2.0 | `zh_male_liangsangmengzai_uranus_bigtts` | Bright |
-| 高冷沉稳 2.0 | `zh_male_gaolengchenwen_uranus_bigtts` | Cool, calm |
-| 深夜播客 2.0 | `zh_male_shenyeboke_uranus_bigtts` | Late-night podcast |
-| 开朗弟弟 2.0 | `zh_male_kailangdidi_uranus_bigtts` | Cheerful younger brother |
-| 快乐小东 2.0 | `zh_male_kuailexiaodong_uranus_bigtts` | Happy, upbeat |
-| 开朗学长 2.0 | `zh_male_kailangxuezhang_uranus_bigtts` | Cheerful senior |
-| 悠悠君子 2.0 | `zh_male_youyoujunzi_uranus_bigtts` | Refined gentleman |
-| 清爽男大 2.0 | `zh_male_qingshuangnanda_uranus_bigtts` | Fresh college guy |
-| 渊博小叔 2.0 | `zh_male_yuanboxiaoshu_uranus_bigtts` | Knowledgeable uncle |
-| 阳光青年 2.0 | `zh_male_yangguangqingnian_uranus_bigtts` | Sunny youth |
-| 温柔小哥 2.0 | `zh_male_wenrouxiaoge_uranus_bigtts` | Gentle guy |
-| 东方浩然 2.0 | `zh_male_dongfanghaoran_uranus_bigtts` | Majestic |
-| 天才童声 2.0 | `zh_male_tiancaitongsheng_uranus_bigtts` | Child prodigy |
-| 广告解说 2.0 | `zh_male_guanggaojieshuo_uranus_bigtts` | Commercial voice |
-
-### 视频配音 (Video Dubbing)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| 猴哥 2.0 | `zh_male_sunwukong_uranus_bigtts` | Monkey King |
-| 大壹 2.0 | `zh_male_dayi_uranus_bigtts` | |
-| 儒雅逸辰 2.0 | `zh_male_ruyayichen_uranus_bigtts` | |
-| 解说小明 2.0 | `zh_male_jieshuoxiaoming_uranus_bigtts` | |
-
-### 角色扮演 (Character)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| 四郎 2.0 | `zh_male_silang_uranus_bigtts` | Douyin, Doubao, Jianying |
-| 擎苍 2.0 | `zh_male_qingcang_uranus_bigtts` | Fanqie Novel, Doubao, Douyin, Jianying |
-| 熊二 2.0 | `zh_male_xionger_uranus_bigtts` | Douyin, Doubao, Jianying |
-| 懒音绵宝 2.0 | `zh_male_lanyinmianbao_uranus_bigtts` | |
-| 鲁班七号 2.0 | `zh_male_lubanqihao_uranus_bigtts` | Douyin, Doubao, Jianying |
-| 唐僧 2.0 | `zh_male_tangseng_uranus_bigtts` | Douyin, Doubao |
-| 庄周 2.0 | `zh_male_zhuangzhou_uranus_bigtts` | Douyin, Jianying |
-| 猪八戒 2.0 | `zh_male_zhubajie_uranus_bigtts` | Doubao, Jianying |
-
-### 有声阅读 (Audiobook)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| 霸气青叔 2.0 | `zh_male_baqiqingshu_uranus_bigtts` | Fanqie Novel, Doubao, Jianying |
-| 悬疑解说 2.0 | `zh_male_xuanyijieshuo_uranus_bigtts` | Douyin, Doubao, Jianying |
-
-### 其他 (Other)
-
-| Name | Voice Type ID | Notes |
-|------|-------------|-------|
-| 译制片男 2.0 | `zh_male_yizhipiannan_uranus_bigtts` | Dubbed foreign film voice |
-
----
-
-## English Voices
-
-| Name | Voice Type ID | Accent |
-|------|-------------|--------|
-| Tim | `en_male_tim_uranus_bigtts` | American English |
-| Dacey | `en_female_dacey_uranus_bigtts` | American English |
-| Stokie | `en_female_stokie_uranus_bigtts` | American English |
-
----
-
-## Voice Capabilities
-
-All seed-tts-2.0 voices support:
-
-- **情感变化 (Emotion variation)**: Voices can express different emotions through natural-language voice instructions.
-- **指令遵循 (Instruction following)**: Voices respond to `context_texts` like "用特别痛心的语气说话" out of the box — no special model flag required for public (non-cloned) voices.
-- **ASMR**: Whispering and breathy styles available.
-- **方言 (Dialects)**: Selected voices support Sichuan, Shaanxi, Dongbei and other dialects (check `--list-speakers` or the voice catalog).
-
-### The `model` Parameter
-
-For the public seed-tts-2.0 voice catalog (speaker IDs ending in `_bigtts`), you generally **do not need to set `model`** — the server picks the correct variant automatically and `context_texts` voice instructions work by default.
-
-The `model` field is mainly relevant when using **cloned (ICL, 声音复刻) voices**:
-
-| Model | Notes |
-|-------|-------|
-| `seed-tts-2.0-standard` | Default for cloned voices; lower latency; voice-instruction QA / CoT tags are filtered out if passed |
-
-Public voices don't need this. If you see older docs referencing `seed-tts-2.0-expressive`, that variant no longer appears in the current (2026-06) API reference — emotion/instructions are built into the default model.
-
----
-
-## Using Voice Instructions (context_texts)
-
-Pass a natural-language instruction via `--context` (no `--model` needed):
-
-```
---context "用特别痛心的语气说话"
---context "像深夜电台主持人一样温柔低沉地读"
---context "像新闻联播主播一样字正腔圆地播报"
---context "Read like an excited startup founder giving a keynote"
+```bash
+uv run scripts/volcengine-tts.py --list-speakers                          # 全量
+uv run scripts/volcengine-tts.py --list-speakers --filter scene=教学场景   # 按场景
+uv run scripts/volcengine-tts.py --list-speakers --filter lang=ja --sort heat
 ```
 
-The `context_texts` field is **not billed** — only the main `text` content counts toward usage.
+需要某个场景的全量音色时，跑 `--list-speakers --filter scene=<场景>`。ICL（`type=icl`）会出现在 list 里；合成时不要假设列表里有就能无参数调用，见 SKILL.md。
+
+## 客服场景（本场景共 28 个，列 Top 5；全量用 `--list-speakers --filter scene=客服场景`）
+
+| 名称 | voice_type | 性别 | 描述 | 试听 | 热度 |
+|---|---|---|---|---|---|
+| 暖阳女声 2.0 | `zh_female_kefunvsheng_uranus_bigtts` | 女 | 开朗温柔的客服，阳光热情，服务贴心细致 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_kefunvsheng_uranus_bigtts.mp3) | 2 |
+| 客服婉君 2.0 | `ICL_uranus_zh_female_kefuwanjun_tob` | 女 | 语气亲切，善用温和语气词，回复条理清晰的客服女生 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ICL_uranus_zh_female_kefuwanjun_tob.mp3) | 0 |
+| 营销小楠 2.0 | `ICL_uranus_zh_female_yingxiaokefu_v2_tob` | 女 | 偏低沉的暖女中音，气息稳、质感厚，讲起营销策略自带一种 "她说的都对" 的说服力。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/ICL_uranus_zh_female_yingxiaokefu_v2_tob.mp3) | 0 |
+| Scarlet | `en_female_scarlet_p1_uranus_bigtts` | 女 | 柔婉深情的姐姐，眼里永远盛着光 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/en_female_scarlet_p1_uranus_bigtts.wav) | 0 |
+| Ivy | `en_female_lana_del_rey_parky_s_p1_uranus_bigtts` | 女 | 温婉柔和女声，语调亲切自然，听感温润怡人 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/en_female_lana_del_rey_parky_s_p1_uranus_bigtts.wav) | 0 |
+
+## 教学场景（本场景共 21 个，列 Top 5；全量用 `--list-speakers --filter scene=教学场景`）
+
+| 名称 | voice_type | 性别 | 描述 | 试听 | 热度 |
+|---|---|---|---|---|---|
+| Tina老师 2.0 | `zh_female_yingyujiaoxue_uranus_bigtts` | 女 | 磁性知性的青年讲师，温柔耐心，专业靠谱 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_yingyujiaoxue_uranus_bigtts.mp3) | 21 |
+| Charlotte | `en_female_authoritative-british_uranus_bigtts` | 女 | 清亮利落，张力十足的姐姐 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/en_female_authoritative-british_uranus_bigtts.wav) | 1 |
+| Arthur | `pt_male_bv531_uranus_bigtts` | 男 | 理智客观的中年男声，行事稳重可靠。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/pt_male_bv531_uranus_bigtts.wav) | 0 |
+| Irene | `mx_female_bv065_uranus_bigtts` | 女 | 冷静客观的干练女生，做事干练且条理分明。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/mx_female_bv065_uranus_bigtts.wav) | 0 |
+| Zendaya | `en_female_zendaya_p1_uranus_bigtts` | 女 | 随性亲切的姐姐，松弛不拘谨又有活力。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/en_female_zendaya_p1_uranus_bigtts.wav) | 0 |
+
+## 通用场景（本场景共 133 个，列 Top 5；全量用 `--list-speakers --filter scene=通用场景`）
+
+| 名称 | voice_type | 性别 | 描述 | 试听 | 热度 |
+|---|---|---|---|---|---|
+| 💐 Vivi 2.0 | `zh_female_vv_uranus_bigtts` | 女 | 语调平稳、咬字柔和、自带治愈安抚力的女声音色 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_vv_uranus_bigtts.wav) | 100 |
+| 甜美小源 2.0 | `zh_female_tianmeixiaoyuan_uranus_bigtts` | 女 | 声线明亮甜美的专业客服，亲切耐心，服务细致周到 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_tianmeixiaoyuan_uranus_bigtts.mp3) | 12 |
+| 爽快思思 2.0 | `zh_female_shuangkuaisisi_uranus_bigtts` | 女 | 温暖直爽的邻家小妹，阳光热情，相处轻松自在 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_shuangkuaisisi_uranus_bigtts.mp3) | 10 |
+| 小何 2.0 | `zh_female_xiaohe_uranus_bigtts` | 女 | 声线甜美有活力的妹妹，活泼开朗，笑容明媚。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_xiaohe_uranus_bigtts.mp3) | 9 |
+| 开朗姐姐  2.0 | `zh_female_kailangjiejie_uranus_bigtts` | 女 | 语调明快、声线爽朗，阳光开朗的大姐姐音 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_kailangjiejie_uranus_bigtts.mp3) | 7 |
+
+## 有声阅读（本场景共 29 个，列 Top 5；全量用 `--list-speakers --filter scene=有声阅读`）
+
+| 名称 | voice_type | 性别 | 描述 | 试听 | 热度 |
+|---|---|---|---|---|---|
+| 儿童绘本 2.0 | `zh_female_xiaoxue_uranus_bigtts` | 女 | 清甜讲述者，充满童趣与耐心，为孩子编织美好梦境 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_xiaoxue_uranus_bigtts.mp3) | 3 |
+| 深夜播客 2.0 | `zh_male_shenyeboke_uranus_bigtts` | 男 | 语调舒缓、情感细腻，适配深夜陪伴的多情感男声，氛围感拉满 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_male_shenyeboke_uranus_bigtts.mp3) | 0 |
+| 霸气青叔 2.0 | `zh_male_baqiqingshu_uranus_bigtts` | 男 | 声线浑厚成熟、气场强大，阅历感十足的叔音 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_male_baqiqingshu_uranus_bigtts.mp3) | 0 |
+| 擎苍 2.0 | `zh_male_qingcang_uranus_bigtts` | 男 | 声线雄浑厚重、气势磅礴，充满力量感的霸气男声 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_male_qingcang_uranus_bigtts.mp3) | 0 |
+| 儒雅青年 2.0 | `zh_male_ruyaqingnian_uranus_bigtts` | 男 | 语调温润、咬字文雅，书卷气十足的知性男声 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_male_ruyaqingnian_uranus_bigtts.mp3) | 0 |
+
+## 视频配音（本场景共 42 个，列 Top 5；全量用 `--list-speakers --filter scene=视频配音`）
+
+| 名称 | voice_type | 性别 | 描述 | 试听 | 热度 |
+|---|---|---|---|---|---|
+| 黑猫侦探社咪仔 2.0 | `zh_female_mizai_uranus_bigtts` | 女 | 声线稳重优雅的知心姐姐，温暖亲和，善于陪伴 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_mizai_uranus_bigtts.mp3) | 7 |
+| 佩奇猪 2.0 | `zh_female_peiqi_uranus_bigtts` | 女 | 活泼童趣，天真烂漫，可爱治愈 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_peiqi_uranus_bigtts.mp3) | 4 |
+| 流畅女声 2.0 | `zh_female_liuchangnv_uranus_bigtts` | 女 | 温暖爽朗的小妹，阳光热情，性格直爽好相处 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_liuchangnv_uranus_bigtts.mp3) | 3 |
+| 鸡汤女 2.0 | `zh_female_jitangnv_uranus_bigtts` | 女 | 声音治愈的知心姐姐，温柔体贴，擅长倾听与理解 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_jitangnv_uranus_bigtts.mp3) | 3 |
+| 大壹 2.0 | `zh_male_dayi_uranus_bigtts` | 男 | 历经世事的沉稳大叔，果敢可靠，让人安心信赖 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_male_dayi_uranus_bigtts.mp3) | 3 |
+
+## 多语种（本场景共 19 个，列 Top 5；全量用 `--list-speakers --filter scene=多语种`）
+
+| 名称 | voice_type | 性别 | 描述 | 试听 | 热度 |
+|---|---|---|---|---|---|
+| Big Boogie 2.0 | `ICL_uranus_en_male_big_boogie_tob` | 男 | 声音沙哑浑厚的爷爷，从容有气度，擅长英语 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ICL_uranus_en_male_big_boogie_tob.wav) | 0 |
+| Michael 2.0 | `ICL_uranus_en_male_michael_tob` | 男 | 平易近人的学长，温暖亲切，待人真诚，擅长英语 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ICL_uranus_en_male_michael_tob.wav) | 0 |
+| Kevin McCallister 2.0 | `ICL_uranus_en_male_kevin_mccallister_tob` | 男 | 可爱乖巧的萌娃，说话干净软糯，擅长英语 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ICL_uranus_en_male_kevin_mccallister_tob.wav) | 0 |
+| The Grinch 2.0 | `ICL_uranus_en_male_the_grinch_tob` | 男 | 声音磁性的成熟大叔，沉稳直率，擅长英语 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ICL_uranus_en_male_the_grinch_tob.wav) | 0 |
+| Frosty Man 2.0 | `ICL_uranus_en_male_frosty_man_tob` | 男 | 低沉浑厚的儒雅大叔，温柔亲切，擅长英语 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ICL_uranus_en_male_frosty_man_tob.wav) | 0 |
+
+## 趣味口音（本场景共 15 个，列 Top 5；全量用 `--list-speakers --filter scene=趣味口音`）
+
+| 名称 | voice_type | 性别 | 描述 | 试听 | 热度 |
+|---|---|---|---|---|---|
+| Orion | `en_male_deep-voice_uranus_bigtts` | 男 | 嗓音沉实有质感，语速舒缓，戏剧表现力拉满。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/en_male_deep-voice_uranus_bigtts.wav) | 0 |
+| Silas | `ru_male_vlad_uranus_bigtts` | 男 | 轻柔低语的男生，性情温和内敛，沉静平和。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ru_male_vlad_uranus_bigtts.wav) | 0 |
+| Lily | `ja_female_bv523_uranus_bigtts` | 女 | 天真烂漫的女童，语调灵动，满是童真童趣。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ja_female_bv523_uranus_bigtts.wav) | 0 |
+| Aoi | `ja_female_bv521_uranus_bigtts` | 女 | 甜美灵动的女生，日系少女声线，表演感染力强。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ja_female_bv521_uranus_bigtts.wav) | 0 |
+| Sharron | `en_female_sharron_uranus_bigtts` | 女 | 声线轻柔带哑，语气悠然闲适的大小姐 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/en_female_sharron_uranus_bigtts.wav) | 0 |
+
+## 角色扮演（本场景共 156 个，列 Top 5；全量用 `--list-speakers --filter scene=角色扮演`）
+
+| 名称 | voice_type | 性别 | 描述 | 试听 | 热度 |
+|---|---|---|---|---|---|
+| 熊二 2.0 | `zh_male_xionger_uranus_bigtts` | 男 | 声线憨厚软糯、语气呆萌，自带东北口音的可爱男声 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_male_xionger_uranus_bigtts.mp3) | 1 |
+| 撒娇学妹 2.0 | `zh_female_sajiaoxuemei_uranus_bigtts` | 女 | 嗲甜软萌的可爱妹妹，灵动娇气，活泼讨喜 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_sajiaoxuemei_uranus_bigtts.mp3) | 1 |
+| 知性灿灿 2.0 | `zh_female_cancan_uranus_bigtts` | 女 | 语气温柔舒缓，软糯但有善解人意的治愈系少女音 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_cancan_uranus_bigtts.mp3) | 1 |
+| 调皮公主 2.0 | `ICL_uranus_zh_female_tiaopigongzhu_tob` | 女 | 娇俏公主，古灵精怪，偶尔娇气带点小自大 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ICL_uranus_zh_female_tiaopigongzhu_tob.wav) | 1 |
+| 顾姐 2.0 | `zh_female_gujie_uranus_bigtts` | 女 | 声线干练、气场强大，飒爽独立的大女主音 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_gujie_uranus_bigtts.mp3) | 0 |
+
+## 其他（本场景共 1 个，列 Top 1；全量用 `--list-speakers --filter scene=其他`）
+
+| 名称 | voice_type | 性别 | 描述 | 试听 | 热度 |
+|---|---|---|---|---|---|
+| 东方浩然 2.0 | `zh_male_dongfanghaoran_uranus_bigtts` | 男 | 声线雄浑、气场强大，正气凛然的成熟男声 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_male_dongfanghaoran_uranus_bigtts.mp3) | 1 |

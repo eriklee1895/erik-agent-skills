@@ -17,7 +17,7 @@ Single sentence:
 Batch mode:
     uv run volcengine-tts.py --batch '[{"text":"第一句"},{"text":"第二句"}]'
 
-List speakers:
+List speakers (local table, no API call):
     uv run volcengine-tts.py --list-speakers
 
 API docs: https://www.volcengine.com/docs/6561/2528925?lang=zh
@@ -45,11 +45,11 @@ from mutagen.mp3 import MP3
 
 API_BASE = "https://openspeech.bytedance.com"
 TTS_ENDPOINT = f"{API_BASE}/api/v3/tts/unidirectional"
-LIST_SPEAKERS_ENDPOINT = "https://open.volcengineapi.com"
-LIST_SPEAKERS_ACTION = "ListSpeakers"
-LIST_SPEAKERS_VERSION = "2024-01-01"
 
 RESOURCE_ID = "seed-tts-2.0"
+SCRIPT_DIR = Path(__file__).resolve().parent
+SKILL_DIR = SCRIPT_DIR.parent
+SPEAKERS_JSON = SKILL_DIR / "references" / "speakers.json"
 DEFAULT_SPEAKER = "zh_female_vv_uranus_bigtts"
 DEFAULT_FORMAT = "mp3"
 DEFAULT_SAMPLE_RATE = 24000
@@ -482,134 +482,45 @@ def synthesize_batch(
     }
 
 
-# ── List speakers ──────────────────────────────────────────────────────────
+# ── List speakers (local table) ────────────────────────────────────────────
 
-def list_speakers(api_key: str) -> list[dict[str, Any]]:
-    """Fetch available speakers via Volcengine OpenAPI."""
-    # Try the ListSpeakers API (volcengine OpenAPI format)
-    try:
-        resp = requests.post(
-            LIST_SPEAKERS_ENDPOINT,
-            headers={"Content-Type": "application/json"},
-            json={
-                "Action": LIST_SPEAKERS_ACTION,
-                "Version": LIST_SPEAKERS_VERSION,
-            },
-            params={
-                "Action": LIST_SPEAKERS_ACTION,
-                "Version": LIST_SPEAKERS_VERSION,
-            },
-            timeout=30,
-        )
-        if resp.ok:
-            data = resp.json()
-            speakers = data.get("Response", {}).get("Speakers", [])
-            if speakers:
-                return speakers
-    except Exception:
-        pass
-
-    # Fallback: return the built-in reference list
-    return _builtin_speakers()
+def query_speakers(speakers: list[dict], *, filters: dict | None = None, sort_by: str | None = None) -> list[dict]:
+    """Filter/sort the local speakers.json catalog. lang contains-matches languages[]."""
+    result = list(speakers)
+    if filters:
+        for k, v in filters.items():
+            if k == "lang":
+                result = [s for s in result if v in s.get("languages", [])]
+            else:
+                result = [s for s in result if s.get(k) == v]
+    if sort_by == "heat":
+        result = sorted(result, key=lambda s: -s.get("heat", 0))
+    return result
 
 
-def _builtin_speakers() -> list[dict[str, Any]]:
-    """Built-in speaker catalog for seed-tts-2.0."""
-    return [
-        {"name": "Vivi 2.0", "voice_type": "zh_female_vv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "小何 2.0", "voice_type": "zh_female_xiaohe_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "云舟 2.0", "voice_type": "zh_male_m191_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "小天 2.0", "voice_type": "zh_male_taocheng_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "刘飞 2.0", "voice_type": "zh_male_liufei_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "魅力苏菲 2.0", "voice_type": "zh_female_sophie_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "清新女声 2.0", "voice_type": "zh_female_qingxinnvsheng_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "知性灿灿 2.0", "voice_type": "zh_female_cancan_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "撒娇学妹 2.0", "voice_type": "zh_female_sajiaoxuemei_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "甜美小源 2.0", "voice_type": "zh_female_tianmeixiaoyuan_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "甜美桃子 2.0", "voice_type": "zh_female_tianmeitaozi_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "爽快思思 2.0", "voice_type": "zh_female_shuangkuaisisi_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "佩奇猪 2.0", "voice_type": "zh_female_peiqi_uranus_bigtts", "language": "zh", "gender": "female", "scene": "视频配音"},
-        {"name": "邻家女孩 2.0", "voice_type": "zh_female_linjianvhai_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "少年梓辛/Brayan 2.0", "voice_type": "zh_male_shaonianzixin_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "猴哥 2.0", "voice_type": "zh_male_sunwukong_uranus_bigtts", "language": "zh", "gender": "male", "scene": "视频配音"},
-        {"name": "Tina老师 2.0", "voice_type": "zh_female_yingyujiaoxue_uranus_bigtts", "language": "zh,en-GB", "gender": "female", "scene": "教育场景"},
-        {"name": "暖阳女声 2.0", "voice_type": "zh_female_kefunvsheng_uranus_bigtts", "language": "zh", "gender": "female", "scene": "客服场景"},
-        {"name": "儿童绘本 2.0", "voice_type": "zh_female_xiaoxue_uranus_bigtts", "language": "zh", "gender": "female", "scene": "有声阅读"},
-        {"name": "大壹 2.0", "voice_type": "zh_male_dayi_uranus_bigtts", "language": "zh", "gender": "male", "scene": "视频配音"},
-        {"name": "黑猫侦探社咪仔 2.0", "voice_type": "zh_female_mizai_uranus_bigtts", "language": "zh", "gender": "female", "scene": "视频配音"},
-        {"name": "鸡汤女 2.0", "voice_type": "zh_female_jitangnv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "视频配音"},
-        {"name": "魅力女友 2.0", "voice_type": "zh_female_meilinvyou_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "流畅女声 2.0", "voice_type": "zh_female_liuchangnv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "视频配音"},
-        {"name": "儒雅逸辰 2.0", "voice_type": "zh_male_ruyayichen_uranus_bigtts", "language": "zh", "gender": "male", "scene": "视频配音"},
-        {"name": "Tim", "voice_type": "en_male_tim_uranus_bigtts", "language": "en-US", "gender": "male", "scene": "多语种"},
-        {"name": "Dacey", "voice_type": "en_female_dacey_uranus_bigtts", "language": "en-US", "gender": "female", "scene": "多语种"},
-        {"name": "Stokie", "voice_type": "en_female_stokie_uranus_bigtts", "language": "en-US", "gender": "female", "scene": "多语种"},
-        {"name": "温柔妈妈 2.0", "voice_type": "zh_female_wenroumama_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "解说小明 2.0", "voice_type": "zh_male_jieshuoxiaoming_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "TVB女声 2.0", "voice_type": "zh_female_tvbnv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "译制片男 2.0", "voice_type": "zh_male_yizhipiannan_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "俏皮女声 2.0", "voice_type": "zh_female_qiaopinv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "直率英子 2.0", "voice_type": "zh_female_zhishuaiyingzi_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "邻家男孩 2.0", "voice_type": "zh_male_linjiananhai_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "四郎 2.0", "voice_type": "zh_male_silang_uranus_bigtts", "language": "zh", "gender": "male", "scene": "角色扮演"},
-        {"name": "儒雅青年 2.0", "voice_type": "zh_male_ruyaqingnian_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "擎苍 2.0", "voice_type": "zh_male_qingcang_uranus_bigtts", "language": "zh", "gender": "male", "scene": "角色扮演"},
-        {"name": "熊二 2.0", "voice_type": "zh_male_xionger_uranus_bigtts", "language": "zh", "gender": "male", "scene": "角色扮演"},
-        {"name": "樱桃丸子 2.0", "voice_type": "zh_female_yingtaowanzi_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "温暖阿虎/Alvin 2.0", "voice_type": "zh_male_wennuanahu_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "奶气萌娃 2.0", "voice_type": "zh_male_naiqimengwa_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "婆婆 2.0", "voice_type": "zh_female_popo_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "高冷御姐 2.0", "voice_type": "zh_female_gaolengyujie_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "傲娇霸总 2.0", "voice_type": "zh_male_aojiaobazong_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "懒音绵宝 2.0", "voice_type": "zh_male_lanyinmianbao_uranus_bigtts", "language": "zh", "gender": "male", "scene": "角色扮演"},
-        {"name": "反卷青年 2.0", "voice_type": "zh_male_fanjuanqingnian_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "温柔淑女 2.0", "voice_type": "zh_female_wenroushunv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "古风少御 2.0", "voice_type": "zh_female_gufengshaoyu_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "活力小哥 2.0", "voice_type": "zh_male_huolixiaoge_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "霸气青叔 2.0", "voice_type": "zh_male_baqiqingshu_uranus_bigtts", "language": "zh", "gender": "male", "scene": "有声阅读"},
-        {"name": "悬疑解说 2.0", "voice_type": "zh_male_xuanyijieshuo_uranus_bigtts", "language": "zh", "gender": "male", "scene": "有声阅读"},
-        {"name": "萌丫头/Cutey 2.0", "voice_type": "zh_female_mengyatou_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "贴心女声/Candy 2.0", "voice_type": "zh_female_tiexinnvsheng_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "鸡汤妹妹/Hope 2.0", "voice_type": "zh_female_jitangmei_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "磁性解说男声/Morgan 2.0", "voice_type": "zh_male_cixingjieshuonan_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "亮嗓萌仔 2.0", "voice_type": "zh_male_liangsangmengzai_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "开朗姐姐 2.0", "voice_type": "zh_female_kailangjiejie_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "高冷沉稳 2.0", "voice_type": "zh_male_gaolengchenwen_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "深夜播客 2.0", "voice_type": "zh_male_shenyeboke_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "鲁班七号 2.0", "voice_type": "zh_male_lubanqihao_uranus_bigtts", "language": "zh", "gender": "male", "scene": "角色扮演"},
-        {"name": "娇喘女声 2.0", "voice_type": "zh_female_jiaochuannv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "林潇 2.0", "voice_type": "zh_female_linxiao_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "玲玲姐姐 2.0", "voice_type": "zh_female_lingling_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "春日部姐姐 2.0", "voice_type": "zh_female_chunribu_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "唐僧 2.0", "voice_type": "zh_male_tangseng_uranus_bigtts", "language": "zh", "gender": "male", "scene": "角色扮演"},
-        {"name": "庄周 2.0", "voice_type": "zh_male_zhuangzhou_uranus_bigtts", "language": "zh", "gender": "male", "scene": "角色扮演"},
-        {"name": "开朗弟弟 2.0", "voice_type": "zh_male_kailangdidi_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "猪八戒 2.0", "voice_type": "zh_male_zhubajie_uranus_bigtts", "language": "zh", "gender": "male", "scene": "角色扮演"},
-        {"name": "感冒电音姐姐 2.0", "voice_type": "zh_female_ganmaodianyin_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "谄媚女声 2.0", "voice_type": "zh_female_chanmeinv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "女雷神 2.0", "voice_type": "zh_female_nvleishen_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "亲切女声 2.0", "voice_type": "zh_female_qinqienv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "快乐小东 2.0", "voice_type": "zh_male_kuailexiaodong_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "开朗学长 2.0", "voice_type": "zh_male_kailangxuezhang_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "悠悠君子 2.0", "voice_type": "zh_male_youyoujunzi_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "文静毛毛 2.0", "voice_type": "zh_female_wenjingmaomao_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "知性女声 2.0", "voice_type": "zh_female_zhixingnv_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "清爽男大 2.0", "voice_type": "zh_male_qingshuangnanda_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "渊博小叔 2.0", "voice_type": "zh_male_yuanboxiaoshu_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "阳光青年 2.0", "voice_type": "zh_male_yangguangqingnian_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "清澈梓梓 2.0", "voice_type": "zh_female_qingchezizi_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "甜美悦悦 2.0", "voice_type": "zh_female_tianmeiyueyue_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "心灵鸡汤 2.0", "voice_type": "zh_female_xinlingjitang_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "温柔小哥 2.0", "voice_type": "zh_male_wenrouxiaoge_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "柔美女友 2.0", "voice_type": "zh_female_roumeinvyou_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "东方浩然 2.0", "voice_type": "zh_male_dongfanghaoran_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "温柔小雅 2.0", "voice_type": "zh_female_wenrouxiaoya_uranus_bigtts", "language": "zh", "gender": "female", "scene": "通用场景"},
-        {"name": "天才童声 2.0", "voice_type": "zh_male_tiancaitongsheng_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "武则天 2.0", "voice_type": "zh_female_wuzetian_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "顾姐 2.0", "voice_type": "zh_female_gujie_uranus_bigtts", "language": "zh", "gender": "female", "scene": "角色扮演"},
-        {"name": "广告解说 2.0", "voice_type": "zh_male_guanggaojieshuo_uranus_bigtts", "language": "zh", "gender": "male", "scene": "通用场景"},
-        {"name": "少儿故事 2.0", "voice_type": "zh_female_shaoergushi_uranus_bigtts", "language": "zh", "gender": "female", "scene": "有声阅读"},
+def _list_speakers(args) -> None:
+    if not SPEAKERS_JSON.exists():
+        die(f"speakers.json not found: {SPEAKERS_JSON}")
+    speakers = json.loads(SPEAKERS_JSON.read_text(encoding="utf-8"))
+    filters = {}
+    if args.filter:
+        for f in args.filter:
+            k, _, v = f.partition("=")
+            filters[k] = v
+    result = query_speakers(speakers, filters=filters or None, sort_by=args.sort)
+    out = [
+        {
+            "name": s["name"],
+            "voice_type": s["voice_type"],
+            "type": s["type"],
+            "gender": s.get("gender", ""),
+            "scene": s.get("scene", ""),
+            "description": s.get("description", "")[:40],
+            "heat": s.get("heat", 0),
+        }
+        for s in result
     ]
+    print(json.dumps({"total": len(out), "speakers": out}, ensure_ascii=False, indent=2))
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────
@@ -673,15 +584,15 @@ def main() -> None:
     parser.add_argument("--concurrency", "-c", type=int, default=DEFAULT_CONCURRENCY, help=f"Max parallel requests (default: {DEFAULT_CONCURRENCY})")
 
     # Info
-    parser.add_argument("--list-speakers", action="store_true", help="List available speakers and exit")
+    parser.add_argument("--list-speakers", action="store_true", help="list speakers from local table (no API call)")
+    parser.add_argument("--filter", action="append", help="filter: scene=教学场景 / type=bigtts / lang=ja")
+    parser.add_argument("--sort", choices=["heat"], help="sort by field")
 
     args = parser.parse_args()
 
-    # --list-speakers mode
+    # --list-speakers mode (local table; does not need VOLC_SPEECH_API_KEY)
     if args.list_speakers:
-        api_key = load_api_key()
-        speakers = list_speakers(api_key)
-        print(json.dumps(speakers, ensure_ascii=False, indent=2))
+        _list_speakers(args)
         return
 
     # Validate mode
@@ -695,7 +606,7 @@ def main() -> None:
     elif args.text:
         items = [{"text": args.text}]
     else:
-        die("Either provide text as positional argument or use --batch '[...]'")
+        die("Either provide text as positional argument, use --batch '[...]', or --list-speakers")
 
     api_key = load_api_key()
     output_dir = Path(args.output_dir)

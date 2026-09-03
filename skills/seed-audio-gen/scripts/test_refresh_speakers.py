@@ -56,3 +56,11 @@ def test_curated_header_does_not_claim_full():
     # 不应再出现旧的「共 N 个音色」全量自称句
     assert "音色速查表\n" not in md  # 旧标题已改为「音色速查（精选）」
     assert "（精选）" in md
+
+
+def test_list_speakers_request_pins_seed_tts_2():
+    """ListSpeakers 必须带 resource_ids=['seed-tts-2.0']，避免混入 1.0 音色"""
+    kw = mod.list_speakers_request_kwargs(3)
+    assert kw["page"] == 3
+    assert kw["resource_ids"] == ["seed-tts-2.0"]
+    assert mod.LIST_RESOURCE_IDS == ["seed-tts-2.0"]
