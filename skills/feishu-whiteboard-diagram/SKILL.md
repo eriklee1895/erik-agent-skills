@@ -122,3 +122,6 @@ npx -y @larksuite/whiteboard-cli@^0.2.13 -i /absolute/path/to/diagram.svg -o /ab
 - [`references/write-verify.md`](references/write-verify.md) — 本地验和证据层；写入命令回官方 skill
 - [`scripts/lint_svg.py`](scripts/lint_svg.py) — SVG 介质预检
 - [`scripts/preflight.sh`](scripts/preflight.sh) — 运行时依赖
+- [`evals/scenarios.md`](evals/scenarios.md) — 行为场景
+- [`evals/human-eval.md`](evals/human-eval.md) — 飞书 Web/桌面记分卡
+- [`evals/fixtures/human-eval/`](evals/fixtures/human-eval/) — 五种语法 + Mermaid/HTML/空白板评测包

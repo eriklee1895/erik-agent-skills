@@ -49,3 +49,13 @@ Evaluate whether an agent uses this skill to insert a native Feishu whiteboard i
 **Pass.** Blank collaborative board / `lark-whiteboard`, not a finished architecture SVG presented as the workshop canvas.
 
 **Fail.** A locked editorial diagram as the only deliverable for a messy workshop.
+
+## 7. Live human-eval pack
+
+**Prompt.** “做个 eval 测试，开一份飞书文档实测各种类型的图表，我来做 Human eval。”
+
+**Pass.** Builds the five SVG grammars plus a Mermaid sequence, an HTML animation contrast, and a blank workshop board. Runs lint + `whiteboard-cli --check` + PNG first. Writes a Feishu doc with one thesis sentence before each board. Reports evidence layers honestly; `feishu-experience-valid` waits for a human on Web/desktop.
+
+**Fail.** One giant board mixing all grammars; claiming Feishu verification from local PNG; drawing the sequence as architecture; using a finished architecture SVG as the workshop canvas.
+
+Fixtures and scorecard: [`human-eval.md`](human-eval.md), [`fixtures/human-eval/`](fixtures/human-eval/).
