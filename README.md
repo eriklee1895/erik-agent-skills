@@ -52,6 +52,31 @@ categorized list, descriptions, and per-skill install commands.
 Each skill is a self-contained directory with a required `SKILL.md` and optional
 `scripts/`, `references/`, `assets/`, `evals/`, and `agents/` directories.
 
+## Development
+
+Each skill script declares its own dependencies inline (PEP 723) and is meant to
+run with [`uv`](https://docs.astral.sh/uv/):
+
+```bash
+# Run any skill script (uv resolves its declared dependencies automatically)
+uv run skills/<skill>/scripts/<name>.py --help
+```
+
+For running the whole test suite, an aggregated virtualenv is provided:
+
+```bash
+# One-time setup (also run automatically by the Cursor Cloud Agent environment)
+bash .cursor/install.sh
+
+# Run the tests
+./.venv/bin/python -m pytest skills/
+```
+
+`.cursor/install.sh` installs `uv`, builds the `.venv` from
+`requirements-dev.txt`, and downloads the Playwright Chromium browser used by the
+headless-scraping skills. The WeChat skills reuse the system Google Chrome via
+the `CHROME_EXECUTABLE` environment variable.
+
 ## Related project
 
 Explore [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness),

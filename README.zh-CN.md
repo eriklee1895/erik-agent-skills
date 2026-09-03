@@ -48,6 +48,29 @@ npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen
 每个 skill 都是一个自包含目录，必须提供 `SKILL.md`，并可按需包含
 `scripts/`、`references/`、`assets/`、`evals/` 和 `agents/`。
 
+## 开发
+
+每个 skill 脚本都通过 PEP 723 内联声明自身依赖，推荐使用 [`uv`](https://docs.astral.sh/uv/) 运行：
+
+```bash
+# 运行任意 skill 脚本（uv 会自动解析其声明的依赖）
+uv run skills/<skill>/scripts/<name>.py --help
+```
+
+如需运行完整测试套件，仓库提供了一个聚合的虚拟环境：
+
+```bash
+# 一次性初始化（Cursor Cloud Agent 环境会自动执行）
+bash .cursor/install.sh
+
+# 运行测试
+./.venv/bin/python -m pytest skills/
+```
+
+`.cursor/install.sh` 会安装 `uv`，基于 `requirements-dev.txt` 构建 `.venv`，
+并下载无头抓取类 skill 所需的 Playwright Chromium 浏览器。微信相关 skill 则通过
+`CHROME_EXECUTABLE` 环境变量复用系统的 Google Chrome。
+
 ## 相关项目
 
 欢迎访问 [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)：
