@@ -1,0 +1,5 @@
+{
+  "name": "erik-agent-skills",
+  "install": "bash .cursor/install.sh",
+  "chromeExecutablePath": "/usr/local/bin/google-chrome"
+}
