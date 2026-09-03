@@ -1,0 +1,193 @@
+<title>飞书画板精美图表 · Human Eval</title>
+<callout emoji="🧪" background-color="light-blue" border-color="blue">
+  <p>这份文档用来肉眼评测文档精排画板：每种图前面有一句论点。请在飞书 Web 和桌面分别打开画板，点进去改一个节点，确认是原生画板而不是图片。HTML 对照块不是画板。</p>
+</callout>
+<p>评测包日期 2026-09-03。本地已通过 lint-valid 与 local-render-valid。请在文末记分表填写 feishu-experience-valid。</p>
+<h1 seq="auto">怎么评</h1>
+<p>先记证据层，再打 1–5 分。SVG / Mermaid 是静态精排图，运动和交互记 N/A。有一项低于 3，或出现截断、豆腐、把 HTML 当成画板，整张图不通过。</p>
+<table>
+  <colgroup>
+    <col width="80"/>
+    <col width="160"/>
+    <col width="240"/>
+    <col width="340"/>
+  </colgroup>
+  <thead>
+    <tr>
+      <th background-color="light-gray"><p>ID</p></th>
+      <th background-color="light-gray"><p>介质</p></th>
+      <th background-color="light-gray"><p>语法</p></th>
+      <th background-color="light-gray"><p>你要确认</p></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><p>01</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>分层条带</p></td>
+      <td><p>职责 / 边界成列，上下行 API 分色</p></td>
+    </tr>
+    <tr>
+      <td><p>02</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>任务循环 · 分叉</p></td>
+      <td><p>工具回路是放大色块；短虚线回填，不绕场</p></td>
+    </tr>
+    <tr>
+      <td><p>03</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>学习闭环 · 三列</p></td>
+      <td><p>三列写满对比项；下一轮是标签不是绕场虚线</p></td>
+    </tr>
+    <tr>
+      <td><p>04</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>多列运行</p></td>
+      <td><p>请求向右、事件向左，页脚是边界</p></td>
+    </tr>
+    <tr>
+      <td><p>05</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>编号层级</p></td>
+      <td><p>右侧每层一个问题；页脚是恢复坐标</p></td>
+    </tr>
+    <tr>
+      <td><p>06</p></td>
+      <td><p>Mermaid 画板</p></td>
+      <td><p>时序</p></td>
+      <td><p>不要被重画成架构分层</p></td>
+    </tr>
+    <tr>
+      <td><p>07</p></td>
+      <td><p>HTML5</p></td>
+      <td><p>对照：语义运动</p></td>
+      <td><p>这不是画板；静止时也能读完四层</p></td>
+    </tr>
+    <tr>
+      <td><p>08</p></td>
+      <td><p>空白画板</p></td>
+      <td><p>共创</p></td>
+      <td><p>能拖便签，不要和精排图锁在一起</p></td>
+    </tr>
+    <tr>
+      <td><p>09</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>对比列 · Riptide</p></td>
+      <td><p>钴色块是该行去处，不是每格都上色</p></td>
+    </tr>
+    <tr>
+      <td><p>10</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>枢纽</p></td>
+      <td><p>Agent Loop 最大且唯一饱和</p></td>
+    </tr>
+    <tr>
+      <td><p>11</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>时间线 · Coral</p></td>
+      <td><p>completed 是高潮；中断/失败是旁路</p></td>
+    </tr>
+    <tr>
+      <td><p>12</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>泳道</p></td>
+      <td><p>Agent 车道上色；判断是唯一饱和块</p></td>
+    </tr>
+    <tr>
+      <td><p>13</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>四象限 · Grove</p></td>
+      <td><p>右上 SKILL.md 最大；其余老实留白</p></td>
+    </tr>
+    <tr>
+      <td><p>14</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>焦点+细节 · Avocado</p></td>
+      <td><p>左边判断最大，右边三张小卡不要均分</p></td>
+    </tr>
+  </tbody>
+</table>
+<h1 seq="auto">分层条带</h1>
+<p>这张图回答：支付网关每一层屏蔽什么，层间真正暴露哪条 API。</p>
+<whiteboard type="svg" path="@./01-layered-strip.svg"/>
+<h1 seq="auto">任务循环</h1>
+<p>这张图回答：谁决策、谁执行。工具回路才是要放大的分叉；直接回答是短支。</p>
+<whiteboard type="svg" path="@./02-task-loop.svg"/>
+<h1 seq="auto">学习闭环</h1>
+<p>这张图回答：值不值得写回去。上门禁，下三列对比。门禁写的是扫描 / 去重 / 质量，不是保存。</p>
+<whiteboard type="svg" path="@./03-learning-loop.svg"/>
+<h1 seq="auto">多列运行架构</h1>
+<p>这张图回答：请求向右送进 Agent Loop，事件向左投影回宿主。列是职责边界。</p>
+<whiteboard type="svg" path="@./04-multicolumn-runtime.svg"/>
+<h1 seq="auto">编号层级</h1>
+<p>这张图回答：中断之后恢复哪一层。页脚给出 threadId + turnId + itemId。</p>
+<whiteboard type="svg" path="@./05-recovery-layers.svg"/>
+<h1 seq="auto">Mermaid 时序</h1>
+<p>用户已经给了 sequenceDiagram。只把源码放进 whiteboard type=mermaid，飞书服务端自动转成画板，不要重画成 SVG 架构。</p>
+<whiteboard type="mermaid" path="@./06-sequence.mmd"/>
+<h1 seq="auto">HTML 动画对照</h1>
+<p>请求在网关里流动需要看见阶段。画板做不好语义运动，所以走 feishu-html-diagram，而不是假装画板会动。</p>
+<html5-block path="@./07-packet-flow.html"/>
+<h1 seq="auto">空白共创画板</h1>
+<p>现场评审要一起拖便签、改聚类。这是空白画板，不是上面那些精排插图。</p>
+<whiteboard type="blank"/>
+<h1 seq="auto">对比列</h1>
+<p>这张图回答：三种落盘哪一列接什么。钴色是该行更该写入的去处。</p>
+<whiteboard type="svg" path="@./09-comparison.svg"/>
+<h1 seq="auto">枢纽</h1>
+<p>这张图回答：Agent 周围一圈是什么。核心必须最大。</p>
+<whiteboard type="svg" path="@./10-hub.svg"/>
+<h1 seq="auto">时间线</h1>
+<p>这张图回答：一次 Turn 的高潮在完成。Delta 不是完成。Coral 色板，和其他图不是同一套皮。</p>
+<whiteboard type="svg" path="@./11-timeline.svg"/>
+<h1 seq="auto">泳道握手</h1>
+<p>这张图回答：一次调用里用户 / Agent / 工具怎么接力。主角车道上色，不要三条一样灰。</p>
+<whiteboard type="svg" path="@./12-swimlane.svg"/>
+<h1 seq="auto">四象限</h1>
+<p>这张图回答：可复用 × 可验证，哪一格才写 SKILL.md。Grove 色板。</p>
+<whiteboard type="svg" path="@./13-quadrant.svg"/>
+<h1 seq="auto">焦点+细节</h1>
+<p>这张图回答：判断这一步到底看什么。左边一块焦点，右边三张支持卡。Avocado Press。</p>
+<whiteboard type="svg" path="@./14-focus-detail.svg"/>
+<h1 seq="auto">记分表</h1>
+<p>每张图复制一行。Web / 桌面都打开过再把最高证据层写成 feishu-experience-valid。</p>
+<table>
+  <colgroup>
+    <col width="70"/>
+    <col width="90"/>
+    <col width="90"/>
+    <col width="90"/>
+    <col width="90"/>
+    <col width="90"/>
+    <col width="110"/>
+    <col width="90"/>
+  </colgroup>
+  <thead>
+    <tr>
+      <th background-color="light-gray"><p>ID</p></th>
+      <th background-color="light-gray"><p>理解</p></th>
+      <th background-color="light-gray"><p>观感</p></th>
+      <th background-color="light-gray"><p>语法</p></th>
+      <th background-color="light-gray"><p>可编辑</p></th>
+      <th background-color="light-gray"><p>可读</p></th>
+      <th background-color="light-gray"><p>证据层</p></th>
+      <th background-color="light-gray"><p>结论</p></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><p>01</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>02</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>03</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>04</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>05</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>06</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>07</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>08</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>09</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>10</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>11</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>12</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>13</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>14</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+  </tbody>
+</table>

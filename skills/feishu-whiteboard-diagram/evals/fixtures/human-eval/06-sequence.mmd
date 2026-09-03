@@ -1,0 +1,12 @@
+sequenceDiagram
+    autonumber
+    participant Caller as 调用方
+    participant Access as 接入层
+    participant Session as 会话层
+    participant Adapt as 后端适配
+    Caller->>Access: OpenStream
+    Access->>Session: OnTrackOpen
+    Session->>Adapt: Dispatch(track)
+    Adapt-->>Session: MediaEvent
+    Session-->>Access: OnTrackData
+    Access-->>Caller: StreamChunk
