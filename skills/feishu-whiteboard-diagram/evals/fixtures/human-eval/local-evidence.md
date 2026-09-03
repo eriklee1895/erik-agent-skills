@@ -5,7 +5,9 @@ Remaining: `feishu-experience-valid` (open the live doc in Feishu Web and/or des
 
 Live document: https://bytedance.my.larkoffice.com/docx/MoiudXbwaonw61xo2Uem0E9qyQg
 
-Fetch-back found 7 `<whiteboard>` blocks (five SVG grammars, one Mermaid sequence, one blank workshop board) and 1 `html5-block`. Exported Feishu previews match the local PNG composition for 01–06; board 07 is blank as intended.
+Fetch-back found 7 `<whiteboard>` blocks (five SVG grammars, one Mermaid sequence **direct-upload**, one blank workshop board) and 1 `html5-block`. 02/03/04 were redrawn after Human eval: denser layout, larger focal nodes, no wrap-around dashed loops, no empty column shells. Exported Feishu previews match the local PNG composition for 01–06; board 07 is blank as intended.
+
+Mermaid (06) is not rendered by this skill — Feishu converts `<whiteboard type="mermaid">` to board nodes.
 
 | Artifact | lint / check | Feishu write |
 |---|---|---|

@@ -20,7 +20,8 @@ metadata:
 
 - 不是 `lark-whiteboard` 的替代品，不复制其 CLI、scene 骨架和身份分流表。
 - 不是 `feishu-html-diagram`：不需要动画、Tab、D3 时，不要用 HTML5 冒充画板。
-- 不是社区 35 套色板或 17 类图表百科。那些当参考，不在这里再做一遍。
+- 不是社区 35 套换肤色板，也不自己实现 Mermaid 渲染。`<whiteboard type="mermaid">` 交给飞书服务端转成画板。
+- 社区 `beautiful-feishu-whiteboard` / `feishu-whiteboard-pro` 只吸收 **介质硬规则 + 构图纪律**（原生形状、焦点靠尺寸、反均等卡片），不搬 35 套 `design.md`。
 
 ## 适用 / 不适用
 
@@ -43,7 +44,7 @@ metadata:
 
 | 条件 | 画什么 |
 |---|---|
-| 用户已给出 Mermaid/PlantUML，或图是思维导图 / 时序 / 类图 / 饼图 / 甘特 | 代码图，按官方 Mermaid/PlantUML 路径 |
+| 用户已给出 Mermaid/PlantUML，或图是思维导图 / 时序 / 类图 / 饼图 / 甘特 | 把源码放进 `<whiteboard type="mermaid">`（或 PlantUML），飞书自动转画板；不要重画成 SVG 架构 |
 | 判断多、回路多、需要原生菱形，卡片对齐要求一般 | DSL `dagre` + `diamond`，按官方 DSL 路径 |
 | 分层条带、多列运行图、编号层级、页脚结论、层间 API 标注 | **UTF-8 SVG，只用可识别原生形状** |
 | 需要运动、Tab、D3 | `feishu-html-diagram` |
@@ -75,9 +76,11 @@ bash /resolved/skill-dir/scripts/preflight.sh
 
 没有合适的就用「标题 + 分区卡片 + 少量语义连线 + 页脚结论条」现编，不要硬套。
 
-### 2. 按文档精排上色
+### 2. 按文档精排上色，并先定焦点
 
-见 [视觉系统](references/visual-system.md)。最低要求：浅底 + 同色深边框分组；组内白卡片；蓝=动作、紫=上下文、橙=判断、绿=产出；默认连线灰，只有上行/下行/是/否/回填才彩色；标题是论点，页脚是结论；画布上不要出现 prompt 或风格名。
+见 [视觉系统](references/visual-system.md) 和 [构图](references/composition.md)。最低要求：浅底 + 同色深边框分组；组内白卡片；蓝=动作、紫=上下文、橙=判断、绿=产出；默认连线灰，只有上行/下行/是/否/回填才彩色；标题是论点，页脚是结论；画布上不要出现 prompt 或风格名。
+
+构图先定 **哪一个节点最大**。染色但和邻居一样大，读者看起来仍是草稿流程图。回填/下一轮用最短正交虚线，不要绕画板外框。列容器高度跟着内容走，不要先画高壳再把卡片贴在顶和底。
 
 ### 3. 写 SVG（精排默认路径）
 
@@ -117,6 +120,7 @@ npx -y @larksuite/whiteboard-cli@^0.2.13 -i /absolute/path/to/diagram.svg -o /ab
 
 - [`references/medium.md`](references/medium.md) — 画板 / Mermaid / HTML5 / 图片，以及和官方 skill 的分工
 - [`references/grammars.md`](references/grammars.md) — 五种文档精排布局语法
+- [`references/composition.md`](references/composition.md) — 间距、字号阶梯、焦点靠尺寸、反套路
 - [`references/visual-system.md`](references/visual-system.md) — 色板、字号、间距
 - [`references/constraints.md`](references/constraints.md) — 社区经验 + 实测映射
 - [`references/write-verify.md`](references/write-verify.md) — 本地验和证据层；写入命令回官方 skill

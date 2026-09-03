@@ -135,18 +135,18 @@ def card(x: float, y: float, w: float, h: float, title: str, detail: str, edge: 
     return "".join(
         [
             rect(x, y, w, h, WHITE, edge, sw=1.5, rx=12),
-            t(x + 16, y + 28, title, size=14, weight=700),
-            t(x + 16, y + 50, detail, size=13, fill=MUTED),
+            t(x + 16, y + 30, title, size=16, weight=700),
+            t(x + 16, y + 54, detail, size=14, fill=MUTED),
         ]
     )
 
 
 def layered_strip() -> str:
     parts: list[str] = [
-        t(40, 48, "支付网关分层：每层屏蔽什么", size=24, weight=700),
-        t(40, 76, "自上而下看职责，自下而上看出边界。层间只暴露真实 API。", size=14, fill=MUTED),
-        t(1180, 48, "↑ 上行", size=13, weight=700, fill=BLUE_EDGE),
-        t(1280, 48, "↓ 下行", size=13, weight=700, fill=GREEN_EDGE),
+        t(48, 52, "支付网关分层：每层屏蔽什么", size=28, weight=700),
+        t(48, 84, "自上而下看职责，自下而上看出边界。层间只暴露真实 API。", size=16, fill=MUTED),
+        t(1180, 52, "↑ 上行", size=16, weight=700, fill=BLUE_EDGE),
+        t(1288, 52, "↓ 下行", size=16, weight=700, fill=GREEN_EDGE),
     ]
     layers = [
         (
@@ -202,8 +202,8 @@ def layered_strip() -> str:
     y = 100
     layer_h = 168
     gap = 56
-    x = 40
-    w = 1440
+    x = 48
+    w = 1424
     for i, (badge, name, fill, edge, cards) in enumerate(layers):
         parts.append(rect(x, y, w, layer_h, fill, edge, sw=2, rx=16))
         parts.append(rect(x - 8, y - 12, 52, 28, edge, edge, sw=0, rx=8))
@@ -221,14 +221,14 @@ def layered_strip() -> str:
             gy = y + layer_h + gap / 2
             up, down = apis[i]
             parts.append(line(220, gy + 16, 220, gy - 16, BLUE_EDGE, marker="arrow-blue"))
-            parts.append(t(236, gy + 5, f"上行 {up}", size=13, fill=BLUE_EDGE))
+            parts.append(t(236, gy + 5, f"上行 {up}", size=14, fill=BLUE_EDGE))
             parts.append(line(1280, gy - 16, 1280, gy + 16, GREEN_EDGE, marker="arrow-green"))
-            parts.append(t(1108, gy + 5, f"下行 {down}", size=13, fill=GREEN_EDGE, anchor="end"))
+            parts.append(t(1108, gy + 5, f"下行 {down}", size=14, fill=GREEN_EDGE, anchor="end"))
             y += layer_h + gap
         else:
             y += layer_h
     fy = y + 24
-    parts.append(rect(40, fy, 1440, 52, GREEN_SOFT, GREEN_EDGE, sw=2, rx=12))
+    parts.append(rect(48, fy, 1424, 52, GREEN_SOFT, GREEN_EDGE, sw=2, rx=12))
     parts.append(
         t(
             760,
@@ -243,174 +243,183 @@ def layered_strip() -> str:
     return svg(1520, fy + 92, "".join(parts))
 
 
+def capsule(parts: list[str], x: float, y: float, w: float, h: float, label: str, fill: str, edge: str, *, size: int = 16) -> None:
+    parts.append(rect(x, y, w, h, fill, edge, sw=2, rx=min(28, h / 2)))
+    parts.append(t(x + w / 2, y + h / 2 + 6, label, size=size, weight=700, fill=edge, anchor="middle"))
+
+
 def task_loop() -> str:
     parts: list[str] = [
-        rect(40, 32, 1440, 700, CANVAS, CANVAS_EDGE, sw=2, rx=16),
-        t(64, 72, "Hermes 普通任务循环：谁决策、谁执行", size=24, weight=700),
-        t(64, 100, "能直接回答就结束；需要工具则执行后虚线回填，再判断一次。", size=14, fill=MUTED),
+        rect(48, 32, 1424, 528, CANVAS, CANVAS_EDGE, sw=2, rx=16),
+        t(72, 76, "Hermes 普通任务循环：谁决策、谁执行", size=28, weight=700),
+        t(72, 108, "能直接回答就结束。需要工具才走下面这条矮带，虚线回填后再判断。", size=16, fill=MUTED),
     ]
-    caps = [
-        (80, 176, 210, "用户任务", BLUE_FILL, BLUE_EDGE),
-        (360, 176, 220, "加载上下文", PURPLE_FILL, PURPLE_EDGE),
-        (930, 176, 210, "最终答案", GREEN_FILL, GREEN_EDGE),
-        (620, 390, 210, "执行工具", BLUE_FILL, BLUE_EDGE),
-        (620, 520, 210, "工具结果", PURPLE_FILL, PURPLE_EDGE),
-    ]
-    for x, y, w, label, fill, edge in caps:
-        parts.append(rect(x, y, w, 56, fill, edge, sw=2, rx=28))
-        parts.append(t(x + w / 2, y + 36, label, size=15, weight=700, fill=edge, anchor="middle"))
-    cx, cy = 720, 204
-    parts.append(diamond(cx, cy, 110, 92, ORANGE_FILL, ORANGE_EDGE))
-    parts.append(t(cx, cy + 6, "判断", size=15, weight=700, fill=ORANGE_EDGE, anchor="middle"))
-    parts.append(line(290, 204, 348, 204, LINE))
-    parts.append(line(580, 204, 665, 204, LINE))
-    parts.append(line(775, 204, 918, 204, GREEN_EDGE, marker="arrow-green"))
-    parts.append(t(846, 190, "直接回答", size=12, fill=GREEN_EDGE, anchor="middle"))
-    parts.append(poly("720,250 720,390", ORANGE_EDGE, marker="arrow-orange"))
-    parts.append(t(736, 330, "需要工具", size=12, fill=ORANGE_EDGE))
-    parts.append(line(725, 446, 725, 512, LINE))
+    # Demoted start steps; judgment is the focal; final answer is second.
+    capsule(parts, 72, 168, 200, 72, "用户任务", BLUE_FILL, BLUE_EDGE)
+    capsule(parts, 312, 168, 220, 72, "加载上下文", PURPLE_FILL, PURPLE_EDGE)
+    cx, cy = 740, 204
+    parts.append(diamond(cx, cy, 188, 152, ORANGE_FILL, ORANGE_EDGE))
+    parts.append(t(cx, cy + 6, "判断", size=20, weight=700, fill=ORANGE_EDGE, anchor="middle"))
+    parts.append(rect(928, 158, 312, 92, GREEN_SOFT, GREEN_EDGE, sw=2, rx=16))
+    parts.append(t(1084, 194, "最终答案", size=20, weight=700, fill=GREEN_EDGE, anchor="middle"))
+    parts.append(t(1084, 222, "直接结束", size=14, fill=MUTED, anchor="middle"))
+    parts.append(line(272, 204, 312, 204, LINE))
+    parts.append(line(532, 204, 646, 204, LINE))
+    parts.append(line(834, 204, 928, 204, GREEN_EDGE, marker="arrow-green"))
+    parts.append(t(880, 190, "直接回答", size=14, weight=700, fill=GREEN_EDGE, anchor="middle"))
+    parts.append(rect(560, 312, 360, 168, ORANGE_FILL, ORANGE_EDGE, sw=2, rx=16))
+    parts.append(t(580, 338, "工具回路", size=14, weight=700, fill=ORANGE_EDGE))
+    capsule(parts, 600, 352, 280, 52, "执行工具", BLUE_FILL, BLUE_EDGE, size=16)
+    capsule(parts, 600, 416, 280, 52, "工具结果", PURPLE_FILL, PURPLE_EDGE, size=16)
+    parts.append(poly("740,280 740,352", ORANGE_EDGE, marker="arrow-orange"))
+    parts.append(t(888, 338, "需要工具", size=14, weight=700, fill=ORANGE_EDGE, anchor="end"))
     parts.append(
         poly(
-            "620,548 460,548 460,268 720,250",
+            "600,442 500,442 500,280 740,280",
             PURPLE_EDGE,
             marker="arrow-purple",
             dash=True,
         )
     )
-    parts.append(t(360, 536, "结果回填，再次判断", size=13, fill=PURPLE_EDGE, anchor="middle"))
-    parts.append(rect(64, 640, 1392, 56, WHITE, CANVAS_EDGE, sw=1.5, rx=12))
+    parts.append(t(500, 468, "结果回填，再次判断", size=14, fill=PURPLE_EDGE, anchor="middle"))
+    parts.append(rect(72, 500, 1376, 40, GREEN_SOFT, GREEN_EDGE, sw=1.5, rx=10))
     parts.append(
         t(
             760,
-            674,
-            "蓝 = 动作 · 紫 = 上下文 · 橙 = 判断 · 绿 = 产出。虚线不是另一条正向边。",
-            size=14,
-            fill=MUTED,
+            526,
+            "直接回答就结束。工具结果必须虚线回填，再判断一次。",
+            size=16,
+            weight=700,
+            fill=GREEN_EDGE,
             anchor="middle",
         )
     )
-    return svg(1520, 764, "".join(parts))
+    return svg(1520, 592, "".join(parts))
 
 
 def learning_loop() -> str:
     parts: list[str] = [
-        rect(40, 32, 1440, 780, CANVAS, CANVAS_EDGE, sw=2, rx=16),
-        t(64, 72, "学习闭环：值不值得写回去", size=24, weight=700),
-        t(64, 100, "复盘之后先过门禁；只有值得复用的才分类落盘，并在后续任务注入。", size=14, fill=MUTED),
+        rect(48, 32, 1424, 656, CANVAS, CANVAS_EDGE, sw=2, rx=16),
+        t(72, 76, "学习闭环：值不值得写回去", size=28, weight=700),
+        t(72, 108, "复盘之后先过门禁；只有值得复用的才分类落盘，并在后续任务注入。", size=16, fill=MUTED),
     ]
-
-    def capsule(x: float, y: float, w: float, label: str, fill: str, edge: str) -> None:
-        parts.append(rect(x, y, w, 56, fill, edge, sw=2, rx=28))
-        parts.append(t(x + w / 2, y + 36, label, size=15, weight=700, fill=edge, anchor="middle"))
-
-    capsule(64, 160, 180, "任务完成", GREEN_FILL, GREEN_EDGE)
-    capsule(310, 160, 160, "复盘", PURPLE_FILL, PURPLE_EDGE)
-    cx, cy = 620, 188
-    parts.append(diamond(cx, cy, 120, 96, ORANGE_FILL, ORANGE_EDGE))
-    parts.append(t(cx, cy - 2, "值得", size=14, weight=700, fill=ORANGE_EDGE, anchor="middle"))
-    parts.append(t(cx, cy + 18, "复用?", size=14, weight=700, fill=ORANGE_EDGE, anchor="middle"))
-    capsule(780, 160, 150, "结束", RED_FILL, RED_EDGE)
-    capsule(540, 320, 200, "写入门禁", ORANGE_FILL, ORANGE_EDGE)
+    capsule(parts, 72, 168, 188, 64, "任务完成", GREEN_FILL, GREEN_EDGE)
+    capsule(parts, 300, 168, 156, 64, "复盘", PURPLE_FILL, PURPLE_EDGE)
+    cx, cy = 640, 220
+    parts.append(diamond(cx, cy, 208, 168, ORANGE_FILL, ORANGE_EDGE))
+    parts.append(t(cx, cy - 8, "值得复用?", size=18, weight=700, fill=ORANGE_EDGE, anchor="middle"))
+    capsule(parts, 860, 188, 132, 48, "结束", RED_FILL, RED_EDGE, size=16)
+    parts.append(rect(520, 328, 240, 88, ORANGE_FILL, ORANGE_EDGE, sw=2, rx=16))
+    parts.append(t(640, 362, "写入门禁", size=18, weight=700, fill=ORANGE_EDGE, anchor="middle"))
+    parts.append(t(640, 388, "扫描 / 去重 / 质量", size=14, fill=ORANGE_EDGE, anchor="middle"))
     stores = [
-        (220, 460, 220, "USER.md", "个人偏好 / 习惯", BLUE_FILL, BLUE_EDGE),
-        (640, 460, 220, "MEMORY", "可检索事实", PURPLE_FILL, PURPLE_EDGE),
-        (1060, 460, 220, "SKILL.md", "可复用方法", GREEN_FILL, GREEN_EDGE),
+        (72, 444, 432, "USER.md", "个人偏好 / 习惯", BLUE_FILL, BLUE_EDGE),
+        (544, 444, 432, "MEMORY", "可检索事实", PURPLE_FILL, PURPLE_EDGE),
+        (1016, 444, 432, "SKILL.md", "可复用方法", GREEN_FILL, GREEN_EDGE),
     ]
     for x, y, w, title, detail, fill, edge in stores:
-        parts.append(rect(x, y, w, 88, fill, edge, sw=2, rx=12))
-        parts.append(t(x + w / 2, y + 36, title, size=15, weight=700, fill=edge, anchor="middle"))
-        parts.append(t(x + w / 2, y + 62, detail, size=13, fill=MUTED, anchor="middle"))
-    capsule(430, 610, 220, "后续任务注入", BLUE_FILL, BLUE_EDGE)
-    capsule(760, 610, 200, "复用执行", GREEN_FILL, GREEN_EDGE)
-    parts.append(line(244, 188, 298, 188, LINE))
-    parts.append(line(470, 188, 560, 188, LINE))
-    parts.append(line(680, 188, 770, 188, RED_EDGE, marker="arrow-red"))
-    parts.append(t(725, 174, "否", size=13, fill=RED_EDGE, anchor="middle"))
-    parts.append(poly("620,236 620,320", LINE, marker="arrow-gray"))
-    parts.append(t(636, 286, "是", size=13, fill=GREEN_EDGE))
-    parts.append(poly("640,376 330,376 330,460", BLUE_EDGE, marker="arrow-blue"))
-    parts.append(line(640, 376, 750, 460, PURPLE_EDGE, marker="arrow-purple"))
-    parts.append(poly("740,348 1170,348 1170,460", GREEN_EDGE, marker="arrow-green"))
-    parts.append(t(560, 404, "扫描 / 去重 / 质量", size=13, fill=ORANGE_EDGE, anchor="middle"))
-    parts.append(poly("330,548 330,638 430,638", LINE, marker="arrow-gray"))
-    parts.append(line(750, 548, 540, 638, LINE))
-    parts.append(poly("1170,548 1170,638 960,638", LINE, marker="arrow-gray"))
-    parts.append(line(650, 638, 748, 638, LINE))
+        parts.append(rect(x, y, w, 84, fill, edge, sw=2, rx=12))
+        parts.append(t(x + w / 2, y + 34, title, size=18, weight=700, fill=edge, anchor="middle"))
+        parts.append(t(x + w / 2, y + 60, detail, size=14, fill=MUTED, anchor="middle"))
+    capsule(parts, 400, 560, 240, 56, "后续任务注入", BLUE_FILL, BLUE_EDGE)
+    capsule(parts, 720, 560, 200, 56, "复用执行", GREEN_FILL, GREEN_EDGE)
+    parts.append(line(260, 200, 300, 200, LINE))
+    parts.append(line(456, 200, 536, 220, LINE))
+    parts.append(line(744, 220, 860, 212, RED_EDGE, marker="arrow-red"))
+    parts.append(t(800, 198, "否", size=14, weight=700, fill=RED_EDGE, anchor="middle"))
+    parts.append(poly("640,304 640,328", LINE, marker="arrow-gray"))
+    parts.append(t(548, 348, "是", size=14, weight=700, fill=GREEN_EDGE))
+    parts.append(poly("560,416 288,416 288,444", BLUE_EDGE, marker="arrow-blue"))
+    parts.append(line(640, 416, 760, 444, PURPLE_EDGE, marker="arrow-purple"))
+    parts.append(poly("760,372 1232,372 1232,444", GREEN_EDGE, marker="arrow-green"))
+    parts.append(poly("288,528 288,588 400,588", LINE, marker="arrow-gray"))
+    parts.append(line(760, 528, 520, 588, LINE))
+    parts.append(poly("1232,528 1232,588 920,588", LINE, marker="arrow-gray"))
+    parts.append(line(640, 588, 720, 588, LINE))
     parts.append(
         poly(
-            "960,638 1410,638 1410,128 154,128 154,160",
+            "720,616 72,616 72,200",
             PURPLE_EDGE,
             marker="arrow-purple",
             dash=True,
         )
     )
-    parts.append(t(1320, 150, "下一轮", size=13, fill=PURPLE_EDGE, anchor="middle"))
-    parts.append(rect(64, 710, 1392, 56, WHITE, CANVAS_EDGE, sw=1.5, rx=12))
+    parts.append(t(160, 604, "下一轮", size=14, weight=700, fill=PURPLE_EDGE))
+    parts.append(rect(72, 640, 1376, 32, GREEN_SOFT, GREEN_EDGE, sw=1.5, rx=10))
     parts.append(
         t(
             760,
-            744,
+            662,
             "「否」必须有结束态。门禁写的是扫描 / 去重 / 质量，不是「保存」。",
-            size=14,
-            fill=MUTED,
+            size=16,
+            weight=700,
+            fill=GREEN_EDGE,
             anchor="middle",
         )
     )
-    return svg(1520, 844, "".join(parts))
+    return svg(1520, 720, "".join(parts))
 
 
 def multicolumn_runtime() -> str:
     parts: list[str] = [
-        t(40, 48, "运行架构：请求向右，事件向左", size=24, weight=700),
-        t(40, 76, "列是职责边界。上排把请求送进 Agent Loop，下排把事件投影回宿主。", size=14, fill=MUTED),
-        t(1180, 48, "请求向右 →", size=13, weight=700, fill=BLUE_EDGE, anchor="end"),
-        t(1480, 48, "← 事件向左", size=13, weight=700, fill=PURPLE_EDGE, anchor="end"),
+        t(48, 52, "运行架构：请求向右，事件向左", size=28, weight=700),
+        t(48, 84, "列是职责边界。上排把请求送进 Agent Loop，下排把事件投影回宿主。", size=16, fill=MUTED),
+        t(1188, 52, "请求向右 →", size=16, weight=700, fill=BLUE_EDGE, anchor="end"),
+        t(1472, 52, "← 事件向左", size=16, weight=700, fill=PURPLE_EDGE, anchor="end"),
     ]
     cols = [
-        ("01", "宿主", "发起与投影", PURPLE_FILL, PURPLE_EDGE, "发起请求", "thread/start", "投影到 UI", "item/completed"),
-        ("02", "传输", "连接与鉴权", BLUE_FILL, BLUE_EDGE, "Gate", "auth · stream", "Outbound", "event frame"),
-        ("03", "协调", "排队与调度", ORANGE_FILL, ORANGE_EDGE, "Processor", "turn queue", "Outbound", "delta / event"),
-        ("04", "运行时", "思考与工具", GREEN_FILL, GREEN_EDGE, "Agent Loop", "model · tools", "Events", "item / file"),
+        ("01", "宿主", "发起与投影", PURPLE_FILL, PURPLE_EDGE, "发起请求", "thread/start", "投影到 UI", "item/completed", 320),
+        ("02", "传输", "连接与鉴权", BLUE_FILL, BLUE_EDGE, "Gate", "auth · stream", "Outbound", "event frame", 320),
+        ("03", "协调", "排队与调度", ORANGE_FILL, ORANGE_EDGE, "Processor", "turn queue", "Outbound", "delta / event", 320),
+        ("04", "运行时", "思考与工具", GREEN_FILL, GREEN_EDGE, "Agent Loop", "model · tools", "Events", "item / file", 404),
     ]
-    x0 = 40
-    col_w = 348
-    gap = 16
-    top = 100
-    h = 560
-    for i, (num, name, duty, fill, edge, req, req_d, ev, ev_d) in enumerate(cols):
-        x = x0 + i * (col_w + gap)
-        parts.append(rect(x, top, col_w, h, CANVAS, CANVAS_EDGE, sw=2, rx=16))
+    x = 48
+    gap = 20
+    top = 112
+    shell_h = 348
+    req_y, req_h = 184, 100
+    ev_y, ev_h = 340, 96
+    xs: list[float] = []
+    widths: list[float] = []
+    for i, (num, name, duty, fill, edge, req, req_d, ev, ev_d, col_w) in enumerate(cols):
+        xs.append(x)
+        widths.append(col_w)
+        parts.append(rect(x, top, col_w, shell_h, CANVAS, CANVAS_EDGE, sw=2, rx=16))
         parts.append(circle(x + 28, top + 28, 16, edge, edge))
-        parts.append(t(x + 28, top + 34, num, size=12, weight=700, fill=WHITE, anchor="middle"))
-        parts.append(t(x + 52, top + 24, name, size=16, weight=700))
-        parts.append(t(x + 52, top + 46, duty, size=13, fill=MUTED))
-        parts.append(rect(x + 16, 168, col_w - 32, 120, fill, edge, sw=2, rx=12))
-        parts.append(t(x + col_w / 2, 216, req, size=16, weight=700, fill=edge, anchor="middle"))
-        parts.append(t(x + col_w / 2, 244, req_d, size=13, fill=MUTED, anchor="middle"))
-        parts.append(rect(x + 16, 488, col_w - 32, 120, WHITE, edge, sw=2, rx=12))
-        parts.append(t(x + col_w / 2, 536, ev, size=16, weight=700, fill=edge, anchor="middle"))
-        parts.append(t(x + col_w / 2, 564, ev_d, size=13, fill=MUTED, anchor="middle"))
-        if i < 3:
-            x2 = x + col_w + gap
-            parts.append(line(x + col_w - 16, 228, x2 + 16, 228, BLUE_EDGE, marker="arrow-blue"))
-            parts.append(line(x2 + 16, 548, x + col_w - 16, 548, PURPLE_EDGE, marker="arrow-purple"))
+        parts.append(t(x + 28, top + 34, num, size=14, weight=700, fill=WHITE, anchor="middle"))
+        parts.append(t(x + 52, top + 24, name, size=18, weight=700))
+        parts.append(t(x + 52, top + 48, duty, size=14, fill=MUTED))
+        card_x = x + 16
+        card_w = col_w - 32
+        parts.append(rect(card_x, req_y, card_w, req_h, fill, edge, sw=2, rx=12))
+        parts.append(t(x + col_w / 2, req_y + 42, req, size=18, weight=700, fill=edge, anchor="middle"))
+        parts.append(t(x + col_w / 2, req_y + 70, req_d, size=14, fill=MUTED, anchor="middle"))
+        parts.append(rect(card_x, ev_y, card_w, ev_h, WHITE, edge, sw=2, rx=12))
+        parts.append(t(x + col_w / 2, ev_y + 40, ev, size=18, weight=700, fill=edge, anchor="middle"))
+        parts.append(t(x + col_w / 2, ev_y + 68, ev_d, size=14, fill=MUTED, anchor="middle"))
         if i == 3:
-            parts.append(t(x + col_w / 2, 430, "tools ↓", size=13, fill=GREEN_EDGE, anchor="middle"))
-            parts.append(line(x + col_w / 2, 288, x + col_w / 2, 476, GREEN_EDGE, marker="arrow-green"))
-    fy = 684
-    parts.append(rect(40, fy, 1440, 72, GREEN_SOFT, GREEN_EDGE, sw=2, rx=12))
-    parts.append(t(80, fy + 28, "边界", size=14, weight=700, fill=GREEN_EDGE))
+            mid = x + col_w / 2
+            parts.append(line(mid, req_y + req_h, mid, ev_y, GREEN_EDGE, marker="arrow-green"))
+            parts.append(t(mid + 18, 328, "tools", size=14, weight=700, fill=GREEN_EDGE))
+        x += col_w + gap
+    for i in range(3):
+        x1 = xs[i] + widths[i] - 16
+        x2 = xs[i + 1] + 16
+        parts.append(line(x1, req_y + 50, x2, req_y + 50, BLUE_EDGE, marker="arrow-blue"))
+        parts.append(line(x2, ev_y + 48, x1, ev_y + 48, PURPLE_EDGE, marker="arrow-purple"))
+    fy = 480
+    parts.append(rect(48, fy, 1424, 56, GREEN_SOFT, GREEN_EDGE, sw=2, rx=12))
     notes = ["宿主不跑模型", "传输不理解 turn", "协调不碰工具", "运行时不画 UI"]
     for i, note in enumerate(notes):
-        parts.append(t(220 + i * 310, fy + 46, note, size=14, fill=INK, anchor="middle"))
-    return svg(1520, 788, "".join(parts))
+        parts.append(t(xs[i] + widths[i] / 2, fy + 36, note, size=16, weight=700, fill=INK, anchor="middle"))
+    return svg(1520, 560, "".join(parts))
 
 
 def recovery_layers() -> str:
     parts: list[str] = [
-        t(40, 48, "三层状态，三种恢复粒度", size=24, weight=700),
-        t(40, 76, "中断之后到底恢复哪一层：对话、事务，还是某一个动作。", size=14, fill=MUTED),
-        t(1480, 48, "一张图回答：从哪继续", size=14, weight=700, fill=BLUE_EDGE, anchor="end"),
+        t(48, 52, "三层状态，三种恢复粒度", size=28, weight=700),
+        t(48, 84, "中断之后到底恢复哪一层：对话、事务，还是某一个动作。", size=16, fill=MUTED),
+        t(1472, 52, "一张图回答：从哪继续", size=16, weight=700, fill=BLUE_EDGE, anchor="end"),
     ]
     layers = [
         (
@@ -474,12 +483,12 @@ def recovery_layers() -> str:
             cfill, cedge = status_colors.get(label, (WHITE, edge))
             parts.append(rect(px, py, pw, 64, cfill, cedge, sw=1.5, rx=12))
             parts.append(t(px + pw / 2, py + 28, label, size=14, weight=700, fill=cedge, anchor="middle"))
-            parts.append(t(px + pw / 2, py + 50, detail, size=12, fill=MUTED, anchor="middle"))
+            parts.append(t(px + pw / 2, py + 50, detail, size=14, fill=MUTED, anchor="middle"))
             px += pw + 16
         y += h
         if between:
             parts.append(line(760, y + 4, 760, y + 36, LINE, marker="arrow-gray"))
-            parts.append(t(776, y + 24, between, size=13, fill=MUTED))
+            parts.append(t(776, y + 24, between, size=14, fill=MUTED))
             y += 44
     fy = y + 16
     parts.append(rect(40, fy, 1440, 64, GREEN_SOFT, GREEN_EDGE, sw=2, rx=12))
@@ -495,7 +504,7 @@ def recovery_layers() -> str:
         )
     )
     parts.append(
-        t(760, fy + 50, "Delta 是预览 · Completed 是事实", size=13, fill=MUTED, anchor="middle")
+        t(760, fy + 50, "Delta 是预览 · Completed 是事实", size=14, fill=MUTED, anchor="middle")
     )
     return svg(1520, fy + 92, "".join(parts))
 
@@ -742,7 +751,7 @@ EVAL_DOC = """<title>飞书画板精美图表 · Human Eval</title>
 <p>这张图回答：中断之后恢复哪一层。页脚给出 threadId + turnId + itemId。</p>
 <whiteboard type="svg" path="@./05-recovery-layers.svg"/>
 <h1 seq="auto">Mermaid 时序</h1>
-<p>用户已经给了 sequenceDiagram。按代码图路径插入，不要重画成架构图。</p>
+<p>用户已经给了 sequenceDiagram。只把源码放进 whiteboard type=mermaid，飞书服务端自动转成画板，不要重画成 SVG 架构。</p>
 <whiteboard type="mermaid" path="@./06-sequence.mmd"/>
 <h1 seq="auto">HTML 动画对照</h1>
 <p>请求在网关里流动需要看见阶段。画板做不好语义运动，所以走 feishu-html-diagram，而不是假装画板会动。</p>

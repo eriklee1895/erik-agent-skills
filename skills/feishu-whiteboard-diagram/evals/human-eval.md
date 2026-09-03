@@ -36,7 +36,7 @@ bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh
 | 维度 | 1 | 3 | 5 |
 |---|---|---|---|
 | 理解速度 | 看不出这张图在回答什么 | 能看出主论点和关系，但要停一下 | 扫一眼就知道分层 / 循环 / 恢复粒度 |
-| 专业观感 | 像草稿、海报或监控大屏 | 能放进技术文档，有小毛边 | 浅底、色边分组、编号签、页脚结论，像精排插图 |
+| 专业观感 | 像草稿流程图：均等胶囊、绕场虚线、列壳大半是空 | 能放进技术文档，有小毛边 | 有一个明显更大的焦点；密度均匀；页脚是结论 |
 | 语法是否对 | 用错骨架（时序画成架构，闭环没有「否」） | 骨架对，个别标注弱 | 与 [grammars.md](../references/grammars.md) 的关系一致，且没有第二种主语法 |
 | 可编辑性 | 飞书里是图片 / HTML / 整块嵌入 SVG | 主结构是原生节点，个别菱形嵌入可接受 | 卡片、条带、连线能点开改；装饰 path 没有当骨架 |
 | 默认宽度可读 | 文档默认宽度下核心被裁或要放大 | 核心可读，边角略挤 | 默认文档宽度下标题、卡片、页脚都清楚 |
@@ -59,7 +59,7 @@ bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh
 | 03 | `03-learning-loop.svg` | SVG 画板 | 「否」有结束；门禁写扫描/去重/质量；下一轮回到任务完成 |
 | 04 | `04-multicolumn-runtime.svg` | SVG 画板 | 上请求向右、下事件向左，页脚四句边界 |
 | 05 | `05-recovery-layers.svg` | SVG 画板 | 01–03 编号签，右侧每层一个问题，页脚 threadId+turnId+itemId |
-| 06 | `06-sequence.mmd` | Mermaid 画板 | 仍是时序，没有被改成分层架构 |
+| 06 | `06-sequence.mmd` | Mermaid 直传 | 只写 Mermaid，飞书自动转画板；不要改画成 SVG 架构 |
 | 07 | `07-packet-flow.html` | html5-block | **不是画板**；暂停/重放可用，静止时也能读完四层 |
 | 08 | blank | 空白画板 | 能拖便签；不要和 01–05 精排图混成一张 |
 

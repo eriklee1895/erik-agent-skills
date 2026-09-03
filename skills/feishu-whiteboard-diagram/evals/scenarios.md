@@ -30,9 +30,9 @@ Evaluate whether an agent uses this skill to insert a native Feishu whiteboard i
 
 **Prompt.** “把这段 sequenceDiagram 放到飞书画板里，不要重画成架构图。”
 
-**Pass.** Routes to `type="mermaid"` (or PlantUML if given). Does not force the layered-strip grammar.
+**Pass.** Writes `<whiteboard type="mermaid">` (or PlantUML). Feishu converts the source to board nodes. Does not rebuild the sequence as an SVG architecture grammar.
 
-**Fail.** Rewriting a sequence into SVG columns without a reason.
+**Fail.** Rewriting a sequence into SVG columns without a reason; claiming this skill rendered Mermaid itself.
 
 ## 5. Animated explainer
 

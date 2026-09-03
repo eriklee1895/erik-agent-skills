@@ -87,7 +87,7 @@
 <p>这张图回答：中断之后恢复哪一层。页脚给出 threadId + turnId + itemId。</p>
 <whiteboard type="svg" path="@./05-recovery-layers.svg"/>
 <h1 seq="auto">Mermaid 时序</h1>
-<p>用户已经给了 sequenceDiagram。按代码图路径插入，不要重画成架构图。</p>
+<p>用户已经给了 sequenceDiagram。只把源码放进 whiteboard type=mermaid，飞书服务端自动转成画板，不要重画成 SVG 架构。</p>
 <whiteboard type="mermaid" path="@./06-sequence.mmd"/>
 <h1 seq="auto">HTML 动画对照</h1>
 <p>请求在网关里流动需要看见阶段。画板做不好语义运动，所以走 feishu-html-diagram，而不是假装画板会动。</p>
