@@ -29,16 +29,17 @@ try:
 except json.JSONDecodeError:
     print("not_configured")
     raise SystemExit(2)
-if not data.get("ok"):
+if data.get("ok") is False:
     print((data.get("error") or {}).get("subtype") or "unknown")
     raise SystemExit(2)
 payload = data.get("data") or data
 user = (payload.get("identities") or {}).get("user") or {}
 if (
     payload.get("verified") is True
-    or user.get("tokenStatus") in {"valid", "active"}
-    or user.get("status") in {"valid", "active"}
-    or (payload.get("identity") == "user" and user.get("userName"))
+    or user.get("verified") is True
+    or user.get("tokenStatus") in {"valid", "active", "ready"}
+    or user.get("status") in {"valid", "active", "ready"}
+    or (payload.get("identity") == "user" and (user.get("userName") or user.get("available")))
 ):
     print("ok")
     raise SystemExit(0)
@@ -131,6 +132,7 @@ lark-cli docs +fetch --doc "$DOC_URL" --detail with-ids --as user --doc-format x
   > /tmp/feishu-human-eval/fetch.json
 python3 <<'PY'
 import json
+import re
 from pathlib import Path
 raw = Path("/tmp/feishu-human-eval/fetch.json").read_text(encoding="utf-8")
 start = raw.find("{")
@@ -138,22 +140,14 @@ data = json.loads(raw[start:])
 if not data.get("ok"):
     raise SystemExit(f"fetch failed: {raw[:1000]}")
 payload = data.get("data") or {}
-content = payload.get("content") or payload.get("xml") or ""
+doc = payload.get("document") or payload
+content = doc.get("content") or payload.get("xml") or ""
 text = content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)
 whiteboard = text.count("<whiteboard")
 html5 = text.count("<html5-block")
 print(f"FETCH_WHITEBOARDS={whiteboard}")
 print(f"FETCH_HTML5={html5}")
-blocks = payload.get("document", {}).get("new_blocks") or payload.get("blocks") or []
-tokens = []
-if isinstance(blocks, list):
-    for block in blocks:
-        if isinstance(block, dict) and block.get("block_token"):
-            tokens.append((block.get("block_type"), block.get("block_token")))
-# also scan json for board tokens
-blob = json.dumps(data, ensure_ascii=False)
-import re
-found = re.findall(r'"block_token":\s*"(board[^"]+|wbcn[^"]+)"', blob)
+found = re.findall(r'<whiteboard[^>]*\btoken="([^"]+)"', text)
 print(f"BOARD_TOKENS={len(found)}")
 for token in found[:12]:
     print(f"BOARD_TOKEN\t{token}")
@@ -162,22 +156,25 @@ if whiteboard < 1 and not found:
     raise SystemExit("fetch-back did not find whiteboard blocks")
 PY
 
-export_dir=/tmp/feishu-human-eval/previews
-mkdir -p "$export_dir"
+export_dir=previews
+mkdir -p /tmp/feishu-human-eval/previews
 if [ -s /tmp/feishu-human-eval/board-tokens.txt ]; then
   i=0
-  while IFS= read -r token; do
-    [ -z "$token" ] && continue
-    i=$((i + 1))
-    [ "$i" -gt 6 ] && break
-    echo "Exporting preview $i $token"
-    lark-cli whiteboard +export \
-      --whiteboard-token "$token" \
-      --output-type preview \
-      --output "$export_dir/board-$i.png" \
-      --overwrite \
-      --as user || true
-  done < /tmp/feishu-human-eval/board-tokens.txt
+  (
+    cd /tmp/feishu-human-eval
+    while IFS= read -r token; do
+      [ -z "$token" ] && continue
+      i=$((i + 1))
+      [ "$i" -gt 7 ] && break
+      echo "Exporting preview $i $token"
+      lark-cli whiteboard +export \
+        --whiteboard-token "$token" \
+        --output-type preview \
+        --output "./previews/board-$i.jpg" \
+        --overwrite \
+        --as user || true
+    done < /tmp/feishu-human-eval/board-tokens.txt
+  )
 fi
 
 echo "HUMAN_EVAL_DOC_URL=$DOC_URL"
