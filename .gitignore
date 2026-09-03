@@ -9,6 +9,13 @@ evals/**/outputs/
 doc-fetch-resources/
 **/doc-fetch-resources/
 
+# Raster previews from local evals (whiteboard-cli, screenshots).
+# Source fixtures stay as SVG / Mermaid / HTML.
+skills/**/evals/**/*.png
+skills/**/evals/**/*.jpg
+skills/**/evals/**/*.jpeg
+skills/**/evals/**/*.webp
+
 # Generated skill artifacts and Python runtime files.
 **/__pycache__/
 **/*.pyc
