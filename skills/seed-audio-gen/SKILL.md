@@ -228,7 +228,7 @@ When `--subtitle` is enabled, the `subtitle` field contains sentence-level and w
 
 ## Voice Selection
 
-**Query the catalog with `--list-speakers`** (reads a local table, no API call). Do **not** read `references/speakers.json` into context — it is ~220KB / 444 voices. `references/speakers.md` is a short curated shortlist (Top 5 per scene, with trial links), not the full list.
+**Query the catalog with `--list-speakers`** (reads a local table, no API call). Do **not** read `references/speakers.json` into context — it is ~220KB / 444 seed-tts-2.0 voices. `references/speakers.md` is a short curated shortlist (Top 5 per scene, with trial links), not the full list.
 
 ### Common-scene quick picks
 
@@ -264,7 +264,11 @@ To refresh the speaker table when new voices are released, run:
 uv run scripts/refresh-speakers.py
 ```
 
-This requires AK/SK (`VOLC_ACCESSKEY`/`VOLC_SECRETKEY`) and the internal Volcano SDK preinstalled; the ListSpeakers API uses a different auth system than everyday synthesis.
+This requires AK/SK (`VOLC_ACCESSKEY`/`VOLC_SECRETKEY`) and the internal Volcano SDK preinstalled; the ListSpeakers API uses a different auth system than everyday synthesis, and always sends `ResourceIDs=["seed-tts-2.0"]`. To filter the local json and rebuild only the curated markdown (no API):
+
+```bash
+uv run scripts/refresh-speakers.py --from-json
+```
 
 ## Prompt Guide
 

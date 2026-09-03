@@ -67,11 +67,42 @@ def test_source_note_override():
 
 
 def test_list_speakers_request_pins_seed_tts_2():
-    """ListSpeakers 必须带 resource_ids=['seed-tts-2.0']，避免混入 1.0 音色"""
+    """ListSpeakers 必须带 resource_ids=['seed-tts-2.0']"""
     kw = mod.list_speakers_request_kwargs(3)
     assert kw["page"] == 3
     assert kw["resource_ids"] == ["seed-tts-2.0"]
     assert mod.LIST_RESOURCE_IDS == ["seed-tts-2.0"]
+
+
+def test_filter_keeps_uranus_drops_legacy():
+    speakers = [
+        _spk("zh_female_vv_uranus_bigtts", "通用场景"),
+        _spk("ICL_uranus_zh_female_kefuwanjun_tob", "客服场景"),
+        _spk("zh_female_qingxin_mars_bigtts", "通用场景"),
+        _spk("zh_male_chunhou_moon_bigtts", "有声阅读"),
+        _spk("ICL_zh_female_oldstyle_tob", "角色扮演"),
+    ]
+    kept = mod.filter_seed_tts_2_voices(speakers)
+    assert [s["voice_type"] for s in kept] == [
+        "zh_female_vv_uranus_bigtts",
+        "ICL_uranus_zh_female_kefuwanjun_tob",
+    ]
+
+
+def test_local_catalog_is_seed_tts_2_only():
+    import json
+
+    speakers = json.loads(mod.SPEAKERS_JSON.read_text(encoding="utf-8"))
+    assert speakers, "speakers.json should not be empty"
+    dropped = [s["voice_type"] for s in speakers if not mod.is_seed_tts_2_voice(s["voice_type"])]
+    assert dropped == []
+
+
+def test_curated_md_file_is_seed_tts_2():
+    text = mod.SPEAKERS_MD.read_text(encoding="utf-8")
+    assert text.startswith("# seed-tts-2.0 音色速查（精选）")
+    assert "ResourceID=seed-tts-2.0" in text
+    assert "尚未按" not in text
 
 
 def test_md_filename_is_volcengine_speakers():

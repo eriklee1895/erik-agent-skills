@@ -1,6 +1,6 @@
-# seed-audio-1.0 音色速查（精选）
+# seed-tts-2.0 音色速查（精选）
 
-> 本表为**精选速查**：每场景按热度列 Top 5，带试听链接。全量 444 个音色（244 bigtts + 200 ICL，截至 2026-08-27）在 `speakers.json`，请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。
+> 本表为**精选速查**：每场景按热度列 Top 5，带试听链接。全量 444 个音色（244 bigtts + 200 ICL，截至 2026-09-03，ListSpeakers ResourceID=seed-tts-2.0）在 `speakers.json`，请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。
 
 ```bash
 uv run scripts/seed-audio-gen.py --list-speakers                          # 全量
@@ -8,7 +8,7 @@ uv run scripts/seed-audio-gen.py --list-speakers --filter scene=视频配音   #
 uv run scripts/seed-audio-gen.py --list-speakers --filter lang=ja --sort heat
 ```
 
-需要某个场景的全量音色（如全部 156 个角色扮演音）时，跑 `--list-speakers --filter scene=<场景>`。
+需要某个场景的全量音色时，跑 `--list-speakers --filter scene=<场景>`。
 
 ## 通用场景（本场景共 133 个，列 Top 5；全量用 `--list-speakers --filter scene=通用场景`）
 
@@ -86,8 +86,7 @@ uv run scripts/seed-audio-gen.py --list-speakers --filter lang=ja --sort heat
 |---|---|---|---|---|---|
 | 暖阳女声 2.0 | `zh_female_kefunvsheng_uranus_bigtts` | 女 | 开朗温柔的客服，阳光热情，服务贴心细致 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/zh_female_kefunvsheng_uranus_bigtts.mp3) | 2 |
 | 客服婉君 2.0 | `ICL_uranus_zh_female_kefuwanjun_tob` | 女 | 语气亲切，善用温和语气词，回复条理清晰的客服女生 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/ICL_uranus_zh_female_kefuwanjun_tob.mp3) | 0 |
-| 营销小楠 2.0 | `ICL_uranus_zh_female_yingxiaokefu_v2_tob` | 女 | 偏低沉的暖女中音，气息稳、质感厚，讲起营销策略自带一种 "她说的都对" 的说服力。
- | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/ICL_uranus_zh_female_yingxiaokefu_v2_tob.mp3) | 0 |
+| 营销小楠 2.0 | `ICL_uranus_zh_female_yingxiaokefu_v2_tob` | 女 | 偏低沉的暖女中音，气息稳、质感厚，讲起营销策略自带一种 "她说的都对" 的说服力。 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/ICL_uranus_zh_female_yingxiaokefu_v2_tob.mp3) | 0 |
 | Scarlet | `en_female_scarlet_p1_uranus_bigtts` | 女 | 柔婉深情的姐姐，眼里永远盛着光 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/en_female_scarlet_p1_uranus_bigtts.wav) | 0 |
 | Ivy | `en_female_lana_del_rey_parky_s_p1_uranus_bigtts` | 女 | 温婉柔和女声，语调亲切自然，听感温润怡人 | [试听](https://lf3-static.bytednsdoc.com/obj/eden-cn/lm_hz_ihsph/ljhwZthlaukjlkulzlp/portal/bigtts/audio/en_female_lana_del_rey_parky_s_p1_uranus_bigtts.wav) | 0 |
 

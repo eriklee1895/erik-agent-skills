@@ -1,6 +1,6 @@
 # seed-tts-2.0 音色速查（精选）
 
-> 本表为**精选速查**：每场景按热度列 Top 5，带试听链接。全量 444 个音色（244 bigtts + 200 ICL）在 `speakers.json`。数据来源：拷贝自 seed-audio 2026-08-27 快照（444 条），尚未按 ResourceID=seed-tts-2.0 重新拉取；下次 uv run scripts/refresh-speakers.py 会过滤。请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。`--context` / SSML / LaTeX 说明见 SKILL.md。
+> 本表为**精选速查**：每场景按热度列 Top 5，带试听链接。全量 444 个音色（244 bigtts + 200 ICL）在 `speakers.json`。截至 2026-09-03，ListSpeakers ResourceID=seed-tts-2.0。请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。`--context` / SSML / LaTeX 说明见 SKILL.md。
 
 ```bash
 uv run scripts/volcengine-tts.py --list-speakers                          # 全量

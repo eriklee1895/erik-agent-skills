@@ -13,10 +13,12 @@
 volcenginesdkcore / volcenginesdkspeechsaasprod 为内部 SDK 包，需预先从内部 registry 安装。
 
 用法:
-    uv run scripts/refresh-speakers.py
+    uv run scripts/refresh-speakers.py              # 打 API 写 json + 精选 md
+    uv run scripts/refresh-speakers.py --from-json  # 仅从本地 json 过滤 2.0 并重建精选 md
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -24,15 +26,12 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
-
 # Per-scene cap in the curated speakers.md quick reference. The full catalog
 # lives in speakers.json and is queried via `--list-speakers`; the md file is a
 # short-listing aid, not a complete dump.
 TOP_VOICES_PER_SCENE = 5
 
-# SDK field is resource_ids (JSON key ResourceIDs). Pin seed-tts-2.0 so the
-# catalog does not mix in seed-audio-1.0 / other resource voices.
+# SDK field is resource_ids (JSON key ResourceIDs). Always pin seed-tts-2.0.
 LIST_RESOURCE_IDS = ["seed-tts-2.0"]
 
 
@@ -41,13 +40,25 @@ def list_speakers_request_kwargs(page: int) -> dict[str, Any]:
     return {"page": page, "resource_ids": list(LIST_RESOURCE_IDS)}
 
 
+def is_seed_tts_2_voice(voice_type: str) -> bool:
+    """Official seed-tts-2.0 IDs: *_uranus_bigtts or ICL_uranus_*_tob."""
+    vt = voice_type or ""
+    return vt.endswith("_uranus_bigtts") or (
+        vt.startswith("ICL_uranus_") and vt.endswith("_tob")
+    )
+
+
+def filter_seed_tts_2_voices(speakers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [s for s in speakers if is_seed_tts_2_voice(str(s.get("voice_type", "")))]
+
+
 # seed-audio is a creative (voice-acting / scene-audio) skill, so the default
 # and most-used voices come first. volcengine-tts shares the same local-table
 # + --filter/--sort CLI, but its curated shortlist leads with 客服/教学
 # narration voices. 其他 (uncategorized) sorts last.
 _SCENE_ORDER = [
     "通用场景",   # default narration / warm旁白 (Vivi 2.0 lives here)
-    "角色扮演",   # multi-character / radio drama / game NPC (156 voices)
+    "角色扮演",   # multi-character / radio drama / game NPC
     "视频配音",   # film / ad dubbing
     "有声阅读",   # audiobook narration
     "趣味口音",   # accented / character voices
@@ -71,19 +82,20 @@ def build_speakers_md(speakers: list[dict[str, Any]]) -> str:
     """Build a CURATED speakers.md quick reference: Top-N voices per scene.
 
     This is intentionally not a full dump of speakers.json — it is a short,
-    low-context shortlist with trial links. The full 444-voice catalog is
-    queried via `--list-speakers`; agents should not read speakers.json into
-    context (it is ~220KB)."""
+    low-context shortlist with trial links. The full catalog is queried via
+    `--list-speakers`; agents should not read speakers.json into context
+    (it is ~220KB)."""
     bigtts_count = sum(1 for s in speakers if s["type"] == "bigtts")
     icl_count = sum(1 for s in speakers if s["type"] == "icl")
     total = len(speakers)
     today = date.today().isoformat()
 
     lines: list[str] = [
-        "# seed-audio-1.0 音色速查（精选）",
+        "# seed-tts-2.0 音色速查（精选）",
         "",
         f"> 本表为**精选速查**：每场景按热度列 Top {TOP_VOICES_PER_SCENE}，带试听链接。"
-        f"全量 {total} 个音色（{bigtts_count} bigtts + {icl_count} ICL，截至 {today}）在 `speakers.json`，"
+        f"全量 {total} 个音色（{bigtts_count} bigtts + {icl_count} ICL，截至 {today}，"
+        f"ListSpeakers ResourceID=seed-tts-2.0）在 `speakers.json`，"
         f"请勿把 speakers.json 读进上下文（约 220KB）；用下列命令查询。",
         "",
         "```bash",
@@ -92,7 +104,7 @@ def build_speakers_md(speakers: list[dict[str, Any]]) -> str:
         "uv run scripts/seed-audio-gen.py --list-speakers --filter lang=ja --sort heat",
         "```",
         "",
-        "需要某个场景的全量音色（如全部 156 个角色扮演音）时，跑 `--list-speakers --filter scene=<场景>`。",
+        "需要某个场景的全量音色时，跑 `--list-speakers --filter scene=<场景>`。",
         "",
     ]
 
@@ -117,7 +129,7 @@ def build_speakers_md(speakers: list[dict[str, Any]]) -> str:
             name = f"{emoji} {item['name']}" if emoji else item["name"]
             vt = f"`{item['voice_type']}`"
             gender = item.get("gender", "")
-            desc = item.get("description", "")
+            desc = " ".join(str(item.get("description", "") or "").split())
             trial = item.get("trial_url", "")
             trial_link = f"[试听]({trial})" if trial else ""
             heat = item.get("heat", 0)
@@ -140,6 +152,8 @@ def die(msg: str, code: int = 1) -> None:
 
 def load_credentials() -> tuple[str, str]:
     """三級 fallback: env → .env → ~/.volcengine.env"""
+    from dotenv import load_dotenv
+
     ak = os.environ.get("VOLC_ACCESSKEY", "").strip()
     sk = os.environ.get("VOLC_SECRETKEY", "").strip()
     if ak and sk:
@@ -168,7 +182,7 @@ def load_credentials() -> tuple[str, str]:
 
 
 def fetch_all_speakers(ak: str, sk: str) -> list[dict[str, Any]]:
-    """分页调 ListSpeakers API 拉全量音色列表。"""
+    """分页调 ListSpeakers API 拉全量音色列表（ResourceID=seed-tts-2.0）。"""
     from volcenginesdkcore import Configuration
     from volcenginesdkspeechsaasprod import (
         SPEECHSAASPRODApi,
@@ -290,7 +304,7 @@ def process_speakers(raw_speakers: list[dict[str, Any]]) -> list[dict[str, Any]]
             "emoji": s.get("Emoji", ""),
         }
         processed.append(entry)
-    return processed
+    return filter_seed_tts_2_voices(processed)
 
 
 def write_speakers_json(speakers: list[dict[str, Any]], path: Path) -> None:
@@ -303,21 +317,44 @@ def write_speakers_json(speakers: list[dict[str, Any]], path: Path) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Refresh seed-audio-gen speaker catalog (speakers.json + curated md)",
+    )
+    parser.add_argument(
+        "--from-json",
+        action="store_true",
+        help="Filter local speakers.json to seed-tts-2.0 and rebuild speakers.md (no API)",
+    )
+    args = parser.parse_args()
+
+    if args.from_json:
+        if not SPEAKERS_JSON.exists():
+            die(f"speakers.json not found: {SPEAKERS_JSON}")
+        processed = json.loads(SPEAKERS_JSON.read_text(encoding="utf-8"))
+        if not isinstance(processed, list):
+            die("speakers.json must be a JSON array")
+        before = len(processed)
+        processed = filter_seed_tts_2_voices(processed)
+        write_speakers_json(processed, SPEAKERS_JSON)
+        SPEAKERS_MD.write_text(build_speakers_md(processed), encoding="utf-8")
+        print(
+            f"Wrote {SPEAKERS_JSON} and {SPEAKERS_MD} "
+            f"(kept {len(processed)}, dropped {before - len(processed)})"
+        )
+        return
+
     ak, sk = load_credentials()
-    print("Fetching all speakers from ListSpeakers API...")
+    print("Fetching all speakers from ListSpeakers API (ResourceID=seed-tts-2.0)...")
     raw = fetch_all_speakers(ak, sk)
     print(f"Total raw speakers: {len(raw)}")
 
     processed = process_speakers(raw)
     print(f"Processed: {len(processed)} speakers")
 
-    # Write speakers.json
     write_speakers_json(processed, SPEAKERS_JSON)
     print(f"Wrote {SPEAKERS_JSON}")
 
-    # Write speakers.md
-    md_content = build_speakers_md(processed)
-    SPEAKERS_MD.write_text(md_content, encoding="utf-8")
+    SPEAKERS_MD.write_text(build_speakers_md(processed), encoding="utf-8")
     print(f"Wrote {SPEAKERS_MD}")
 
     print(f"\nDone. {len(processed)} speakers written to speakers.json + speakers.md")

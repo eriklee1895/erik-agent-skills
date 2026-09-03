@@ -139,7 +139,7 @@ Verified 2026-08-27: 2 and 3 reference audios are accepted with clean output. A 
 
 ### From the catalog (--speaker)
 
-Use `--speaker <voice_type>` to select from the 444-voice catalog. For the default picks by scenario (general narration, suspense, audiobook, children, English, etc.), see the **Common-scene quick picks** table in `SKILL.md`; for a curated shortlist with trial links, read `references/speakers.md` (Top 5 per scene).
+Use `--speaker <voice_type>` to select from the seed-tts-2.0 catalog (444 voices). For the default picks by scenario (general narration, suspense, audiobook, children, English, etc.), see the **Common-scene quick picks** table in `SKILL.md`; for a curated shortlist with trial links, read `references/speakers.md` (Top 5 per scene).
 
 Browse or filter the full catalog without loading it into context:
 

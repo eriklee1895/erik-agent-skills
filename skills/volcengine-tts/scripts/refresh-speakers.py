@@ -16,7 +16,7 @@ volcenginesdkcore / volcenginesdkspeechsaasprod 为内部 SDK 包，需预先从
 
 用法:
     uv run scripts/refresh-speakers.py              # 打 API 写 json + 精选 md
-    uv run scripts/refresh-speakers.py --from-json  # 仅从本地 json 重建精选 md（不打 API）
+    uv run scripts/refresh-speakers.py --from-json  # 过滤本地 json 为 2.0 并重建精选 md（不打 API）
 """
 from __future__ import annotations
 
@@ -35,9 +35,20 @@ from typing import Any
 # this md without wiping them.
 TOP_VOICES_PER_SCENE = 5
 
-# SDK field is resource_ids (JSON key ResourceIDs). Pin seed-tts-2.0 so the
-# catalog does not mix in seed-audio-1.0 / other resource voices.
+# SDK field is resource_ids (JSON key ResourceIDs). Always pin seed-tts-2.0.
 LIST_RESOURCE_IDS = ["seed-tts-2.0"]
+
+
+def is_seed_tts_2_voice(voice_type: str) -> bool:
+    """Official seed-tts-2.0 IDs: *_uranus_bigtts or ICL_uranus_*_tob."""
+    vt = voice_type or ""
+    return vt.endswith("_uranus_bigtts") or (
+        vt.startswith("ICL_uranus_") and vt.endswith("_tob")
+    )
+
+
+def filter_seed_tts_2_voices(speakers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [s for s in speakers if is_seed_tts_2_voice(str(s.get("voice_type", "")))]
 
 # Narration-first scene ordering for volcengine-tts (pure voiceover / teaching /
 # customer-service reads). This is intentionally the opposite of seed-audio-gen's
@@ -89,10 +100,7 @@ def build_speakers_md(
     if source_note:
         provenance = source_note.rstrip("。") + "。"
     else:
-        provenance = (
-            f"全量 {total} 个音色（{bigtts_count} bigtts + {icl_count} ICL，"
-            f"截至 {today}，ListSpeakers ResourceID=seed-tts-2.0）。"
-        )
+        provenance = f"截至 {today}，ListSpeakers ResourceID=seed-tts-2.0。"
 
     lines: list[str] = [
         "# seed-tts-2.0 音色速查（精选）",
@@ -307,7 +315,7 @@ def process_speakers(raw_speakers: list[dict[str, Any]]) -> list[dict[str, Any]]
             "emoji": s.get("Emoji", ""),
         }
         processed.append(entry)
-    return processed
+    return filter_seed_tts_2_voices(processed)
 
 
 def write_speakers_json(speakers: list[dict[str, Any]], path: Path) -> None:
@@ -337,7 +345,7 @@ def main() -> None:
     parser.add_argument(
         "--from-json",
         action="store_true",
-        help="Rebuild volcengine-speakers.md from local speakers.json (no API call)",
+        help="Filter local speakers.json to seed-tts-2.0 and rebuild curated md (no API)",
     )
     parser.add_argument(
         "--source-note",
@@ -352,8 +360,14 @@ def main() -> None:
         processed = json.loads(SPEAKERS_JSON.read_text(encoding="utf-8"))
         if not isinstance(processed, list):
             die("speakers.json must be a JSON array")
+        before = len(processed)
+        processed = filter_seed_tts_2_voices(processed)
+        write_speakers_json(processed, SPEAKERS_JSON)
         write_speakers_md(processed, source_note=args.source_note)
-        print(f"Wrote {SPEAKERS_MD} from local json ({len(processed)} speakers)")
+        print(
+            f"Wrote {SPEAKERS_JSON} and {SPEAKERS_MD} "
+            f"(kept {len(processed)}, dropped {before - len(processed)})"
+        )
         return
 
     ak, sk = load_credentials()
