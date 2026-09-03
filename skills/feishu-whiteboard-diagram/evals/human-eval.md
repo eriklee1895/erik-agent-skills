@@ -10,7 +10,13 @@ python3 scripts/lint_svg.py evals/fixtures/human-eval/01-layered-strip.svg
 npx -y @larksuite/whiteboard-cli@^0.2.13 -i evals/fixtures/human-eval/01-layered-strip.svg -f svg --check
 ```
 
-写入飞书时，在 `fixtures/human-eval/` 下用 `eval-doc.xml` 调 `lark-cli docs +create --doc-format xml --content @./eval-doc.xml --as user`。
+写入飞书时，登录后在仓库根目录执行：
+
+```bash
+bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh
+```
+
+脚本会解析 `eval-doc.xml` 并以用户身份创建文档。高风险确认走 `--yes`，因为这次评测就是用户要求开文档。
 
 ## 证据层（先记层，再打分）
 
