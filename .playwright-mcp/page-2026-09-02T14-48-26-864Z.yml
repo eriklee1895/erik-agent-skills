@@ -1,0 +1,89 @@
+- generic [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - heading "为什么需要 WebSocket？—— 三种“实时通信”同屏对比" [level=2] [ref=f1e5]
+      - paragraph [ref=f1e6]: 同一条时间轴上，服务器在第 5、12、19 秒各产生 1 条新消息；第 15 秒浏览器也想主动发 1 条消息。观察三种方式各自发生了什么。
+    - generic [ref=f1e7]:
+      - button "⏸ 暂停" [ref=f1e8] [cursor=pointer]
+      - button "↻ 重播" [ref=f1e9] [cursor=pointer]
+  - generic [ref=f1e10]:
+    - generic [ref=f1e11]: 浏览器 → 服务器（请求 / 上行帧）
+    - generic [ref=f1e13]: 服务器 → 浏览器（响应 / 下行帧）
+    - generic [ref=f1e15]: 空转响应（200，但没有新消息）
+  - generic [ref=f1e17]: ⚡ 服务器产生了第 1 条新消息！三种方式分别多久能送达浏览器？
+  - generic [ref=f1e20]:
+    - generic [ref=f1e21]:
+      - generic [ref=f1e22]:
+        - generic [ref=f1e23]: 短轮询（Short Polling）
+        - generic [ref=f1e24]: 定时敲门 · 大量空转
+      - generic [ref=f1e25]:
+        - generic [ref=f1e27]:
+          - text: 浏览器
+          - generic [ref=f1e28]: Browser
+        - generic [ref=f1e29]:
+          - text: 服务器
+          - generic [ref=f1e30]: Server
+        - generic [ref=f1e89]: 200 空
+      - generic [ref=f1e31]:
+        - generic [ref=f1e32]:
+          - generic [ref=f1e33]: HTTP 请求数
+          - generic [ref=f1e34]: "7"
+        - generic [ref=f1e35]:
+          - generic [ref=f1e36]: 空转响应
+          - generic [ref=f1e37]: "6"
+        - generic [ref=f1e38]:
+          - generic [ref=f1e39]: 消息送达延迟
+          - generic [ref=f1e40]: 最坏 ≈1.7s
+    - generic [ref=f1e41]:
+      - generic [ref=f1e42]:
+        - generic [ref=f1e43]: 长轮询（Long Polling）
+        - generic [ref=f1e44]: 扣着门等 · 仍需反复请求
+      - generic [ref=f1e45]:
+        - generic [ref=f1e47]:
+          - text: 浏览器
+          - generic [ref=f1e48]: Browser
+        - generic [ref=f1e49]:
+          - text: 服务器
+          - generic [ref=f1e50]: Server
+      - generic [ref=f1e51]:
+        - generic [ref=f1e52]:
+          - generic [ref=f1e53]: HTTP 请求数
+          - generic [ref=f1e54]: "2"
+        - generic [ref=f1e55]:
+          - generic [ref=f1e56]: 空转响应
+          - generic [ref=f1e57]: "0"
+        - generic [ref=f1e58]:
+          - generic [ref=f1e59]: 消息送达延迟
+          - generic [ref=f1e60]: ≈0.6s
+    - generic [ref=f1e61]:
+      - generic [ref=f1e62]:
+        - generic [ref=f1e63]: WebSocket
+        - generic [ref=f1e64]: 一次握手 · 全双工在线
+      - generic [ref=f1e65]:
+        - generic [ref=f1e67]:
+          - text: 浏览器
+          - generic [ref=f1e68]: Browser
+        - generic [ref=f1e69]:
+          - text: 服务器
+          - generic [ref=f1e70]: Server
+      - generic [ref=f1e71]:
+        - generic [ref=f1e72]:
+          - generic [ref=f1e73]: HTTP 请求数
+          - generic [ref=f1e74]: "1"
+        - generic [ref=f1e75]:
+          - generic [ref=f1e76]: 空转响应
+          - generic [ref=f1e77]: "0"
+        - generic [ref=f1e78]:
+          - generic [ref=f1e79]: 消息送达延迟
+          - generic [ref=f1e80]: 即时推送
+  - generic [ref=f1e81]: 怎么读这张图：短轮询靠浏览器“定时敲门”，大部分敲门都扑空（灰色空响应），消息最坏要等一个轮询周期才被发现；长轮询让服务器“扣着门”等消息，没有空转，但每条消息仍要走一次完整 HTTP 请求-响应；WebSocket 只用 1 次 HTTP 升级请求，之后这条 TCP 连接一直在线，双方随时可以互相“推门说话”——服务器推送不再需要等浏览器来问。
+  - generic [ref=f1e82]:
+    - generic [ref=f1e83]:
+      - generic [ref=f1e84]: 短轮询
+      - text: 实现最简单，但请求数最多、空转浪费最大，实时性取决于轮询间隔；调快间隔等于放大浪费。
+    - generic [ref=f1e85]:
+      - generic [ref=f1e86]: 长轮询
+      - text: 没有空轮询，延迟明显降低，但每条消息仍有 HTTP 头部开销，且连接反复建立、释放。
+    - generic [ref=f1e87]:
+      - generic [ref=f1e88]: WebSocket
+      - text: 一次握手、长期在线、全双工：服务器可主动推送，浏览器可随时发送，帧头部仅 2–14 字节。

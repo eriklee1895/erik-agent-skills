@@ -4,7 +4,7 @@ description: |
   把一篇本地 markdown 文档转写成飞书云文档(docx),排版精美、block 结构完整。
   Mermaid 默认保留为 ```mermaid 代码块(源码可复制);--mermaid-mode whiteboard 时渲染成飞书画板。
   触发:用户说"把 markdown 发到飞书"/"转写到飞书"/"这篇要发飞书";或给了本地 .md 路径,可附带 docx URL(不提供则创建新文档)。
-  不触发:微信公众号(走 wechat-publish-workflow)、Notion、Drive 原生 .md(走 lark-markdown)、docx 内部编辑(走 lark-doc)。
+  不触发:微信公众号发布工作流(见 writing-agent-harness 项目)、Notion、Drive 原生 .md(走 lark-markdown)、docx 内部编辑(走 lark-doc)。
 metadata:
   requires:
     bins: ["lark-cli"]
@@ -19,7 +19,7 @@ metadata:
 
 | 适用 | 不适用 |
 |---|---|
-| 用户给本地 `.md` 路径,要发到飞书 | 微信公众号 → `wechat-publish-workflow` |
+| 用户给本地 `.md` 路径,要发到飞书 | 微信公众号发布(走 writing-agent-harness 项目的发布工作流) |
 | 大部分场景:**全新创建**飞书文档 | 飞书云盘的 `.md` 文件 → `lark-markdown` |
 | 少数场景:用户给空白/旧 docx URL,确认 overwrite 后整篇覆盖 | 已发布飞书 docx 内的局部精修 → `lark-doc` |
 | markdown 含 frontmatter / 本地图片 / Mermaid | 增量同步、diff/patch(本 skill 不做) |

@@ -97,10 +97,10 @@ Supported presets should match `article-video-clip`, currently:
 
 ## Handoff
 
-After the human chooses a row, run `article-video-clip` with the selected candidate:
+After the human chooses a row, hand the selected candidate to the packaging skill. The `article-video-clip` skill ships with the [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness) project (it is not part of this repo); inside a harness checkout the handoff command is:
 
 ```bash
-node ../article-video-clip/scripts/create-article-video-clip.mjs \
+node .agents/skills/article-video-clip/scripts/create-article-video-clip.mjs \
   --material /absolute/path/to/article/assets/media/source-slug \
   --start 00:03 \
   --end 00:11 \
@@ -109,11 +109,13 @@ node ../article-video-clip/scripts/create-article-video-clip.mjs \
   --caption "素材再包装"
 ```
 
+Outside the harness, `highlight-candidates.json` (with `next_step.skill` = `article-video-clip`) is the stable handoff contract: start/end/title/caption/preset per confirmed candidate.
+
 ## Boundaries
 
 - `video-material-ingest` downloads/wraps known video URLs and records provenance.
 - `video-highlight-select` helps humans choose candidate moments.
-- `article-video-clip` renders the confirmed clip.
-- `wechat-publish-workflow` handles whether/how the final video enters a WeChat draft.
+- `article-video-clip` renders the confirmed clip (ships with writing-agent-harness, not this repo).
+- Whether/how the final video enters a WeChat draft is handled by the writing-agent-harness publishing workflow.
 
 Do not claim the highlight has been automatically selected. The human still decides which candidate is editorially right for the article.
