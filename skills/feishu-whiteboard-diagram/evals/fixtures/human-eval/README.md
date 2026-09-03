@@ -1,5 +1,7 @@
 # Human-eval fixtures
 
+2026-09-03 Human eval **Accept**。这一包就是文档精排画板的视觉基准：奶油底、墨边、单焦点；分层条带才浅色分组。
+
 Regenerate SVG / Mermaid / HTML / `eval-doc.xml` with:
 
 ```bash

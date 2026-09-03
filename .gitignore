@@ -6,6 +6,16 @@
 .local-memory/
 .skill-work/
 evals/**/outputs/
+doc-fetch-resources/
+**/doc-fetch-resources/
+
+# Generated skill artifacts and Python runtime files.
+**/__pycache__/
+**/*.pyc
+**/.artifacts/
+skills/**/output/
+.DS_Store
+output/
 
 # Generated skill artifacts and Python runtime files.
 **/__pycache__/

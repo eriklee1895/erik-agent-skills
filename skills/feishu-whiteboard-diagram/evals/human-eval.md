@@ -2,6 +2,18 @@
 
 用这份清单评 `feishu-whiteboard-diagram` 的**文档精排画板**，不是评官方 `lark-whiteboard` CLI 教程。本地 PNG 只能证明构图；飞书里能不能点开改节点，必须人在 Web / 桌面上看。
 
+## 定稿（2026-09-03）
+
+| 项 | 记录 |
+|---|---|
+| 结论 | **Accept**。评测人确认当前飞书效果可以定稿。 |
+| 评测人 / 日期 | 李玉恒 · 2026-09-03 |
+| 最高证据层 | `feishu-experience-valid` |
+| 评测文档 | https://bytedance.my.larkoffice.com/docx/MoiudXbwaonw61xo2Uem0E9qyQg |
+| 视觉基准 | 本目录 fixtures：奶油底 + 4px 墨边 + 一个更大的饱和焦点；分层条带才用浅色分组。不要退回均等胶囊流程图。 |
+
+后续改构图或默认色板，先对照这套 fixtures 和飞书文档，再动 [composition.md](../references/composition.md) / [palettes.md](../references/palettes.md)。
+
 配套产物：[`fixtures/human-eval/`](fixtures/human-eval/)。再生：
 
 ```bash

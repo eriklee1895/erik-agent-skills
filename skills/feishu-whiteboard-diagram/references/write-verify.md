@@ -29,7 +29,7 @@ npx -y @larksuite/whiteboard-cli@^0.2.13 -i diagram.svg -f svg --check
 npx -y @larksuite/whiteboard-cli@^0.2.13 -i diagram.svg -o diagram.png -f svg
 ```
 
-`--check` 的 error 清零后再交给 `lark-whiteboard` 写入。DSL / Mermaid 按官方路径渲染，同样先看 PNG。
+`--check` 的 error 清零后再交给 `lark-whiteboard` 写入。DSL / Mermaid 按官方路径渲染，同样先看 PNG。构图对照 [evals/human-eval.md](../evals/human-eval.md) 的定稿 fixtures，不要画回均等胶囊流程图。
 
 精排默认把 **SVG 源**交给官方 `+update --input_format svg`（或文档里的 svg 画板块），不要为了中文再绕一圈本地 `--to openapi`，除非官方 workflow 要求 raw。
 

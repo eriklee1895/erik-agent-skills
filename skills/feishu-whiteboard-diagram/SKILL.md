@@ -37,7 +37,7 @@ metadata:
 
 ## 和官方 SVG 路线的关键分歧
 
-官方 `routes/svg.md` 会劝 agent「打破矩形牢笼」。插画/海报可以那样做。你要的文档精排图，骨架就是**圆角卡片、色边分组、编号签、页脚结论条**。装饰 `path` 会被打成不可编辑的嵌入图。目标是这种气质时，**以本 skill 的视觉和语法为准**，写入仍走 `lark-whiteboard`。
+官方 `routes/svg.md` 会劝 agent「打破矩形牢笼」。插画/海报可以那样做。你要的文档精排图，骨架就是**直角墨边卡片、一个更大的饱和焦点、页脚结论条**；分层图才用浅色分组圆角。装饰 `path` 会被打成不可编辑的嵌入图。目标是这种气质时，**以本 skill 的视觉和语法为准**，写入仍走 `lark-whiteboard`。Human eval 定稿见 [evals/human-eval.md](evals/human-eval.md)，视觉基准是 `evals/fixtures/human-eval/`。
 
 ## 介质选择（命中即停）
 
@@ -47,7 +47,7 @@ metadata:
 |---|---|
 | 用户已给出 Mermaid/PlantUML，或图是思维导图 / 时序 / 类图 / 饼图 / 甘特 | 把源码放进 `<whiteboard type="mermaid">`（或 PlantUML），飞书自动转画板；不要重画成 SVG 架构 |
 | 判断多、回路多、需要原生菱形，卡片对齐要求一般 | DSL `dagre` + `diamond`，按官方 DSL 路径 |
-| 分层条带、多列运行图、编号层级、页脚结论、层间 API 标注 | **UTF-8 SVG，只用可识别原生形状** |
+| 分层条带、多列运行图、编号层级、页脚结论、层间 API 标注；以及分叉 / 对比 / 枢纽 / 时间线 / 泳道 / 四象限 / 焦点+细节 | **UTF-8 SVG，只用可识别原生形状** |
 | 需要运动、Tab、D3 | `feishu-html-diagram` |
 | 真实界面或照片 | 图片 |
 
@@ -92,18 +92,23 @@ bash /resolved/skill-dir/scripts/preflight.sh
 硬约束和实测映射见 [介质约束](references/constraints.md)。最小骨架：
 
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 820">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 820">
   <defs>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="9" refY="4"
-            orient="auto" markerUnits="strokeWidth">
-      <path d="M0 0 L10 4 L0 8 z"/>
+    <marker id="arrow-ink" markerWidth="10" markerHeight="8" refX="9" refY="4"
+            orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L10 4 L0 8 z" fill="#0F0F0F"/>
     </marker>
   </defs>
-  <text x="40" y="48" font-size="24" font-weight="700" fill="#1F2329">图表标题：一句话论点</text>
-  <text x="40" y="76" font-size="14" fill="#64748B">副标题：读者带着什么问题看这张图</text>
-  <!-- 只用 rect / circle / ellipse / line / polyline / text；菱形可用 polygon，但会变成嵌入 SVG 节点 -->
-  <rect x="40" y="120" width="1360" height="160" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
-  <line x1="200" y1="200" x2="320" y2="200" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="0" y="0" width="1600" height="820" fill="#EFE9D9"/>
+  <text x="80" y="80" font-size="40" font-weight="700" fill="#0F0F0F">图表标题：一句话论点</text>
+  <text x="80" y="122" font-size="18" fill="#2A2A2A">副标题：读者带着什么问题看这张图</text>
+  <!-- 只用 rect / circle / ellipse / line / polyline / text；默认 rx=0。菱形可用 polygon，但会变成嵌入 SVG 节点 -->
+  <rect x="90" y="186" width="360" height="140" fill="#E85A1F"/>
+  <rect x="80" y="176" width="360" height="140" fill="#E85A1F" stroke="#0F0F0F" stroke-width="4"/>
+  <text x="260" y="240" font-size="24" font-weight="700" fill="#EFE9D9" text-anchor="middle">焦点（最大）</text>
+  <rect x="500" y="200" width="280" height="100" fill="#FFFFFF" stroke="#0F0F0F" stroke-width="4"/>
+  <text x="520" y="244" font-size="18" font-weight="700" fill="#0F0F0F">安静步骤</text>
+  <line x1="440" y1="246" x2="500" y2="246" stroke="#0F0F0F" stroke-width="3" marker-end="url(#arrow-ink)"/>
 </svg>
 ```
 

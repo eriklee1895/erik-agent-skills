@@ -2,6 +2,7 @@
 
 社区 `beautiful-feishu-whiteboard` 有 35 套换肤模板；`feishu-whiteboard-pro` 的样板用其中几套把构图做出来。
 本 skill **不复制**那些 `templates/*/design.md`。这里只留 6 套已核对、适合技术说明图的色板。
+2026-09-03 Human eval **Accept** 后，这 6 套就是默认色板；不要再扩成 35 套，也不要退回全蓝 pastel 流程图。
 选气质，不要 6 套同时涂在一张图上。
 
 默认：循环、分叉、枢纽用 **Riso Brut**。对比列用 **Riptide Cobalt**。时间线可用 **Coral**。四象限用 **Grove**。焦点+细节可用 **Avocado Press**。分层协议图仍可用浅色分组色板。

@@ -2,7 +2,7 @@
 
 色板见 [palettes.md](palettes.md) 和 [visual-system.md](visual-system.md)。社区真正拉开差距的是：
 奶油画布、墨边 3–4px、**只有一个饱和焦点且它最大**、次级步骤是安静的描边盒。
-35 套 `design.md` 不搬进来；构图和这 6 套色板要吸收。
+35 套 `design.md` 不搬进来；构图和这 6 套色板要吸收。Human eval 定稿的基准图在 [evals/fixtures/human-eval/](../evals/fixtures/human-eval/)。
 
 循环 / 分叉 / 枢纽默认 **Riso Brut**。对比列用 **Riptide Cobalt**。时间线可用 **Coral**。四象限用 **Grove**。焦点+细节可用 **Avocado Press**。分层条带可以继续用浅色分组。
 
