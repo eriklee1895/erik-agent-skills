@@ -16,4 +16,4 @@ This revision:
 - Added community archetypes: 12 swimlane, 13 2×2 quadrant, 14 focus+detail.
 - Skill docs now pick by relationship (fork / swimlane / quadrant / focus+detail), not five pastel capsules.
 
-Do not treat exported JPG previews as `feishu-experience-valid`.
+Live overwrite 2026-09-03: 02/03/04/11 replaced in place; 12/13/14 appended (revision_id 5). Fetch-back found **13 `<whiteboard>`** blocks + 1 html5-block. 02 export contains cream canvas and 工具回路. Hard-refresh Web/desktop before scoring — document preview JPG is not the board.
