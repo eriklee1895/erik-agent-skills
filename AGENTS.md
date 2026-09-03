@@ -21,5 +21,8 @@ reusable Agent Skills.
 - Update both `docs/skills-catalog.en.md` and `docs/skills-catalog.zh-CN.md`
   whenever a skill is added, removed, or renamed.
 - Do not copy secrets, account state, or machine-local runtime data into this repository.
-- Writing skills remain sourced from `writing-agent-harness` until explicitly promoted.
+- Writing-workflow skills (ideation, polishing, readiness checks, WeChat/blog
+  publishing, post-publication closeout) are coupled to the
+  writing-agent-harness project layout and stay sourced there; this repo
+  publishes only standalone, cross-project skills.
 - Preserve each skill's self-contained `SKILL.md`, scripts, references, and assets.
