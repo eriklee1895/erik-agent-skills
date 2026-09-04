@@ -2,6 +2,11 @@
 /.agents/skills
 /.claude/skills
 
+# Local secrets — .env.example is the committed template; real .env never is.
+.env
+.env.*
+!.env.example
+
 # Local evaluation and runtime artifacts.
 .local-memory/
 .skill-work/
