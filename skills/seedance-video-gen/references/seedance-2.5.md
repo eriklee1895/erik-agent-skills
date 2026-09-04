@@ -11,7 +11,7 @@
 | 2.0 fast | `doubao-seedance-2-0-fast-260128` | 最高 720p，更便宜 |
 | 2.0 mini | `doubao-seedance-2-0-mini-260615` | 最高 720p，批量最便宜 |
 
-本 skill **默认 2.5**。切 2.0 的唯一理由：4k、或要便宜预览/批量。
+本 skill **默认 2.5**。用户明确要 2.0 / 即梦 2.0（没说 fast/mini）→ standard。只要 4k、没有 2.5 独有需求（30s、整数秒硬切、仅音频、omni 编辑/延长、mov）→ 直接 2.0 standard + 4k，并告知「4k 只能 Seedance 2.0 standard，2.5 最高 1080p。」两者都要 → 停下来让用户选 A) 4k+2.0（≤15s）或 B) 2.5+1080p，不要猜。便宜预览/批量才 fast/mini。
 
 ## 能力对照
 
@@ -69,7 +69,7 @@
 
 | 行为 | 结果 |
 |---|---|
-| 2.5 + `--resolution 4k` | 脚本拒绝；改 1080p 或改 2.0 standard |
+| 2.5 + `--resolution 4k` | 脚本拒绝。无 2.5 独有需求 → 改 2.0 standard + 4k；否则问用户（4k+2.0 vs 2.5+1080p） |
 | 2.5 + 首帧 + `--ratio 9:16`（或其它非 adaptive） | 脚本拒绝；先把图裁到目标画幅再 `adaptive` |
 | 2.5 编辑 + 指定 duration | 脚本拒绝；必须 `-1` |
 | 2.0 + `--output-format mov` | 脚本拒绝 |
