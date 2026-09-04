@@ -99,6 +99,18 @@
         "manifest.json model is doubao-seedance-2-5-260628",
         "manifest.json has duration=8, ratio=16:9"
       ]
+    },
+    {
+      "id": 10,
+      "prompt": "用 Seedance 2.5 生成一条 30 秒、16:9、480p 的三镜头时间戳叙事视频：GLOBAL STYLE 电影感写实、暖金黄昏、无字幕；Shot 1: 0-10s 晨雾湖面全景缓慢前推；Hard cut. Shot 2: 10-20s 白鹭掠过水面特写翅膀尖划水；Hard cut. Shot 3: 20-30s 太阳从远山升起湖面染金，镜头缓慢升高拉远。无音频。输出到 output/ 目录。",
+      "expected_output": "A ~30s 16:9 Seedance 2.5 video with timestamped 3-shot structure; manifest model is doubao-seedance-2-5-260628 and duration=30.",
+      "files": [],
+      "expectations": [
+        "video.mp4 exists and is ~30s long (>=28s)",
+        "manifest.json model is doubao-seedance-2-5-260628",
+        "manifest.json has duration=30, generate_audio=false",
+        "prompt.md contains the GLOBAL STYLE and Shot 1/2/3 timestamp structure"
+      ]
     }
   ]
 }

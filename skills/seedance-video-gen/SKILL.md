@@ -110,6 +110,13 @@ uv run scripts/generate_seedance_video.py create \
 
 # 取消/删除任务（按当前状态不同行为不同，见 references/api-reference.md）
 uv run scripts/generate_seedance_video.py cancel-task --task-id cgt-20260606xxxx-xxxx
+
+# 2.5 无缝转场：两段成片之间补过渡（auto 任务类型；成片时长≈输入之和，两 4s → 8s）
+uv run scripts/generate_seedance_video.py create \
+  --prompt "将@视频1和@视频2衔接起来，用猫咪缓慢转头、阳光在毛发上流动的动作自然过渡，保持两段同一暖调。不要字幕。" \
+  --reference-video https://example.com/clip-a.mp4 \
+  --reference-video https://example.com/clip-b.mp4 \
+  --ratio adaptive --duration -1
 ```
 
 ### 批量提交（并行原子 shots）
@@ -185,7 +192,7 @@ Seedance 视频生成是**强迭代**工作流，不是一次出片。下面是�
 
 **2.5 独有需求**（命中才算和 4k 冲突）：30s、整数秒时间戳硬切、仅音频参考、omni 编辑/延长、mov 后期。
 
-2.5 **没有** fast/mini。4s 480p 时 2.0-fast 与 2.5 的 completion_tokens 几乎一样（~38800）；fast 便宜在 **2.0 更低的单价**，不是 token 腰斩。
+2.5 **没有** fast/mini。4s 480p(16:9) 时 2.0 三模型均为 **40,594** tokens、2.5 为 **38,830**，仅差 ~5%；fast/mini 便宜在**更低的单价**（刊例 46/37/23 元每百万 token），不在 token 用量。
 
 - **分辨率**：预览 → 480p；社媒/草稿 → 720p（CLI 默认）；2.5 终稿 → 1080p（10-bit HEVC）；4k → 仅 2.0 standard（10-bit HEVC，并发 1）
 - **时长**：单一动作 → 4-5s；对白/多镜头 → 8-12s；2.0 复杂叙事 → 12-15s 或拆 task；2.5 完整故事可一次 15-30s，prompt 用整数秒时间戳。480p 文生 token ≈ `38830 × (duration/4)`
@@ -256,7 +263,7 @@ Seedance skill 不负责生成或获取素材——它只消费调用方传入�
 
 ### 执行与等待
 
-- 单个 task 墙钟（`created_at`→`updated_at`，2026-09-03 Ark）：2.0-fast 4s 480p ~75s；2.5 文生 4s 480p ~2–2.5 min；12s ~2.7 min；16s ~3 min；首帧 4s ~3.7 min；编辑 16s ~3.6 min。1080p 更久。详见 `references/seedance-2.5.md`
+- 单个 task 墙钟（`created_at`→`updated_at`，2026-09 Ark）：2.0-fast 4s 480p ~75s；2.5 文生 4s 480p ~2–2.5 min；12s ~2.7 min；16s ~3 min；**30s ~3.2 min（193s，480p）**；首帧 4s ~3.7 min；编辑 16s ~3.6 min。1080p 更久。详见 `references/seedance-2.5.md`
 - **submit 任务（POST /tasks）2.0 实测不限流**（普通公司开发账号）：可 burst 提交。并发限制的是同时 `running` 数量。官方 2.5 与 2.0 非 4k 相同：企业 600 RPM / 10 concurrent，个人 180 / 3
 - 4k task（仅 2.0 standard）严格串行（running 1，RPM 15）
 - 轮询间隔默认 20s 就够，不要开得太频繁
@@ -295,7 +302,7 @@ output/seedance/YYYY-MM-DD-<slug>/
 - `duration`：2.5 = `4–30` 或 `-1`；2.0 = `4–15` 或 `-1`。CLI 默认 `5`。编辑必须 `-1`。**延长的 duration 是成片总时长**。
 - `resolution`：`480p` / `720p` / `1080p` / `4k`；CLI 默认 `720p`。**2.5 最高 1080p（10-bit HEVC），无 4k**。2.0-fast/mini 最高 720p。**4k 仅 2.0 standard**。
 - `ratio`：六档 + `adaptive`。CLI 文生默认 `16:9`。**2.5 首帧/首尾帧、编辑、延长必须 `adaptive`**（脚本会拦截）。
-- 多模态上限：2.5 = 图 30 + 视 10 + 音 10（共 50）；2.0 = 图 9 + 视 3 + 音 3（脚本 total ≤ 12）。仍建议 4-5 个素材黄金配比。
+- 多模态上限：2.5 = 图 30 + 视 10 + 音 10（共 50）；2.0 = 图 9 + 视 3 + 音 3（共 15）。但超 1–5 个主体 / 1–8 张参考图后是「需要抽卡」而非报错，仍建议 4-5 个素材黄金配比（稳定性数字见 key-constraints.md）。
 - 仅音频参考：2.5 ✅（Ark live 已通，脚本不拦）；2.0 ❌（必须配图或视频）。参考须有语义的 wav/mp3。
 - 首尾帧与 `reference_*` **互斥**（两代相同）。
 - `--enable-web-search` 仅纯文本（两代相同）。
@@ -365,6 +372,8 @@ Agent 按需读取，不必全加载。简单任务（文生视频 4-5s、单镜
 | 视频 URL 下载失败 | URL 24 小时过期，尽快下载 |
 | `GET /tasks/{id}` 返回 404 | 任务 ID 已过 7 天保留期；用 `list-tasks` 找最近 7 天的任务 |
 | 脚本拒绝本地视频路径 | 视频不支持 base64；先上传到公网 URL / TOS，或录入 asset:// 素材库 |
+| `aspect ratio ... outside [0.4, 2.5]` / `each side must be within [300, 6000]` | 本地参考图/首帧图不符合官方像素约束：单边 300–6000px、宽高比 0.4–2.5。先缩放/裁剪再传（URL 图片由服务端校验） |
+| stderr 出现 `Advisory: prompt length ...` | 提示词超过官方建议（中文 500 字 / 英文 1000 词），不拦截但可能丢细节；精简或拆分镜头 |
 | `--enable-web-search` + 多模态被脚本拒绝 | web_search 仅纯文本输入；如需引用搜索结果，先用纯文本跑一次再以视频为参考续写 |
 
 ## 辅助脚本（高级/评测）
