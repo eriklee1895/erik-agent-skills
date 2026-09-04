@@ -122,7 +122,7 @@ Verified 2026-08-27: 2 and 3 reference audios are accepted with clean output. A 
 - **多人多音色**: each reference is a different person — `@音频1` plays the male lead, `@音频2` the female lead.
 - **组合参考**: different references supply different dimensions — one for timbre, another for emotion and pacing.
 - **一声多角**: the model decouples timbre from performance — one reference voice can play multiple characters with differentiated expression.
-- **音频延长 (long-form chaining)**: feed the previous segment's output back in as a reference for the next call; the model extends with consistent timbre across segments. For recurring series, register a fixed `_tob` speaker ID instead.
+- **单人音频延长 (long-form chaining)**: feed a clean tail no longer than 30 seconds back as the next reference. For multi-character mixed scenes, keep the original solo masters and stable `@音频N` order instead of using the finished mix as one character's identity source. See `voice-cloning-and-consistency.md`.
 
 ### Reference images (separate mode)
 
@@ -169,6 +169,10 @@ uv run scripts/seed-audio-gen.py '@音频1的声音（男主，低沉）说："�
 ```
 
 With one reference you can simply write "用参考音色朗读" / "用提供的声音说". With multiple references, bind each character with `@音频N` (see the Multi-Reference Audio section).
+
+For auditioning a reusable character master, separating voice identity from
+acting, producing long-form multi-character work, and calibrating human QA,
+read `voice-cloning-and-consistency.md`.
 
 ### By character description (no reference)
 
@@ -251,5 +255,5 @@ What this prompt does:
 - **Timestamp for precision, omit for flow**: Use timestamps when you need exact timing (ads, synced dialogue). Omit them when you want the model to pace naturally. Declare `音频总时长：N秒` when the clip must fit a fixed video slot.
 - **Use sound effects as punctuation**: "句首" / "句尾" / "伴随着" / "然后" — these position words help the model place effects relative to dialogue. Non-verbal acting directions (气声、笑声、叹息、吞口水、磕巴) and processing directions (电话失真、遥远) are understood literally.
 - **Direct acting, not just content**: "句末呈现气声"、"音调略微提高"、"语速加快"、"句首和对方的笑声重叠" — the model follows performance directions at this granularity.
-- **The model may paraphrase**: It's generative, not deterministic. If verbatim accuracy is critical, add "请逐字朗读，不要增删改" or use `volcengine-tts`.
+- **The model may paraphrase**: It's generative, not deterministic. If verbatim accuracy is critical, add "请逐字朗读，不要增删改" or use a dedicated deterministic TTS capability.
 - **Test and iterate**: seed-audio rewards prompt experimentation. Start simple, listen, then add detail.

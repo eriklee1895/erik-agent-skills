@@ -52,10 +52,8 @@ def filter_seed_tts_2_voices(speakers: list[dict[str, Any]]) -> list[dict[str, A
     return [s for s in speakers if is_seed_tts_2_voice(str(s.get("voice_type", "")))]
 
 
-# seed-audio is a creative (voice-acting / scene-audio) skill, so the default
-# and most-used voices come first. volcengine-tts shares the same local-table
-# + --filter/--sort CLI, but its curated shortlist leads with 客服/教学
-# narration voices. 其他 (uncategorized) sorts last.
+# seed-audio is a creative voice-acting and scene-audio skill, so the default
+# and most-used dramatic voices come first. 其他 (uncategorized) sorts last.
 _SCENE_ORDER = [
     "通用场景",   # default narration / warm旁白 (Vivi 2.0 lives here)
     "角色扮演",   # multi-character / radio drama / game NPC

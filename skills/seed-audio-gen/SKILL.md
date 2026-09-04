@@ -1,7 +1,7 @@
 ---
 name: seed-audio-gen
 description: >
-  从一条自然语言场景描述，一次生成「人声 + 音效 + 背景音乐」混合的成品音频（最长 120 秒）。Use this skill whenever the user wants to generate a complete audio scene — voice combined with sound effects, ambient sound, and/or background music — in a single call. 触发场景包括且不限于：有声书/广播剧/播客的场景化音频、影视配音、游戏 NPC 台词 + 战斗氛围、广告配音 + 音乐床、视频片头音频、多角色对话 + 环境音、用参考音频克隆音色生成多段语音、需要时间戳精准控制台词进出时机的配音。关键信号：用户提到「场景音」「环境音」「音效 + 配音」「BGM + 人声」「一次生成成品音频」「多角色对话」「有声书/广播剧升级到剧感」时，必须使用本 skill。本 skill 是 seed-audio-1.0（火山引擎豆包音频生成模型），不是传统 TTS——它把 TTS + 配乐 + 拟音 + 混音的多步流程压成一次调用。不适用场景（用更优工具）：纯旁白/批量朗读用 volcengine-tts（快 11 倍、便宜 14 倍、流式）；纯背景音乐用 volcengine-bigmusic-bgm（时长精确）；实时对话用双向流式 TTS；SSML/拼音注解用 volcengine-tts。
+  从一条自然语言场景描述，一次生成「人声 + 音效 + 背景音乐」混合的成品音频（最长 120 秒）。Use this skill whenever the user wants to generate a complete audio scene — voice combined with sound effects, ambient sound, and/or background music — in a single call. 触发场景包括且不限于：有声书/广播剧/播客的场景化音频、影视配音、游戏 NPC 台词 + 战斗氛围、广告配音 + 音乐床、视频片头音频、多角色对话 + 环境音、用参考音频克隆音色生成多段语音、需要时间戳精准控制台词进出时机的配音。关键信号：用户提到「场景音」「环境音」「音效 + 配音」「BGM + 人声」「一次生成成品音频」「多角色对话」「有声书/广播剧升级到剧感」时，必须使用本 skill。本 skill 是 seed-audio-1.0（火山引擎豆包音频生成模型），不是传统 TTS——它把 TTS + 配乐 + 拟音 + 混音的多步流程压成一次调用。不适用场景（按能力选择其他实现）：纯旁白/批量逐字朗读用专用 TTS；纯背景音乐用专用音乐生成；实时对话用双向流式语音；SSML/拼音注解用支持这些控制能力的 TTS。
 ---
 
 # seed-audio-gen
@@ -9,6 +9,30 @@ description: >
 Generate complete audio scenes from natural language prompts using Volcano Engine's Doubao Audio Generation 1.0 (`seed-audio-1.0`). One API call produces voice + sound effects + BGM — a mixed, mastered audio clip up to 120 seconds.
 
 This is a **generative audio model**, not a traditional TTS. Think of it as "prompt an audio scene" rather than "read this text aloud."
+
+## Seed Audio vs. dedicated TTS
+
+This comparison describes capability classes, not a dependency on another
+skill or a permanent claim about every TTS implementation.
+
+| Capability | Seed Audio 1.0 | Typical dedicated TTS |
+|---|---|---|
+| Output | Mixed voice + SFX + BGM scene | Clean speech audio |
+| Request-time reference cloning | Supported without prior voice registration | Often uses a catalog or registered custom voice; varies by system |
+| Multiple characters in one scene | Up to 3 references with `@音频1/2/3` | Usually one speaker per request or stream; mix roles downstream |
+| Acting direction | Generative natural-language scene direction and non-verbal performance | Voice/style controls optimized for stable reading |
+| SFX and BGM | Generated and mixed in the same call | Usually out of scope |
+| Verbatim text | May paraphrase or embellish | Generally more reliable |
+| Long-form work | Segment at no more than 120 seconds and review each scene | Usually better suited to long or batch narration |
+| Speed and cost | Heavier generation; typically slower and more expensive | Typically faster and lower cost |
+| Stable recurring voice | Reuse a clean identity master or registered voice | Reuse a speaker ID or registered custom voice |
+| Timestamps | Optional; complex mixes can return `null` | Often more predictable for speech alignment; varies by system |
+| Streaming/realtime | Non-streaming; not intended for realtime dialogue | Streaming is commonly available, depending on implementation |
+
+Use Seed Audio when the deliverable is a performed audio scene. Use a dedicated
+TTS capability when the primary requirement is reliable, efficient reading of
+long or exact text. Use a dedicated music capability for a clean standalone BGM
+track.
 
 **Project homepage**: https://seed.bytedance.com/seedaudio1_0
 
@@ -62,7 +86,7 @@ To set up permanently:
 echo 'VOLC_SPEECH_API_KEY=your-key-here' >> ~/.volcengine.env
 ```
 
-Note: Everyday synthesis only needs `VOLC_SPEECH_API_KEY` (no `X-Api-Resource-Id`). `--list-speakers` reads the local table and does not call the API — the same pattern as `volcengine-tts`. Refreshing the table needs AK/SK.
+Note: Everyday synthesis only needs `VOLC_SPEECH_API_KEY` (no `X-Api-Resource-Id`). `--list-speakers` reads the local table and does not call the API. Refreshing the table needs AK/SK.
 
 ## CLI Reference
 
@@ -152,7 +176,9 @@ Image references **cannot be mixed with audio references or `--speaker`** (API e
 
 ### Deliberately Omitted Flags
 
-The following flags from `volcengine-tts` are intentionally **not** exposed in `seed-audio-gen`, because seed-audio handles everything through the natural language `text_prompt`:
+The following conventional TTS controls are intentionally **not** exposed in
+`seed-audio-gen`, because Seed Audio handles direction through the natural
+language `text_prompt`:
 
 - `--context` / `--ssml` / `--latex` — these are seed-tts-2.0 features. In seed-audio, express tone, pacing, and emotion directly in the prompt.
 - `--no-subtitle` — seed-audio subtitle is off by default (unlike seed-tts-2.0 where it's on by default).
@@ -278,6 +304,11 @@ uv run scripts/refresh-speakers.py --from-json
 
 For the full prompt-writing guide — timestamp syntax, total-duration declaration, scene element structure, `@音频N` multi-voice binding, directing vocabulary, voice selection, and complete worked examples — read `references/seedaudio-prompt-guide.md`.
 
+For designing reusable character voices, selecting clean identity masters,
+keeping a multi-character cast consistent across long-form segments, or QA for
+whisper/cry/shout and dense mixes, read
+`references/voice-cloning-and-consistency.md`.
+
 ### Scenario quick reference
 
 seed-audio-gen handles **mixed audio scenes** (voice + SFX + BGM together) — not single-element generation. Match your scenario to a worked example in the prompt guide:
@@ -288,22 +319,28 @@ seed-audio-gen handles **mixed audio scenes** (voice + SFX + BGM together) — n
 | 影视/剧情对白 | 多角色对话 + 环境音 + 情绪节奏 | Example 2: Rainy Night Farewell |
 | 游戏 NPC 台词 | 角色音色 + 动作音效 + 氛围 BGM | Example 3: Game Character Voice |
 | 有声书/广播剧 | 旁白 + 多角色 + 场景氛围 | Example 4: Audiobook Scene |
-| 多角色音色克隆 | 2-3 条参考音频 + `@音频N` 绑定 | Multi-Reference section |
-| 超过 120s 长内容 | 分段生成 + 末段音频回灌做参考延长 | Long-form section below |
+| 多角色音色克隆 | 固定单人母版 + `@音频N` 绑定 | Voice cloning guide + Multi-Reference section |
+| 超过 120s 长内容 | 分段生成；多人持续复用原始单人母版 | Voice cloning guide + Long-form section below |
 | 纯音效场景 | 无台词，只有 SFX/环境音 | 无独立示例；prompt 里只写音效描述、不写台词 |
-| 纯 BGM 场景 | 无台词无人声，只有音乐 | 能出粗氛围底垫，但时长不精确、非专用音乐模型；**要精确秒数/干净配乐用 `volcengine-bigmusic-bgm` 更优** |
+| 纯 BGM 场景 | 无台词无人声，只有音乐 | 能出粗氛围底垫，但时长不精确；精确、干净的独立配乐应使用专用音乐生成能力 |
 
 The pattern across all examples: describe BGM, define characters (gender/age/timbre/tone), write timestamped dialogue, describe SFX — all in one `text_prompt`. The model orchestrates them onto a single timeline.
 
 ## Long-form Content (>120s): Audio Extension
 
-Each call generates at most 120s. For longer scenes (audiobook chapters, multi-scene podcasts), chain calls while keeping voices consistent:
+Each call generates at most 120s. For longer scenes (audiobook chapters,
+multi-scene podcasts), use independently reviewable segments:
 
-1. Generate segment 1 (≤120s).
-2. Generate segment 2 with `--ref-audio segment1.mp3` (or the tail few seconds of it) — the model treats the previous output as a voice reference and extends with the same timbre. For multi-character scenes, pass each character's reference audio again in the same order, keeping the `@音频N` bindings identical.
-3. Repeat, always referencing the most recent segment.
+1. Generate and verify each segment before continuing.
+2. For single-speaker continuation, a clean tail no longer than 30 seconds can
+   be used as the next reference.
+3. For multi-character scenes, reuse each character's original clean solo
+   master in the same CLI order and keep the `@音频N` bindings identical. Do not
+   use a finished multi-speaker/SFX/BGM mix as a character identity reference.
 
-This is the official "音频延长" workflow — chaining references keeps multi-character voices consistent across extensions ("在多次音频延长中保持音色的高度一致").
+The previous-segment workflow is the official "音频延长" mechanism. The fixed
+solo-master workflow is the safer production default when several identities
+share a mixed scene. See `references/voice-cloning-and-consistency.md`.
 
 For a recurring long-running series (fixed cast across many episodes), prefer registering a fixed speaker ID (`_tob` ICL voice) over ad-hoc cloning — see the Voice Selection section.
 
@@ -335,9 +372,9 @@ For a recurring long-running series (fixed cast across many episodes), prefer re
 
 ## When NOT to Use
 
-- **Pure narration / reading text verbatim** — use `volcengine-tts`. seed-audio is ~11x slower and ~14x more expensive for simple TTS. It may also rewrite or embellish the input text (it's a generative model, not a deterministic reader).
-- **Precise, clean BGM tracks** — use `volcengine-bigmusic-bgm`. seed-audio *can* emit a rough music-only / ambient bed when you omit dialogue (verified), but it is not a dedicated music model: track duration is not precisely controllable and music quality trails BigMusic. Reach for BigMusic when you need an exact-length, standalone music track; seed-audio's BGM is best as part of a mixed voice+SFX+music scene.
+- **Pure narration / reading text verbatim** — use a dedicated TTS capability. Seed Audio is slower and more expensive for simple speech, and may rewrite or embellish the input because it is generative rather than deterministic.
+- **Precise, clean BGM tracks** — use a dedicated music-generation capability. Seed Audio can emit a rough music-only / ambient bed when dialogue is omitted, but duration is not precisely controllable and the BGM is best used inside a mixed voice+SFX+music scene.
 - **Real-time / streaming conversation** — use a bidirectional streaming TTS. seed-audio is non-streaming and takes 10+ seconds per call.
-- **SSML-precise control** — use `volcengine-tts`. seed-audio does not support SSML; all timing and emotion is expressed in natural language, which is expressive but not deterministic.
-- **Verbatim word-for-word accuracy required** — seed-audio is a generative model and may paraphrase. If you need every character read exactly as written, use `volcengine-tts`.
-- **Long-form content beyond 120s** — the model maxes out at 120s per call. Use the audio-extension chaining workflow above for scene content longer than 120s; for plain long-form narration, `volcengine-tts` is also faster and cheaper.
+- **SSML-precise control** — use a TTS implementation that supports SSML. Seed Audio does not support SSML; timing and emotion are expressed through natural language, which is expressive but not deterministic.
+- **Verbatim word-for-word accuracy required** — Seed Audio may paraphrase. Use a dedicated deterministic TTS capability when every character must be preserved.
+- **Long-form content beyond 120s** — use the segmented workflow above for performed scenes; use a dedicated TTS capability for plain long-form narration.
