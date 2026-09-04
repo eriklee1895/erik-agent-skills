@@ -2,35 +2,47 @@
 
 用这份清单评 `feishu-whiteboard-diagram` 的**文档精排画板**，不是评官方 `lark-whiteboard` CLI 教程。本地 PNG 只能证明构图；飞书里能不能点开改节点，必须人在 Web / 桌面上看。
 
-## 定稿（2026-09-03）
+## 当前候选（2026-09-04）
+
+安全门禁、parser contract、连线 lint、文字对比度和事实复核已进入新候选。当前最高证据层是 **`local-render-valid`**：11 张 SVG 自有 lint 全部 exit 0，固定 `whiteboard-cli@0.2.13` 全部 0 error、warning 与基线一致，PNG 已目视复核。详见 [`current-local-evidence.md`](fixtures/human-eval/current-local-evidence.md)。
+
+在 Web / 桌面重新打开并逐图填写记分表之前，**不得沿用旧版的 `feishu-experience-valid`**。
+
+## 历史定稿（2026-09-03）
 
 | 项 | 记录 |
 |---|---|
-| 结论 | **Accept**。评测人确认当前飞书效果可以定稿。 |
+| 结论 | **Qualitative Accept**。评测人确认当时的飞书效果可以定稿；没有填写逐图分数。 |
 | 评测人 / 日期 | 李玉恒 · 2026-09-03 |
-| 最高证据层 | `feishu-experience-valid` |
+| 最高证据层 | 当时有人在飞书打开并确认，但在线记分表为空；不视为逐图可审计证据。 |
 | 评测文档 | https://bytedance.my.larkoffice.com/docx/MoiudXbwaonw61xo2Uem0E9qyQg |
 | 视觉基准 | 本目录 fixtures：奶油底 + 4px 墨边 + 一个更大的饱和焦点；分层条带才用浅色分组。不要退回均等胶囊流程图。 |
 
-后续改构图或默认色板，先对照这套 fixtures 和飞书文档，再动 [composition.md](../references/composition.md) / [palettes.md](../references/palettes.md)。
+这份历史结论只覆盖当时的色板与 fixtures。后续改构图、parser 或默认色板，先跑本地验证，再建新的评测文档；不要覆盖历史文档伪装成同一轮结果。
 
 配套产物：[`fixtures/human-eval/`](fixtures/human-eval/)（入库的是 SVG / Mermaid / HTML；PNG 预览本地生成，不提交）。再生：
 
 ```bash
-python3 evals/generate_human_eval_fixtures.py
-python3 scripts/lint_svg.py evals/fixtures/human-eval/01-layered-strip.svg
-npx -y @larksuite/whiteboard-cli@^0.2.13 -i evals/fixtures/human-eval/01-layered-strip.svg -f svg --check
+PYTHONDONTWRITEBYTECODE=1 python3 skills/feishu-whiteboard-diagram/evals/generate_human_eval_fixtures.py
+python3 skills/feishu-whiteboard-diagram/scripts/lint_svg.py skills/feishu-whiteboard-diagram/evals/fixtures/human-eval/01-layered-strip.svg
+npx -y @larksuite/whiteboard-cli@0.2.13 -i skills/feishu-whiteboard-diagram/evals/fixtures/human-eval/01-layered-strip.svg -f svg --check
 # 可选：本地 PNG 预览（gitignored）
-npx -y @larksuite/whiteboard-cli@^0.2.13 -i evals/fixtures/human-eval/01-layered-strip.svg -o evals/fixtures/human-eval/01-layered-strip.png -f svg
+npx -y @larksuite/whiteboard-cli@0.2.13 -i skills/feishu-whiteboard-diagram/evals/fixtures/human-eval/01-layered-strip.svg -o /tmp/feishu-whiteboard-diagram-01.png -f svg
 ```
 
-写入飞书时，登录后在仓库根目录执行：
+写入飞书时，登录后在仓库根目录先执行不带确认参数的命令：
 
 ```bash
 bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh
 ```
 
-脚本会解析 `eval-doc.xml` 并以用户身份创建文档。高风险确认走 `--yes`，因为这次评测就是用户要求开文档。
+脚本会解析 `eval-doc.xml` 并尝试以用户身份创建文档。遇到 exit 10 时，把返回的 action、risk 和关键参数展示给用户；只有用户针对本次创建明确同意后，才重跑：
+
+```bash
+bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh --yes
+```
+
+脚本不自动追加 `--yes`，也不因普通失败改目标目录重试。
 
 ## 证据层（先记层，再打分）
 
@@ -85,7 +97,7 @@ bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh
 
 ## 记分卡
 
-复制一表一张图。HTML 对照块才填运动/交互；其它写 N/A。
+复制一表一张图。HTML 对照块才填运动/交互；其它写 N/A。所有格仍是 `—` 时只能表示“待评”，不能汇总成 Accept。
 
 | 项 | 记录 |
 |---|---|

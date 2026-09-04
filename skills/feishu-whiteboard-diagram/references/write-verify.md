@@ -15,21 +15,17 @@ diagram.mmd    Mermaid 路径
 diagram.png    本地预览（交给用户看构图）
 ```
 
-中文 SVG 必须 UTF-8。写入工具弄坏 XML 中文时：
-
-```bash
-python3 -c 'from pathlib import Path; Path("diagram.svg").write_text(src, encoding="utf-8")'
-```
+中文 SVG 必须在首次写入时就是 UTF-8。`lint_svg.py` 报 `invalid-utf8`，或 PNG 已出现乱码 / 豆腐时，停止写入；从仍然完好的原始文本重新生成文件。已经损坏的内容没有可靠的通用“原地转码”命令。
 
 ## 本地审查（写入前）
 
 ```bash
-python3 scripts/lint_svg.py diagram.svg          # 仅 SVG
+python3 /resolved/skill-dir/scripts/lint_svg.py diagram.svg          # 仅 SVG
 npx -y @larksuite/whiteboard-cli@^0.2.13 -i diagram.svg -f svg --check
 npx -y @larksuite/whiteboard-cli@^0.2.13 -i diagram.svg -o diagram.png -f svg
 ```
 
-`--check` 的 error 清零后再交给 `lark-whiteboard` 写入。DSL / Mermaid 按官方路径渲染，同样先看 PNG。构图对照 [evals/human-eval.md](../evals/human-eval.md) 的定稿 fixtures，不要画回均等胶囊流程图。
+`lint_svg.py` 和 `--check` 的 error 清零后再交给 `lark-whiteboard` 写入。DSL / Mermaid 按官方路径渲染，同样先看 PNG。构图对照 [evals/human-eval.md](../evals/human-eval.md) 的当前候选 fixtures，不要画回均等胶囊流程图。
 
 精排默认把 **SVG 源**交给官方 `+update --input_format svg`（或文档里的 svg 画板块），不要为了中文再绕一圈本地 `--to openapi`，除非官方 workflow 要求 raw。
 

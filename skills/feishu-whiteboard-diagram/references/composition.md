@@ -2,7 +2,7 @@
 
 色板见 [palettes.md](palettes.md) 和 [visual-system.md](visual-system.md)。社区真正拉开差距的是：
 奶油画布、墨边 3–4px、**只有一个饱和焦点且它最大**、次级步骤是安静的描边盒。
-35 套 `design.md` 不搬进来；构图和这 6 套色板要吸收。Human eval 定稿的基准图在 [evals/fixtures/human-eval/](../evals/fixtures/human-eval/)。
+35 套 `design.md` 不搬进来；构图和这 6 套色板要吸收。当前本地候选图在 [evals/fixtures/human-eval/](../evals/fixtures/human-eval/)，历史 Human eval 与待复核状态见 [human-eval.md](../evals/human-eval.md)。
 
 循环 / 分叉 / 枢纽默认 **Riso Brut**。对比列用 **Riptide Cobalt**。时间线可用 **Coral**。四象限用 **Grove**。焦点+细节可用 **Avocado Press**。分层条带可以继续用浅色分组。
 
@@ -34,6 +34,13 @@
 ## 焦点
 
 染色但一样大 = 还是草稿。焦点必须 **更大 + 饱和填充 +（可选）硬阴影**。邻居用白/奶油描边盒、墨字。
+
+## 密度与删减
+
+- 默认不超过 12 个主信息块；更多内容拆成总览和细节图。
+- 正文已经清楚表达、且布局本身能说明的关系，不再补箭头或图例。
+- 页脚只在收束跨列边界或提供新结论时使用；若只是重复标题、副标题或正文导语，就删除。
+- 不用缩小到 12px 换取“完整”。读者任务优先于把所有材料塞进一张图。
 
 ## 原型（从社区样板收）
 

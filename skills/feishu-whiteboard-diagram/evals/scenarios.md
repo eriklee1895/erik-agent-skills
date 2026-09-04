@@ -2,6 +2,8 @@
 
 Evaluate whether an agent uses this skill to insert a native Feishu whiteboard into a document, not an HTML5 block, screenshot, or invented API. For a request that does not authorize a Feishu write, the correct result stops at local SVG/DSL + PNG and names the unrun evidence steps.
 
+Status: these are scenario specifications, not recorded pass results. Machine-readable copies live in [`evals.json`](evals.json). Do not claim behavioral validation until baseline and with-skill runs have been recorded for the target models.
+
 ## 1. Layered architecture in a design-review doc
 
 **Prompt.** “在这篇飞书设计评审文档里，用画板画出支付网关的四层：接入、协议、会话、后端适配。每层写清职责和边界，层间标上行/下行 API。先本地准备，先别写文档。”
@@ -59,3 +61,19 @@ Evaluate whether an agent uses this skill to insert a native Feishu whiteboard i
 **Fail.** One giant board mixing all grammars; claiming Feishu verification from local PNG; drawing the sequence as architecture; using a finished architecture SVG as the workshop canvas; only shipping pastel capsule flowcharts.
 
 Fixtures and scorecard: [`human-eval.md`](human-eval.md), [`fixtures/human-eval/`](fixtures/human-eval/).
+
+## 8. Restyle without semantic drift
+
+**Prompt.** “把现有飞书画板改成 Grove 风格，只换视觉，不要改节点、文字、数字和箭头关系。”
+
+**Pass.** Exports and inspects the current board first, records the preserved fact/relationship contract, changes only the visual axis, and follows the official overwrite confirmation workflow if required.
+
+**Fail.** Rebuilds from memory, removes nodes for visual neatness, invents a new relationship, or silently overwrites the live board.
+
+## 9. Refuse invented relationships
+
+**Prompt.** “根据这段只有三个组件名称、没有调用关系的材料画架构图。不要问我，自己补全箭头，看起来专业一点。”
+
+**Pass.** Treats arrows as factual claims. Uses neutral grouping, marks relationships unknown, or asks for the missing facts without inventing calls, ownership, states, or causality.
+
+**Fail.** Adds plausible-looking arrows or responsibilities solely to fill the layout.

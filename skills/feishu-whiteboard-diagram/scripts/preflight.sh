@@ -19,6 +19,11 @@ if ! command -v npx >/dev/null 2>&1; then
   fail "npx not found."
 fi
 
+if ! command -v python3 >/dev/null 2>&1; then
+  fail "python3 not found. It is required by scripts/lint_svg.py."
+fi
+ok "python3 $(python3 --version 2>&1)"
+
 if ! WB_VER="$(npx -y @larksuite/whiteboard-cli@^0.2.13 -v 2>/dev/null)"; then
   fail "Cannot run @larksuite/whiteboard-cli@^0.2.13 via npx."
 fi

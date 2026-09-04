@@ -2,7 +2,7 @@
 
 社区 `beautiful-feishu-whiteboard` 有 35 套换肤模板；`feishu-whiteboard-pro` 的样板用其中几套把构图做出来。
 本 skill **不复制**那些 `templates/*/design.md`。这里只留 6 套已核对、适合技术说明图的色板。
-2026-09-03 Human eval **Accept** 后，这 6 套就是默认色板；不要再扩成 35 套，也不要退回全蓝 pastel 流程图。
+2026-09-03 的上一版曾获 Human eval **Accept**。当前色板为满足小字对比度已做收敛，须按 [human-eval.md](../evals/human-eval.md) 重新确认飞书体验；不要扩成 35 套，也不要退回全蓝 pastel 流程图。
 选气质，不要 6 套同时涂在一张图上。
 
 默认：循环、分叉、枢纽用 **Riso Brut**。对比列用 **Riptide Cobalt**。时间线可用 **Coral**。四象限用 **Grove**。焦点+细节可用 **Avocado Press**。分层协议图仍可用浅色分组色板。
@@ -18,7 +18,7 @@
 | 白页双色、偏品牌 | Pin & Paper | 白贴白没描边 |
 | 更克制、决策四象限 | Grove | 海报大字铺满 |
 
-一张图 2–3 个强调色。画布不要纯白（Riso / Coral / Riptide 用奶油底）。结构靠色块和 3–4px 墨边，不要靠浅灰外框。
+一张图 2–3 个强调色。画布不要纯白（Riso / Coral / Riptide 用奶油底）。结构靠色块和 3–4px 墨边，不要靠浅灰外框。14–18px 普通文字与背景至少 4.5:1；≥24px 或 ≥19px/700 的大字至少 3:1。SVG 中用 `data-bg` 交给 lint 复核。
 
 ## Riso Brut（默认 · 解释图）
 
@@ -27,8 +27,8 @@
 | cream | `#EFE9D9` | 画布 |
 | cream-2 | `#E4DCC4` | 次级底 |
 | ink | `#0F0F0F` | 边框、正文、默认连线、默认硬阴影 |
-| green | `#1F8A4C` | 主强调 / 成功 |
-| orange | `#E85A1F` | 焦点阴影或判断色块 |
+| green | `#167342` | 主强调 / 成功；奶油字 4.86:1 |
+| orange | `#E85A1F` | 焦点阴影或判断色块；小字用墨色，不用奶油色 |
 | pink | `#F06CA8` | 第二强调，少用 |
 | yellow | `#F5C518` | 编号、点 |
 
@@ -36,7 +36,7 @@
 
 ## Coral
 
-cream `#F5F0E8` · coral `#E85D5D` · ink `#1A1A1A` · white `#FFFFFF`。白卡片坐在奶油底上，珊瑚作顶边 4px 或整块焦点。
+cream `#F5F0E8` · coral `#E85D5D` · ink `#1A1A1A` · white `#FFFFFF`。白卡片坐在奶油底上，珊瑚作顶边 4px 或整块焦点；珊瑚块上的小字用 ink。
 
 ## Riptide Cobalt
 
@@ -52,7 +52,7 @@ white `#FFFFFF` · cobalt `#2A3C99` · yellow `#F1E84E`。白卡片必须有 2�
 
 ## Grove
 
-parchment `#E8E4D6` · forest `#192B1B` · terracotta `#C8524A`。最克制，适合正式评审。
+parchment `#E8E4D6` · forest `#192B1B` · terracotta `#B0443E`。最克制，适合正式评审；浅字对 terracotta ≥4.5:1。
 
 ## 和浅色分组色板的关系
 

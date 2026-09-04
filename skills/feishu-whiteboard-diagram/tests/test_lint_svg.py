@@ -53,9 +53,7 @@ class LintSvgTests(unittest.TestCase):
         self.assertEqual("invalid-utf8", result.findings[0].code)
 
     def test_missing_viewbox(self):
-        result = self.validate(
-            MINIMAL.replace(' viewBox="0 0 400 200"', "")
-        )
+        result = self.validate(MINIMAL.replace(' viewBox="0 0 400 200"', ""))
         self.assertFalse(result.ok)
         self.assertIn("missing-viewbox", {f.code for f in result.findings})
 
@@ -102,6 +100,58 @@ class LintSvgTests(unittest.TestCase):
     def test_marker_path_is_not_flatten_warning(self):
         result = self.validate(MINIMAL)
         self.assertEqual((), result.findings)
+
+    def test_each_declared_edge_requires_an_arrow_marker(self):
+        result = self.validate(
+            MINIMAL.replace(
+                "</svg>",
+                '<line data-role="edge" x1="20" y1="120" x2="140" y2="120"/></svg>',
+            )
+        )
+        self.assertFalse(result.ok)
+        self.assertIn("missing-marker-end", {f.code for f in result.findings})
+
+    def test_marker_reference_must_exist(self):
+        result = self.validate(MINIMAL.replace("url(#arrow)", "url(#missing)"))
+        self.assertFalse(result.ok)
+        self.assertIn("missing-marker-reference", {f.code for f in result.findings})
+
+    def test_undirected_spoke_does_not_require_an_arrow(self):
+        result = self.validate(
+            MINIMAL.replace(
+                '<line x1="140" y1="64" x2="220" y2="64" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>',
+                '<line data-role="spoke" x1="140" y1="64" x2="220" y2="64" stroke="#94A3B8" stroke-width="2"/>',
+            )
+        )
+        self.assertEqual((), result.findings)
+
+    def test_curve_path_with_marker_is_a_connector_not_a_flatten_warning(self):
+        result = self.validate(
+            MINIMAL.replace(
+                '<line x1="140" y1="64" x2="220" y2="64" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>',
+                '<path data-role="edge" d="M140 64 C170 64 190 96 220 96" fill="none" stroke="#94A3B8" marker-end="url(#arrow)"/>',
+            )
+        )
+        self.assertNotIn("flatten-to-svg-node", {f.code for f in result.findings})
+
+    def test_low_contrast_declared_background_is_error(self):
+        result = self.validate(
+            MINIMAL.replace(
+                'fill="#1F2329">步骤</text>',
+                'fill="#EFE9D9" data-bg="#E85A1F">步骤</text>',
+            )
+        )
+        self.assertFalse(result.ok)
+        self.assertIn("low-contrast", {f.code for f in result.findings})
+
+    def test_accessible_declared_background_passes(self):
+        result = self.validate(
+            MINIMAL.replace(
+                'fill="#1F2329">步骤</text>',
+                'fill="#0F0F0F" data-bg="#E85A1F">步骤</text>',
+            )
+        )
+        self.assertNotIn("low-contrast", {f.code for f in result.findings})
 
 
 if __name__ == "__main__":
