@@ -1,12 +1,12 @@
 ---
 name: seedance-video-gen
 description: |
-  火山引擎 Seedance 2.0 视频生成。用户说”生成视频””做短视频””把这张图做成视频””图生视频””文生视频””产品广告视频””视频镜头””优化 Seedance 提示词”等时使用；支持文生视频、首帧/首尾帧图生视频、多模态参考（图+视+音组合）、批量并行 shots、任务创建/轮询/下载、任务列表/取消/删除、提示词优化。
+  火山引擎 Seedance 2.5 / 2.0 视频生成。用户说”生成视频””Seedance 2.5””即梦””图生视频””文生视频””30秒视频””首尾帧””多模态参考””优化 Seedance 提示词”等时使用；同一套异步 API。默认 2.5；只要 4k 且无 2.5 独有需求则 2.0 standard；4k 与 2.5 能力冲突则先问；便宜预览用 2.0-fast/mini。
 ---
 
 # Seedance Video
 
-用火山引擎 Seedance 2.0 把文字、图片或多模态参考生成视频，适合文章短视频、产品广告、概念验证镜头、社交媒体素材。
+用火山引擎 Seedance 把文字、图片或多模态参考生成视频。默认 **Seedance 2.5**（`doubao-seedance-2-5-260628`，最长 30s，无 4k、无 fast/mini）。用户明确要 2.0、只要 4k、或便宜预览时切 2.0；4k 与 2.5 独有能力冲突则停下来问。
 
 ## 何时使用
 
@@ -30,34 +30,41 @@ description: |
 
 ## 快速用法
 
-> **duration 生成视频时长**：取值范围4-15s，根据内容复杂度选择，简单镜头 4–5s，有剧情/对白/多镜头建议 8–15s。
-> **预览 vs 出片**：探索/调参阶段用 fast + 480p/720p 快速迭代，终稿再切 standard + 目标分辨率。
-> **默认模型**：省略 `--model` 即走 `doubao-seedance-2-0-260128`（standard 标准版，唯一支持 4k，质量最高）。下方第一个示例显式带 `--model fast` 是「快速预览」用法；第二个「终稿」示例省略 `--model` 即默认 standard。fast/mini 都需主动 opt-in。
+> **默认模型**：省略 `--model` = Seedance 2.5 `doubao-seedance-2-5-260628`。2.5 无 fast/mini、无 4k。
+> **何时切 2.0**：用户明确要 2.0 / 即梦 2.0（没说 fast/mini）→ standard；只要 4k 且无 2.5 独有需求 → 直接 2.0 standard + 4k；4k 且要 2.5 能力 → 先问。便宜预览/批量 → fast/mini。决策树见下方。
+> **时长**：2.5 为 4–30s / `-1`；2.0 为 4–15s / `-1`。脚本 CLI 默认仍是 5s（控成本）；官方 2.5 API 默认是 `-1`。
+> **2.5 首帧/首尾帧**：`--ratio` **必须** `adaptive`（画幅锁到首帧图）。编辑：`--ratio adaptive --duration -1`；延长：`--ratio adaptive`。
 
 ```bash
-# 文生视频（快速预览，~40% 成本）
+# 文生视频（默认 2.5，终稿 1080p；2.5 的 1080p 是 10-bit HEVC）
+uv run scripts/generate_seedance_video.py \
+  --prompt "一只橘猫在阳光下缓慢眨眼，微风吹动毛发，镜头轻微推进" \
+  --duration 5 --ratio 1:1 --resolution 1080p
+
+# 文生视频（2.0 fast 快速预览，~40% 成本，最高 720p）
 uv run scripts/generate_seedance_video.py \
   --model doubao-seedance-2-0-fast-260128 \
   --prompt "一只橘猫在阳光下缓慢眨眼，微风吹动毛发，镜头轻微推进" \
   --duration 5 --ratio 1:1 --resolution 720p
 
-# 文生视频（终稿，1080p）
-uv run scripts/generate_seedance_video.py \
-  --prompt "一只橘猫在阳光下缓慢眨眼，微风吹动毛发，镜头轻微推进" \
-  --duration 5 --ratio 1:1 --resolution 1080p
-
-# 首帧图生视频（带对白和音效的场景，适当加长）
+# 2.5 首帧图生视频（ratio 必须 adaptive）
 uv run scripts/generate_seedance_video.py \
   --prompt "让人物自然转身看向镜头，保持电影级光影，{你好，好久不见}" \
   --first-frame assets/start-frame.png \
-  --duration 8 --ratio 9:16
+  --duration 8 --ratio adaptive
 
-# 首尾帧
+# 2.5 首尾帧（ratio 必须 adaptive）
 uv run scripts/generate_seedance_video.py \
   --prompt "顺滑的产品外观转场，不出现人物" \
   --first-frame assets/start.png \
   --last-frame assets/end.png \
-  --duration 4
+  --duration 4 --ratio adaptive
+
+# 显式 2.0 standard（例如要 4k）
+uv run scripts/generate_seedance_video.py \
+  --model doubao-seedance-2-0-260128 \
+  --prompt "城市夜景航拍，镜头缓慢前推" \
+  --duration 5 --ratio 16:9 --resolution 4k
 
 # 只创建任务，拿到 task_id（多分镜叙事用长时长）
 uv run scripts/generate_seedance_video.py create \
@@ -78,8 +85,28 @@ uv run scripts/generate_seedance_video.py list-tasks \
 
 # 按模型 + 多个 task_id 精确搜索
 uv run scripts/generate_seedance_video.py list-tasks \
-  --model doubao-seedance-2-0-260128 \
+  --model doubao-seedance-2-5-260628 \
   --task-ids cgt-20260606xxxx-xxxx cgt-20260606yyyy-yyyy
+
+# 2.5 编辑视频（ratio+duration 锁定；mov 便于后期）
+uv run scripts/generate_seedance_video.py create \
+  --prompt "编辑视频1：把晴天改成雨夜，保持运镜不变" \
+  --reference-video https://example.com/src.mp4 \
+  --ratio adaptive --duration -1 \
+  --omni-reference-task-type edit --output-format mov
+
+# 2.5 仅音频参考（Ark live 已通；音频须有语义，不要纯正弦）
+uv run scripts/generate_seedance_video.py create \
+  --prompt "画面跟随音频1的节拍与情绪：黄昏海岸镜头缓慢前推，<海浪>，不要字幕。" \
+  --reference-audio assets/score.wav \
+  --duration 8 --ratio 16:9 --resolution 1080p
+
+# 2.5 延长。--duration 是成片总时长（源 5s 再续 7s → 12），不是「再延长 N 秒」
+uv run scripts/generate_seedance_video.py create \
+  --prompt "向后延长@视频1。紧接视频1结尾：窗户打开，镜头推进室内。不要字幕。" \
+  --reference-video https://example.com/src.mov \
+  --ratio adaptive --duration 12 \
+  --omni-reference-task-type extend --output-format mov
 
 # 取消/删除任务（按当前状态不同行为不同，见 references/api-reference.md）
 uv run scripts/generate_seedance_video.py cancel-task --task-id cgt-20260606xxxx-xxxx
@@ -87,7 +114,7 @@ uv run scripts/generate_seedance_video.py cancel-task --task-id cgt-20260606xxxx
 
 ### 批量提交（并行原子 shots）
 
-适合一次性并行提交多个独立 4-15s 视频片段，每个 task 独立生成、独立 task_id。**不是**长视频分镜编排（那是单独的 longform skill 干的事）。
+适合一次性并行提交多个独立短视频片段（2.5 最长 30s，2.0 最长 15s），每个 task 独立生成、独立 task_id。**不是**长视频分镜编排（那是单独的 longform skill 干的事）。
 
 典型场景：
 - A/B 测试同一 prompt 的多个变体，挑最好的
@@ -138,28 +165,79 @@ Seedance 视频生成是**强迭代**工作流，不是一次出片。下面是�
 
 | 阶段 | 特征 | 策略 |
 |---|---|---|
-| 探索/脑暴 | 用户自己也不清楚要什么、想看可能性 | fast 模型 + 480p/720p + 短时长（4-5s），一次提交 2-3 个变体，不做首帧图 |
-| 调参/迭代 | 已有初版，要修具体问题（换脸/字幕/运镜） | 保留原 prompt，小步修改，用 fast 快速验证；每次只改一个变量 |
-| 出片/交付 | 要最终成品 | standard 模型 + 目标分辨率（见下方选择启发式）+ 长时长，参考素材到位 |
-| 批量素材 | 多段落独立配图/产品多角度 | batch-submit + fast/mini，并行提交 |
+| 探索/脑暴 | 用户自己也不清楚要什么、想看可能性 | 2.0-fast + 480p/720p + 4-5s，一次 2-3 个变体；或 2.5 短时长看质量上限 |
+| 调参/迭代 | 已有初版，要修具体问题（换脸/字幕/运镜） | 保留原 prompt，小步修改；预览用 2.0-fast，质量问题改用 2.5 |
+| 出片/交付 | 要最终成品 | **默认 2.5** + 目标分辨率（2.5 最高 1080p HEVC；只要 4k 且无 2.5 独有需求 → 2.0 standard）|
+| 批量素材 | 多段落独立配图/产品多角度 | batch-submit + 2.0-fast/mini |
 
 ### 模型 / 分辨率 / 时长选择启发式
 
-不要盲目用默认值。按场景挑：
+不要盲目用默认值。按场景挑。
 
-- **模型**：探索/批量/预览 → fast（~40% token 成本、速度相近）；出片 → standard；超大规模备选库 → mini（GA 后）；需要 4k → 只能 standard（并发 1，耐心等）
-- **分辨率**：快速预览 → 480p；社媒/微信/草稿 → 720p（默认够用）；最终发布/大屏 → 1080p；有明确 4k 需求且播放器支持 HEVC → 4k
-- **时长**：单一动作/产品展示/转场 → 4-5s；有对白/多镜头/情绪铺垫 → 8-12s；复杂叙事 → 12-15s 或拆成多个 task 拼接
-- **ratio**：微信视频号/抖音/竖屏短片 → 9:16；文章头图视频/概念片 → 16:9；产品方形展示 → 1:1；电影感宽银幕 → 21:9；首帧图尺寸特殊 → adaptive 让模型判断
-- **音频**：对话/旁白/氛围/广告 → 默认生成；纯视觉/后期配音/BGM 另行叠加 → `--no-generate-audio`
+**模型选择（用户说了什么 → 立刻做什么）。** 能唯一确定就别问；不要每次提到 4k 都问。脚本已拦截 `2.5 + 4k`。
+
+| 用户说了什么 | 立刻做什么 |
+|---|---|
+| 没指定模型 | **2.5** `doubao-seedance-2-5-260628` |
+| 明确要 2.0 / seedance 2.0 / 即梦 2.0，没说 fast/mini | **2.0 standard** `doubao-seedance-2-0-260128`。便宜预览/批量才 fast/mini |
+| 明确要 4k，且没有 2.5 独有需求 | **直接 2.0 standard + `--resolution 4k`**，并告知一句：`4k 只能 Seedance 2.0 standard，2.5 最高 1080p。` |
+| 要 4k **且** 要 2.5 独有能力 | **停下来让用户选**：A) 4k + 2.0（最长 15s，无那些 2.5 能力）或 B) 留在 2.5 用 1080p。不要擅自猜 |
+
+**2.5 独有需求**（命中才算和 4k 冲突）：30s、整数秒时间戳硬切、仅音频参考、omni 编辑/延长、mov 后期。
+
+2.5 **没有** fast/mini。4s 480p 时 2.0-fast 与 2.5 的 completion_tokens 几乎一样（~38800）；fast 便宜在 **2.0 更低的单价**，不是 token 腰斩。
+
+- **分辨率**：预览 → 480p；社媒/草稿 → 720p（CLI 默认）；2.5 终稿 → 1080p（10-bit HEVC）；4k → 仅 2.0 standard（10-bit HEVC，并发 1）
+- **时长**：单一动作 → 4-5s；对白/多镜头 → 8-12s；2.0 复杂叙事 → 12-15s 或拆 task；2.5 完整故事可一次 15-30s，prompt 用整数秒时间戳。480p 文生 token ≈ `38830 × (duration/4)`
+- **ratio**：竖屏 9:16、横屏 16:9、方 1:1、宽银幕 21:9。**2.5 首帧/编辑/延长必须 `adaptive`**。CLI 文生默认仍是 `16:9`（官方 2.5 API 默认 `adaptive`）
+- **音频**：对话/旁白/广告 → 默认生成；后期自配 → `--no-generate-audio`。仅音频参考：**仅 2.5 允许**（Ark live 已通）；参考须是有语义的 wav/mp3
+- **2.5 新参数**：后期调色/编辑延长建议 `--output-format mov`；明确编辑/延长时加 `--omni-reference-task-type edit|extend` 把校验前置。延长的 `--duration` 是成片总时长
+
+### 何时必须用 2.5（按用户意图锁模型，不要先降到 fast）
+
+命中下表任一行就走默认 2.5。这些不是「2.5 更好看」，是 2.0 **没有这条路或会 400**。
+
+| 用户说了什么 | 立刻用的参数 | 实测注意 |
+|---|---|---|
+| 「一条 16–30 秒」「不要拆成多段再拼」 | `--duration 16–30`，prompt 连续整数秒 | 16s 480p live 成片 16.06s，token 154,120 ≈ 4s 的 4 倍 |
+| 「第 N 秒切镜 / Hard cut / 0-4s 再 4-8s」 | 分段 prompt：`GLOBAL STYLE` + `Shot N: 0-xs … Hard cut.` | live：4s 硬切会换镜头；「航拍拉升」等运镜动词只部分兑现，景别边界比动词可靠 |
+| 「只有配乐/旁白，没有图」 | `--reference-audio file.wav`（不要配图） | Ark **允许仅音频**（create+succeeded）。纯正弦几乎不驱动画面；`generate_audio=true` 会重做音轨，不是原样贴参考 |
+| 「用这张图当第一帧」 | `--first-frame` + **`--ratio adaptive`** | 非 adaptive → HTTP 400 `TaskTypeConstraint`。adaptive 画幅锁首帧（响应 ratio 如 `427:240`） |
+| 「改这段视频：删人/换天气/替换物体」 | `--omni-reference-task-type edit --ratio adaptive --duration -1` | duration `-1` 成片时长≈源片。live 任务通；「保持运镜不变」不一定兑现，删路人可能长出新主角——prompt 写死「不要新增人物」 |
+| 「把这段往后/往前续」 | `--omni-reference-task-type extend --ratio adaptive`，`--duration`=**成片总时长** | 源 5s 再续 7s → `--duration 12`。prompt 必须写「紧接@视频1结尾：具体动作」。只写「延续同一场景」可能整段换景 |
+| 「要 mov 给后期调色」 | `--output-format mov` | live 4s 480p URL `.mov`，token 与 mp4 相同 |
+| 「参考图超过 9 / 视频超过 3」 | 默认 2.5；每元素仍各 1 份 | 上限 30/10/10 共 50，不要堆满 |
+| 白模 / 宫格 / 多关键帧 / 跨镜锁身份 | prompt-guide **§3**（白模/宫格/关键帧）；跨镜锁 **§2** | 宫格 ≤15；关键帧第一句见 §3.1 |
+
+**不要用 2.5**：只要便宜预览/批量短片 → `--model doubao-seedance-2-0-fast-260128` 或 mini。要 4k 见上方决策树（无 2.5 独有需求才切 2.0 standard；脚本会拦截 2.5+4k）。2.5 无 fast。
+
+### 2.5 复杂镜头怎么写（吃满能力）
+
+简单 4–5s 仍用一句话。**多切镜 / 30s / 要跨镜头不换脸** 时用分段结构（一项不写就会在对应维度翻车，不是「写得越长越好」）：
+
+```
+GLOBAL STYLE：类型、色调、片种、画幅、禁止出现什么
+SCENE：一句话发生了什么
+CHARACTERS / LOCATION：人或空间；有参考图就点名「图片N 是谁」
+FIRST FRAME AND BLOCKING：开场谁在哪、朝哪
+Shot 1: … Hard cut.
+Shot 2: 0-4s … 4-10s …
+OPTICS / LIGHTING / PHYSICS：焦段或机位、光从哪来、布料/烟/液体怎么动
+AUDIO：环境音、音效、不要什么。默认「无 bgm、无额外字幕」，对白用 {}
+```
+
+复杂分段、named locks、角色表、时间戳规则见 [prompt-guide.md](references/prompt-guide.md) **§2**。白模/宫格/关键帧/仅音频见 **§3**。场景模板见 [scene-cookbook.md](references/scene-cookbook.md)。
+
+30s 是上限不是目标；只有一个动作就 4–8s。10–15 次迭代仍烂：拆场景。一次只改一个变量。看完整成片再判。
 
 ### 写提示词：按 shot 复杂度伸缩
 
-- **简单 shot**（4-5s 单一动作/产品/场景）：一句话点明主体+动作+风格即可，不用硬凑运镜/光影/画质
-- **中等 shot**（有运镜或氛围要求）：主体 + 动作 + 场景 + 运镜 + 风格
-- **复杂 shot**（多人对话/多镜头/长叙事/编辑延长）：完整公式（主体定义 + 分镜时序 + 动作细节 + 光影 + 运镜 + 风格 + 音频 + 约束）
-- 提示词技巧、运镜/光影词表、约束模板见 [references/prompt-guide.md](references/prompt-guide.md)，按需翻阅，不是每次必套。
-- 参考素材如何绑定、图片/视频/音频组合规则见 [references/multimodal-reference.md](references/multimodal-reference.md)。
+- **简单 shot**（4-5s 单一动作/产品/场景）：一句话点明主体+动作+风格即可
+- **中等 shot**：主体 + 动作 + 场景 + 运镜 + 风格
+- **复杂 shot**（多人/多镜头/30s 叙事/编辑延长）：prompt-guide §2 分段结构。**2.5 用连续整数秒**（`0-3s` / `[1s-4s]`）；2.0 只认镜头序号，不要写精确秒数（附录 A）
+- 音频符号不变：`（）`音乐、`<>`音效、`{}`台词、`【】`字幕。2.5 负向控制见 prompt-guide §3.3
+- 细节见 [prompt-guide.md](references/prompt-guide.md)（2.5-first；2.0 见附录 A）；参数差异见 [seedance-2.5.md](references/seedance-2.5.md)
+- 参考素材绑定规则见 [references/multimodal-reference.md](references/multimodal-reference.md)
 
 ### 准备参考素材（可选）
 
@@ -178,9 +256,9 @@ Seedance skill 不负责生成或获取素材——它只消费调用方传入�
 
 ### 执行与等待
 
-- 单个 task 4-5 分钟 wall time（含排队）
-- **submit 任务（POST /tasks）实测不限流**（普通公司开发账号）：可以一次性 burst 提交几十个 task。并发限制的是**同时 `running` 状态的 task 数量**（普通档实测 20，fast + standard 共享 pool），超出后新任务进 `queued` FIFO 排队，不会报 429。官方文档列出企业 600 / 个人 180 RPM，个人账号未验证
-- 4k task 严格串行（running 上限 1，submit 端 RPM 15），耐心等
+- 单个 task 墙钟（`created_at`→`updated_at`，2026-09-03 Ark）：2.0-fast 4s 480p ~75s；2.5 文生 4s 480p ~2–2.5 min；12s ~2.7 min；16s ~3 min；首帧 4s ~3.7 min；编辑 16s ~3.6 min。1080p 更久。详见 `references/seedance-2.5.md`
+- **submit 任务（POST /tasks）2.0 实测不限流**（普通公司开发账号）：可 burst 提交。并发限制的是同时 `running` 数量。官方 2.5 与 2.0 非 4k 相同：企业 600 RPM / 10 concurrent，个人 180 / 3
+- 4k task（仅 2.0 standard）严格串行（running 1，RPM 15）
 - 轮询间隔默认 20s 就够，不要开得太频繁
 - 需要只拿 task_id 稍后再查：用 `create` 子命令；需要同步等结果：用默认 `generate`
 
@@ -189,8 +267,8 @@ Seedance skill 不负责生成或获取素材——它只消费调用方传入�
 第一次生成结果不满意很正常。典型迭代模式：
 1. 看视频：问题是人/动作/运镜/光影/字幕/音频中哪一个？
 2. 对应修正 prompt 或换参考素材（一次只改一个维度）
-3. fast 模型快速验证
-4. 通过后再用 standard + 目标分辨率出终稿
+3. 2.0-fast 快速验证（或短时长 2.5）
+4. 通过后再用 2.5（或 2.0 standard 4k）+ 目标分辨率出终稿
 - 常见问题的 prompt 层解法见 [references/prompt-guide.md](references/prompt-guide.md) 和 [references/key-constraints.md](references/key-constraints.md) 的翻车清单
 - 同一 prompt 生成 2-3 次挑最好的，对复杂 shot 是划算的
 
@@ -204,7 +282,7 @@ Seedance skill 不负责生成或获取素材——它只消费调用方传入�
 
 ```text
 output/seedance/YYYY-MM-DD-<slug>/
-├── video.mp4
+├── video.mp4               # 或 video.mov（2.5 `--output-format mov`）
 ├── manifest.json           # task_id, model, params, video_url, usage, output paths
 ├── prompt.md               # 最终提示词
 └── last-frame.jpg          # 仅当 --return-last-frame
@@ -212,14 +290,17 @@ output/seedance/YYYY-MM-DD-<slug>/
 
 ## 重要约束
 
-- `duration` 范围 `4–15` 秒，或 `-1` 让模型自适应。
-- `resolution`：`480p` / `720p` / `1080p` / `4k`；**默认 `720p`**；**Fast 版和 Mini 版最高 `720p`**（脚本会在 client 侧直接拦截）；**`4k` 仅标准版，输出 10-bit H.265/HEVC**，并发 1、RPM 15。
-- `ratio`：`16:9`、`4:3`、`1:1`、`3:4`、`9:16`、`21:9`、`adaptive`；**默认 `16:9`**（脚本 argparse 默认 16:9；实测省略 ratio 时 API 也返回 16:9，官方文档标注的 `adaptive` 与实测不符）。
-- 多模态参考单类型上限：图片 ≤ 9，视频 ≤ 3，音频 ≤ 3（官方未明文规定总数硬上限；脚本 client 侧硬限总计 ≤ 12）；实测推荐 **4-5 个素材** 的黄金配比（详见 references）。
-- 音频不能单独使用，必须与至少一张图片或一段视频一起传入。
-- 首尾帧模式（`first_frame` / `last_frame`）和参考图模式（`reference_image`）**互斥**；首尾帧与 `reference_video`/`reference_audio` 共用未在官方文档明文确认（详见 multimodal-reference.md 的「模式组合规则」）。
-- **联网搜索（`--enable-web-search`）仅纯文本输入**，与 image_url/video_url/audio_url 互斥（脚本会拦截）。
-- 本地图片（png/jpg/jpeg/webp/gif/bmp/tiff/heic/heif）和本地音频（mp3/wav）会自动转成 base64 data URL 上传；**本地视频不支持 base64**，视频必须以 http(s):// URL 或 `asset://` ID 形式传入，容器仅 MP4/MOV，单文件 ≤ 200 MB。
+按模型分流。2.5 任务类型硬限制见 [references/seedance-2.5.md](references/seedance-2.5.md)。
+
+- `duration`：2.5 = `4–30` 或 `-1`；2.0 = `4–15` 或 `-1`。CLI 默认 `5`。编辑必须 `-1`。**延长的 duration 是成片总时长**。
+- `resolution`：`480p` / `720p` / `1080p` / `4k`；CLI 默认 `720p`。**2.5 最高 1080p（10-bit HEVC），无 4k**。2.0-fast/mini 最高 720p。**4k 仅 2.0 standard**。
+- `ratio`：六档 + `adaptive`。CLI 文生默认 `16:9`。**2.5 首帧/首尾帧、编辑、延长必须 `adaptive`**（脚本会拦截）。
+- 多模态上限：2.5 = 图 30 + 视 10 + 音 10（共 50）；2.0 = 图 9 + 视 3 + 音 3（脚本 total ≤ 12）。仍建议 4-5 个素材黄金配比。
+- 仅音频参考：2.5 ✅（Ark live 已通，脚本不拦）；2.0 ❌（必须配图或视频）。参考须有语义的 wav/mp3。
+- 首尾帧与 `reference_*` **互斥**（两代相同）。
+- `--enable-web-search` 仅纯文本（两代相同）。
+- 2.5 新字段：`output_format`=`mp4|mov`（mov 仅 2.5）；`omni_reference_task_type`=`auto|reference|edit|extend`（仅 2.5）。
+- 本地图片/音频可 base64；**本地视频必须 URL 或 `asset://`**。真人人脸输入禁止（asset:// / 授权 / 信任产物除外）。
 
 > 完整参数表、计费、状态机、错误码见 [references/api-reference.md](references/api-reference.md)。
 
@@ -234,10 +315,12 @@ output/seedance/YYYY-MM-DD-<slug>/
 | `--reference-image` | 多模态参考图（可重复） |
 | `--reference-video` | 多模态参考视频（可重复） |
 | `--reference-audio` | 多模态参考音频（可重复） |
-| `--model` | 模型 ID |
-| `--duration` | 时长秒数 |
-| `--ratio` | 画面比例 |
-| `--resolution` | 分辨率 |
+| `--model` | 默认 `doubao-seedance-2-5-260628`；2.0 三个 ID 仍可用 |
+| `--duration` | 2.5: 4–30 / -1；2.0: 4–15 / -1；CLI 默认 5。编辑必须 -1；延长 = 成片总时长 |
+| `--ratio` | 六档 + adaptive；2.5 首帧/编辑/延长必须 adaptive |
+| `--resolution` | 480p/720p/1080p/4k；2.5 无 4k |
+| `--output-format` | 2.5 only：`mp4`（默认不传）或 `mov` |
+| `--omni-reference-task-type` | 2.5 only：`auto` / `reference` / `edit` / `extend` |
 | `--generate-audio` / `--no-generate-audio` | 是否生成音频 |
 | `--watermark` / `--no-watermark` | 是否加水印 |
 | `--return-last-frame` | 返回尾帧图 |
@@ -257,27 +340,31 @@ Agent 按需读取，不必全加载。简单任务（文生视频 4-5s、单镜
 
 | 文件 | 用途 | 何时读 |
 |---|---|---|
-| `references/key-constraints.md` | 能力边界、硬限制、翻车清单、并发上限、4k 特殊规则 | 第一次用 / 遇到 API 错误 / 用 4k 或多模态前 / 排查"为什么生成不对" |
-| `references/multimodal-reference.md` | 多模态输入：图片/视频/音频怎么传、asset://、编辑/延长模式 | 准备参考素材时 |
-| `references/prompt-guide.md` | 提示词公式、运镜/光影/风格词表、音频写法、约束模板、翻车对应解法 | 写 Seedance 提示词 / 生成结果不满意要迭代时 |
-| `references/scene-cookbook.md` | 完整场景配方示例（教育、短剧、产品、竖屏、编辑、延长、戏曲、跨模态编辑等）| 需要模板参照 / 不知道某类场景怎么写时 |
-| `references/api-reference.md` | API 端点、参数、状态机、错误码、计费、manifest 字段 | 调试 API 调用 / 需要查具体字段含义时 |
+| `references/seedance-2.5.md` | 2.5 vs 2.0 差异、任务类型锁定、新参数、prompt 增量、不兼容点 | 用 2.5 / 30s / 首帧 / 编辑延长 / mov 之前 |
+| `references/key-constraints.md` | 能力边界、硬限制、翻车清单、并发、4k | 第一次用 / API 报错 / 4k 或多模态 |
+| `references/multimodal-reference.md` | 多模态输入、asset://、编辑/延长 | 准备参考素材时 |
+| `references/prompt-guide.md` | 2.5-first 提示词公式；2.0 见附录 A | 写 prompt / 迭代失败时 |
+| `references/scene-cookbook.md` | 场景配方（默认 2.5 时间戳；2.0 见各节改写） | 需要模板时 |
+| `references/api-reference.md` | 端点、字段、状态机、错误码、计费 | 调试 API 时 |
 
 ## 故障排查
 
 | 现象 | 处理 |
 |---|---|
 | `ARK_API_KEY not found` | 检查环境变量或 `.env` 文件 |
-| `400 InvalidParameter` | 检查 `resolution` 与模型是否匹配、`duration` 越界、比例非法 |
+| `400 InvalidParameter.TaskTypeConstraint` | 2.5 首帧/编辑/延长参数和任务类型不一致。首帧必须 `--ratio adaptive`；编辑还要 `--duration -1` |
+| 脚本拒绝 `--resolution 4k` | 2.5 / 2.0-fast / mini 无 4k；4k 用 `--model doubao-seedance-2-0-260128` |
+| 脚本拒绝 `--resolution 1080p` | 仅 2.0-fast/mini 最高 720p；2.5 支持 1080p |
+| 脚本拒绝 2.5 首帧非 adaptive | 改 `--ratio adaptive`（画幅锁首帧） |
+| 脚本拒绝仅音频参考 | 改 `--model doubao-seedance-2-5-260628` |
+| 想批量找历史任务 | `list-tasks --status succeeded --model doubao-seedance-2-5-260628` |
 | `401` | API Key 无效或权限未开通 Seedance |
 | `403` | 内容审核未通过，检查是否含人脸或违规内容 |
 | `429` | 限流或余额不足 |
 | 任务 `failed` | 查看 `manifest.json` 中的 `error` 字段 |
 | 视频 URL 下载失败 | URL 24 小时过期，尽快下载 |
 | `GET /tasks/{id}` 返回 404 | 任务 ID 已过 7 天保留期；用 `list-tasks` 找最近 7 天的任务 |
-| 脚本拒绝 `--resolution 1080p`/`4k` | Fast / Mini 最高 720p，脚本会硬阻断；改用 720p 或 480p |
 | 脚本拒绝本地视频路径 | 视频不支持 base64；先上传到公网 URL / TOS，或录入 asset:// 素材库 |
-| 想批量找历史任务 | `list-tasks --status succeeded --model doubao-seedance-2-0-260128` |
 | `--enable-web-search` + 多模态被脚本拒绝 | web_search 仅纯文本输入；如需引用搜索结果，先用纯文本跑一次再以视频为参考续写 |
 
 ## 辅助脚本（高级/评测）
