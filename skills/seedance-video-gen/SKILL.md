@@ -392,7 +392,6 @@ Seedance 是原子能力 skill：**输入是 prompt + 可选素材 + 参数，�
 - **上游**（给 Seedance 喂素材，均为本仓 skill；由上层编排按场景选择，Seedance 本身不主动调用）：
   - 首帧/概念图/参考图：`seedream-image-gen`（Seedream 文生图，与 Seedance 同属火山方舟模型家族）
   - BGM/音效：`volcengine-bigmusic-bgm`；旁白/TTS 配音：`volcengine-tts`；已有音频素材整理：`seed-audio-gen`
-  - 素材采集与粗剪参考：`video-material-ingest`、`video-highlight-select`
   - 需要查方舟文档细节：`volcengine-doc-fetcher`；需要引用当前事件/最新资料：`volcengine-web-search`（或直接用本脚本的 `--enable-web-search`）
 - **长片编排边界**：超过单任务时长上限的长视频（2.5 >30s、2.0 >15s）由**上层编排层**负责：拆 shot → 准备素材 → 调用 Seedance（batch-submit 或逐任务）→ 链式续写/无缝转场 → 后期拼接。本 skill 不提供编排器。
 - **下游边界**：剪辑、字幕、配音合成、调色、转场拼接、发布、归档**都不在本 skill 范围**——Seedance 的交付物是可直接进入剪辑环节的视频文件（mov/mp4）+ manifest。不要在本 skill 里假设存在某个发布/剪辑 skill。

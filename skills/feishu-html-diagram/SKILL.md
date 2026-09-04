@@ -83,7 +83,7 @@ python3 /resolved/skill-dir/scripts/validate_html_block.py /absolute/path/to/dia
 | 文档内需要动画、交互或 CSS 自由排版的架构 / 数据流 / 状态机 | 本 skill |
 | 标准流程、时序或依赖关系，重视简洁文本语法 | Mermaid |
 | 文档内可二次编辑的精美架构 / 流程 / 分层画板 | `feishu-whiteboard-diagram` |
-| 多人拖拽、贴便签、现场共创和飞书内原生编辑 | `lark-whiteboard` |
+| 多人拖拽、贴便签、现场共创和飞书内原生编辑 | `lark-whiteboard`（larksuite CLI 的外部 skill，非本仓库） |
 | 数据计算、筛选、透视和普通统计图 | 飞书表格/图表 |
 | 展示真实 UI、现场证据或追求最大静态兼容性 | 图片/截图 |
 | 认证、持久状态、多页面路由、公开 URL 或完整业务操作 | 独立 Web 开发流程 |

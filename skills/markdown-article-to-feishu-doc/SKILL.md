@@ -4,7 +4,7 @@ description: |
   把一篇本地 markdown 文档转写成飞书云文档(docx),排版精美、block 结构完整。
   Mermaid 默认保留为 ```mermaid 代码块(源码可复制);--mermaid-mode whiteboard 时渲染成飞书画板。
   触发:用户说"把 markdown 发到飞书"/"转写到飞书"/"这篇要发飞书";或给了本地 .md 路径,可附带 docx URL(不提供则创建新文档)。
-  不触发:微信公众号发布工作流(见 writing-agent-harness 项目)、Notion、Drive 原生 .md(走 lark-markdown)、docx 内部编辑(走 lark-doc)。
+  不触发:微信公众号发布、Notion、Drive 原生 .md、docx 内部编辑等非「md 转飞书文档」场景。
 metadata:
   requires:
     bins: ["lark-cli"]
@@ -19,7 +19,7 @@ metadata:
 
 | 适用 | 不适用 |
 |---|---|
-| 用户给本地 `.md` 路径,要发到飞书 | 微信公众号发布(走 writing-agent-harness 项目的发布工作流) |
+| 用户给本地 `.md` 路径,要发到飞书 | 微信公众号发布(不在本 skill 范围) |
 | 大部分场景:**全新创建**飞书文档 | 飞书云盘的 `.md` 文件 → `lark-markdown` |
 | 少数场景:用户给空白/旧 docx URL,确认 overwrite 后整篇覆盖 | 已发布飞书 docx 内的局部精修 → `lark-doc` |
 | markdown 含 frontmatter / 本地图片 / Mermaid | 增量同步、diff/patch(本 skill 不做) |
@@ -159,7 +159,7 @@ lark-cli docs +update --api-version v2 --doc <doc_id> --command overwrite \
 
 - [`lark-doc`](https://github.com/larksuite/cli):docx 创建 / 更新 / fetch / 媒体插入 / XML 规范
 - [`lark-whiteboard`](https://github.com/larksuite/cli):若 mermaid 直传失败,降级路径(本 skill v1 默认不走)
-- [`feishu-whiteboard-diagram`](../feishu-whiteboard-diagram/):文档内精美架构/流程图应走原生画板 SVG/DSL,而不是把复杂图塞进 mermaid 直传
+- `feishu-whiteboard-diagram` skill(同仓库,需单独安装):文档内精美架构/流程图应走原生画板 SVG/DSL,而不是把复杂图塞进 mermaid 直传
 - [`lark-shared`](https://github.com/larksuite/cli):认证、`auth login`、`--as user/bot` 切换
 
 ## 相关文件

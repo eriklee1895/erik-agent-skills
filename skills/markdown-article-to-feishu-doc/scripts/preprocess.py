@@ -98,7 +98,7 @@ def derive_title(fm: dict[str, Any], body: str, fallback: str) -> str:
 
 # Match GFM image syntax: ![alt](url "optional title")
 # We handle both inline images and reference-style images is left out for v1
-# (rare in our writing-agent-harness articles).
+# (rare in practice).
 IMAGE_RE = re.compile(
     r"""
     !\[(?P<alt>[^\]]*)\]    # ![alt]
@@ -396,7 +396,7 @@ def rewrite_mermaid(body: str, mode: str = "code") -> tuple[str, int]:
 # highlight markers (==text==) → Feishu callout
 # ---------------------------------------------------------------------------
 
-# Some writing-agent-harness articles use the markdown-like ==highlight text==
+# Some articles use the markdown-like ==highlight text==
 # convention for key takeaway lines. Feishu markdown mode does not understand
 # this syntax, so it renders the literal == markers. Convert them to a
 # <callout> block with a light-yellow background.

@@ -16,7 +16,6 @@ discovered, linked, and installed consistently.
 
 | Skill | Purpose | Install |
 | --- | --- | --- |
-| [article-to-notion](../skills/article-to-notion/) | Capture and clean web articles into Notion while preserving useful metadata and assets. | `npx skills add eriklee1895/erik-agent-skills --skill article-to-notion` |
 | [markdown-article-to-feishu-doc](../skills/markdown-article-to-feishu-doc/) | Convert local Markdown into a structured Feishu document with media and Mermaid support. | `npx skills add eriklee1895/erik-agent-skills --skill markdown-article-to-feishu-doc` |
 | [feishu-html-diagram](../skills/feishu-html-diagram/) | Create high-fidelity, animated, or interactive diagrams inside Feishu Docx using HTML5 blocks when Mermaid, whiteboards, tables, or images are too restrictive. | `npx skills add eriklee1895/erik-agent-skills --skill feishu-html-diagram` |
 | [feishu-whiteboard-diagram](../skills/feishu-whiteboard-diagram/) | Create, restyle, or review editable, document-quality architecture and process diagrams in Feishu Docx as native whiteboards (SVG / DSL / Mermaid), with fact-preserving editorial composition and evidence gates. | `npx skills add eriklee1895/erik-agent-skills --skill feishu-whiteboard-diagram` |
@@ -30,8 +29,6 @@ discovered, linked, and installed consistently.
 | [gpt-image-2](../skills/gpt-image-2/) | Generate, edit, and batch-create raster images with OpenAI's image model. | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-2` |
 | [seedream-image-gen](../skills/seedream-image-gen/) | Generate and edit images with Seedream, including typography, marker editing, outpainting, and batch workflows. | `npx skills add eriklee1895/erik-agent-skills --skill seedream-image-gen` |
 | [seedance-video-gen](../skills/seedance-video-gen/) | Generate videos with Seedance from text, images, or multimodal references. | `npx skills add eriklee1895/erik-agent-skills --skill seedance-video-gen` |
-| [video-material-ingest](../skills/video-material-ingest/) | Ingest known video URLs into traceable local material packages. | `npx skills add eriklee1895/erik-agent-skills --skill video-material-ingest` |
-| [video-highlight-select](../skills/video-highlight-select/) | Review video material and select article-relevant highlight ranges before clipping. | `npx skills add eriklee1895/erik-agent-skills --skill video-highlight-select` |
 | [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | Generate instrumental background music for video and article media workflows. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-bigmusic-bgm` |
 | [volcengine-tts](../skills/volcengine-tts/) | Synthesize speech audio with Volcano Engine's text-to-speech models. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-tts` |
 | [seed-audio-gen](../skills/seed-audio-gen/) | Generate complete mixed audio scenes (voice + SFX + BGM) with the generative seed-audio-1.0 model; multi-reference voice cloning, sound effects, and directed dialogue in one call. | `npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen` |
