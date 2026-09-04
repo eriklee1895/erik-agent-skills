@@ -31,6 +31,7 @@
 | [video-highlight-select](../skills/video-highlight-select/) | 审阅视频素材并选择与文章相关的高光时间段，为后续剪辑做准备。 | `npx skills add eriklee1895/erik-agent-skills --skill video-highlight-select` |
 | [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | 为视频和文章媒体工作流生成无人声背景音乐。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-bigmusic-bgm` |
 | [volcengine-tts](../skills/volcengine-tts/) | 使用火山引擎语音合成模型生成语音音频。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-tts` |
+| [volcengine-asr](../skills/volcengine-asr/) | 用火山引擎语音识别将音视频转写为文本并生成 SRT/VTT 字幕；内置说话人分离与 ffmpeg 视频抽音轨。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-asr` |
 | [seed-audio-gen](../skills/seed-audio-gen/) | 用生成式 seed-audio-1.0 模型一次生成人声+音效+BGM 的完整音频场景；支持多参考音色克隆、音效和导演式对白。 | `npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen` |
 
 ## 工具与集成

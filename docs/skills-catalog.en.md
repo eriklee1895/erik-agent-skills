@@ -34,6 +34,7 @@ discovered, linked, and installed consistently.
 | [video-highlight-select](../skills/video-highlight-select/) | Review video material and select article-relevant highlight ranges before clipping. | `npx skills add eriklee1895/erik-agent-skills --skill video-highlight-select` |
 | [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | Generate instrumental background music for video and article media workflows. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-bigmusic-bgm` |
 | [volcengine-tts](../skills/volcengine-tts/) | Synthesize speech audio with Volcano Engine's text-to-speech models. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-tts` |
+| [volcengine-asr](../skills/volcengine-asr/) | Transcribe audio/video to text with Volcano Engine's speech recognition and generate SRT/VTT subtitles; speaker diarization and ffmpeg video extraction built in. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-asr` |
 | [seed-audio-gen](../skills/seed-audio-gen/) | Generate complete mixed audio scenes (voice + SFX + BGM) with the generative seed-audio-1.0 model; multi-reference voice cloning, sound effects, and directed dialogue in one call. | `npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen` |
 
 ## Tools & Integrations
