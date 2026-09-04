@@ -368,7 +368,7 @@ CLI 在 Lite 上使用 `--marker-rect` 会自动 warning. 任何严肃的 marker
 | `references/styles/text-poster.md` | 6 份 text-rendering recipes |
 | `guides/marker-edit-protocol.md` | 本文档 (协议动机 + threshold 表 + 4 组 demo 记录) |
 
-> 本文档由 writing-agent-harness 项目迁入；早期 smoke test 的三栏对比图和端到端测试报告保留在该项目的本机归档中, 不随 skill 分发。
+> 早期 smoke test 的三栏对比图和端到端测试报告不随 skill 分发。
 
 ---
 

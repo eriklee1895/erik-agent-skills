@@ -227,7 +227,7 @@ uv run scripts/volcengine-tts.py --list-speakers --filter type=bigtts --sort hea
 uv run scripts/volcengine-tts.py --list-speakers --filter lang=ja --sort heat
 ```
 
-`--list-speakers` may include ICL voices (`type=icl`, IDs containing `ICL_` or `_tob`). Seeing them in the local table does **not** mean they synthesize with the default public-catalog call. Official `_bigtts` voices work with Resource-Id `seed-tts-2.0` and do **not** need `--model`. Registered ICL/`_tob` voices typically need `--model seed-tts-2.0-standard`. Creating a new cloned voice is a different skill, not this list.
+`--list-speakers` may include ICL voices (`type=icl`, IDs containing `ICL_` or `_tob`). Seeing them in the local table does **not** mean they synthesize with the default public-catalog call. Official `_bigtts` voices work with Resource-Id `seed-tts-2.0` and do **not** need `--model`. Registered ICL/`_tob` voices typically need `--model seed-tts-2.0-standard`. Creating a new cloned voice from reference audio is handled by the `seed-audio-gen` skill (same repo, install separately), not this list.
 
 To refresh the speaker table when new voices are released, run:
 
@@ -259,6 +259,6 @@ uv run scripts/refresh-speakers.py --from-json
 
 ## When NOT to Use
 
-- Voice cloning / 声音复刻 — needs a separate skill (uses `seed-icl-2.0`)
+- Voice cloning / 声音复刻 — use the `seed-audio-gen` skill (same repo; install separately)
 - Real-time speech recognition / ASR — different API
 - Music/audio editing — not TTS
