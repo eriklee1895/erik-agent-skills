@@ -13,10 +13,9 @@
 
 | Skill | 用途 | 安装 |
 | --- | --- | --- |
-| [article-to-notion](../skills/article-to-notion/) | 抓取和清洗网页文章，连同有价值的元数据与素材整理进 Notion。 | `npx skills add eriklee1895/erik-agent-skills --skill article-to-notion` |
 | [markdown-article-to-feishu-doc](../skills/markdown-article-to-feishu-doc/) | 将本地 Markdown 转为结构完整的飞书文档，并支持图片与 Mermaid。 | `npx skills add eriklee1895/erik-agent-skills --skill markdown-article-to-feishu-doc` |
 | [feishu-html-diagram](../skills/feishu-html-diagram/) | 在 Mermaid、画板、表格或图片表达受限时，用 HTML5 块在飞书 Docx 中创建高保真、动态或交互式图表。 | `npx skills add eriklee1895/erik-agent-skills --skill feishu-html-diagram` |
-| [feishu-whiteboard-diagram](../skills/feishu-whiteboard-diagram/) | 在飞书 Docx 中插入可二次编辑的精美架构 / 流程图，使用原生画板（SVG / DSL / Mermaid）和文档精排构图，而不是截图或 HTML5。 | `npx skills add eriklee1895/erik-agent-skills --skill feishu-whiteboard-diagram` |
+| [feishu-whiteboard-diagram](../skills/feishu-whiteboard-diagram/) | 在飞书 Docx 中新增、改版或审查可二次编辑的精美架构 / 流程图，使用原生画板（SVG / DSL / Mermaid）、事实保真构图与分层证据门禁。 | `npx skills add eriklee1895/erik-agent-skills --skill feishu-whiteboard-diagram` |
 | [wechat-article-fetcher](../skills/wechat-article-fetcher/) | 将微信公众号文章提取为结构化 Markdown 和本地素材，用于研究或复用。 | `npx skills add eriklee1895/erik-agent-skills --skill wechat-article-fetcher` |
 
 ## 媒体
@@ -27,8 +26,6 @@
 | [gpt-image-2](../skills/gpt-image-2/) | 使用 OpenAI 图片模型生成、编辑和批量制作位图。 | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-2` |
 | [seedream-image-gen](../skills/seedream-image-gen/) | 使用 Seedream 生成和编辑图片，支持文字设计、标记编辑、扩图与批量工作流。 | `npx skills add eriklee1895/erik-agent-skills --skill seedream-image-gen` |
 | [seedance-video-gen](../skills/seedance-video-gen/) | 使用 Seedance 根据文本、图片或多模态参考生成视频。 | `npx skills add eriklee1895/erik-agent-skills --skill seedance-video-gen` |
-| [video-material-ingest](../skills/video-material-ingest/) | 将已知视频 URL 整理为可追踪的本地素材包。 | `npx skills add eriklee1895/erik-agent-skills --skill video-material-ingest` |
-| [video-highlight-select](../skills/video-highlight-select/) | 审阅视频素材并选择与文章相关的高光时间段，为后续剪辑做准备。 | `npx skills add eriklee1895/erik-agent-skills --skill video-highlight-select` |
 | [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | 为视频和文章媒体工作流生成无人声背景音乐。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-bigmusic-bgm` |
 | [volcengine-tts](../skills/volcengine-tts/) | 使用火山引擎语音合成模型生成语音音频。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-tts` |
 | [volcengine-asr](../skills/volcengine-asr/) | 用火山引擎语音识别将音视频转写为文本并生成 SRT/VTT 字幕；内置说话人分离与 ffmpeg 视频抽音轨。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-asr` |

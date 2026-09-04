@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 # Create the Feishu human-eval document after lark-cli is configured and the user is logged in.
 # Run from anywhere. Requires lark-cli on PATH and a completed `auth login` as user.
+# Run without --yes first. Pass --yes only after the caller has shown the current
+# high-risk action and parameters and received explicit user approval for this run.
 set -euo pipefail
+
+confirm_create=0
+if [ "$#" -gt 1 ] || { [ "$#" -eq 1 ] && [ "$1" != "--yes" ]; }; then
+  echo "Usage: $0 [--yes]" >&2
+  exit 2
+fi
+if [ "${1:-}" = "--yes" ]; then
+  confirm_create=1
+fi
 
 ROOT="$(cd "$(dirname "$0")/fixtures/human-eval" && pwd)"
 cd "$ROOT"
@@ -75,29 +86,31 @@ if status not in (None, "pass", "passed", "ok"):
 PY
 
 echo "Creating Feishu document as user"
+create_args=(
+  docs +create
+  --doc-format xml
+  --content @./eval-doc.xml
+  --as user
+  --parent-position my_library
+)
+if [ "$confirm_create" -eq 1 ]; then
+  create_args+=(--yes)
+fi
 set +e
-create_json="$(lark-cli docs +create --doc-format xml --content @./eval-doc.xml --as user --parent-position my_library 2>&1)"
+create_json="$(lark-cli "${create_args[@]}" 2>&1)"
 create_rc=$?
-if [ "$create_rc" -eq 10 ]; then
-  echo "confirmation required; retrying with --yes because the user asked to create this eval doc"
-  create_json="$(lark-cli docs +create --doc-format xml --content @./eval-doc.xml --as user --parent-position my_library --yes 2>&1)"
-  create_rc=$?
-fi
-if [ "$create_rc" -ne 0 ]; then
-  echo "$create_json" >&2
-  echo "retrying without parent-position" >&2
-  create_json="$(lark-cli docs +create --doc-format xml --content @./eval-doc.xml --as user --yes 2>&1)"
-  create_rc=$?
-fi
 set -e
 if [ "$create_rc" -ne 0 ]; then
   echo "$create_json" >&2
+  if [ "$create_rc" -eq 10 ]; then
+    echo "CONFIRMATION REQUIRED: show the high-risk action and parameters to the user." >&2
+    echo "After explicit approval, rerun this script with --yes." >&2
+  fi
   exit "$create_rc"
 fi
 
-python3 - "$create_json" <<'PY'
+doc_meta="$(python3 - "$create_json" <<'PY'
 import json, sys
-from pathlib import Path
 raw = sys.argv[1]
 start = raw.find("{")
 data = json.loads(raw[start:])
@@ -106,35 +119,28 @@ if not data.get("ok"):
 doc = ((data.get("data") or {}).get("document") or {})
 url = doc.get("url") or ""
 doc_id = doc.get("document_id") or ""
-print(f"DOC_URL={url}")
-print(f"DOC_ID={doc_id}")
-blocks = doc.get("new_blocks") or []
-print(f"NEW_BLOCKS={len(blocks)}")
-for block in blocks:
-    print(f"BLOCK\t{block.get('block_type')}\t{block.get('block_id')}\t{block.get('block_token')}")
-if data.get("data", {}).get("warnings"):
-    print("WARNINGS=" + json.dumps(data["data"]["warnings"], ensure_ascii=False))
-Path("/tmp/feishu-human-eval-create.env").write_text(
-    f"DOC_URL={url}\nDOC_ID={doc_id}\n",
-    encoding="utf-8",
-)
+print(f"{url}\t{doc_id}")
 PY
-# shellcheck disable=SC1091
-source /tmp/feishu-human-eval-create.env
+)"
+IFS=$'\t' read -r DOC_URL DOC_ID <<< "$doc_meta"
 if [ -z "${DOC_URL:-}" ]; then
   echo "ERROR: create succeeded but no document URL" >&2
   exit 5
 fi
+echo "DOC_URL=$DOC_URL"
+echo "DOC_ID=$DOC_ID"
 
+work_dir="$(mktemp -d "${TMPDIR:-/tmp}/feishu-human-eval.XXXXXX")"
 echo "Fetching document back with ids"
-mkdir -p /tmp/feishu-human-eval
 lark-cli docs +fetch --doc "$DOC_URL" --detail with-ids --as user --doc-format xml --format json \
-  > /tmp/feishu-human-eval/fetch.json
-python3 <<'PY'
+  > "$work_dir/fetch.json"
+python3 - "$work_dir" <<'PY'
 import json
 import re
+import sys
 from pathlib import Path
-raw = Path("/tmp/feishu-human-eval/fetch.json").read_text(encoding="utf-8")
+work_dir = Path(sys.argv[1])
+raw = (work_dir / "fetch.json").read_text(encoding="utf-8")
 start = raw.find("{")
 data = json.loads(raw[start:])
 if not data.get("ok"):
@@ -149,23 +155,21 @@ print(f"FETCH_WHITEBOARDS={whiteboard}")
 print(f"FETCH_HTML5={html5}")
 found = re.findall(r'<whiteboard[^>]*\btoken="([^"]+)"', text)
 print(f"BOARD_TOKENS={len(found)}")
-for token in found[:12]:
+for token in found:
     print(f"BOARD_TOKEN\t{token}")
-Path("/tmp/feishu-human-eval/board-tokens.txt").write_text("\n".join(found) + "\n", encoding="utf-8")
+(work_dir / "board-tokens.txt").write_text("\n".join(found) + "\n", encoding="utf-8")
 if whiteboard < 1 and not found:
     raise SystemExit("fetch-back did not find whiteboard blocks")
 PY
 
-export_dir=previews
-mkdir -p /tmp/feishu-human-eval/previews
-if [ -s /tmp/feishu-human-eval/board-tokens.txt ]; then
+mkdir -p "$work_dir/previews"
+if [ -s "$work_dir/board-tokens.txt" ]; then
   i=0
   (
-    cd /tmp/feishu-human-eval
+    cd "$work_dir"
     while IFS= read -r token; do
       [ -z "$token" ] && continue
       i=$((i + 1))
-      [ "$i" -gt 7 ] && break
       echo "Exporting preview $i $token"
       lark-cli whiteboard +export \
         --whiteboard-token "$token" \
@@ -173,9 +177,9 @@ if [ -s /tmp/feishu-human-eval/board-tokens.txt ]; then
         --output "./previews/board-$i.jpg" \
         --overwrite \
         --as user || true
-    done < /tmp/feishu-human-eval/board-tokens.txt
+    done < "$work_dir/board-tokens.txt"
   )
 fi
 
 echo "HUMAN_EVAL_DOC_URL=$DOC_URL"
-echo "OK: created and fetched. Previews in $export_dir"
+echo "OK: created and fetched. Evidence in $work_dir"

@@ -62,7 +62,7 @@ lark-cli auth login
 ### `permission denied` / `missing scope` 类报错
 
 - 没跑 `lark-cli auth login`,或 token 过期。重跑 `auth login`。
-- 应用 scope 不够:见 [`lark-shared`](../../../../.claude/skills/lark-shared/SKILL.md) 的 scope 处理章节(具体路径以你的安装为准)。
+- 应用 scope 不够:见 larksuite CLI 的 `lark-shared` skill(随 lark-cli 安装:https://github.com/larksuite/cli )的 scope 处理章节。
 
 ### 看不到 lark-doc / lark-whiteboard skill
 

@@ -1,7 +1,7 @@
 ---
 name: volcengine-doc-fetcher
 description: >
-  Fetch Volcano Engine (火山引擎) official documentation pages as clean Markdown. Use this skill whenever the user provides a volcengine.com/docs/ URL, wants to look up a Volcano Engine API reference, needs to check API parameters, models, or product documentation from 火山引擎, or mentions 火山引擎文档/火山引擎API/火山引擎接口文档. Also use when the user says "查一下火山引擎的...", "帮我看一下豆包/方舟/Seedance 的 API 文档", or pastes any volcengine.com URL. Supports single and multi-URL concurrent fetching with Playwright (default, free) and Firecrawl (fallback). This skill should ALWAYS be used for fetching Volcano Engine doc pages — never use WebFetch, firecrawl-scrape, or raw curl directly for volcengine.com URLs.
+  Fetch Volcano Engine (火山引擎) official documentation pages as clean Markdown. Use this skill whenever the user provides a volcengine.com/docs/ URL, wants to look up a Volcano Engine API reference, needs to check API parameters, models, or product documentation from 火山引擎, or mentions 火山引擎文档/火山引擎API/火山引擎接口文档. Also use when the user says "查一下火山引擎的...", "帮我看一下豆包/方舟/Seedance 的 API 文档", or pastes any volcengine.com URL. Supports single and multi-URL concurrent fetching with Playwright (default, free) and Firecrawl (fallback). This skill should ALWAYS be used for fetching Volcano Engine doc pages — never use WebFetch or raw curl directly for volcengine.com URLs.
 ---
 
 # Volcengine Doc Fetcher
@@ -167,7 +167,7 @@ Fetched pages are cached at `~/.cache/volcengine-docs/` with a configurable TTL 
 
 ## When NOT to Use
 
-- General web search about Volcano Engine — use `volcengine-web-search` or `byted-web-search`
-- Non-Volcano Engine URLs — use `firecrawl-scrape` or `WebFetch`
-- Volcano Engine TTS voice generation — use `volcengine-tts`
-- Volcano Engine image/video generation — use `seedream-image-gen` or `seedance-video-gen`
+- General web search about Volcano Engine — use the `volcengine-web-search` skill (same repo; install separately if needed)
+- Non-Volcano Engine URLs — use built-in `WebFetch`, or your general-purpose web/fetch tooling
+- Volcano Engine TTS voice generation — use the `volcengine-tts` skill (same repo)
+- Volcano Engine image/video generation — use the `seedream-image-gen` (image) or `seedance-video-gen` (video) skill (same repo)

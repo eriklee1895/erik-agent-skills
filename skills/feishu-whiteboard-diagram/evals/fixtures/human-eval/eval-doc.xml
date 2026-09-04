@@ -1,8 +1,8 @@
 <title>飞书画板精美图表 · Human Eval</title>
 <callout emoji="🧪" background-color="light-blue" border-color="blue">
-  <p>这份文档用来肉眼评测文档精排画板：每种图前面有一句论点。请在飞书 Web 和桌面分别打开画板，点进去改一个节点，确认是原生画板而不是图片。HTML 对照块不是画板。</p>
+  <p>这份文档用来肉眼评测文档精排画板：每种图前面有一句论点。请在飞书 Web 和桌面分别打开画板，点进去改一个节点，确认是原生画板而不是图片。HTML 对照块不是画板。每行必须实际填写，破折号只表示待评。</p>
 </callout>
-<p>评测包日期 2026-09-03。本地已通过 lint-valid 与 local-render-valid。请在文末记分表填写 feishu-experience-valid。</p>
+<p>评测包候选日期 2026-09-04。本地验证结果以仓库最新测试输出为准。请在文末逐图填写 Web / 桌面体验和最高证据层；不能用上一版的定性 Accept 代替本轮评分。</p>
 <h1 seq="auto">怎么评</h1>
 <p>先记证据层，再打 1–5 分。SVG / Mermaid 是静态精排图，运动和交互记 N/A。有一项低于 3，或出现截断、豆腐、把 HTML 当成画板，整张图不通过。</p>
 <table>

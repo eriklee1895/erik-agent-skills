@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import html
+import math
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent / "fixtures" / "human-eval"
@@ -25,16 +26,46 @@ YELLOW_FILL, YELLOW_EDGE = "#FEF3C7", "#D97706"
 PINK_FILL, PINK_EDGE = "#FDF2F8", "#DB2777"
 RISO_CREAM, RISO_CREAM2 = "#EFE9D9", "#E4DCC4"
 RISO_INK, RISO_INK2 = "#0F0F0F", "#2A2A2A"
-RISO_GREEN, RISO_ORANGE = "#1F8A4C", "#E85A1F"
+RISO_GREEN, RISO_ORANGE = "#167342", "#E85A1F"
 RISO_PINK, RISO_YELLOW = "#F06CA8", "#F5C518"
 RIPTIDE_COBALT, RIPTIDE_CREAM, RIPTIDE_INK = "#375DFE", "#FDF0E0", "#1A2240"
 CORAL, CORAL_CREAM, CORAL_INK = "#E85D5D", "#F5F0E8", "#1A1A1A"
-GROVE_PARCH, GROVE_FOREST, GROVE_TERRA = "#E8E4D6", "#192B1B", "#C8524A"
+GROVE_PARCH, GROVE_FOREST, GROVE_TERRA = "#E8E4D6", "#192B1B", "#B0443E"
 AVO_BLUE, AVO_LIME, AVO_INK = "#0055A4", "#DCF4A2", "#0B1F3A"
 
 
 def esc(text: str) -> str:
     return html.escape(text, quote=True)
+
+
+def contrast_ratio(foreground: str, background: str) -> float:
+    def luminance(color: str) -> float:
+        values = [int(color[index : index + 2], 16) / 255 for index in (1, 3, 5)]
+        linear = [
+            value / 12.92
+            if value <= 0.04045
+            else math.pow((value + 0.055) / 1.055, 2.4)
+            for value in values
+        ]
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+    lighter, darker = sorted(
+        (luminance(foreground), luminance(background)), reverse=True
+    )
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def text_color_for_background(
+    background: str,
+    *,
+    light: str = RISO_CREAM,
+    dark: str = RISO_INK,
+) -> str:
+    candidates = (light, dark)
+    winner = max(candidates, key=lambda color: contrast_ratio(color, background))
+    if contrast_ratio(winner, background) < 4.5:
+        raise ValueError(f"No accessible text color for {background}")
+    return winner
 
 
 def markers() -> str:
@@ -79,10 +110,12 @@ def t(
     weight: int = 400,
     fill: str = INK,
     anchor: str = "start",
+    background: str | None = None,
 ) -> str:
+    background_attr = f' data-bg="{background}"' if background else ""
     return (
         f'<text x="{x:.0f}" y="{y:.0f}" font-size="{size}" font-weight="{weight}" '
-        f'fill="{fill}" text-anchor="{anchor}">{esc(text)}</text>'
+        f'fill="{fill}" text-anchor="{anchor}"{background_attr}>{esc(text)}</text>'
     )
 
 
@@ -103,9 +136,13 @@ def rect(
     )
 
 
-def circle(cx: float, cy: float, r: float, fill: str, stroke: str, sw: float = 0) -> str:
+def circle(
+    cx: float, cy: float, r: float, fill: str, stroke: str, sw: float = 0
+) -> str:
     stroke_attr = f' stroke="{stroke}" stroke-width="{sw}"' if sw else ""
-    return f'<circle cx="{cx:.0f}" cy="{cy:.0f}" r="{r:.0f}" fill="{fill}"{stroke_attr}/>'
+    return (
+        f'<circle cx="{cx:.0f}" cy="{cy:.0f}" r="{r:.0f}" fill="{fill}"{stroke_attr}/>'
+    )
 
 
 def poly(
@@ -118,7 +155,7 @@ def poly(
 ) -> str:
     dash_attr = ' stroke-dasharray="8 6"' if dash else ""
     return (
-        f'<polyline points="{points}" fill="none" stroke="{stroke}" stroke-width="{sw}" '
+        f'<polyline data-role="edge" points="{points}" fill="none" stroke="{stroke}" stroke-width="{sw}" '
         f'marker-end="url(#{marker})"{dash_attr}/>'
     )
 
@@ -136,7 +173,7 @@ def line(
 ) -> str:
     dash_attr = ' stroke-dasharray="8 6"' if dash else ""
     return (
-        f'<line x1="{x1:.0f}" y1="{y1:.0f}" x2="{x2:.0f}" y2="{y2:.0f}" fill="none" '
+        f'<line data-role="edge" x1="{x1:.0f}" y1="{y1:.0f}" x2="{x2:.0f}" y2="{y2:.0f}" fill="none" '
         f'stroke="{stroke}" stroke-width="{sw}" marker-end="url(#{marker})"{dash_attr}/>'
     )
 
@@ -146,7 +183,9 @@ def diamond(cx: float, cy: float, w: float, h: float, fill: str, stroke: str) ->
     return f'<polygon points="{pts}" fill="{fill}" stroke="{stroke}" stroke-width="2"/>'
 
 
-def card(x: float, y: float, w: float, h: float, title: str, detail: str, edge: str) -> str:
+def card(
+    x: float, y: float, w: float, h: float, title: str, detail: str, edge: str
+) -> str:
     return "".join(
         [
             rect(x, y, w, h, WHITE, edge, sw=1.5, rx=12),
@@ -159,7 +198,13 @@ def card(x: float, y: float, w: float, h: float, title: str, detail: str, edge: 
 def layered_strip() -> str:
     parts: list[str] = [
         t(48, 52, "支付网关分层：每层屏蔽什么", size=28, weight=700),
-        t(48, 84, "自上而下看职责，自下而上看出边界。层间只暴露真实 API。", size=16, fill=MUTED),
+        t(
+            48,
+            84,
+            "自上而下看职责，自下而上看出边界。层间只暴露真实 API。",
+            size=16,
+            fill=MUTED,
+        ),
         t(1180, 52, "↑ 上行", size=16, weight=700, fill=BLUE_EDGE),
         t(1288, 52, "↓ 下行", size=16, weight=700, fill=GREEN_EDGE),
     ]
@@ -222,7 +267,9 @@ def layered_strip() -> str:
     for i, (badge, name, fill, edge, cards) in enumerate(layers):
         parts.append(rect(x, y, w, layer_h, fill, edge, sw=2, rx=16))
         parts.append(rect(x - 8, y - 12, 52, 28, edge, edge, sw=0, rx=8))
-        parts.append(t(x + 18, y + 8, badge, size=13, weight=700, fill=WHITE, anchor="middle"))
+        parts.append(
+            t(x + 18, y + 8, badge, size=13, weight=700, fill=WHITE, anchor="middle")
+        )
         parts.append(t(x + 56, y + 28, name, size=16, weight=700, fill=edge))
         card_y = y + 48
         card_h = 100
@@ -235,10 +282,16 @@ def layered_strip() -> str:
         if i < len(apis):
             gy = y + layer_h + gap / 2
             up, down = apis[i]
-            parts.append(line(220, gy + 16, 220, gy - 16, BLUE_EDGE, marker="arrow-blue"))
+            parts.append(
+                line(220, gy + 16, 220, gy - 16, BLUE_EDGE, marker="arrow-blue")
+            )
             parts.append(t(236, gy + 5, f"上行 {up}", size=14, fill=BLUE_EDGE))
-            parts.append(line(1280, gy - 16, 1280, gy + 16, GREEN_EDGE, marker="arrow-green"))
-            parts.append(t(1108, gy + 5, f"下行 {down}", size=14, fill=GREEN_EDGE, anchor="end"))
+            parts.append(
+                line(1280, gy - 16, 1280, gy + 16, GREEN_EDGE, marker="arrow-green")
+            )
+            parts.append(
+                t(1108, gy + 5, f"下行 {down}", size=14, fill=GREEN_EDGE, anchor="end")
+            )
             y += layer_h + gap
         else:
             y += layer_h
@@ -258,7 +311,9 @@ def layered_strip() -> str:
     return svg(1520, fy + 92, "".join(parts))
 
 
-def hard_shadow(x: float, y: float, w: float, h: float, color: str = RISO_INK, d: float = 10) -> str:
+def hard_shadow(
+    x: float, y: float, w: float, h: float, color: str = RISO_INK, d: float = 10
+) -> str:
     return rect(x + d, y + d, w, h, color, color, sw=0, rx=0)
 
 
@@ -266,9 +321,29 @@ def cream_bg(parts: list[str], w: float, h: float, fill: str = RISO_CREAM) -> No
     parts.append(rect(0, 0, w, h, fill, fill, sw=0, rx=0))
 
 
-def ink_footer(parts: list[str], x: float, y: float, w: float, text: str, fill: str = RISO_INK, fg: str = RISO_CREAM) -> None:
+def ink_footer(
+    parts: list[str],
+    x: float,
+    y: float,
+    w: float,
+    text: str,
+    fill: str = RISO_INK,
+    fg: str | None = None,
+) -> None:
+    foreground = fg or text_color_for_background(fill)
     parts.append(rect(x, y, w, 56, fill, fill, sw=0, rx=0))
-    parts.append(t(x + w / 2, y + 36, text, size=18, weight=700, fill=fg, anchor="middle"))
+    parts.append(
+        t(
+            x + w / 2,
+            y + 36,
+            text,
+            size=18,
+            weight=700,
+            fill=foreground,
+            anchor="middle",
+            background=fill,
+        )
+    )
 
 
 def quiet_box(
@@ -301,19 +376,52 @@ def solid_box(
     detail: str = "",
     *,
     ink: str = RISO_INK,
-    fg: str = RISO_CREAM,
+    fg: str | None = None,
     title_size: int = 22,
     shadow: str | None = None,
 ) -> None:
+    foreground = fg or text_color_for_background(fill)
     if shadow:
         parts.append(hard_shadow(x, y, w, h, shadow))
     parts.append(rect(x, y, w, h, fill, ink, sw=4, rx=0))
     cy = y + h / 2
     if detail:
-        parts.append(t(x + w / 2, cy - 6, title, size=title_size, weight=700, fill=fg, anchor="middle"))
-        parts.append(t(x + w / 2, cy + 24, detail, size=16, fill=fg, anchor="middle"))
+        parts.append(
+            t(
+                x + w / 2,
+                cy - 6,
+                title,
+                size=title_size,
+                weight=700,
+                fill=foreground,
+                anchor="middle",
+                background=fill,
+            )
+        )
+        parts.append(
+            t(
+                x + w / 2,
+                cy + 24,
+                detail,
+                size=16,
+                fill=foreground,
+                anchor="middle",
+                background=fill,
+            )
+        )
     else:
-        parts.append(t(x + w / 2, cy + 8, title, size=title_size, weight=700, fill=fg, anchor="middle"))
+        parts.append(
+            t(
+                x + w / 2,
+                cy + 8,
+                title,
+                size=title_size,
+                weight=700,
+                fill=foreground,
+                anchor="middle",
+                background=fill,
+            )
+        )
 
 
 def task_loop() -> str:
@@ -334,29 +442,77 @@ def task_loop() -> str:
     parts.append(t(80, 172, "准备", size=16, weight=700, fill=RISO_INK2))
     quiet_box(parts, 80, 188, 260, 100, "用户任务", "提出问题")
     quiet_box(parts, 380, 188, 280, 100, "加载上下文", "记忆 / 技能 / 会话")
-    solid_box(parts, 720, 172, 400, 132, RISO_ORANGE, "判断", "谁决策", title_size=28, shadow=RISO_ORANGE)
+    solid_box(
+        parts,
+        720,
+        172,
+        400,
+        132,
+        RISO_ORANGE,
+        "判断",
+        "谁决策",
+        title_size=28,
+        shadow=RISO_ORANGE,
+    )
     parts.append(line(340, 238, 380, 238, RISO_INK, marker="arrow-ink", sw=3))
     parts.append(line(660, 238, 720, 238, RISO_INK, marker="arrow-ink", sw=3))
 
     parts.append(t(80, 340, "直接回答 · 短支", size=16, weight=700, fill=RISO_INK2))
-    solid_box(parts, 80, 360, 520, 220, RISO_GREEN, "最终答案", "到这里就结束", title_size=26)
-    parts.append(poly("720,304 340,304 340,360", RISO_GREEN, marker="arrow-riso-green", sw=3))
+    solid_box(
+        parts, 80, 360, 520, 220, RISO_GREEN, "最终答案", "到这里就结束", title_size=26
+    )
+    parts.append(
+        poly("720,304 340,304 340,360", RISO_GREEN, marker="arrow-riso-green", sw=3)
+    )
     parts.append(t(500, 292, "直接回答", size=16, weight=700, fill=RISO_GREEN))
 
     parts.append(hard_shadow(650, 350, 870, 360, RISO_INK))
     parts.append(rect(640, 340, 870, 360, RISO_GREEN, RISO_INK, sw=4, rx=0))
-    parts.append(t(672, 384, "工具回路", size=24, weight=700, fill=RISO_CREAM))
-    parts.append(t(672, 416, "需要工具才走 · 这一段才是焦点", size=16, fill=RISO_CREAM))
+    parts.append(
+        t(
+            672,
+            384,
+            "工具回路",
+            size=24,
+            weight=700,
+            fill=RISO_CREAM,
+            background=RISO_GREEN,
+        )
+    )
+    parts.append(
+        t(
+            672,
+            416,
+            "需要工具才走 · 这一段才是焦点",
+            size=16,
+            fill=RISO_CREAM,
+            background=RISO_GREEN,
+        )
+    )
     parts.append(rect(672, 444, 360, 216, WHITE, RISO_INK, sw=4, rx=0))
-    parts.append(t(852, 524, "执行工具", size=24, weight=700, fill=RISO_INK, anchor="middle"))
+    parts.append(
+        t(852, 524, "执行工具", size=24, weight=700, fill=RISO_INK, anchor="middle")
+    )
     parts.append(t(852, 560, "谁执行", size=16, fill=RISO_INK2, anchor="middle"))
     parts.append(rect(1072, 444, 400, 216, WHITE, RISO_INK, sw=4, rx=0))
     parts.append(rect(1072, 444, 400, 12, RISO_ORANGE, RISO_ORANGE, sw=0, rx=0))
-    parts.append(t(1272, 536, "工具结果", size=24, weight=700, fill=RISO_INK, anchor="middle"))
+    parts.append(
+        t(1272, 536, "工具结果", size=24, weight=700, fill=RISO_INK, anchor="middle")
+    )
     parts.append(t(1272, 572, "回填后再判断", size=16, fill=RISO_INK2, anchor="middle"))
     parts.append(line(1032, 552, 1072, 552, RISO_INK, marker="arrow-ink", sw=3))
     parts.append(poly("852,304 852,444", RISO_ORANGE, marker="arrow-riso-orange", sw=3))
-    parts.append(t(868, 380, "需要工具", size=16, weight=700, fill=RISO_CREAM))
+    parts.append(
+        t(
+            868,
+            380,
+            "需要工具",
+            size=16,
+            weight=700,
+            fill=RISO_CREAM,
+            background=RISO_GREEN,
+        )
+    )
     parts.append(
         poly(
             "1272,444 1272,428 1080,428 1080,304",
@@ -366,8 +522,24 @@ def task_loop() -> str:
             sw=3,
         )
     )
-    parts.append(t(1188, 418, "结果回填，再次判断", size=16, weight=700, fill=RISO_ORANGE, anchor="middle"))
-    ink_footer(parts, 80, 788, 1440, "直接回答就结束。工具结果用短虚线回填到判断，不要绕画布一圈。")
+    parts.append(
+        t(
+            1188,
+            418,
+            "结果回填，再次判断",
+            size=16,
+            weight=700,
+            fill=RISO_ORANGE,
+            anchor="middle",
+        )
+    )
+    ink_footer(
+        parts,
+        80,
+        788,
+        1440,
+        "直接回答就结束。工具结果用短虚线回填到判断，不要绕画布一圈。",
+    )
     return svg(w, h, "".join(parts))
 
 
@@ -376,7 +548,9 @@ def learning_loop() -> str:
     w, h = 1600, 980
     parts: list[str] = []
     cream_bg(parts, w, h)
-    parts.append(t(80, 80, "学习闭环：值不值得写回去", size=40, weight=700, fill=RISO_INK))
+    parts.append(
+        t(80, 80, "学习闭环：值不值得写回去", size=40, weight=700, fill=RISO_INK)
+    )
     parts.append(
         t(
             80,
@@ -387,10 +561,30 @@ def learning_loop() -> str:
         )
     )
     parts.append(rect(80, 148, 220, 28, RISO_YELLOW, RISO_INK, sw=3, rx=0))
-    parts.append(t(190, 168, "下一轮从这里开始", size=14, weight=700, fill=RISO_INK, anchor="middle"))
+    parts.append(
+        t(
+            190,
+            168,
+            "下一轮从这里开始",
+            size=14,
+            weight=700,
+            fill=RISO_INK,
+            anchor="middle",
+        )
+    )
     quiet_box(parts, 80, 188, 220, 96, "任务完成", "一次执行结束")
     quiet_box(parts, 340, 188, 200, 96, "复盘", "值不值得留下")
-    solid_box(parts, 580, 180, 280, 112, RISO_ORANGE, "值得复用?", "是 ↓   否 →", title_size=22)
+    solid_box(
+        parts,
+        580,
+        180,
+        280,
+        112,
+        RISO_ORANGE,
+        "值得复用?",
+        "是 ↓   否 →",
+        title_size=22,
+    )
     quiet_box(parts, 900, 196, 220, 88, "结束", "不写回去")
     parts.append(line(300, 236, 340, 236, RISO_INK, marker="arrow-ink", sw=3))
     parts.append(line(540, 236, 580, 236, RISO_INK, marker="arrow-ink", sw=3))
@@ -442,7 +636,19 @@ def learning_loop() -> str:
         body_h = cap_h + row_h * len(rows)
         parts.append(hard_shadow(x, 358, col_w, body_h, RISO_INK))
         parts.append(rect(x, 348, col_w, cap_h, cap, RISO_INK, sw=4, rx=0))
-        parts.append(t(x + col_w / 2, 386, title, size=22, weight=700, fill=RISO_CREAM, anchor="middle"))
+        cap_foreground = text_color_for_background(cap)
+        parts.append(
+            t(
+                x + col_w / 2,
+                386,
+                title,
+                size=22,
+                weight=700,
+                fill=cap_foreground,
+                anchor="middle",
+                background=cap,
+            )
+        )
         y = 348 + cap_h
         for i, (label, value) in enumerate(rows):
             bg = WHITE if i < len(rows) - 1 else RISO_CREAM2
@@ -452,10 +658,26 @@ def learning_loop() -> str:
             y += row_h
 
     quiet_box(parts, 80, 800, 454, 80, "后续任务注入", "USER.md + MEMORY")
-    solid_box(parts, 573, 800, 454, 80, RISO_GREEN, "复用执行", "SKILL.md 按步骤调用", title_size=20)
+    solid_box(
+        parts,
+        573,
+        800,
+        454,
+        80,
+        RISO_GREEN,
+        "复用执行",
+        "SKILL.md 按步骤调用",
+        title_size=20,
+    )
     parts.append(t(1140, 848, "一类知识只进一列", size=18, weight=700, fill=RISO_INK))
     parts.append(line(534, 840, 573, 840, RISO_INK, marker="arrow-ink", sw=3))
-    ink_footer(parts, 80, 900, 1440, "「否」必须有结束态。门禁写的是扫描 / 去重 / 质量，不是「保存」。")
+    ink_footer(
+        parts,
+        80,
+        900,
+        1440,
+        "「否」必须有结束态。门禁写的是扫描 / 去重 / 质量，不是「保存」。",
+    )
     return svg(w, h, "".join(parts))
 
 
@@ -463,17 +685,69 @@ def multicolumn_runtime() -> str:
     w, h = 1600, 720
     parts: list[str] = []
     cream_bg(parts, w, h)
-    parts.append(t(80, 80, "运行架构：请求向右，事件向左", size=40, weight=700, fill=RISO_INK))
     parts.append(
-        t(80, 122, "列是职责边界。运行时必须最大：模型只在这里跑。", size=18, fill=RISO_INK2)
+        t(80, 80, "运行架构：请求向右，事件向左", size=40, weight=700, fill=RISO_INK)
     )
-    parts.append(t(1180, 80, "请求 →", size=16, weight=700, fill=RISO_GREEN, anchor="end"))
-    parts.append(t(1520, 80, "← 事件", size=16, weight=700, fill=RISO_ORANGE, anchor="end"))
+    parts.append(
+        t(
+            80,
+            122,
+            "列是职责边界。运行时必须最大：模型只在这里跑。",
+            size=18,
+            fill=RISO_INK2,
+        )
+    )
+    parts.append(
+        t(1180, 80, "请求 →", size=16, weight=700, fill=RISO_GREEN, anchor="end")
+    )
+    parts.append(
+        t(1520, 80, "← 事件", size=16, weight=700, fill=RISO_ORANGE, anchor="end")
+    )
     cols = [
-        (80, 280, False, "01 宿主", "发起与投影", "发起请求", "thread/start", "投影到 UI", "item/completed"),
-        (380, 280, False, "02 传输", "连接与鉴权", "Gate", "auth · stream", "Outbound", "event frame"),
-        (680, 280, False, "03 协调", "排队与调度", "Processor", "turn queue", "Outbound", "delta / event"),
-        (1000, 520, True, "04 运行时", "思考与工具", "Agent Loop", "model · tools", "Events", "item / file"),
+        (
+            80,
+            280,
+            False,
+            "01 宿主",
+            "发起与投影",
+            "发起请求",
+            "thread/start",
+            "投影到 UI",
+            "item/completed",
+        ),
+        (
+            380,
+            280,
+            False,
+            "02 传输",
+            "连接与鉴权",
+            "Gate",
+            "auth · stream",
+            "Outbound",
+            "event frame",
+        ),
+        (
+            680,
+            280,
+            False,
+            "03 协调",
+            "排队与调度",
+            "Processor",
+            "turn queue",
+            "Outbound",
+            "delta / event",
+        ),
+        (
+            1000,
+            520,
+            True,
+            "04 运行时",
+            "思考与工具",
+            "Agent Loop",
+            "model · tools",
+            "Events",
+            "item / file",
+        ),
     ]
     req_y, ev_y = 220, 400
     for x, col_w, hero, name, duty, req, req_d, ev, ev_d in cols:
@@ -481,37 +755,152 @@ def multicolumn_runtime() -> str:
             parts.append(hard_shadow(x, 168, col_w, 392, RISO_INK))
             parts.append(rect(x, 158, col_w, 392, RISO_GREEN, RISO_INK, sw=4, rx=0))
             fg, sub, box_fill, box_ink = RISO_CREAM, RISO_CREAM, WHITE, RISO_INK
+            heading_background = RISO_GREEN
         else:
             parts.append(rect(x, 158, col_w, 392, WHITE, RISO_INK, sw=4, rx=0))
             fg, sub, box_fill, box_ink = RISO_INK, RISO_INK2, RISO_CREAM2, RISO_INK
-        parts.append(t(x + 20, 196, name, size=20, weight=700, fill=fg))
-        parts.append(t(x + 20, 224, duty, size=16, fill=sub))
+            heading_background = WHITE
+        parts.append(
+            t(
+                x + 20,
+                196,
+                name,
+                size=20,
+                weight=700,
+                fill=fg,
+                background=heading_background,
+            )
+        )
+        parts.append(
+            t(x + 20, 224, duty, size=16, fill=sub, background=heading_background)
+        )
         inner_w = col_w - 40
         parts.append(rect(x + 20, req_y, inner_w, 88, box_fill, box_ink, sw=3, rx=0))
-        parts.append(t(x + col_w / 2, req_y + 36, req, size=18, weight=700, fill=RISO_INK, anchor="middle"))
-        parts.append(t(x + col_w / 2, req_y + 64, req_d, size=14, fill=RISO_INK2, anchor="middle"))
+        parts.append(
+            t(
+                x + col_w / 2,
+                req_y + 36,
+                req,
+                size=18,
+                weight=700,
+                fill=RISO_INK,
+                anchor="middle",
+            )
+        )
+        parts.append(
+            t(
+                x + col_w / 2,
+                req_y + 64,
+                req_d,
+                size=14,
+                fill=RISO_INK2,
+                anchor="middle",
+            )
+        )
         parts.append(rect(x + 20, ev_y, inner_w, 88, WHITE, box_ink, sw=3, rx=0))
-        parts.append(t(x + col_w / 2, ev_y + 36, ev, size=18, weight=700, fill=RISO_INK, anchor="middle"))
-        parts.append(t(x + col_w / 2, ev_y + 64, ev_d, size=14, fill=RISO_INK2, anchor="middle"))
+        parts.append(
+            t(
+                x + col_w / 2,
+                ev_y + 36,
+                ev,
+                size=18,
+                weight=700,
+                fill=RISO_INK,
+                anchor="middle",
+            )
+        )
+        parts.append(
+            t(x + col_w / 2, ev_y + 64, ev_d, size=14, fill=RISO_INK2, anchor="middle")
+        )
         if hero:
-            parts.append(line(x + col_w / 2, req_y + 88, x + col_w / 2, ev_y, RISO_INK, marker="arrow-ink", sw=3))
-            parts.append(t(x + col_w / 2 + 16, 392, "tools", size=14, weight=700, fill=RISO_CREAM))
+            parts.append(
+                line(
+                    x + col_w / 2,
+                    req_y + 88,
+                    x + col_w / 2,
+                    ev_y,
+                    RISO_INK,
+                    marker="arrow-ink",
+                    sw=3,
+                )
+            )
+            parts.append(
+                t(
+                    x + col_w / 2 + 16,
+                    392,
+                    "tools",
+                    size=14,
+                    weight=700,
+                    fill=RISO_CREAM,
+                    background=RISO_GREEN,
+                )
+            )
     pairs = [(80, 280, 380), (380, 280, 680), (680, 280, 1000)]
     for x, col_w, nxt in pairs:
-        parts.append(line(x + col_w, req_y + 44, nxt, req_y + 44, RISO_GREEN, marker="arrow-riso-green", sw=3))
-        parts.append(line(nxt, ev_y + 44, x + col_w, ev_y + 44, RISO_ORANGE, marker="arrow-riso-orange", sw=3))
-    notes = [(220, "宿主不跑模型"), (520, "传输不理解 turn"), (820, "协调不碰工具"), (1260, "运行时不画 UI")]
+        parts.append(
+            line(
+                x + col_w,
+                req_y + 44,
+                nxt,
+                req_y + 44,
+                RISO_GREEN,
+                marker="arrow-riso-green",
+                sw=3,
+            )
+        )
+        parts.append(
+            line(
+                nxt,
+                ev_y + 44,
+                x + col_w,
+                ev_y + 44,
+                RISO_ORANGE,
+                marker="arrow-riso-orange",
+                sw=3,
+            )
+        )
+    notes = [
+        (220, "宿主不跑模型"),
+        (520, "传输不理解 turn"),
+        (820, "协调不碰工具"),
+        (1260, "运行时不画 UI"),
+    ]
     parts.append(rect(80, 572, 1440, 56, RISO_INK, RISO_INK, sw=0, rx=0))
     for x, note in notes:
-        parts.append(t(x, 608, note, size=16, weight=700, fill=RISO_CREAM, anchor="middle"))
+        parts.append(
+            t(
+                x,
+                608,
+                note,
+                size=16,
+                weight=700,
+                fill=RISO_CREAM,
+                anchor="middle",
+                background=RISO_INK,
+            )
+        )
     return svg(w, h, "".join(parts))
 
 
 def recovery_layers() -> str:
     parts: list[str] = [
         t(48, 52, "三层状态，三种恢复粒度", size=28, weight=700),
-        t(48, 84, "中断之后到底恢复哪一层：对话、事务，还是某一个动作。", size=16, fill=MUTED),
-        t(1472, 52, "一张图回答：从哪继续", size=16, weight=700, fill=BLUE_EDGE, anchor="end"),
+        t(
+            48,
+            84,
+            "中断之后到底恢复哪一层：对话、事务，还是某一个动作。",
+            size=16,
+            fill=MUTED,
+        ),
+        t(
+            1472,
+            52,
+            "一张图回答：从哪继续",
+            size=16,
+            weight=700,
+            fill=BLUE_EDGE,
+            anchor="end",
+        ),
     ]
     layers = [
         (
@@ -564,18 +953,34 @@ def recovery_layers() -> str:
         h = 168
         parts.append(rect(40, y, 1440, h, fill, edge, sw=2, rx=16))
         parts.append(rect(28, y - 14, 56, 32, edge, edge, sw=0, rx=8))
-        parts.append(t(56, y + 8, num, size=14, weight=700, fill=WHITE, anchor="middle"))
+        parts.append(
+            t(56, y + 8, num, size=14, weight=700, fill=WHITE, anchor="middle")
+        )
         parts.append(t(100, y + 28, title, size=16, weight=700, fill=edge))
         parts.append(rect(1120, y + 20, 336, 44, WHITE, edge, sw=1.5, rx=12))
-        parts.append(t(1288, y + 48, question, size=14, weight=700, fill=edge, anchor="middle"))
+        parts.append(
+            t(1288, y + 48, question, size=14, weight=700, fill=edge, anchor="middle")
+        )
         px = 64
         py = y + 72
         for label, detail in pills:
             pw = 200 if i != 2 else 160
             cfill, cedge = status_colors.get(label, (WHITE, edge))
             parts.append(rect(px, py, pw, 64, cfill, cedge, sw=1.5, rx=12))
-            parts.append(t(px + pw / 2, py + 28, label, size=14, weight=700, fill=cedge, anchor="middle"))
-            parts.append(t(px + pw / 2, py + 50, detail, size=14, fill=MUTED, anchor="middle"))
+            parts.append(
+                t(
+                    px + pw / 2,
+                    py + 28,
+                    label,
+                    size=14,
+                    weight=700,
+                    fill=cedge,
+                    anchor="middle",
+                )
+            )
+            parts.append(
+                t(px + pw / 2, py + 50, detail, size=14, fill=MUTED, anchor="middle")
+            )
             px += pw + 16
         y += h
         if between:
@@ -596,7 +1001,14 @@ def recovery_layers() -> str:
         )
     )
     parts.append(
-        t(760, fy + 50, "Delta 是预览 · Completed 是事实", size=14, fill=MUTED, anchor="middle")
+        t(
+            760,
+            fy + 50,
+            "Delta 是预览 · Completed 是事实",
+            size=14,
+            fill=MUTED,
+            anchor="middle",
+        )
     )
     return svg(1520, fy + 92, "".join(parts))
 
@@ -606,22 +1018,42 @@ def comparison_matrix() -> str:
     parts: list[str] = [
         rect(0, 0, w, h, RIPTIDE_CREAM, RIPTIDE_CREAM, sw=0, rx=0),
         t(64, 72, "三种落盘，哪一列接什么", size=40, weight=700, fill=RIPTIDE_INK),
-        t(64, 112, "逐项对比。钴色块是该行更该写入的去处，不是三种都写。", size=18, fill=RIPTIDE_INK),
+        t(
+            64,
+            112,
+            "逐项对比。钴色块是该行更该写入的去处，不是三种都写。",
+            size=18,
+            fill=RIPTIDE_INK,
+        ),
     ]
-    headers = [("写什么", 64), ("USER.md", 400), ("MEMORY", 800), ("SKILL.md", 1200)]
     col_w = 336
     xs = [64, 400, 800, 1200]
     parts.append(rect(xs[0], 160, col_w, 64, RIPTIDE_INK, RIPTIDE_INK, sw=0, rx=0))
-    parts.append(t(xs[0] + 24, 200, "维度", size=20, weight=700, fill=RIPTIDE_CREAM))
+    parts.append(
+        t(
+            xs[0] + 24,
+            200,
+            "维度",
+            size=20,
+            weight=700,
+            fill=RIPTIDE_CREAM,
+            background=RIPTIDE_INK,
+        )
+    )
     for x, name in zip(xs[1:], ["USER.md", "MEMORY", "SKILL.md"]):
         parts.append(rect(x, 160, col_w, 64, RIPTIDE_COBALT, RIPTIDE_INK, sw=4, rx=0))
-        parts.append(t(x + col_w / 2, 202, name, size=20, weight=700, fill="#FFFFFF", anchor="middle"))
-    rows = [
-        ("内容", "偏好与习惯", "可检索事实", "可复用步骤", 2),
-        ("读取时机", "每轮开始注入", "需要时召回", "匹配任务时加载", 0),
-        ("风险", "写进人格会漂移", "脏事实被反复引用", "步骤过时仍被执行", 1),
-        ("门禁", "先问是否稳定偏好", "扫描去重", "质量是否可复现", 1),
-    ]
+        parts.append(
+            t(
+                x + col_w / 2,
+                202,
+                name,
+                size=20,
+                weight=700,
+                fill="#FFFFFF",
+                anchor="middle",
+                background=RIPTIDE_COBALT,
+            )
+        )
     y = 240
     labels = ["内容", "读取时机", "风险", "门禁"]
     cells = [
@@ -633,12 +1065,34 @@ def comparison_matrix() -> str:
     winners = [0, 2, 1, 1]
     for i, (label, row, win) in enumerate(zip(labels, cells, winners)):
         parts.append(rect(xs[0], y, col_w, 100, RIPTIDE_INK, RIPTIDE_INK, sw=0, rx=0))
-        parts.append(t(xs[0] + 24, y + 58, label, size=18, weight=700, fill=RIPTIDE_CREAM))
+        parts.append(
+            t(
+                xs[0] + 24,
+                y + 58,
+                label,
+                size=18,
+                weight=700,
+                fill=RIPTIDE_CREAM,
+                background=RIPTIDE_INK,
+            )
+        )
         for j, text in enumerate(row):
             x = xs[j + 1]
             if j == win:
-                parts.append(rect(x, y, col_w, 100, RIPTIDE_COBALT, RIPTIDE_INK, sw=4, rx=0))
-                parts.append(t(x + 20, y + 58, text, size=16, weight=700, fill="#FFFFFF"))
+                parts.append(
+                    rect(x, y, col_w, 100, RIPTIDE_COBALT, RIPTIDE_INK, sw=4, rx=0)
+                )
+                parts.append(
+                    t(
+                        x + 20,
+                        y + 58,
+                        text,
+                        size=16,
+                        weight=700,
+                        fill="#FFFFFF",
+                        background=RIPTIDE_COBALT,
+                    )
+                )
             else:
                 parts.append(rect(x, y, col_w, 100, "#FFFFFF", RIPTIDE_INK, sw=4, rx=0))
                 parts.append(t(x + 20, y + 58, text, size=16, fill=RIPTIDE_INK))
@@ -653,6 +1107,7 @@ def comparison_matrix() -> str:
             weight=700,
             fill="#FFFFFF",
             anchor="middle",
+            background=RIPTIDE_COBALT,
         )
     )
     return svg(w, h, "".join(parts))
@@ -663,7 +1118,13 @@ def hub_spoke() -> str:
     parts: list[str] = [
         rect(0, 0, w, h, RISO_CREAM, RISO_CREAM, sw=0, rx=0),
         t(64, 72, "Agent 枢纽：周围一圈是什么", size=40, weight=700, fill=RISO_INK),
-        t(64, 112, "核心必须最大。卫星同等大小，连线接到边缘，不穿文字。", size=18, fill=RISO_INK2),
+        t(
+            64,
+            112,
+            "核心必须最大。卫星同等大小，连线接到边缘，不穿文字。",
+            size=18,
+            fill=RISO_INK2,
+        ),
     ]
     hx, hy, hw, hh = 620, 340, 360, 220
     spokes = [
@@ -676,14 +1137,35 @@ def hub_spoke() -> str:
     ]
     for x, y, title, detail, x1, y1, x2, y2 in spokes:
         parts.append(
-            f'<line x1="{x1:.0f}" y1="{y1:.0f}" x2="{x2:.0f}" y2="{y2:.0f}" fill="none" '
+            f'<line data-role="spoke" x1="{x1:.0f}" y1="{y1:.0f}" x2="{x2:.0f}" y2="{y2:.0f}" fill="none" '
             f'stroke="{RISO_INK}" stroke-width="3"/>'
         )
         quiet_box(parts, x, y, 280, 100, title, detail)
     parts.append(hard_shadow(hx, hy, hw, hh, RISO_ORANGE))
     parts.append(rect(hx, hy, hw, hh, RISO_GREEN, RISO_INK, sw=4, rx=0))
-    parts.append(t(hx + hw / 2, hy + 90, "Agent Loop", size=28, weight=700, fill=RISO_CREAM, anchor="middle"))
-    parts.append(t(hx + hw / 2, hy + 132, "判断 · 调用 · 回填", size=16, fill=RISO_CREAM, anchor="middle"))
+    parts.append(
+        t(
+            hx + hw / 2,
+            hy + 90,
+            "Agent Loop",
+            size=28,
+            weight=700,
+            fill=RISO_CREAM,
+            anchor="middle",
+            background=RISO_GREEN,
+        )
+    )
+    parts.append(
+        t(
+            hx + hw / 2,
+            hy + 132,
+            "判断 · 调用 · 回填",
+            size=16,
+            fill=RISO_CREAM,
+            anchor="middle",
+            background=RISO_GREEN,
+        )
+    )
     return svg(w, h, "".join(parts))
 
 
@@ -691,7 +1173,9 @@ def turn_timeline() -> str:
     w, h = 1600, 680
     parts: list[str] = []
     cream_bg(parts, w, h, CORAL_CREAM)
-    parts.append(t(80, 80, "一次 Turn：高潮在完成", size=40, weight=700, fill=CORAL_INK))
+    parts.append(
+        t(80, 80, "一次 Turn：高潮在完成", size=40, weight=700, fill=CORAL_INK)
+    )
     parts.append(
         t(
             80,
@@ -712,8 +1196,29 @@ def turn_timeline() -> str:
         if hero:
             parts.append(hard_shadow(x, 188, 300, 170, CORAL))
             parts.append(rect(x, 178, 300, 170, CORAL, CORAL_INK, sw=4, rx=0))
-            parts.append(t(x + 150, 248, title, size=24, weight=700, fill="#FFFFFF", anchor="middle"))
-            parts.append(t(x + 150, 286, detail, size=16, fill="#FFFFFF", anchor="middle"))
+            parts.append(
+                t(
+                    x + 150,
+                    248,
+                    title,
+                    size=24,
+                    weight=700,
+                    fill=CORAL_INK,
+                    anchor="middle",
+                    background=CORAL,
+                )
+            )
+            parts.append(
+                t(
+                    x + 150,
+                    286,
+                    detail,
+                    size=16,
+                    fill=CORAL_INK,
+                    anchor="middle",
+                    background=CORAL,
+                )
+            )
             parts.append(rect(x + 138, 308, 24, 24, "#F1E84E", CORAL_INK, sw=3, rx=12))
         else:
             parts.append(rect(x, 228, 240, 100, WHITE, CORAL_INK, sw=4, rx=0))
@@ -726,7 +1231,16 @@ def turn_timeline() -> str:
     parts.append(rect(360, 430, 240, 88, WHITE, CORAL_INK, sw=4, rx=0))
     parts.append(t(380, 470, "failed", size=18, weight=700, fill=CORAL_INK))
     parts.append(t(380, 498, "失败 · 可重试", size=16, fill=CORAL_INK))
-    parts.append(t(80, 580, "Delta 是预览。Completed 才是事实。", size=18, weight=700, fill=CORAL_INK))
+    parts.append(
+        t(
+            80,
+            580,
+            "Delta 是预览。Completed 才是事实。",
+            size=18,
+            weight=700,
+            fill=CORAL_INK,
+        )
+    )
     return svg(w, h, "".join(parts))
 
 
@@ -735,16 +1249,34 @@ def swimlane_handshake() -> str:
     w, h = 1600, 900
     parts: list[str] = []
     cream_bg(parts, w, h)
-    parts.append(t(80, 80, "一次调用：三条泳道怎么握手", size=40, weight=700, fill=RISO_INK))
     parts.append(
-        t(80, 122, "时间向右。Agent 是主角车道：绿帽 + 更重的色带。判断那一格是唯一饱和块。", size=18, fill=RISO_INK2)
+        t(80, 80, "一次调用：三条泳道怎么握手", size=40, weight=700, fill=RISO_INK)
+    )
+    parts.append(
+        t(
+            80,
+            122,
+            "时间向右。Agent 是主角车道：绿帽 + 更重的色带。判断那一格是唯一饱和块。",
+            size=18,
+            fill=RISO_INK2,
+        )
     )
     label_w, body_x = 200, 300
     headers = ["提出", "判断", "执行", "回填", "作答"]
     step_w, gap = 208, 24
     for i, name in enumerate(headers):
         x = body_x + i * (step_w + gap)
-        parts.append(t(x + step_w / 2, 156, name, size=16, weight=700, fill=RISO_INK2, anchor="middle"))
+        parts.append(
+            t(
+                x + step_w / 2,
+                156,
+                name,
+                size=16,
+                weight=700,
+                fill=RISO_INK2,
+                anchor="middle",
+            )
+        )
     lanes = [
         (176, False, "用户", "提出目标，收答案"),
         (376, True, "Agent", "决策与组织"),
@@ -755,13 +1287,36 @@ def swimlane_handshake() -> str:
             parts.append(hard_shadow(80, y + 10, 1440, 180, RISO_INK))
             parts.append(rect(80, y, 1440, 180, RISO_CREAM2, RISO_INK, sw=4, rx=0))
             parts.append(rect(80, y, label_w, 180, RISO_GREEN, RISO_INK, sw=4, rx=0))
-            fg = RISO_CREAM
+            fg = text_color_for_background(RISO_GREEN)
+            lane_background = RISO_GREEN
         else:
             parts.append(rect(80, y, 1440, 180, WHITE, RISO_INK, sw=4, rx=0))
             parts.append(rect(80, y, label_w, 180, RISO_INK, RISO_INK, sw=4, rx=0))
-            fg = RISO_CREAM
-        parts.append(t(80 + label_w / 2, y + 80, name, size=22, weight=700, fill=fg, anchor="middle"))
-        parts.append(t(80 + label_w / 2, y + 112, duty, size=14, fill=fg, anchor="middle"))
+            fg = text_color_for_background(RISO_INK)
+            lane_background = RISO_INK
+        parts.append(
+            t(
+                80 + label_w / 2,
+                y + 80,
+                name,
+                size=22,
+                weight=700,
+                fill=fg,
+                anchor="middle",
+                background=lane_background,
+            )
+        )
+        parts.append(
+            t(
+                80 + label_w / 2,
+                y + 112,
+                duty,
+                size=14,
+                fill=fg,
+                anchor="middle",
+                background=lane_background,
+            )
+        )
         for i in range(5):
             x = body_x + i * (step_w + gap)
             occupied = False
@@ -778,7 +1333,7 @@ def swimlane_handshake() -> str:
                 fill, tfill = WHITE, RISO_INK
             elif name == "Agent" and i == 1:
                 occupied, cell_title, cell_detail = True, "判断", "谁决策"
-                fill, tfill = RISO_ORANGE, RISO_CREAM
+                fill, tfill = RISO_ORANGE, text_color_for_background(RISO_ORANGE)
             elif name == "Agent" and i == 2:
                 occupied, cell_title, cell_detail = True, "组织调用", "要不要工具"
                 fill, tfill = WHITE, RISO_INK
@@ -787,7 +1342,7 @@ def swimlane_handshake() -> str:
                 fill, tfill = WHITE, RISO_INK
             elif name == "Agent" and i == 4:
                 occupied, cell_title, cell_detail = True, "最终答案", "写回用户"
-                fill, tfill = RISO_GREEN, RISO_CREAM
+                fill, tfill = RISO_GREEN, text_color_for_background(RISO_GREEN)
             elif name == "工具" and i == 2:
                 occupied, cell_title, cell_detail = True, "执行工具", "谁执行"
                 fill, tfill = WHITE, RISO_INK
@@ -798,10 +1353,31 @@ def swimlane_handshake() -> str:
                 if fill == RISO_ORANGE:
                     parts.append(hard_shadow(x, y + 28, step_w, 124, RISO_ORANGE))
                 parts.append(rect(x, y + 28, step_w, 124, fill, RISO_INK, sw=4, rx=0))
-                parts.append(t(x + 16, y + 76, cell_title, size=16, weight=700, fill=tfill))
-                parts.append(t(x + 16, y + 108, cell_detail, size=14, fill=tfill))
+                parts.append(
+                    t(
+                        x + 16,
+                        y + 76,
+                        cell_title,
+                        size=16,
+                        weight=700,
+                        fill=tfill,
+                        background=fill,
+                    )
+                )
+                parts.append(
+                    t(
+                        x + 16,
+                        y + 108,
+                        cell_detail,
+                        size=14,
+                        fill=tfill,
+                        background=fill,
+                    )
+                )
             else:
-                parts.append(rect(x, y + 48, step_w, 84, RISO_CREAM2, RISO_INK, sw=2, rx=0))
+                parts.append(
+                    rect(x, y + 48, step_w, 84, RISO_CREAM2, RISO_INK, sw=2, rx=0)
+                )
     backfill_x = body_x + 3 * (step_w + gap) + step_w / 2
     parts.append(
         poly(
@@ -813,7 +1389,13 @@ def swimlane_handshake() -> str:
         )
     )
     parts.append(t(backfill_x + 16, 572, "回填", size=16, weight=700, fill=RISO_ORANGE))
-    ink_footer(parts, 80, 788, 1440, "主角车道上色。判断是唯一饱和块。工具结果虚线回填，不是另一条正向边。")
+    ink_footer(
+        parts,
+        80,
+        788,
+        1440,
+        "主角车道上色。判断是唯一饱和块。工具结果虚线回填，不是另一条正向边。",
+    )
     return svg(w, h, "".join(parts))
 
 
@@ -822,24 +1404,91 @@ def reuse_quadrant() -> str:
     w, h = 1600, 1020
     parts: list[str] = []
     cream_bg(parts, w, h, GROVE_PARCH)
-    parts.append(t(80, 80, "写不写回去：可复用 × 可验证", size=40, weight=700, fill=GROVE_FOREST))
     parts.append(
-        t(80, 122, "Grove 色板。只有右上角值得写成 SKILL.md。其余三格老实留白。", size=18, fill=GROVE_FOREST)
+        t(80, 80, "写不写回去：可复用 × 可验证", size=40, weight=700, fill=GROVE_FOREST)
+    )
+    parts.append(
+        t(
+            80,
+            122,
+            "Grove 色板。只有右上角值得写成 SKILL.md。其余三格老实留白。",
+            size=18,
+            fill=GROVE_FOREST,
+        )
     )
     plot_x, plot_y, plot = 400, 168, 720
     mid = plot_x + plot / 2
     parts.append(rect(mid - 2, plot_y, 4, plot, GROVE_FOREST, GROVE_FOREST, sw=0, rx=0))
-    parts.append(rect(plot_x, plot_y + plot / 2 - 2, plot, 4, GROVE_FOREST, GROVE_FOREST, sw=0, rx=0))
-    parts.append(t(plot_x + plot / 2, plot_y + plot + 32, "可复用 →", size=20, weight=700, fill=GROVE_FOREST, anchor="middle"))
-    parts.append(t(plot_x - 28, plot_y + 32, "可验证 ↑", size=20, weight=700, fill=GROVE_FOREST, anchor="end"))
+    parts.append(
+        rect(
+            plot_x,
+            plot_y + plot / 2 - 2,
+            plot,
+            4,
+            GROVE_FOREST,
+            GROVE_FOREST,
+            sw=0,
+            rx=0,
+        )
+    )
+    parts.append(
+        t(
+            plot_x + plot / 2,
+            plot_y + plot + 32,
+            "可复用 →",
+            size=20,
+            weight=700,
+            fill=GROVE_FOREST,
+            anchor="middle",
+        )
+    )
+    parts.append(
+        t(
+            plot_x - 28,
+            plot_y + 32,
+            "可验证 ↑",
+            size=20,
+            weight=700,
+            fill=GROVE_FOREST,
+            anchor="end",
+        )
+    )
     pad = 20
     cell = (plot / 2) - 36
     # Q2 top-left: high verify, low reuse
     q = [
-        (plot_x + pad, plot_y + pad, False, "MEMORY", "可验证但不必复用", "召回事实，不养成习惯"),
-        (mid + 16, plot_y + pad, True, "SKILL.md", "可复用且可验证", "过门禁后按步骤落盘"),
-        (plot_x + pad, plot_y + plot / 2 + 16, False, "结束", "既不复用也难验证", "不写回去"),
-        (mid + 16, plot_y + plot / 2 + 16, False, "先过门禁", "想复用但还不可验证", "扫描 / 去重 / 质量"),
+        (
+            plot_x + pad,
+            plot_y + pad,
+            False,
+            "MEMORY",
+            "可验证但不必复用",
+            "召回事实，不养成习惯",
+        ),
+        (
+            mid + 16,
+            plot_y + pad,
+            True,
+            "SKILL.md",
+            "可复用且可验证",
+            "过门禁后按步骤落盘",
+        ),
+        (
+            plot_x + pad,
+            plot_y + plot / 2 + 16,
+            False,
+            "结束",
+            "既不复用也难验证",
+            "不写回去",
+        ),
+        (
+            mid + 16,
+            plot_y + plot / 2 + 16,
+            False,
+            "先过门禁",
+            "想复用但还不可验证",
+            "扫描 / 去重 / 质量",
+        ),
     ]
     for x, y, hero, title, line1, line2 in q:
         if hero:
@@ -849,9 +1498,24 @@ def reuse_quadrant() -> str:
         else:
             parts.append(rect(x, y, cell, cell, GROVE_PARCH, GROVE_FOREST, sw=4, rx=0))
             fg = GROVE_FOREST
-        parts.append(t(x + 24, y + 56, title, size=24, weight=700, fill=fg))
-        parts.append(t(x + 24, y + 100, line1, size=16, fill=fg))
-        parts.append(t(x + 24, y + 132, line2, size=16, fill=fg))
+        cell_background = GROVE_TERRA if hero else GROVE_PARCH
+        parts.append(
+            t(
+                x + 24,
+                y + 56,
+                title,
+                size=24,
+                weight=700,
+                fill=fg,
+                background=cell_background,
+            )
+        )
+        parts.append(
+            t(x + 24, y + 100, line1, size=16, fill=fg, background=cell_background)
+        )
+        parts.append(
+            t(x + 24, y + 132, line2, size=16, fill=fg, background=cell_background)
+        )
     ink_footer(
         parts,
         80,
@@ -871,12 +1535,30 @@ def focus_detail() -> str:
     cream_bg(parts, w, h, "#FFFFFF")
     parts.append(t(80, 80, "判断这一步到底看什么", size=40, weight=700, fill=AVO_BLUE))
     parts.append(
-        t(80, 122, "Avocado Press。左边一块是焦点；右边三张小卡是支持，不要做成均等四宫格。", size=18, fill=AVO_INK)
+        t(
+            80,
+            122,
+            "Avocado Press。左边一块是焦点；右边三张小卡是支持，不要做成均等四宫格。",
+            size=18,
+            fill=AVO_INK,
+        )
     )
     parts.append(hard_shadow(80, 176, 880, 520, AVO_BLUE))
     parts.append(rect(80, 166, 880, 520, AVO_BLUE, AVO_BLUE, sw=0, rx=0))
-    parts.append(t(120, 230, "判断", size=40, weight=700, fill="#FFFFFF"))
-    parts.append(t(120, 286, "谁决策，不是谁执行。", size=22, weight=700, fill=AVO_LIME))
+    parts.append(
+        t(120, 230, "判断", size=40, weight=700, fill="#FFFFFF", background=AVO_BLUE)
+    )
+    parts.append(
+        t(
+            120,
+            286,
+            "谁决策，不是谁执行。",
+            size=22,
+            weight=700,
+            fill=AVO_LIME,
+            background=AVO_BLUE,
+        )
+    )
     for i, line in enumerate(
         [
             "上下文已经在，不必再找工具。",
@@ -885,7 +1567,9 @@ def focus_detail() -> str:
             "工具结果必须回来，再判断一次。",
         ]
     ):
-        parts.append(t(120, 360 + i * 44, line, size=18, fill="#FFFFFF"))
+        parts.append(
+            t(120, 360 + i * 44, line, size=18, fill="#FFFFFF", background=AVO_BLUE)
+        )
     supports = [
         (AVO_LIME, AVO_INK, "直接回答", "短支。到最终答案就停。"),
         ("#FFFFFF", AVO_BLUE, "需要工具", "整段放大。执行是下一张卡。"),
@@ -899,7 +1583,16 @@ def focus_detail() -> str:
         y += 180
     parts.append(rect(80, 720, 1440, 56, AVO_BLUE, AVO_BLUE, sw=0, rx=0))
     parts.append(
-        t(800, 756, "一张图只放大判断。执行工具另走工具回路，不要和判断抢尺寸。", size=18, weight=700, fill="#FFFFFF", anchor="middle")
+        t(
+            800,
+            756,
+            "一张图只放大判断。执行工具另走工具回路，不要和判断抢尺寸。",
+            size=18,
+            weight=700,
+            fill="#FFFFFF",
+            anchor="middle",
+            background=AVO_BLUE,
+        )
     )
     return svg(w, h, "".join(parts))
 
@@ -1059,9 +1752,9 @@ def write(path: Path, text: str) -> None:
 
 EVAL_DOC = """<title>飞书画板精美图表 · Human Eval</title>
 <callout emoji="🧪" background-color="light-blue" border-color="blue">
-  <p>这份文档用来肉眼评测文档精排画板：每种图前面有一句论点。请在飞书 Web 和桌面分别打开画板，点进去改一个节点，确认是原生画板而不是图片。HTML 对照块不是画板。</p>
+  <p>这份文档用来肉眼评测文档精排画板：每种图前面有一句论点。请在飞书 Web 和桌面分别打开画板，点进去改一个节点，确认是原生画板而不是图片。HTML 对照块不是画板。每行必须实际填写，破折号只表示待评。</p>
 </callout>
-<p>评测包日期 2026-09-03。本地已通过 lint-valid 与 local-render-valid。请在文末记分表填写 feishu-experience-valid。</p>
+<p>评测包候选日期 2026-09-04。本地验证结果以仓库最新测试输出为准。请在文末逐图填写 Web / 桌面体验和最高证据层；不能用上一版的定性 Accept 代替本轮评分。</p>
 <h1 seq="auto">怎么评</h1>
 <p>先记证据层，再打 1–5 分。SVG / Mermaid 是静态精排图，运动和交互记 N/A。有一项低于 3，或出现截断、豆腐、把 HTML 当成画板，整张图不通过。</p>
 <table>
@@ -1272,7 +1965,9 @@ def main() -> None:
     print(f"wrote fixtures to {OUT}")
     for path in sorted(OUT.glob("*.svg")):
         text = path.read_text(encoding="utf-8")
-        print(f"{path.name}: {len(text)} bytes, has CJK={any(ord(c) > 127 for c in text)}")
+        print(
+            f"{path.name}: {len(text)} bytes, has CJK={any(ord(c) > 127 for c in text)}"
+        )
 
 
 if __name__ == "__main__":

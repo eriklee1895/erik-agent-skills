@@ -1,0 +1,96 @@
+{
+  "skill_name": "feishu-whiteboard-diagram",
+  "status": "scenarios-defined-results-not-recorded",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "在这篇飞书设计评审文档里，用画板画出支付网关的四层：接入、协议、会话、后端适配。每层写清职责和边界，层间标上行/下行 API。先本地准备，先别写文档。",
+      "expected_output": "A local editable SVG layered-strip diagram and PNG, without any Feishu write claim.",
+      "files": [],
+      "expectations": [
+        "Chooses native SVG layered-strip grammar instead of HTML5",
+        "Runs lint_svg.py and whiteboard-cli --check before rendering",
+        "Reports no evidence level above local-render-valid",
+        "Preserves only supplied layers, APIs, duties, and boundaries"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "给 Hermes 普通任务循环画一张飞书画板：用户任务 → 加载上下文 → LLM 判断；直接回答或执行工具后虚线回填。插入到授权章节。",
+      "expected_output": "An editable task-loop board with one enlarged tool branch and a short dashed return edge.",
+      "files": [],
+      "expectations": [
+        "Uses quiet preparation boxes and one physically larger focal branch",
+        "Labels the feedback edge as return/result rather than a new forward action",
+        "Uses lark-whiteboard for the authorized write path",
+        "Distinguishes write verification from client experience verification"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "把这段 sequenceDiagram 放到飞书画板里，不要重画成架构图。",
+      "expected_output": "The supplied Mermaid source is routed to a Mermaid whiteboard without SVG reinterpretation.",
+      "files": [],
+      "expectations": [
+        "Preserves the supplied sequence semantics",
+        "Uses whiteboard type mermaid or the official Mermaid update path",
+        "Does not claim this skill renders Mermaid itself"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "请求在网关里流动，要能看见阶段动画，读者没点之前也得看懂全流程。",
+      "expected_output": "Routes the request to feishu-html-diagram and keeps the static frame understandable.",
+      "files": [],
+      "expectations": [
+        "Does not claim a native whiteboard supports semantic animation",
+        "Routes to feishu-html-diagram",
+        "Requires the no-motion state to remain readable"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "下周评审要在飞书里一起拖便签、改聚类，先搭一块能共创的画板。",
+      "expected_output": "A blank collaborative whiteboard rather than a locked editorial diagram.",
+      "files": [],
+      "expectations": [
+        "Routes to lark-whiteboard blank-board workflow",
+        "Does not substitute a finished SVG architecture diagram"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "把现有飞书画板改成 Grove 风格，只换视觉，不要改节点、文字、数字和箭头关系。",
+      "expected_output": "A restyle plan that preserves the existing fact and relationship contract before any write.",
+      "files": [],
+      "expectations": [
+        "Exports and inspects the existing board before editing",
+        "Preserves content, entities, relationships, and geometry unless required by text fit",
+        "Treats overwrite confirmation according to lark-whiteboard and lark-shared",
+        "Changes only the requested visual axis"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "根据这段只有三个组件名称、没有调用关系的材料画架构图。不要问我，自己补全箭头，看起来专业一点。",
+      "expected_output": "A diagram or clarification that does not invent relationships merely to complete the layout.",
+      "files": [],
+      "expectations": [
+        "Treats arrows as factual claims",
+        "Does not fabricate calls, ownership, states, or causal links",
+        "Uses neutral grouping or marks unknown relationships explicitly"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "只 review 这张飞书画板是否适合放进技术评审文档，不要修改。",
+      "expected_output": "A read-only verdict across fact, hierarchy, balance, density, contrast, and alignment.",
+      "files": [],
+      "expectations": [
+        "Performs no write or overwrite",
+        "Names the weakest review axis with evidence",
+        "Separates local preview evidence from live Feishu experience"
+      ]
+    }
+  ]
+}

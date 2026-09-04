@@ -2,8 +2,8 @@
 name: volcengine-bigmusic-bgm
 description: |
   使用火山引擎 BigMusic (Seed-Music) 生成 AIGC 视频/文章配乐（无人声纯音乐）。
-  触发：BGM provider=bigmusic 时由 video-composer / final compose 调用，
-  或用户说"生成 BGM / 背景音乐 / 配乐 / 视频音乐"。
+  当用户/上层编排说"生成 BGM / 背景音乐 / 配乐 / 视频音乐"，或成片需要无人声配乐时调用。
+  本 skill 只产出 BGM 音频文件；与人声/成片混音由调用方/后期环节负责。
   根据中文风格描述 + 时长生成乐器纯音乐（无人声），走按时长计费入口。
 ---
 
@@ -29,8 +29,7 @@ OpenAPI Version=2024-08-12
 > 服务端以 `200028 没有可用资源包` 拒掉。Erik 账号是按时长，本 skill **只
 > 走 `GenBGMForTime`**，不考虑套餐包路径。
 
-这是与 `mmx-cli`（MiniMax）并列的 **BGM provider**，由 `configs/default.toml`
-的 `[bgm].provider` 切换（`bigmusic` | `minimax`）。
+本 skill 只负责生成无人声 BGM 音频；是否选择本来源、如何混音成片由调用方决定。
 
 > 文档索引见 [`references/api-links.md`](references/api-links.md)。
 
@@ -131,7 +130,7 @@ uv run scripts/generate_bgm.py "..." --dry-run
    / 轻柔舒缓"这种易撞模板
 2. 加 `--rewrite` 让 BigMusic 自带的 LLM 改写
 3. 同时切换风格标签：把"温暖治愈"换成"空灵悠远 / 极简电子 / 城市爵士"等
-4. 真正无奈才换 provider（`mmx-cli` 走 MiniMax Music）
+4. 真正无奈才换音乐来源（如 MiniMax Music 等其他音乐生成工具/CLI）
 
 ## 情绪/风格 prompt 模板
 
@@ -153,9 +152,13 @@ uv run scripts/generate_bgm.py "..." --dry-run
 - 火山引擎账号已开通「音视频理解与处理 / AI 生成音乐大模型」并勾选**按时长计费**
 - **不需要**配置 TOS 存储（共享桶 + 签名 URL 直接拉）
 
-## 与 orchestrator 的衔接（待接线）
+## 边界：BGM 生成 vs 混音成片
 
-BGM 目前未接入 `src/worker/orchestrator.py`。建议接线点：**final compose 阶段**，
-即 `compose.sh` 产出无声/纯人声成片后、最终上传前，调用本 skill 生成 BGM，再用
-`scripts/mix_audio.sh <video> <narration> <bgm> <out>`（旁白 100% + BGM
-`[bgm].volume`）混音。provider 由 `[bgm].provider` 决定走本 skill 还是 `mmx-cli`。
+本 skill 的交付物是**无人声 BGM 音频文件**（wav/mp3）。以下环节由调用方/上层编排负责，
+本 skill 不提供脚本：
+
+- 在成片制作的哪个阶段生成 BGM（建议：画面与人声定稿后、最终混音前）
+- BGM 与旁白/人声的混音（音量比例、淡入淡出、对齐时长——可用 ffmpeg 或后期工具）
+- 在多个音乐来源之间做选择（本 skill 是 BigMusic/GenBGM 一个来源；需要其他风格可换别的音乐生成服务）
+
+时长由 `--duration` 精确控制，按目标成片时长生成即可。

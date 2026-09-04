@@ -18,7 +18,7 @@ description: |
 - 需要给 database row 设置 properties（包括 title/select/multi_select/rich_text/date/url/number 等）
 - 需要批量追加 markdown 内容到已有页面
 
-其他 skill（如 `article-to-notion`）通过调用本 skill 的 `scripts/ntn_cli.py` 完成 Notion 写入。
+其他编排方/skill 可通过调用本 skill 的 `scripts/ntn_cli.py` 完成 Notion 写入（与本 skill 安装在同级 skills 目录）。
 
 ## 不适用
 
@@ -234,4 +234,4 @@ uv run scripts/ntn_cli.py trash-page <page-id>
 - 官方文档：https://developers.notion.com/cli/get-started/overview
 - File uploads 指南：https://developers.notion.com/cli/guides/file-uploads
 - API requests inline 语法（不推荐，用 `--data` 更稳）：https://developers.notion.com/cli/guides/api-requests
-- 项目内使用方：[article-to-notion](../article-to-notion/SKILL.md)
+- 使用方式：独立使用（`uv run scripts/ntn_cli.py <cmd>`），或由同级安装的上层编排/其他 skill 调用本脚本
