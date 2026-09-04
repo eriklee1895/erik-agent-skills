@@ -4,39 +4,65 @@
     {
       "id": 1,
       "prompt": "帮我搜一下最近一周关于AI Agent的新闻，中文的，要5条就行，总结一下主要趋势",
-      "expected_output": "Agent uses volcengine-web-search with --json --count 5 --time-range week --need-summary, searches for AI Agent related query in Chinese, and provides a summary of trends from the results.",
+      "expected_output": "Agent uses volcengine-web-search (Custom edition, default) with --json --count 5 --time-range week, runs the uv script, reads Summary fields, and synthesizes trend highlights in Chinese with source attribution.",
       "files": [],
       "assertions": [
         "uses_volcengine_cli",
-        "correct_flags",
-        "search_in_chinese",
-        "synthesizes_trends",
-        "structured_output"
+        "uses_json_flag",
+        "uses_time_range_flag",
+        "synthesizes_trends_from_summaries",
+        "cites_sources"
       ]
     },
     {
       "id": 2,
-      "prompt": "找几张故宫雪景的照片，我要用来做壁纸",
-      "expected_output": "Agent uses volcengine-web-search with --type image --json, searches for 故宫雪景, and presents image URLs with dimensions and clarity info.",
+      "prompt": "找几张故宫雪景的照片，我要用来做电脑壁纸，最好是横版高清的",
+      "expected_output": "Agent uses --type image with --orientation landscape and --min-short-edge for wallpaper use, presents image URLs with dimensions and clarity info.",
       "files": [],
       "assertions": [
         "uses_image_type",
+        "uses_orientation_landscape",
+        "uses_min_short_edge",
         "image_urls_present",
-        "dimensions_info",
-        "clarity_info"
+        "dimensions_or_clarity_info"
       ]
     },
     {
       "id": 3,
-      "prompt": "我想了解最新的新能源汽车政策，要权威来源的信息",
-      "expected_output": "Agent uses volcengine-web-search with --json --authoritative-only --need-summary, searches for 新能源汽车政策, and synthesizes findings from authoritative sources.",
+      "prompt": "我想了解最新的新能源汽车政策，要权威来源的信息，政府网站最好",
+      "expected_output": "Agent uses Custom edition with --json --authoritative-only (and ideally --industry gov), synthesizes findings from authoritative sources, citing sites and links.",
       "files": [],
       "assertions": [
         "uses_authoritative_flag",
-        "uses_summary_flag",
+        "uses_gov_industry_or_auth_filter",
         "authoritative_sources",
         "policy_focused",
-        "structured_synthesis"
+        "cites_sources"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Look up what OpenAI announced in the last couple of weeks — I need English-language and overseas sources, the Chinese search engines weren't giving me much",
+      "expected_output": "Agent recognizes the overseas/English need and switches to the Global edition with --global (--edition global), uses --json, and synthesizes from global Documents/Snippet results.",
+      "files": [],
+      "assertions": [
+        "uses_global_edition",
+        "uses_json_flag",
+        "reads_global_documents_structure",
+        "synthesizes_findings",
+        "cites_sources"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "我手上有张商品截图 https://p11-volcsearch-sign.byteimg.com/tos-cn-i-xstd03g9pf/5708180019264f8197000b1c6678cd81~tplv-obj.jpeg?lk3s=1515c32d&scene=volc_search&x-expires=1796281042&x-signature=DQT9FvDybZG8Kk1s0sNlIiVMotw%3D ，帮我在网上找找同款或相似的图片",
+      "expected_output": "Agent recognizes image-to-image search requires Global visual mode: --global --type visual --image-url <url>, runs it, and presents visually similar results with links.",
+      "files": [],
+      "assertions": [
+        "uses_global_edition",
+        "uses_visual_type",
+        "uses_image_url_flag",
+        "presents_similar_results"
       ]
     }
   ]
