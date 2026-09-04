@@ -1,126 +1,124 @@
-# 火山引擎豆包 ASR API 参考（录音文件识别）
+# 豆包录音文件识别 2.0 标准版 API 参考
 
-> 摘录自官方文档（2026-09 拉取），agent 调脚本即可，以下仅供排错/扩展参数时参考。
-> 鉴权与 TTS 相同：语音控制台单 API Key（`VOLC_SPEECH_API_KEY`），与火山方舟 ARK key **不通用**。
+本 Skill 只使用最新标准版模型 `volc.seedasr.auc`。以下内容用于扩展参数和排错；
+常规转写直接运行脚本。
 
-## 两个接口
+## 接口
 
-| | 极速版（默认） | 标准版（兜底） |
-|---|---|---|
-| 端点 | `POST /api/v3/auc/bigmodel/recognize/flash` | `POST /api/v3/auc/bigmodel/submit` + `/query` |
-| Resource-Id | `volc.bigasr.auc_turbo` | `volc.seedasr.auc`（2.0）/ `volc.bigasr.auc`（1.0） |
-| 调用方式 | 一次请求同步返回 | 提交后轮询（请求体空 JSON `{}`） |
-| 音频传入 | `audio.data`（base64）或 `audio.url`。data 直传正式记载于极速版旧文档树（1631584，"上传文件二进制流"）；**2026-08 更新的新文档树（2608628/2606791/2606792）只文档化了 `audio.url`**。但 data 直传实测在极速版和标准版 submit 上均可用（2026-09 验证；生态内多个生产项目依赖），属"文档不写但服务端支持"。脚本两种都支持：本地文件默认 data 直传，http(s) 输入走 url | 同左；data 直传无文档但实测可用（volc.seedasr.auc，2026-09 验证） |
-| 时长/大小 | ≤ 2h / ≤ 100MB（base64 建议 ≤20MB） | ≤ 5h / ≤ 512MB |
-| 音频格式 | WAV / MP3 / OGG OPUS | wav/mp3/ogg/pcm/spx/amr/aac/m4a |
-| 计费/开通 | 需单独开通 `volc.bigasr.auc_turbo` | 需单独开通；单价更低 |
+| 操作 | Endpoint |
+|---|---|
+| 提交 | `POST https://openspeech.bytedance.com/api/v3/auc/bigmodel/submit` |
+| 查询 | `POST https://openspeech.bytedance.com/api/v3/auc/bigmodel/query` |
 
-服务根地址：`https://openspeech.bytedance.com`
-
-## 请求头
+请求头：
 
 | Header | 值 |
 |---|---|
-| `X-Api-Key` | 语音控制台 API Key（新版控制台单头；旧版控制台用 `X-Api-App-Key` + `X-Api-Access-Key` 双头） |
-| `X-Api-Resource-Id` | 见上表 |
-| `X-Api-Request-Id` | 随机 UUID；标准版中它就是 task_id，查询时复用同一个 |
-| `X-Api-Sequence` | 固定 `-1` |
+| `X-Api-Key` | 语音控制台 API Key |
+| `X-Api-Resource-Id` | `volc.seedasr.auc` |
+| `X-Api-Request-Id` | 提交时为客户端 UUID；查询时为提交响应的 `task_id` |
+| `X-Api-Sequence` | 提交时为 `-1`；查询接口不需要 |
 | `Content-Type` | `application/json` |
 
-## 请求体（flash / standard 共用形状）
+成功提交的响应体包含 `task_id`。不要假设客户端生成的 request UUID 与
+服务端返回的 `task_id` 相同。保留的旧版 `audio.data` 兼容路径可能返回空的
+`{}`，但服务端仍接受提交时的 request UUID 查询；脚本只在缺少 `task_id` 时
+使用这个兼容回退。
+
+## 输入
+
+当前文档化的请求使用：
 
 ```json
 {
-  "user": { "uid": "任意调用方标识" },
   "audio": {
-    "data": "<base64，flash 本地上传>",
-    "url":   "<公网音频链接，标准版必填 / flash 可选>",
+    "url": "https://example.com/audio.mp3",
     "format": "mp3",
-    "language": "zh-CN"
+    "codec": "raw",
+    "rate": 16000,
+    "bits": 16,
+    "channel": 1
   },
   "request": {
     "model_name": "bigmodel",
     "enable_itn": true,
     "enable_punc": true,
     "enable_ddc": false,
-    "show_utterances": true,
-    "enable_speaker_info": true,
-    "ssd_version": "200",
-    "corpus": { "context": "{\"hotwords\":[{\"word\":\"豆包\"}]}" }
+    "show_utterances": true
   }
 }
 ```
 
-注意：`corpus.context` 是**序列化为 JSON 字符串**的对象（不是嵌套对象）。
-flash data 模式下不发 `audio.format`（服务端从字节流嗅探）。
+标准版限制：不超过 5 小时和 512 MB。格式支持 raw、wav、mp3、ogg、pcm、
+spx、amr、aac、m4a。
 
-### 常用 request 参数
+### 本地 base64 兼容路径
 
-| 参数 | 默认 | 说明 |
-|---|---|---|
-| `model_name` | — | 必填，固定 `bigmodel` |
-| `enable_itn` | true | 口语数字/金额/日期 → 书面形式（"一九七零年"→"1970 年"） |
-| `enable_punc` | true | 加标点 |
-| `enable_ddc` | false | 语义顺滑（删语气词/重复）——**出字幕建议 false 保真** |
-| `show_utterances` | false | 返回分句/分词时间戳、说话人；**出字幕必须 true** |
-| `enable_speaker_info` | false | 说话人分离；需 `show_utterances=true`；仅中文/自动语种生效 |
-| `ssd_version` | — | `200`：≤5 人非会议场景；`300`：声纹匹配，长会议场景 |
-| `enable_channel_split` | false | 双声道识别，结果以 `channel_id` 标记 |
-| `vad_segment` | false | true=按 VAD 静音分句；false=按语义分句（默认，字幕更自然） |
-| `end_window_size` | 800 | VAD 静音判停阈值 ms，[300,5000]，推荐 800-1000 |
-| `enable_auto_lang` | false | 自动语种检测（不与 corpus 热词同用） |
-| `enable_emotion_detection` | false | 分句返回 angry/happy/neutral/sad/surprise |
-| `enable_gender_detection` | false | 分句返回 male/female |
-| `corpus.boosting_table_id` | — | 控制台配置的热词词表 |
-| `corpus.correct_table_id` | — | 替换词词表 |
-| `sensitive_words_filter` | — | 敏感词过滤（JSON 字符串） |
-
-### `audio.language` 常用值
-
-`zh-CN`（普通话）、`en-US`、`ja-JP`、`ko-KR`、`yue-CN`（粤语）、`id-ID`、`es-MX`、`pt-BR`、`de-DE`、`fr-FR` 等 20+。
-**留空时**自动识别：中文、英文、上海话、闽南话、四川话、陕西话、粤语。
-
-## 响应
-
-状态看**响应头**（HTTP 可能恒 200）：
-
-| Header | 含义 |
-|---|---|
-| `X-Api-Status-Code` | 见下表 |
-| `X-Api-Message` | `OK` 或错误描述 |
-| `X-Tt-Logid` | 排障用 logid，报错时务必带上 |
-
-状态码：
-
-| Code | 含义 | 处理 |
-|---|---|---|
-| `20000000` | 成功 | 读 body |
-| `20000003` | 静音/无人声 | 视为空结果成功 |
-| `45000002` | 空音频 | 同样按空结果处理（参考成熟工具的分类约定） |
-| `20000001` / `20000002` | 任务处理中（标准版轮询） | 继续轮询；success code 但 body 无 `result` 也算处理中 |
-| `45000001` | 请求参数无效 | 不重试 |
-| `45000002` | 空音频 | 不重试 |
-| `45000151` | 音频格式不正确 | 不重试；用 ffmpeg 转 mp3 |
-| `55000031` | 服务器繁忙/过载 | 指数退避重试 |
-| `550xxxxx` | 服务内部错误 | 重试 |
-| HTTP 401/403 | API Key 无效/未开通该资源 | 不重试；检查 key 与开通状态 |
-
-成功 body：
+旧版录音文件识别 API 曾正式记录通过 `audio.data` 上传文件二进制/base64。
+新版 2.0 文档只展示 `audio.url`，但服务端仍为 `volc.seedasr.auc` 保留并支持：
 
 ```json
 {
-  "audio_info": { "duration": 6312 },
+  "audio": {
+    "data": "<base64>",
+    "format": "mp3"
+  }
+}
+```
+
+这是“旧版文档有依据、2.0 服务继续兼容”的能力，不是新版文档当前明确列出的
+输入形式。公网 URL 优先走 `audio.url`；本地文件使用该兼容路径。
+
+## 常用参数
+
+| 参数 | 说明 |
+|---|---|
+| `model_name` | 必填，固定 `bigmodel` |
+| `enable_itn` | 数字、金额和日期书面化，默认 true |
+| `enable_punc` | 自动标点，默认 true |
+| `enable_ddc` | 语义顺滑；字幕保真建议 false |
+| `show_utterances` | 返回分句、分词、时间戳和停顿信息；字幕必须 true |
+| `enable_speaker_info` | 说话人分离，需同时开启 `show_utterances` |
+| `ssd_version=200` | 不超过 5 人的非会议场景 |
+| `ssd_version=300` | 长音频会议和声纹匹配场景 |
+| `ssd_mode=0` | 200 模型普通模式，适合 3 分钟内 |
+| `ssd_mode=1` | 200 模型聚类模式，适合 3 分钟以上非会议音频 |
+| `enable_channel_split` | 双声道识别，通过 `channel_id` 标记 |
+| `vad_segment` | true 为 VAD 分句，false 为语义分句 |
+| `end_window_size` | 静音判停阈值 300–5000 ms，推荐 800–1000 |
+| `enable_auto_lang` | 多语种自动检测；不能与 corpus 热词同时使用 |
+| `enable_emotion_detection` | 返回分句情绪 |
+| `enable_gender_detection` | 返回分句性别 |
+| `show_speech_rate` | 返回分句语速 |
+| `show_volume` | 返回分句音量 |
+
+`corpus.context` 必须是序列化后的 JSON 字符串。热词总长度最多 5000 词；它们
+用于提示模型，不保证强制命中。
+
+Skill CLI 通过 `--context-json FILE` 接收未序列化的对象并完成序列化；
+`--hotwords` 可作为快捷输入，和文件中的 `hotwords` 合并去重。官方限制
+上下文最多 500 tokens，且不允许与 `enable_auto_lang` 同时使用。
+
+说话人分离仅在 language 未指定或为 `zh-CN` 时生效。
+
+## 查询与结果
+
+查询请求体是空对象 `{}`，并把提交响应的 `task_id` 放在
+`X-Api-Request-Id`。成功结果的时间单位为毫秒：
+
+```json
+{
+  "audio_info": {"duration": 6312},
   "result": {
-    "additions": { "duration": "6312" },
     "text": "整段文本",
     "utterances": [
       {
-        "start_time": 480, "end_time": 5880,
-        "text": "分句文本（含标点）",
-        "additions": { "speaker": "1", "channel_id": "1" },
+        "start_time": 480,
+        "end_time": 5880,
+        "text": "带标点的分句文本。",
+        "additions": {"speaker": "1", "channel_id": "1"},
         "words": [
-          { "text": "刚", "start_time": 480, "end_time": 600, "confidence": 0 },
-          { "text": "刚", "start_time": 680, "end_time": 800, "confidence": 0 }
+          {"text": "分", "start_time": 480, "end_time": 600, "confidence": 0}
         ]
       }
     ]
@@ -128,25 +126,35 @@ flash data 模式下不发 `audio.format`（服务端从字节流嗅探）。
 }
 ```
 
-关键事实（实测 + 文档）：
-- 时间单位均为**毫秒**；word 级时间戳在 `utterances[].words[]`。
-- **word token 不含标点**，标点只出现在 `utterances[].text`（enable_punc 生成）——脚本已做对齐回填。
-- 说话人 ID 在 `utterances[].additions.speaker`，字符串 "0"/"1"/...。
-- `confidence` 当前固定返回 0，不代表置信度为零。
+## 状态码
 
-## 文档链接
+| Code | 处理 |
+|---|---|
+| `20000000` | 成功 |
+| `20000001` | 正在处理，继续查询 |
+| `20000002` | 排队中，继续查询 |
+| `20000003` | 静音，返回空转写 |
+| `45000001` | 参数无效或重复请求，不重试 |
+| `45000002` | 空音频，返回空转写 |
+| `45000131` | 提交速率/时长额度限制，不重试 |
+| `45000132` | 超过 512 MB，不重试 |
+| `45000151` | 音频格式不正确，不重试 |
+| `55000031` / `550xxxx` | 服务端临时错误，退避重试 |
 
-- 极速版 HTTP：https://www.volcengine.com/docs/6561/1631584
-- 标准版任务提交：https://www.volcengine.com/docs/6561/2606791
-- 标准版结果查询：https://www.volcengine.com/docs/6561/2606792
-- 闲时版（24h 内出结果，更便宜）：submit `/api/v3/auc/bigmodel/idle/submit`，resource `volc.bigasr.auc_idle`
-- 热词最佳实践：https://www.volcengine.com/docs/6561/2604976
-- API Key 管理：https://console.volcengine.com/speech/new/setting/apikeys
+排障时保留响应头中的 `X-Tt-Logid`。
 
-## 抽音时间对齐（字幕不漂移的前提）
+## 官方文档
 
-视频抽音轨必须带 `-af aresample=async=1:first_pts=0`。源音频存在 PTS gap
-（录制暂停、多段拼接、转封装丢帧）时，默认抽音（async=0）忽略 PTS 顺序拼接样本，
-时间轴被压扁，字幕从中段开始累计漂移（真实案例：31 分钟视频末尾漂 8.5s）。
-`async=1` 在 gap 处填静音、overlap 处丢样本，`first_pts=0` 对齐非零起始音轨；
-正常无 gap 视频上是 no-op。
+- 任务提交：https://docs.volcengine.com/docs/6561/2606791?lang=zh
+- 结果查询：https://docs.volcengine.com/docs/6561/2606792?lang=zh
+- 错误码：https://docs.volcengine.com/docs/6561/2611432?lang=zh
+
+## 字幕时间轴约束
+
+从视频抽音必须使用：
+
+```text
+-af aresample=async=1:first_pts=0
+```
+
+它会按源 PTS 填充 gap 或丢弃 overlap，避免长视频字幕累计漂移。

@@ -2,12 +2,28 @@
 """Offline tests for volcengine-asr subtitle/normalization logic (no API calls)."""
 import importlib.util
 import json
+import subprocess
+import sys
 from pathlib import Path
 
-_MODULE_PATH = Path(__file__).parent / "volcengine-asr.py"
-spec = importlib.util.spec_from_file_location("volcengine_asr", str(_MODULE_PATH))
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
+import pytest
+
+_SCRIPTS_DIR = Path(__file__).parent
+sys.path.insert(0, str(_SCRIPTS_DIR))
+
+
+def _load_module(name, path):
+    spec = importlib.util.spec_from_file_location(name, str(path))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+mod = _load_module("volcengine_asr_transcribe", _SCRIPTS_DIR / "transcribe.py")
+subtitle = _load_module("volcengine_asr_subtitle", _SCRIPTS_DIR / "subtitle.py")
+for _name in dir(subtitle):
+    if not _name.startswith("__") and not hasattr(mod, _name):
+        setattr(mod, _name, getattr(subtitle, _name))
 
 
 # ── timestamps ─────────────────────────────────────────────────────────────
@@ -28,7 +44,7 @@ def test_vtt_timestamp_uses_dot():
 def test_build_request_body_minimal():
     body = mod.build_request_body(audio_data_b64="abc")
     assert body["audio"]["data"] == "abc"
-    assert body["user"]["uid"]
+    assert "user" not in body
     req = body["request"]
     assert req["model_name"] == "bigmodel"
     assert req["show_utterances"] is True
@@ -55,10 +71,46 @@ def test_build_request_body_language_and_hotwords():
     assert words == ["豆包", "火山引擎"]
 
 
-def test_build_request_body_data_mode_omits_format():
-    # Flash data mode: server sniffs bytes; proven clients omit audio.format.
+def test_build_request_body_data_mode_includes_format():
+    # The standard 2.0 request always identifies the uploaded audio format.
     body = mod.build_request_body(audio_data_b64="x", audio_format="mp3")
-    assert "format" not in body["audio"]
+    assert body["audio"]["format"] == "mp3"
+
+
+def test_build_request_body_serializes_full_context_payload():
+    context = {
+        "context_type": "dialog_ctx",
+        "context_data": [{"speaker": "user", "text": "这是上一轮对话"}],
+        "hotwords": [{"word": "奥德赛"}],
+    }
+    body = mod.build_request_body(audio_data_b64="x", audio_format="mp3", context=context)
+    assert json.loads(body["request"]["corpus"]["context"]) == context
+
+
+def test_context_hotwords_merge_with_cli_hotwords_without_duplicates():
+    context = {
+        "context_type": "dialog_ctx",
+        "hotwords": [{"word": "奥德赛"}, {"word": "荷马"}],
+    }
+    body = mod.build_request_body(
+        audio_data_b64="x",
+        audio_format="mp3",
+        context=context,
+        hotwords=["荷马", "诺兰"],
+    )
+    payload = json.loads(body["request"]["corpus"]["context"])
+    assert payload["context_type"] == "dialog_ctx"
+    assert [item["word"] for item in payload["hotwords"]] == ["奥德赛", "荷马", "诺兰"]
+
+
+def test_load_context_json_reads_and_validates_provider_object(tmp_path):
+    path = tmp_path / "context.json"
+    expected = {
+        "context_type": "dialog_ctx",
+        "context_data": [{"speaker": "user", "text": "领域背景"}],
+    }
+    path.write_text(json.dumps(expected, ensure_ascii=False), encoding="utf-8")
+    assert mod.load_context_json(path) == expected
 
 
 def test_build_request_body_standard_data_mode_includes_format():
@@ -66,6 +118,310 @@ def test_build_request_body_standard_data_mode_includes_format():
     body = mod.build_request_body(audio_data_b64="x", audio_format="mp3", send_format=True)
     assert body["audio"]["format"] == "mp3"
     assert body["audio"]["data"] == "x"
+
+
+class _FakeResponse:
+    def __init__(self, *, code="20000000", payload=None, http_status=200, message="OK"):
+        self.status_code = http_status
+        self.headers = {
+            "X-Api-Status-Code": code,
+            "X-Api-Message": message,
+            "X-Tt-Logid": "log-1",
+        }
+        self._payload = payload or {}
+        self.content = json.dumps(self._payload).encode()
+        self.text = json.dumps(self._payload)
+
+    def json(self):
+        return self._payload
+
+
+def test_standard_queries_with_task_id_returned_by_submit(monkeypatch):
+    """The current API returns a server task_id that may differ from request UUID."""
+    calls = []
+    responses = iter([
+        _FakeResponse(payload={"task_id": "server-task-id"}),
+        _FakeResponse(payload={"audio_info": {"duration": 1}, "result": {"text": "好"}}),
+    ])
+
+    def fake_post(url, headers, body, *, timeout):
+        calls.append((url, headers.copy(), body, timeout))
+        return next(responses)
+
+    monkeypatch.setattr(mod, "_post", fake_post)
+    result = mod.recognize_standard(
+        api_key="key",
+        audio_url="https://example.com/audio.mp3",
+        audio_format="mp3",
+        poll_interval=0,
+        timeout_s=1,
+    )
+
+    assert result["text"] == "好"
+    assert calls[1][1]["X-Api-Request-Id"] == "server-task-id"
+    assert "X-Api-Sequence" not in calls[1][1]
+
+
+def test_standard_falls_back_to_request_id_for_legacy_data_upload(monkeypatch, tmp_path):
+    """Legacy base64 submit may return an empty body and echo the query id in a header."""
+    calls = []
+    responses = iter([
+        _FakeResponse(payload={}),
+        _FakeResponse(payload={"audio_info": {"duration": 1}, "result": {"text": "好"}}),
+    ])
+
+    def fake_post(url, headers, body, *, timeout):
+        calls.append((url, headers.copy(), body, timeout))
+        return next(responses)
+
+    audio_path = tmp_path / "compat.mp3"
+    audio_path.write_bytes(b"audio")
+    monkeypatch.setattr(mod, "_post", fake_post)
+    result = mod.recognize_standard(
+        api_key="key",
+        audio_path=audio_path,
+        audio_format="mp3",
+        poll_interval=0,
+        timeout_s=1,
+    )
+
+    assert result["text"] == "好"
+    assert calls[1][1]["X-Api-Request-Id"] == calls[0][1]["X-Api-Request-Id"]
+
+
+def test_documented_url_submit_without_task_id_fails_closed(monkeypatch):
+    calls = []
+
+    def fake_post(url, headers, body, *, timeout):
+        calls.append((url, headers.copy(), body, timeout))
+        return _FakeResponse(payload={})
+
+    monkeypatch.setattr(mod, "_post", fake_post)
+    result = mod.recognize_standard(
+        api_key="key",
+        audio_url="https://example.com/audio.mp3",
+        audio_format="mp3",
+        poll_interval=0,
+        timeout_s=1,
+    )
+
+    assert "without task_id" in result["error"]
+    assert len(calls) == 1
+
+
+def test_standard_query_auth_error_stops_without_polling_to_timeout(monkeypatch):
+    responses = iter([
+        _FakeResponse(payload={"task_id": "server-task-id"}),
+        _FakeResponse(http_status=401, code="", message="unauthorized"),
+    ])
+    monkeypatch.setattr(mod, "_post", lambda *args, **kwargs: next(responses))
+    result = mod.recognize_standard(
+        api_key="bad-key",
+        audio_url="https://example.com/audio.mp3",
+        audio_format="mp3",
+        poll_interval=0,
+        timeout_s=30,
+    )
+    assert result["error"] == "query authentication failed: HTTP 401"
+
+
+def test_standard_rejects_audio_over_five_hours_before_upload(monkeypatch, tmp_path):
+    audio = tmp_path / "long.mp3"
+    audio.write_bytes(b"audio")
+    monkeypatch.setattr(mod, "probe_duration_s", lambda path: 5 * 3600 + 1)
+    called = False
+
+    def fail_if_called(*args, **kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("network must not be called")
+
+    monkeypatch.setattr(mod, "_post", fail_if_called)
+    result = mod.recognize_standard(
+        api_key="key", audio_path=audio, audio_format="mp3"
+    )
+    assert "above the 5h standard limit" in result["error"]
+    assert called is False
+
+
+def test_public_cli_exposes_only_standard_model():
+    script = Path(__file__).parent / "volcengine-asr.py"
+    proc = subprocess.run(
+        [sys.executable, str(script), "--help"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert proc.returncode == 0
+    assert "--mode" not in proc.stdout
+    assert "volc.seedasr.auc" in proc.stdout
+    assert "--context-json" in proc.stdout
+
+
+def test_subtitle_cli_rejects_valid_json_with_invalid_transcript_shape(tmp_path):
+    transcript_path = tmp_path / "invalid.transcript.json"
+    transcript_path.write_text("[]", encoding="utf-8")
+    script = Path(__file__).parent / "subtitle.py"
+    proc = subprocess.run(
+        [sys.executable, str(script), str(transcript_path), "--srt"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert proc.returncode == 1
+    error = json.loads(proc.stderr)
+    assert "object" in error["error"]
+
+
+def test_subtitle_cli_rejects_invalid_nested_utterance_shape(tmp_path):
+    transcript_path = tmp_path / "invalid-nested.transcript.json"
+    transcript_path.write_text(
+        json.dumps({"utterances": [None], "speakers": []}), encoding="utf-8"
+    )
+    script = Path(__file__).parent / "subtitle.py"
+    proc = subprocess.run(
+        [sys.executable, str(script), str(transcript_path), "--srt"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert proc.returncode == 1
+    error = json.loads(proc.stderr)
+    assert "utterances" in error["error"]
+
+
+def test_subtitle_cli_rerenders_saved_transcript_without_asr(tmp_path):
+    transcript_path = tmp_path / "saved.transcript.json"
+    transcript_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "text": "你好。",
+                "duration_ms": 800,
+                "utterances": [
+                    {
+                        "text": "你好。",
+                        "start_ms": 0,
+                        "end_ms": 800,
+                        "speaker": None,
+                        "channel": None,
+                        "words": [
+                            {"text": "你", "start_ms": 0, "end_ms": 300},
+                            {"text": "好。", "start_ms": 300, "end_ms": 800},
+                        ],
+                    }
+                ],
+                "speakers": [],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "rerendered.srt"
+    script = Path(__file__).parent / "subtitle.py"
+    proc = subprocess.run(
+        [sys.executable, str(script), str(transcript_path), "--srt", str(output_path)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert "00:00:00,000 --> 00:00:00,800" in output_path.read_text(encoding="utf-8")
+    assert "你好。" in output_path.read_text(encoding="utf-8")
+
+
+def test_transcript_only_writes_word_timestamps_without_subtitles(tmp_path):
+    meta_path = tmp_path / "narration.meta.json"
+    meta_path.write_text(
+        json.dumps(
+            {
+                "sentence_text": "你好",
+                "words": [
+                    {"word": "你", "startTime": 0.0, "endTime": 0.3},
+                    {"word": "好", "startTime": 0.3, "endTime": 0.6},
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    script = Path(__file__).parent / "volcengine-asr.py"
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--from-tts-meta",
+            str(meta_path),
+            "--transcript-only",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    transcript_path = tmp_path / "narration.transcript.json"
+    assert transcript_path.exists()
+    assert not (tmp_path / "narration.srt").exists()
+    assert not (tmp_path / "narration.vtt").exists()
+    transcript = json.loads(transcript_path.read_text(encoding="utf-8"))
+    assert transcript["utterances"][0]["words"][0] == {
+        "text": "你",
+        "start_ms": 0,
+        "end_ms": 300,
+        "confidence": 0,
+    }
+    assert transcript["mode"] == "tts-meta"
+    assert "cues" in transcript
+
+
+def test_prepare_local_media_converts_ffmpeg_failure_to_json_exit(monkeypatch, tmp_path, capsys):
+    audio = tmp_path / "broken.m4a"
+    audio.write_bytes(b"audio")
+    monkeypatch.setattr(mod, "standard_limit_reason", lambda path: None)
+    monkeypatch.setattr(mod.shutil, "which", lambda name: "/usr/bin/ffmpeg")
+    monkeypatch.setattr(mod, "ffmpeg_to_mp3", lambda source, destination: (_ for _ in ()).throw(RuntimeError("bad media")))
+
+    with pytest.raises(SystemExit) as exc:
+        mod.prepare_local_media(audio)
+
+    assert exc.value.code == 1
+    assert json.loads(capsys.readouterr().err)["error"] == "bad media"
+
+
+def test_keep_extracted_failure_preserves_existing_output(monkeypatch, tmp_path, capsys):
+    audio = tmp_path / "broken.m4a"
+    audio.write_bytes(b"audio")
+    existing = tmp_path / "broken.asr-16k-mono.mp3"
+    existing.write_bytes(b"previous-good-output")
+    monkeypatch.setattr(mod, "standard_limit_reason", lambda path: None)
+    monkeypatch.setattr(mod.shutil, "which", lambda name: "/usr/bin/ffmpeg")
+    monkeypatch.setattr(
+        mod,
+        "ffmpeg_to_mp3",
+        lambda source, destination: (_ for _ in ()).throw(RuntimeError("bad media")),
+    )
+
+    with pytest.raises(SystemExit):
+        mod.prepare_local_media(audio, keep_extracted=True)
+
+    assert existing.read_bytes() == b"previous-good-output"
+    assert json.loads(capsys.readouterr().err)["error"] == "bad media"
+
+
+def test_raw_audio_extension_is_accepted():
+    assert ".raw" in mod.AUDIO_EXTS
+
+
+def test_raw_ffmpeg_command_declares_headerless_pcm_input():
+    cmd = mod.build_ffmpeg_cmd(Path("in.raw"), Path("out.mp3"))
+    assert cmd.index("-f") < cmd.index("-i")
+    assert cmd[cmd.index("-f") + 1] == "s16le"
+    assert cmd[cmd.index("-ar") + 1] == "16000"
+    assert cmd[cmd.index("-ac") + 1] == "1"
 
 
 # ── ffmpeg extraction ──────────────────────────────────────────────────────
@@ -111,7 +467,13 @@ def test_normalize_result_parses_utterances_and_speakers():
     assert out["duration_ms"] == 6312
     assert out["text"] == "你好。世界。"
     assert out["speakers"] == ["1", "2"]
-    assert out["utterances"][0]["words"][0] == {"text": "你", "start_ms": 0, "end_ms": 1000, "confidence": 0.9}
+    assert out["utterances"][0]["words"][0] == {
+        "text": "你",
+        "start_ms": 0,
+        "end_ms": 1000,
+        "confidence": 0.9,
+        "blank_duration_ms": 0,
+    }
     assert out["log_id"] == "L1"
 
 
