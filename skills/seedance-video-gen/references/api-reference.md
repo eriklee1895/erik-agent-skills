@@ -1,6 +1,6 @@
 # Seedance 2.0 / 2.5 API 参考
 
-> 2.0 核对：2026-06-29（实测）。2.5 核对：2026-09-03（官方教程 2607688 / 提示词 2607689）。同一套 4 端点；模型相关限制见下表和 [seedance-2.5.md](seedance-2.5.md)。
+> 2.0 核对：2026-06-29（实测）。2.5 核对：2026-09-04（官方教程 2607688 / 提示词 2607689 / 模型列表 1330310 + Ark live 实测）。同一套 4 端点；模型相关限制见下表和 [seedance-2.5.md](seedance-2.5.md)。
 
 ## 基础信息
 
@@ -10,7 +10,7 @@
 | 鉴权 | `Authorization: Bearer $ARK_API_KEY` |
 | 调用方式 | 异步任务：创建后通过轮询或列表查询拿结果；支持配置 callback URL 接收完成回调 |
 | 任务 ID 保留 | **7 天**（从 `created_at` 起算），超时后自动清除，无法再查询 |
-| 视频 URL 保留 | **24 小时**，生成后必须立即下载到本地或转存 TOS |
+| 视频 URL 保留 | **24 小时**，生成后必须立即下载到本地或转存 TOS；**2.5 产物 URL 下载上限 100 次** |
 | cancelled 任务保留 | 取消后任务记录 **24 小时** 自动删除（区别于 succeeded/failed 的 7 天） |
 
 ## 4 个端点总览
@@ -30,8 +30,8 @@
 |---|---|---|---|---|
 | `doubao-seedance-2-5-260628` | ✅ 2.5 默认 | **1080p**（10-bit HEVC）；**无 4k** | [4, 30] s / -1 | 文生 / 首帧 / 首尾帧 / 全模态参考（含仅音频）/ 有声 / 编辑 / 延长 / 联网搜索 / **mov** |
 | `doubao-seedance-2-0-260128` | ✅ 2.0 标准 | **4k**（10-bit H.265/HEVC） | [4, 15] s / -1 | 文生 / 首帧 / 首尾帧 / 多模态参考 / 有声 / 编辑 / 延长 / 联网搜索 |
-| `doubao-seedance-2-0-fast-260128` | ✅ 2.0 快速 | 720p | [4, 15] s / -1 | 同上，更快更便宜；实测 token 用量 ~40% |
-| `doubao-seedance-2-0-mini-260615` | ✅ 2.0 mini | 720p | [4, 15] s / -1 | 同上，成本最低；适合大规模批量 |
+| `doubao-seedance-2-0-fast-260128` | ✅ 2.0 快速 | 720p | [4, 15] s / -1 | 同上，单价更低；**同参数 token 数与 standard 相同**（4s 480p 实测均 40,594），便宜在单价不在 token |
+| `doubao-seedance-2-0-mini-260615` | ✅ 2.0 mini | 720p | [4, 15] s / -1 | 同上，单价最低；适合大规模批量；同参数 token 与 fast/standard 相同 |
 
 > 模型 ID 内嵌日期是构建日（YYMMDD），不是 GA 日。2.5 **没有** fast/mini 兄弟模型。
 
@@ -55,11 +55,11 @@
 | `model` | string | ✅ | 模型 ID 或 Endpoint ID |
 | `content` | object[] | ✅ | 多模态输入数组（见下表） |
 | `duration` | int | ❌ | 2.0 默认脚本 `5`，范围 [4,15] 或 `-1`；**2.5 官方默认 `-1`，范围 [4,30] 或 `-1`**。脚本 CLI 两代都默认 `5`（控成本） |
-| `ratio` | string | ❌ | `21:9`/`16:9`/`4:3`/`1:1`/`3:4`/`9:16`/`adaptive`。2.0 省略实测 16:9；**2.5 官方默认 adaptive**。脚本 CLI 文生默认 `16:9`。**2.5 首帧/编辑/延长必须 adaptive** |
+| `ratio` | string | ❌ | `21:9`/`16:9`/`4:3`/`1:1`/`3:4`/`9:16`/`adaptive`。**2.0 系列与 2.5 官方默认均为 `adaptive`**（2026-06 省略参数实测出 16:9，系 adaptive 对中性文生 prompt 的落地结果）；脚本 CLI 文生显式传 `16:9`。**2.5 首帧/编辑/延长必须 adaptive** |
 | `resolution` | string | ❌ | `480p`/`720p`/`1080p`/`4k`；默认 `720p`。2.5 无 4k；2.5 的 1080p 为 10-bit HEVC |
-| `output_format` | string | ❌ | **仅 2.5**：`mp4`（默认）/ `mov`。2.0 勿传 |
+| `output_format` | string | ❌ | **仅 2.5**：`mp4`（默认）/ `mov`。2.0 勿传。mov = H.264 视频 + **yuv444p** 色度采样 + **PCM 无损音轨**（live 实测 ffprobe：`h264` + `pcm_s16le`），高色彩精度、编辑/延长链路声画一致性更好；播放器：VLC / mpv / ffplay 全平台、macOS IINA，Windows 部分播放器不支持 |
 | `omni_reference_task_type` | string | ❌ | **仅 2.5**：`auto` / `reference` / `edit` / `extend`。edit/extend 会前置校验 ratio/duration |
-| `generate_audio` | bool | ❌ | 是否生成音频；官方未明文给出 API 默认值，脚本默认 `true` 并显式传入；输出音频为**单声道 mono** |
+| `generate_audio` | bool | ❌ | 是否生成音频；**官方默认 `true`**（生成有声视频），脚本显式传入；输出音频为**单声道 mono** |
 | **input size** | — | — | **输入参考素材**体积上限：图片 ≤ 30 MB、**视频 ≤ 200 MB**、音频 ≤ 15 MB；请求体 base64 后 ≤ 64 MB（脚本 hard-fail 在 60 MB）。**这是输入限制，不是输出 video 体积限制** |
 | `watermark` | bool | ❌ | 是否加水印，默认 `false` |
 | `return_last_frame` | bool | ❌ | 返回尾帧图 URL，用于链式续写；尾帧格式 png，无水印，宽高同视频 |
@@ -76,7 +76,7 @@
 
 | `type` | 必填字段 | 可选 `role` | 说明 |
 |---|---|---|---|
-| `text` | `text` | — | 文本提示词 |
+| `text` | `text` | — | 文本提示词。**官方字数建议：中文 ≤ 500 字、英文 ≤ 1000 词**（过长信息分散会丢细节；脚本超限仅告警不拦截）。语言：2.5 支持中/英 + 西/印尼/葡/日/马来/泰/阿拉伯/越/韩共 11 种；2.0 为中/英 + 西/印尼/葡/日 |
 | `image_url` | `image_url.url` | `first_frame` / `last_frame` / `reference_image` | 图生视频或多模态参考 |
 | `video_url` | `video_url.url` | `reference_video` | 视频参考 |
 | `audio_url` | `audio_url.url` | `reference_audio` | 音频参考 |
@@ -158,7 +158,7 @@
 | `content.video_url` | string | 视频 URL，**24 小时有效** |
 | `content.last_frame_url` | string | 尾帧图 URL（仅当 `return_last_frame:true`） |
 | `seed` | int | 本次任务实际使用的随机种子值；**2.0 系列只读返回**，无法作为入参回填复现 |
-| `usage.completion_tokens` | int | 计费 token 数；2.0 系列存在最低 token 用量限制，实际低于最低值时按最低值返回并计费 |
+| `usage.completion_tokens` | int | 计费 token 数；**2.0 系列与 2.5 在输入含视频时均存在最低 token 用量限制**，实际低于最低值时按最低值返回并计费 |
 | `usage.total_tokens` | int | 总 token 数 |
 | `usage.tool_usage.web_search` | int | 实际联网搜索次数（仅开启联网搜索时） |
 | `tools[]` | object[] | 本次任务模型实际调用的工具；未调用时不返回；目前仅 `type="web_search"` |
@@ -217,6 +217,7 @@
 ### 限制
 
 > **仅能查询最近 7 天的任务记录**，时间区间 `[T-7天, T)`，T 为请求 UTC 时间戳（精确到秒）。视频 URL 24 小时有效，请及时下载或转存。
+> 该端点账号级 **QPS = 1**（单任务查询 QPS 20、取消/删除 QPS 20）；脚本轮询走单任务端点，不受此限。
 
 ### 响应顶层字段
 
@@ -274,13 +275,30 @@
 
 ## 计费
 
-- 按 token 计费：`费用 = token 单价 × usage.completion_tokens`
-- 约 **1 元/秒（1080p）量级**，**2.5 单价高于 2.0**；以 [模型价格](https://www.volcengine.com/docs/82379/1544106) / 控制台账单为准
-- 提交时预扣，完成后多退少补；参数错误被拒不计费
-- **2.0 系列存在最低 token 用量限制**
-- 视频 URL **24 小时有效**
-- 2.5 实测 token（2026-09-03）：4s 480p **38,830**；4s 1080p **196,425**
-- 2.0 实测 token：Fast 4s 480p **40,594**；Standard 5s 720p **108,900**
+- 按 token 计费：`费用 = completion_tokens × 单价`；视频生成模型不计输入 token，`total_tokens = completion_tokens`
+- token 用量 ≈ `(输入视频时长 + 输出视频时长) × 输出宽 × 输出高 × 24fps / 1024`。**纯文生 480p 实测：4s ≈ 38.8k tokens，近似随时长线性**
+- 仅对成功任务计费；参数错误同步被拒不计费
+- **输入含视频时有最低 token 用量限制**（估算低于最低值按最低计）；2.0/2.5 均适用
+- 视频 URL **24 小时有效**；**2.5 产物的 video_url 下载上限 100 次**（官方 1521309），生成后立即下载/转存 TOS
+
+### 官方单价（元 / 百万 completion_tokens，[模型价格 1544106](https://www.volcengine.com/docs/82379/1544106)，2026-08-28 更新）
+
+| 模型 | 输出 480p/720p | 输出 1080p | 输出 4k |
+|---|---|---|---|
+| **2.5** `2-5-260628` | 不含视频输入 **70** / 含视频 **42** | **77 / 46**（2026-08-14 ~ 09-17 限时 72 折） | 不支持 |
+| **2.0** `2-0-260128` | 46 / 28 | 51 / 31 | 26 / 16 |
+| **2.0 fast** `2-0-fast-260128` | **刊例 37 / 22**；2026-08-07 ~ 09-07 限时 75 折（折合约 27.8 / 16.5），到期回刊例 37/22（不会涨到 standard 的 46/28） | 不支持 | 不支持 |
+| **2.0 mini** `2-0-mini-260615` | **刊例 23 / 14**；2026-08-07 ~ 09-07 限时 4 折（折合约 9.2 / 5.6），到期回刊例 23/14 | 不支持 | 不支持 |
+
+> 含视频输入的单价**反而更低**（编辑/延长走此档）。促销为 UTC+8 时间窗，到期后以控制台现价为准。
+> 官方 5s 16:9 纯文生示例费用：2.5 480p ¥3.36（0.67 元/s）、720p ¥7.56（1.51 元/s）、1080p ¥18.71（3.74 元/s）；2.0 4k ¥25.27。
+
+### 实测 token（Ark live）
+
+- 2.5（2026-09-03/04）：4s 480p **38,830**；4s 1080p **196,425**（≈480p 的 5×）；12s 480p 115,690；16s 480p 154,120；**30s 480p 288,625**
+- 2.5 带视频参考：编辑 16s 322,800；延长 8s 138,166；**时间戳局部编辑 4s（mov）77,260**；**双视频无缝转场 8s 154,120**
+- 2.0：standard / fast / mini 4s 480p 均为 **40,594**（2026-09-04 实测三模型同参数同 token）；standard 5s 720p 108,900
+- 480p 文生线性估算：2.5 ≈ `38,830 × duration/4`；2.0 ≈ `40,594 × duration/4`
 
 ---
 
@@ -311,7 +329,7 @@
 | `model` / `ratio` / `duration` / `resolution` | API 响应（echo）| 记录实际生效参数（与请求可能不同）|
 | `seed` | API 响应 | 服务端随机种子（2.0 实测返回，仅供追溯，不能回填入参复现）|
 | `service_tier` | API 响应 | 实际服务等级（2.0 固定 `default`）|
-| `usage.completion_tokens` | API 响应 | 计费 token 数（用于成本估算；2.0 有最低用量下限）|
+| `usage.completion_tokens` | API 响应 | 计费 token 数（用于成本估算；2.0/2.5 输入含视频时有最低用量下限）|
 | `usage.tool_usage.web_search` | API 响应 | 联网搜索实际调用次数（开启 web_search 时）|
 | `video_url` | API 响应 | 24h 有效，本脚本已自动下载到 `video.mp4` |
 | `last_frame_url` | API 响应 | 仅当 `return_last_frame:true` |

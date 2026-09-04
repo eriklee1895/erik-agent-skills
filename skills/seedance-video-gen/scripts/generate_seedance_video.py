@@ -3,6 +3,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #   "httpx>=0.28.0",
+#   "pillow>=10.0.0",
 # ]
 # ///
 
@@ -52,12 +53,24 @@ MAX_AUDIO_BYTES = 15 * 1024 * 1024       # 15 MB
 # body-size guard mainly protects image/audio base64 payloads.
 MAX_BODY_BYTES = 60 * 1024 * 1024        # 60 MB safety margin
 
+# Input IMAGE pixel constraints (per 官方 1520757, local-file preflight only;
+# URLs are validated server-side). Both sides in [300, 6000] px and
+# width/height ratio within [0.4, 2.5].
+MIN_IMAGE_SIDE_PX = 300
+MAX_IMAGE_SIDE_PX = 6000
+IMAGE_RATIO_MIN = 0.4
+IMAGE_RATIO_MAX = 2.5
+
 # Seedance 2.5 + 2.0 (same /contents/generations/tasks API; model-specific limits).
 # - 2.5 (260628): GA 2026-08-07. 480p/720p/1080p (1080p=10-bit HEVC), 4–30s, mp4+mov.
 #   No 4k. No fast/mini sibling. Audio-only reference allowed. Up to 50 refs.
 # - 2.0 Standard (260128): 4k/1080p/720p/480p, 4–15s, mp4 only. Unique 4k path.
-# - 2.0 Fast (260128): 720p/480p only, cheaper (~40% tokens).
-# - 2.0 Mini (260615): 720p/480p only; cheapest bulk.
+# - 2.0 Fast (260128): 720p/480p only. Same token count as standard at
+#   identical params (measured 40,594 at 4s 480p for standard/fast/mini);
+#   the saving is the lower per-token UNIT PRICE (list 37 vs 46 元/M tokens),
+#   never lower token consumption.
+# - 2.0 Mini (260615): 720p/480p only; cheapest unit price for bulk work
+#   (list 23 vs 46 元/M tokens), same token count at identical params.
 MODEL_2_5 = "doubao-seedance-2-5-260628"
 MODEL_2_0 = "doubao-seedance-2-0-260128"
 MODEL_2_0_FAST = "doubao-seedance-2-0-fast-260128"
@@ -78,7 +91,7 @@ SUPPORTED_AUDIO_ROLES = {"reference_audio"}
 IMAGE_EXTS = {"png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff", "heic", "heif"}
 VIDEO_EXTS = {"mp4", "mov"}
 AUDIO_EXTS = {"mp3", "wav"}
-MEDIA_LIMITS_2_0 = {"image": 9, "video": 3, "audio": 3, "total": 12}
+MEDIA_LIMITS_2_0 = {"image": 9, "video": 3, "audio": 3, "total": 15}
 MEDIA_LIMITS_2_5 = {"image": 30, "video": 10, "audio": 10, "total": 50}
 
 # --- Validation helpers (shared between build_payload and build_payload_from_shot) ---
@@ -173,6 +186,18 @@ def add_media_to_content(
         # URL size is server-side; we don't pre-validate. API will 400 if too big.
         content.append(build_content_item(item_type, path_or_url, role))
         return
+    # data: URLs (base64) are accepted for images/audio verbatim, but video
+    # has no base64 transport (server-side 400), so route those to the same
+    # actionable error as local video files.
+    if is_data_url(path_or_url):
+        if item_type == "video_url":
+            raise SystemExit(
+                "Error: video references do not support base64 data URLs. "
+                "Seedance video inputs only accept public URLs or asset:// IDs. "
+                "Upload the video to a public URL or TOS first."
+            )
+        content.append(build_content_item(item_type, path_or_url, role))
+        return
     # Per 官方视频生成教程 (doc 2298881, updated 2026-06-25):
     #   - 图片支持 URL / Base64 / 素材 ID
     #   - 视频支持 URL / 素材 ID（**不支持 Base64**）
@@ -180,10 +205,12 @@ def add_media_to_content(
     if item_type == "video_url":
         raise SystemExit(
             f"Error: local video files are not supported ({path_or_url}). "
-            "Seedance 2.0 video inputs only accept public URLs or asset:// IDs (no base64). "
+            "Seedance video inputs only accept public URLs or asset:// IDs (no base64). "
             "Upload the video to a public URL or TOS first."
         )
     local_path = validate_local_media(path_or_url, allowed_exts)
+    if item_type == "image_url":
+        validate_image_dimensions(local_path)
     size = local_path.stat().st_size
     limit = _SIZE_LIMITS.get(item_type)
     if limit and size > limit:
@@ -271,6 +298,12 @@ def is_url(path_or_url: str) -> bool:
     return False
 
 
+def is_data_url(path_or_url: str) -> bool:
+    """data: URLs (base64 data URLs) for images/audio are accepted verbatim;
+    video data URLs are NOT supported by the API (no base64 video transport)."""
+    return path_or_url.startswith("data:")
+
+
 def validate_local_media(path: str, allowed_exts: set[str]) -> Path:
     p = Path(path).expanduser().resolve()
     if not p.is_file():
@@ -281,6 +314,55 @@ def validate_local_media(path: str, allowed_exts: set[str]) -> Path:
             f"Error: unsupported file extension '{ext}' for {p}. Allowed: {allowed_exts}"
         )
     return p
+
+
+def validate_image_dimensions(path: Path) -> None:
+    """Preflight official pixel constraints for local images: each side in
+    [300, 6000] px and width/height ratio within [0.4, 2.5] (官方 1520757).
+    URLs skip this check and are validated server-side."""
+    from PIL import Image
+
+    try:
+        with Image.open(path) as im:
+            width, height = im.size
+    except Image.UnidentifiedImageError:
+        # HEIC/HEIF and other formats Pillow can't decode without plugins are
+        # still valid API inputs (server validates them); skip the preflight.
+        print(
+            f"Advisory: cannot verify pixel dimensions for {path.name} "
+            "(format not readable by Pillow, e.g. HEIC); server will validate.",
+            file=sys.stderr,
+        )
+        return
+    except Exception as e:
+        raise SystemExit(f"Error: cannot read image {path.name}: {e}")
+    if not (MIN_IMAGE_SIDE_PX <= width <= MAX_IMAGE_SIDE_PX
+            and MIN_IMAGE_SIDE_PX <= height <= MAX_IMAGE_SIDE_PX):
+        raise SystemExit(
+            f"Error: image {path.name} is {width}x{height}px; "
+            f"each side must be within [{MIN_IMAGE_SIDE_PX}, {MAX_IMAGE_SIDE_PX}] px."
+        )
+    ratio = width / height
+    if not (IMAGE_RATIO_MIN <= ratio <= IMAGE_RATIO_MAX):
+        raise SystemExit(
+            f"Error: image {path.name} aspect ratio {ratio:.2f} is outside "
+            f"[{IMAGE_RATIO_MIN}, {IMAGE_RATIO_MAX}]."
+        )
+
+
+def prompt_length_advisory(prompt: str) -> None:
+    """Warn (never fail) when a prompt exceeds official length guidance:
+    <=500 Chinese chars or <=1000 English words (1520757). Long prompts lose
+    details because model attention scatters."""
+    cjk = sum(1 for ch in prompt if "\u4e00" <= ch <= "\u9fff")
+    words = len(prompt.split())
+    if cjk > 500 or words > 1000:
+        print(
+            f"Advisory: prompt length ({cjk} CJK chars / {words} words) exceeds "
+            "official guidance (<=500 Chinese chars / <=1000 English words); "
+            "the model may drop details. Consider trimming or splitting.",
+            file=sys.stderr,
+        )
 
 
 def build_content_item(
@@ -459,6 +541,8 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
     if not prompt:
         raise SystemExit("Error: provide --prompt or --prompt-file.")
 
+    prompt_length_advisory(prompt)
+
     content: list[dict[str, Any]] = [build_content_item("text", prompt)]
     tracker = MediaTracker()
 
@@ -556,6 +640,8 @@ def build_payload_from_shot(shot: dict[str, Any], defaults: dict[str, Any]) -> d
     prompt = shot.get("prompt") or shot.get("text")
     if not prompt:
         raise SystemExit(f"Error: shot missing 'prompt': {shot}")
+
+    prompt_length_advisory(prompt)
 
     content: list[dict[str, Any]] = [{"type": "text", "text": prompt}]
     tracker = MediaTracker()
@@ -1062,7 +1148,9 @@ async def cmd_batch_submit_async(args: argparse.Namespace) -> int:
             last_frame_file = None
             if status in {"succeeded", "completed"}:
                 if video_url:
-                    video_path = out_dir / f"shot-{r['shot_index']:03d}-{r['task_id']}.mp4"
+                    url_path = video_url.split("?", 1)[0].lower()
+                    suffix = ".mov" if url_path.endswith(".mov") else ".mp4"
+                    video_path = out_dir / f"shot-{r['shot_index']:03d}-{r['task_id']}{suffix}"
                     print(f"  Downloading shot {r['shot_index']} to {video_path}...", flush=True)
                     async with httpx.AsyncClient() as client:
                         await _download_video_async(client, video_url, video_path)
