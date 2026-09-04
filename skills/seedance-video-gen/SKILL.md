@@ -121,7 +121,7 @@ uv run scripts/generate_seedance_video.py create \
 
 ### 批量提交（并行原子 shots）
 
-适合一次性并行提交多个独立短视频片段（2.5 最长 30s，2.0 最长 15s），每个 task 独立生成、独立 task_id。**不是**长视频分镜编排（那是单独的 longform skill 干的事）。
+适合一次性并行提交多个独立短视频片段（2.5 最长 30s，2.0 最长 15s），每个 task 独立生成、独立 task_id。**不是**长视频分镜编排：超过单模型时长上限的长片，由上层编排负责拆 shot、批量提交、后期拼接（本 skill 只产原子视频素材）。
 
 典型场景：
 - A/B 测试同一 prompt 的多个变体，挑最好的
@@ -387,13 +387,12 @@ Agent 按需读取，不必全加载。简单任务（文生视频 4-5s、单镜
 
 ## 与项目其他 skill 的关系
 
-Seedance 是原子能力 skill：**输入是 prompt + 可选素材 + 参数，输出是视频文件**。它不主动调用其他 skill 准备素材，也不做后期剪辑/发布。
+Seedance 是原子能力 skill：**输入是 prompt + 可选素材 + 参数，输出是视频文件（source asset）**。它不主动调用其他 skill 准备素材，也不做剪辑/字幕/合成/发布。
 
-- **上游**（给 Seedance 喂素材的 skill）：
-  - 需要首帧/概念图：由调用方自行准备，可用 `article-illustration` / `seedream-image-gen` / `gpt-image-2` 等生图 skill，但具体选择是上层编排的事
-  - 需要 BGM/音效/旁白音频：由调用方准备，可用 `volcengine-bigmusic-bgm` / `volcengine-tts`
-  - 长视频分镜、多 shot 编排、首尾帧链式续写：应由专门的长视频编排 skill 负责（当前 repo 尚未有），它负责拆 shot、准备素材、调用 Seedance、拼接
-- **下游**（消费 Seedance 产出的 video.mp4 的环节；剪辑/发布/归档类 skill 随 [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness) 项目提供，不在本 repo）：
-  - 剪辑/拼接/加字幕 → writing-agent-harness 的 `article-video-clip`
-  - 视频插入微信公众号 → writing-agent-harness 的发布工作流
-  - 任务收尾归档 → writing-agent-harness 的 `writing-task-closeout`
+- **上游**（给 Seedance 喂素材，均为本仓 skill；由上层编排按场景选择，Seedance 本身不主动调用）：
+  - 首帧/概念图/参考图：`seedream-image-gen`（Seedream 文生图，与 Seedance 同属火山方舟模型家族）
+  - BGM/音效：`volcengine-bigmusic-bgm`；旁白/TTS 配音：`volcengine-tts`；已有音频素材整理：`seed-audio-gen`
+  - 素材采集与粗剪参考：`video-material-ingest`、`video-highlight-select`
+  - 需要查方舟文档细节：`volcengine-doc-fetcher`；需要引用当前事件/最新资料：`volcengine-web-search`（或直接用本脚本的 `--enable-web-search`）
+- **长片编排边界**：超过单任务时长上限的长视频（2.5 >30s、2.0 >15s）由**上层编排层**负责：拆 shot → 准备素材 → 调用 Seedance（batch-submit 或逐任务）→ 链式续写/无缝转场 → 后期拼接。本 skill 不提供编排器。
+- **下游边界**：剪辑、字幕、配音合成、调色、转场拼接、发布、归档**都不在本 skill 范围**——Seedance 的交付物是可直接进入剪辑环节的视频文件（mov/mp4）+ manifest。不要在本 skill 里假设存在某个发布/剪辑 skill。
