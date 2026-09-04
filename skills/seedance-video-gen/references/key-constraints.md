@@ -120,7 +120,7 @@
 
 **关键结论**：
 - **一个 4s 短视频实际需要 ~4 分钟**生成
-- Fast 和 Standard 时间几乎一样（差 10%）；**同参数下 token 数也相同**（4s 480p 实测 standard/fast/mini 均 40,594，2026-09-04），fast/mini 优势在**更低的单价**（刊例 46 / 37 / 23 元每百万 token），不在 token 用量
+- Fast 和 Standard 时间几乎一样（差 10%）；**同参数下 token 数也相同**（4s 480p 实测 standard/fast/mini 均 40,594，2026-09-04），fast/mini 优势在**单价更低**，不在 token 用量
 - Token 用量只取决于时长 × 分辨率 × 帧率（官方公式：`(输入+输出时长)×宽×高×24/1024`），与模型档位无关：表里 fast 40,594（4s 480p）/ standard 108,900（5s 720p）是**规格差异**，不是 standard 更费 token
 - 写文章/做 demo 时**预估 4-5 min/段**算等待时间
 
