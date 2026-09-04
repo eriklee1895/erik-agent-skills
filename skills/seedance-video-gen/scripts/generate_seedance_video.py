@@ -52,41 +52,59 @@ MAX_AUDIO_BYTES = 15 * 1024 * 1024       # 15 MB
 # body-size guard mainly protects image/audio base64 payloads.
 MAX_BODY_BYTES = 60 * 1024 * 1024        # 60 MB safety margin
 
-# Seedance 2.0 series (the only line this script currently supports).
-# - Standard (260128): 4k/1080p/720p/480p, all ratios incl. adaptive, audio.
-# - Fast (260128): 720p/480p only (no 1080p, no 4k), cheaper and quicker.
-# - Mini (260615): 720p/480p only; API GA on/after 2026-06-25.
-# Resolution tiers that cap at 720p (no 1080p, no 4k):
-VALID_MODELS = {
-    "doubao-seedance-2-0-260128",
-    "doubao-seedance-2-0-fast-260128",
-    "doubao-seedance-2-0-mini-260615",
-}
-NO_1080P_MODELS = {
-    "doubao-seedance-2-0-fast-260128",
-    "doubao-seedance-2-0-mini-260615",
-}
-# Standard-only premium tier (4k):
-NO_4K_MODELS = NO_1080P_MODELS  # fast + mini don't do 4k either
+# Seedance 2.5 + 2.0 (same /contents/generations/tasks API; model-specific limits).
+# - 2.5 (260628): GA 2026-08-07. 480p/720p/1080p (1080p=10-bit HEVC), 4–30s, mp4+mov.
+#   No 4k. No fast/mini sibling. Audio-only reference allowed. Up to 50 refs.
+# - 2.0 Standard (260128): 4k/1080p/720p/480p, 4–15s, mp4 only. Unique 4k path.
+# - 2.0 Fast (260128): 720p/480p only, cheaper (~40% tokens).
+# - 2.0 Mini (260615): 720p/480p only; cheapest bulk.
+MODEL_2_5 = "doubao-seedance-2-5-260628"
+MODEL_2_0 = "doubao-seedance-2-0-260128"
+MODEL_2_0_FAST = "doubao-seedance-2-0-fast-260128"
+MODEL_2_0_MINI = "doubao-seedance-2-0-mini-260615"
+DEFAULT_MODEL = MODEL_2_5
+
+VALID_MODELS = {MODEL_2_5, MODEL_2_0, MODEL_2_0_FAST, MODEL_2_0_MINI}
+MODELS_2_5 = {MODEL_2_5}
+NO_1080P_MODELS = {MODEL_2_0_FAST, MODEL_2_0_MINI}
+NO_4K_MODELS = {MODEL_2_0_FAST, MODEL_2_0_MINI, MODEL_2_5}
 VALID_RATIOS = {"16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"}
 VALID_RESOLUTIONS = {"480p", "720p", "1080p", "4k"}
+VALID_OUTPUT_FORMATS = {"mp4", "mov"}
+VALID_OMNI_TASK_TYPES = {"auto", "reference", "edit", "extend"}
 SUPPORTED_IMAGE_ROLES = {"first_frame", "last_frame", "reference_image"}
 SUPPORTED_VIDEO_ROLES = {"reference_video"}
 SUPPORTED_AUDIO_ROLES = {"reference_audio"}
-# Image formats accepted by Seedance 2.0 (HEIC/HEIF added 2026 on 2.0 + 1.5 pro):
 IMAGE_EXTS = {"png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff", "heic", "heif"}
 VIDEO_EXTS = {"mp4", "mov"}
 AUDIO_EXTS = {"mp3", "wav"}
+MEDIA_LIMITS_2_0 = {"image": 9, "video": 3, "audio": 3, "total": 12}
+MEDIA_LIMITS_2_5 = {"image": 30, "video": 10, "audio": 10, "total": 50}
 
 # --- Validation helpers (shared between build_payload and build_payload_from_shot) ---
+
+def is_seedance_25(model: str) -> bool:
+    return model in MODELS_2_5
+
+
+def max_duration_for_model(model: str) -> int:
+    return 30 if is_seedance_25(model) else 15
+
+
+def media_limits_for_model(model: str) -> dict[str, int]:
+    return MEDIA_LIMITS_2_5 if is_seedance_25(model) else MEDIA_LIMITS_2_0
+
 
 def validate_model(model: str) -> None:
     if model not in VALID_MODELS:
         raise SystemExit(f"Error: unsupported model '{model}'. Valid: {sorted(VALID_MODELS)}")
 
-def validate_duration(duration: int) -> None:
-    if duration != -1 and not (4 <= duration <= 15):
-        raise SystemExit("Error: duration must be between 4 and 15, or -1 for adaptive.")
+def validate_duration(duration: int, model: str) -> None:
+    max_d = max_duration_for_model(model)
+    if duration != -1 and not (4 <= duration <= max_d):
+        raise SystemExit(
+            f"Error: duration for '{model}' must be between 4 and {max_d}, or -1 for adaptive."
+        )
 
 def validate_ratio(ratio: str) -> None:
     if ratio not in VALID_RATIOS:
@@ -95,9 +113,19 @@ def validate_ratio(ratio: str) -> None:
 def validate_resolution(model: str, resolution: str) -> None:
     if resolution not in VALID_RESOLUTIONS:
         raise SystemExit(f"Error: unsupported resolution '{resolution}'. Valid: {sorted(VALID_RESOLUTIONS)}")
-    if resolution in {"1080p", "4k"} and model in NO_1080P_MODELS:
+    if resolution == "4k" and model in NO_4K_MODELS:
+        if is_seedance_25(model):
+            raise SystemExit(
+                f"Error: model '{model}' does not support 4k (max 1080p, 10-bit HEVC). "
+                f"Use --model {MODEL_2_0} for 4k, or --resolution 1080p."
+            )
         raise SystemExit(
-            f"Error: model '{model}' does not support {resolution} (capped at 720p). "
+            f"Error: model '{model}' does not support 4k (capped at 720p). "
+            f"Use --resolution 720p or 480p."
+        )
+    if resolution == "1080p" and model in NO_1080P_MODELS:
+        raise SystemExit(
+            f"Error: model '{model}' does not support 1080p (capped at 720p). "
             f"Use --resolution 720p or 480p."
         )
 
@@ -276,7 +304,7 @@ def build_content_item(
     return payload
 
 
-def validate_mode_constraints(content: list[dict[str, Any]]) -> None:
+def validate_mode_constraints(content: list[dict[str, Any]], model: str) -> None:
     roles = [item.get("role") for item in content if item.get("type") != "text"]
     has_first_last = any(r in {"first_frame", "last_frame"} for r in roles)
     has_reference = any(r and r.startswith("reference_") for r in roles)
@@ -287,18 +315,106 @@ def validate_mode_constraints(content: list[dict[str, Any]]) -> None:
     images = [r for r in roles if r in SUPPORTED_IMAGE_ROLES]
     videos = [r for r in roles if r in SUPPORTED_VIDEO_ROLES]
     audios = [r for r in roles if r in SUPPORTED_AUDIO_ROLES]
-    if len(images) > 9:
-        raise SystemExit("Error: at most 9 reference images allowed.")
-    if len(videos) > 3:
-        raise SystemExit("Error: at most 3 reference videos allowed.")
-    if len(audios) > 3:
-        raise SystemExit("Error: at most 3 reference audios allowed.")
-    if len(images) + len(videos) + len(audios) > 12:
-        raise SystemExit("Error: total reference media must be <= 12.")
-    if audios and not (images or videos):
+    limits = media_limits_for_model(model)
+    if len(images) > limits["image"]:
         raise SystemExit(
-            "Error: audio reference requires at least one image or video reference."
+            f"Error: at most {limits['image']} reference images allowed for '{model}'."
         )
+    if len(videos) > limits["video"]:
+        raise SystemExit(
+            f"Error: at most {limits['video']} reference videos allowed for '{model}'."
+        )
+    if len(audios) > limits["audio"]:
+        raise SystemExit(
+            f"Error: at most {limits['audio']} reference audios allowed for '{model}'."
+        )
+    if len(images) + len(videos) + len(audios) > limits["total"]:
+        raise SystemExit(
+            f"Error: total reference media must be <= {limits['total']} for '{model}'."
+        )
+    # 2.5 audio-only is allowed by Ark (live 2026-09-03: create+succeeded).
+    # 2.0 still requires at least one image or video alongside audio.
+    if audios and not (images or videos) and not is_seedance_25(model):
+        raise SystemExit(
+            "Error: Seedance 2.0 audio reference requires at least one image or video. "
+            f"Use --model {MODEL_2_5} for audio-only reference."
+        )
+
+
+def validate_25_task_params(
+    content: list[dict[str, Any]],
+    model: str,
+    ratio: str,
+    duration: int,
+    omni_task_type: str | None,
+    output_format: str | None,
+) -> None:
+    if output_format is not None:
+        if output_format not in VALID_OUTPUT_FORMATS:
+            raise SystemExit(
+                f"Error: unsupported output_format '{output_format}'. Valid: {sorted(VALID_OUTPUT_FORMATS)}"
+            )
+        if output_format == "mov" and not is_seedance_25(model):
+            raise SystemExit(
+                f"Error: output_format=mov is Seedance 2.5 only. Use --model {MODEL_2_5}."
+            )
+    if omni_task_type is not None:
+        if omni_task_type not in VALID_OMNI_TASK_TYPES:
+            raise SystemExit(
+                f"Error: unsupported omni_reference_task_type '{omni_task_type}'. "
+                f"Valid: {sorted(VALID_OMNI_TASK_TYPES)}"
+            )
+        if not is_seedance_25(model):
+            raise SystemExit(
+                f"Error: omni_reference_task_type is Seedance 2.5 only. Use --model {MODEL_2_5}."
+            )
+    if not is_seedance_25(model):
+        return
+    roles = [item.get("role") for item in content if item.get("type") != "text"]
+    has_first_last = any(r in {"first_frame", "last_frame"} for r in roles)
+    has_ref_video = any(r == "reference_video" for r in roles)
+    if has_first_last and ratio != "adaptive":
+        raise SystemExit(
+            "Error: Seedance 2.5 first/last-frame requires --ratio adaptive "
+            "(output aspect locks to the first-frame image)."
+        )
+    if omni_task_type == "edit":
+        if not has_ref_video:
+            raise SystemExit("Error: omni_reference_task_type=edit requires --reference-video.")
+        if ratio != "adaptive" or duration != -1:
+            raise SystemExit(
+                "Error: Seedance 2.5 edit requires --ratio adaptive and --duration -1 "
+                "(output locks to the source video)."
+            )
+    if omni_task_type == "extend":
+        if not has_ref_video:
+            raise SystemExit("Error: omni_reference_task_type=extend requires --reference-video.")
+        if ratio != "adaptive":
+            raise SystemExit(
+                "Error: Seedance 2.5 extend requires --ratio adaptive "
+                "(output aspect locks to the source video)."
+            )
+
+
+def apply_25_payload_fields(
+    payload: dict[str, Any],
+    model: str,
+    output_format: str | None,
+    omni_task_type: str | None,
+) -> None:
+    if not is_seedance_25(model):
+        return
+    if output_format:
+        payload["output_format"] = output_format
+    if omni_task_type:
+        payload["omni_reference_task_type"] = omni_task_type
+
+
+def video_filename_from_payload(payload: dict[str, Any]) -> str:
+    fmt = payload.get("output_format") or "mp4"
+    if fmt not in VALID_OUTPUT_FORMATS:
+        fmt = "mp4"
+    return f"video.{fmt}"
 
 
 def _image_mime(ext: str) -> str:
@@ -335,7 +451,7 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
     validate_model(args.model)
     validate_ratio(args.ratio)
     validate_resolution(args.model, args.resolution)
-    validate_duration(args.duration)
+    validate_duration(args.duration, args.model)
 
     prompt = args.prompt
     if args.prompt_file:
@@ -358,8 +474,13 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
         add_media_to_content(content, tracker, v, "audio_url", "reference_audio", AUDIO_EXTS)
 
     check_total_body_size(content, tracker.raw_bytes)
-    validate_mode_constraints(content)
+    validate_mode_constraints(content, args.model)
     validate_web_search_mode(content, args.enable_web_search)
+    output_format = getattr(args, "output_format", None)
+    omni_task_type = getattr(args, "omni_reference_task_type", None)
+    validate_25_task_params(
+        content, args.model, args.ratio, args.duration, omni_task_type, output_format,
+    )
 
     payload: dict[str, Any] = {
         "model": args.model,
@@ -376,6 +497,7 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
         payload["priority"] = args.priority
     if args.enable_web_search:
         payload["tools"] = [{"type": "web_search"}]
+    apply_25_payload_fields(payload, args.model, output_format, omni_task_type)
     return payload
 
 async def _request_with_retry(
@@ -426,7 +548,7 @@ def build_payload_from_shot(shot: dict[str, Any], defaults: dict[str, Any]) -> d
 
     Shot keys (all optional except prompt):
       prompt, model, duration, ratio, resolution, generate_audio, watermark,
-      return_last_frame,
+      return_last_frame, output_format, omni_reference_task_type,
       first_frame, last_frame, reference_image, reference_video, reference_audio.
     Values for *_frame and reference_* can be a single path/URL string or a list.
     Missing shot keys fall back to the defaults dict.
@@ -453,17 +575,22 @@ def build_payload_from_shot(shot: dict[str, Any], defaults: dict[str, Any]) -> d
     _add_shot_media("reference_audio", "audio_url", "reference_audio", AUDIO_EXTS)
 
     check_total_body_size(content, tracker.raw_bytes)
-    validate_mode_constraints(content)
 
     # Validate every per-shot param that defaults would otherwise silently override.
-    model = shot.get("model", defaults.get("model", "doubao-seedance-2-0-260128"))
+    model = shot.get("model", defaults.get("model", DEFAULT_MODEL))
     ratio = shot.get("ratio", defaults.get("ratio", "16:9"))
     resolution = shot.get("resolution", defaults.get("resolution", "720p"))
     duration = shot.get("duration", defaults.get("duration", 5))
+    output_format = shot.get("output_format", defaults.get("output_format"))
+    omni_task_type = shot.get(
+        "omni_reference_task_type", defaults.get("omni_reference_task_type")
+    )
     validate_model(model)
     validate_ratio(ratio)
     validate_resolution(model, resolution)
-    validate_duration(duration)
+    validate_duration(duration, model)
+    validate_mode_constraints(content, model)
+    validate_25_task_params(content, model, ratio, duration, omni_task_type, output_format)
 
     payload: dict[str, Any] = {
         "model": model,
@@ -476,6 +603,7 @@ def build_payload_from_shot(shot: dict[str, Any], defaults: dict[str, Any]) -> d
     }
     if shot.get("return_last_frame") or defaults.get("return_last_frame"):
         payload["return_last_frame"] = True
+    apply_25_payload_fields(payload, model, output_format, omni_task_type)
     return payload
 
 async def _create_task_async(
@@ -649,7 +777,7 @@ async def cmd_generate_async(args: argparse.Namespace) -> int:
         if status in {"succeeded", "completed"}:
             video_url = result.get("content", {}).get("video_url")
             if video_url:
-                video_path = output_dir / "video.mp4"
+                video_path = output_dir / video_filename_from_payload(payload)
                 print(f"Downloading video to {video_path} ...")
                 await _download_video_async(client, video_url, video_path)
             last_frame_url = result.get("content", {}).get("last_frame_url")
@@ -703,7 +831,9 @@ def cmd_download(args: argparse.Namespace) -> int:
     if not args.video_url:
         raise SystemExit("Error: --video-url required for download.")
     output_dir = make_output_dir(args.output_dir, Path(args.video_url).name or "seedance-download")
-    video_path = output_dir / "video.mp4"
+    url_path = args.video_url.split("?", 1)[0].lower()
+    suffix = ".mov" if url_path.endswith(".mov") else ".mp4"
+    video_path = output_dir / f"video{suffix}"
     async def _run():
         async with httpx.AsyncClient() as client:
             await _download_video_async(client, args.video_url, video_path)
@@ -827,6 +957,8 @@ async def cmd_batch_submit_async(args: argparse.Namespace) -> int:
         "generate_audio": args.generate_audio,
         "watermark": args.watermark,
         "return_last_frame": args.return_last_frame,
+        "output_format": getattr(args, "output_format", None),
+        "omni_reference_task_type": getattr(args, "omni_reference_task_type", None),
     }
 
     timestamp = dt.datetime.now().strftime("%Y-%m-%dT%H%M%S")
@@ -969,7 +1101,7 @@ def cmd_batch_submit(args: argparse.Namespace) -> int:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate videos with Seedance 2.0.")
+    parser = argparse.ArgumentParser(description="Generate videos with Seedance 2.5 / 2.0.")
     subparsers = parser.add_subparsers(dest="command", help="Command")
 
     # Default subcommand: generate. Insert it when the first argument is not a known
@@ -981,7 +1113,7 @@ def parse_args() -> argparse.Namespace:
         sys.argv.insert(1, "generate")
 
     def _add_common(p: argparse.ArgumentParser) -> None:
-        p.add_argument("--model", default="doubao-seedance-2-0-260128", choices=sorted(VALID_MODELS))
+        p.add_argument("--model", default=DEFAULT_MODEL, choices=sorted(VALID_MODELS))
         p.add_argument("--prompt", "-p")
         p.add_argument("--prompt-file")
         p.add_argument("--first-frame")
@@ -989,12 +1121,38 @@ def parse_args() -> argparse.Namespace:
         p.add_argument("--reference-image", action="append", default=[])
         p.add_argument("--reference-video", action="append", default=[])
         p.add_argument("--reference-audio", action="append", default=[])
-        p.add_argument("--duration", type=int, default=5)
+        p.add_argument(
+            "--duration",
+            type=int,
+            default=5,
+            help=(
+                "Seconds, or -1. 2.5: 4-30; 2.0: 4-15. "
+                "For 2.5 extend this is TOTAL output length "
+                "(source 5s + 7s more → 12), not the extension amount. "
+                "For 2.5 edit this must be -1."
+            ),
+        )
         p.add_argument("--ratio", default="16:9", choices=sorted(VALID_RATIOS))
         p.add_argument("--resolution", default="720p", choices=sorted(VALID_RESOLUTIONS))
         p.add_argument("--generate-audio", action=argparse.BooleanOptionalAction, default=True)
         p.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=False)
         p.add_argument("--return-last-frame", action="store_true")
+        p.add_argument(
+            "--output-format",
+            choices=sorted(VALID_OUTPUT_FORMATS),
+            default=None,
+            help="Seedance 2.5 only: mp4 (default) or mov (H.264 + yuv444p + PCM, for edit/extend).",
+        )
+        p.add_argument(
+            "--omni-reference-task-type",
+            choices=sorted(VALID_OMNI_TASK_TYPES),
+            default=None,
+            help=(
+                "Seedance 2.5 only: auto/reference/edit/extend. "
+                "edit requires --ratio adaptive --duration -1; "
+                "extend requires --ratio adaptive (duration = total output length)."
+            ),
+        )
         p.add_argument("--priority", type=int, help="Queue priority (higher runs sooner).")
         p.add_argument(
             "--enable-web-search",
@@ -1028,7 +1186,7 @@ def parse_args() -> argparse.Namespace:
 
     list_tasks = subparsers.add_parser("list-tasks", help="List video generation tasks (filter by status/model/task-ids)")
     list_tasks.add_argument("--status", choices=["queued", "running", "succeeded", "failed", "cancelled", "expired"], help="Filter by task status")
-    list_tasks.add_argument("--model", help="Filter by model name (e.g. doubao-seedance-2-0-260128)")
+    list_tasks.add_argument("--model", help="Filter by model name (e.g. doubao-seedance-2-5-260628)")
     list_tasks.add_argument("--task-ids", nargs="+", help="Filter by specific task IDs (space-separated)")
     list_tasks.add_argument("--page-num", type=int, default=1)
     list_tasks.add_argument("--page-size", type=int, default=20)
@@ -1039,13 +1197,15 @@ def parse_args() -> argparse.Namespace:
     batch.add_argument("--shots-file", required=True, help="Path to JSON file: array of {prompt, [duration], [first_frame], [reference_image], ...}")
     batch.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR,
                        help="Output root (default: SEEDANCE_OUTPUT_DIR env var, or 'output/seedance/')")
-    batch.add_argument("--model", default="doubao-seedance-2-0-260128", choices=sorted(VALID_MODELS))
+    batch.add_argument("--model", default=DEFAULT_MODEL, choices=sorted(VALID_MODELS))
     batch.add_argument("--duration", type=int, default=5)
     batch.add_argument("--ratio", default="16:9", choices=sorted(VALID_RATIOS))
     batch.add_argument("--resolution", default="720p", choices=sorted(VALID_RESOLUTIONS))
     batch.add_argument("--generate-audio", action=argparse.BooleanOptionalAction, default=True)
     batch.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=False)
     batch.add_argument("--return-last-frame", action="store_true")
+    batch.add_argument("--output-format", choices=sorted(VALID_OUTPUT_FORMATS), default=None)
+    batch.add_argument("--omni-reference-task-type", choices=sorted(VALID_OMNI_TASK_TYPES), default=None)
     batch.add_argument("--wait", action="store_true", help="After submitting, wait for all tasks to complete and download videos")
     batch.add_argument("--poll-interval", type=int, default=DEFAULT_POLL_INTERVAL)
     batch.add_argument("--max-wait", type=int, default=DEFAULT_MAX_WAIT)

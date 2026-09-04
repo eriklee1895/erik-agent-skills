@@ -88,6 +88,17 @@
         "manifest.json has ratio=9:16, generate_audio=true",
         "prompt.md includes subtitle description"
       ]
+    },
+    {
+      "id": 9,
+      "prompt": "用 Seedance 2.5（默认模型 doubao-seedance-2-5-260628）生成一段 8 秒、16:9、720p 视频：0-3s 海边栈道全景缓慢前推，3-8s 一个穿风衣的人走入画面。不要字幕。输出到 output/ 目录。",
+      "expected_output": "An 8s 16:9 Seedance 2.5 video; manifest model is doubao-seedance-2-5-260628.",
+      "files": [],
+      "expectations": [
+        "video.mp4 exists and is non-empty",
+        "manifest.json model is doubao-seedance-2-5-260628",
+        "manifest.json has duration=8, ratio=16:9"
+      ]
     }
   ]
 }

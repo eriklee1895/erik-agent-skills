@@ -90,7 +90,12 @@ def grade_product_ad(outputs_dir: Path) -> list[dict[str, Any]]:
         "text": "manifest.json 包含正确的 task_id、model、ratio=9:16、duration=5",
         "passed": (
             bool(manifest.get("task_id") or manifest.get("id"))
-            and manifest.get("model") in {"doubao-seedance-2-0-260128", "doubao-seedance-2-0-fast-260128"}
+            and manifest.get("model") in {
+                "doubao-seedance-2-5-260628",
+                "doubao-seedance-2-0-260128",
+                "doubao-seedance-2-0-fast-260128",
+                "doubao-seedance-2-0-mini-260615",
+            }
             and manifest.get("ratio") == "9:16"
             and manifest.get("duration") == 5
         ),
