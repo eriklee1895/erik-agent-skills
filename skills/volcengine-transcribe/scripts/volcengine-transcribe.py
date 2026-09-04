@@ -7,7 +7,7 @@
 #   "python-dotenv>=1.0",
 # ]
 # ///
-"""Compatibility entrypoint for the Volcengine ASR 2.0 standard workflow."""
+"""Compatibility entrypoint for the Volcengine transcription workflow."""
 
 from transcribe import main
 

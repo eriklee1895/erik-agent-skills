@@ -492,12 +492,12 @@ def parse_hotwords(raw: Optional[str]) -> Optional[list[str]]:
 
 def _url_stem(url: str) -> str:
     name = Path(urlparse(url).path).stem
-    return name or f"asr-{uuid.uuid4().hex[:8]}"
+    return name or f"transcribe-{uuid.uuid4().hex[:8]}"
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="volcengine-asr",
+        prog="volcengine-transcribe",
         description=(
             "Transcribe with volc.seedasr.auc (Doubao ASR 2.0 standard) "
             "and generate SRT/VTT/TXT"

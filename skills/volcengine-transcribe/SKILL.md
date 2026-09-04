@@ -1,9 +1,9 @@
 ---
-name: volcengine-asr
-description: Use when transcribing local audio or video with Volcano Engine Doubao ASR, generating SRT/VTT subtitles from recordings, or producing speaker-labelled transcripts with 火山引擎录音文件识别.
+name: volcengine-transcribe
+description: Use whenever the user asks to transcribe audio or video, convert speech to text (ASR/STT), generate word-level timestamps or SRT/VTT subtitles, or diarize speakers with Volcano Engine Doubao ASR.
 ---
 
-# Volcengine ASR
+# Volcengine Transcribe
 
 Use Volcano Engine's latest Doubao audio-file recognition 2.0 standard model
 (`volc.seedasr.auc`) for high-quality transcription and subtitle generation.
@@ -12,32 +12,32 @@ Use Volcano Engine's latest Doubao audio-file recognition 2.0 standard model
 
 ```bash
 # Local audio/video: writes meeting.srt and meeting.transcript.json
-uv run scripts/volcengine-asr.py meeting.mp4
+uv run scripts/volcengine-transcribe.py meeting.mp4
 
 # Public audio URL
-uv run scripts/volcengine-asr.py \
+uv run scripts/volcengine-transcribe.py \
   'https://example.com/interview.mp3' --srt --vtt --txt
 
 # Speaker diarization
-uv run scripts/volcengine-asr.py meeting.m4a --meeting --srt
+uv run scripts/volcengine-transcribe.py meeting.m4a --meeting --srt
 
 # Domain vocabulary
-uv run scripts/volcengine-asr.py talk.wav \
+uv run scripts/volcengine-transcribe.py talk.wav \
   --hotwords '豆包,火山引擎,Seedance' --srt
 
 # Full corpus context (dialog history, scene context, and hotwords)
-uv run scripts/volcengine-asr.py talk.wav \
+uv run scripts/volcengine-transcribe.py talk.wav \
   --context-json context.json --srt
 
 # Word/character timestamps only, for HyperFrames or custom renderers
-uv run scripts/volcengine-asr.py video.mp4 --transcript-only
+uv run scripts/volcengine-transcribe.py video.mp4 --transcript-only
 
 # Re-render a saved transcript without another ASR request
 uv run scripts/subtitle.py meeting.transcript.json \
   --srt meeting-short.srt --max-cue-chars 16
 
 # Reuse exact word timestamps produced by volcengine-tts
-uv run scripts/volcengine-asr.py \
+uv run scripts/volcengine-transcribe.py \
   --from-tts-meta tts-output/tts_001.meta.json --srt --vtt
 ```
 
@@ -46,7 +46,7 @@ conversion require `ffmpeg` and `ffprobe`.
 
 ## Implementation boundary
 
-- `scripts/volcengine-asr.py`: stable one-command entrypoint.
+- `scripts/volcengine-transcribe.py`: stable one-command entrypoint.
 - `scripts/transcribe.py`: media preparation, ASR 2.0 submit/query, response
   normalization, and workflow orchestration.
 - `scripts/subtitle.py`: pure transcript-to-cue conversion and SRT/VTT/TXT
@@ -168,7 +168,7 @@ Errors are JSON on stderr and use a non-zero exit status. Successful summaries
 are JSON on stdout.
 
 For protocol parameters and source links, read
-`references/volcengine-asr-api-docs.md` only when extending or troubleshooting
+`references/volcengine-transcribe-api-docs.md` only when extending or troubleshooting
 the provider integration.
 
 ## Boundaries

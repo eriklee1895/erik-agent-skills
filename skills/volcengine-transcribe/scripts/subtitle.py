@@ -1,5 +1,5 @@
 #!/usr/bin/env -S uv run
-"""Render normalized Volcengine ASR transcripts as SRT, VTT, or TXT."""
+"""Render normalized Volcengine transcripts as SRT, VTT, or TXT."""
 
 from __future__ import annotations
 
@@ -451,7 +451,7 @@ def write_outputs(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Render a saved Volcengine ASR transcript as subtitles"
+        description="Render a saved Volcengine transcript as subtitles"
     )
     parser.add_argument("transcript", type=Path, help="Normalized .transcript.json file")
     parser.add_argument("--srt", nargs="?", const=True, default=False)

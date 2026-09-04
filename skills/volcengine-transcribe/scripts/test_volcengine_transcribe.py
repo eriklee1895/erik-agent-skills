@@ -1,5 +1,5 @@
-# skills/volcengine-asr/scripts/test_volcengine_asr.py
-"""Offline tests for volcengine-asr subtitle/normalization logic (no API calls)."""
+# skills/volcengine-transcribe/scripts/test_volcengine_transcribe.py
+"""Offline tests for volcengine-transcribe subtitle/normalization logic (no API calls)."""
 import importlib.util
 import json
 import subprocess
@@ -19,8 +19,8 @@ def _load_module(name, path):
     return module
 
 
-mod = _load_module("volcengine_asr_transcribe", _SCRIPTS_DIR / "transcribe.py")
-subtitle = _load_module("volcengine_asr_subtitle", _SCRIPTS_DIR / "subtitle.py")
+mod = _load_module("volcengine_transcribe_transcribe", _SCRIPTS_DIR / "transcribe.py")
+subtitle = _load_module("volcengine_transcribe_subtitle", _SCRIPTS_DIR / "subtitle.py")
 for _name in dir(subtitle):
     if not _name.startswith("__") and not hasattr(mod, _name):
         setattr(mod, _name, getattr(subtitle, _name))
@@ -245,7 +245,7 @@ def test_standard_rejects_audio_over_five_hours_before_upload(monkeypatch, tmp_p
 
 
 def test_public_cli_exposes_only_standard_model():
-    script = Path(__file__).parent / "volcengine-asr.py"
+    script = Path(__file__).parent / "volcengine-transcribe.py"
     proc = subprocess.run(
         [sys.executable, str(script), "--help"],
         capture_output=True,
@@ -348,7 +348,7 @@ def test_transcript_only_writes_word_timestamps_without_subtitles(tmp_path):
         ),
         encoding="utf-8",
     )
-    script = Path(__file__).parent / "volcengine-asr.py"
+    script = Path(__file__).parent / "volcengine-transcribe.py"
     proc = subprocess.run(
         [
             sys.executable,
