@@ -41,7 +41,7 @@ uv run scripts/generate_seedance_video.py \
   --prompt "一只橘猫在阳光下缓慢眨眼，微风吹动毛发，镜头轻微推进" \
   --duration 5 --ratio 1:1 --resolution 1080p
 
-# 文生视频（2.0 fast 快速预览，~40% 成本，最高 720p）
+# 文生视频（2.0 fast 快速预览档：单价低、同参数 token 数与 standard 相同；最高 720p）
 uv run scripts/generate_seedance_video.py \
   --model doubao-seedance-2-0-fast-260128 \
   --prompt "一只橘猫在阳光下缓慢眨眼，微风吹动毛发，镜头轻微推进" \
@@ -192,7 +192,7 @@ Seedance 视频生成是**强迭代**工作流，不是一次出片。下面是�
 
 **2.5 独有需求**（命中才算和 4k 冲突）：30s、整数秒时间戳硬切、仅音频参考、omni 编辑/延长、mov 后期。
 
-2.5 **没有** fast/mini。4s 480p(16:9) 时 2.0 三模型均为 **40,594** tokens、2.5 为 **38,830**，仅差 ~5%；fast/mini 便宜在**更低的单价**（刊例 46/37/23 元每百万 token），不在 token 用量。
+2.5 **没有** fast/mini。4s 480p(16:9) 时 2.0 三模型均为 **40,594** tokens、2.5 为 **38,830**，仅差 ~5%——**fast/mini 便宜在单价，不在 token 用量**（选模型按能力，不按价格；具体单价见 api-reference 价格页链接）。
 
 - **分辨率**：预览 → 480p；社媒/草稿 → 720p（CLI 默认）；2.5 终稿 → 1080p（10-bit HEVC）；4k → 仅 2.0 standard（10-bit HEVC，并发 1）
 - **时长**：单一动作 → 4-5s；对白/多镜头 → 8-12s；2.0 复杂叙事 → 12-15s 或拆 task；2.5 完整故事可一次 15-30s，prompt 用整数秒时间戳。480p 文生 token ≈ `38830 × (duration/4)`
