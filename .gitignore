@@ -1,0 +1,31 @@
+# Local agent discovery adapters; canonical content lives in skills/.
+/.agents/skills
+/.claude/skills
+
+# Local secrets — .env.example is the committed template; real .env never is.
+.env
+.env.*
+!.env.example
+
+# Local evaluation and runtime artifacts.
+.local-memory/
+.skill-work/
+.playwright-mcp/
+evals/**/outputs/
+doc-fetch-resources/
+**/doc-fetch-resources/
+
+# Raster previews from local evals (whiteboard-cli, screenshots).
+# Source fixtures stay as SVG / Mermaid / HTML.
+skills/**/evals/**/*.png
+skills/**/evals/**/*.jpg
+skills/**/evals/**/*.jpeg
+skills/**/evals/**/*.webp
+
+# Generated skill artifacts and Python runtime files.
+**/__pycache__/
+**/*.pyc
+**/.artifacts/
+skills/**/output/
+.DS_Store
+output/

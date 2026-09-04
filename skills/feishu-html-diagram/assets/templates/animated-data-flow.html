@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="use-iframe" content="true">
+  <meta name="html-box-height-mode" content="auto">
+  <meta name="description" content="An animated closed-loop data flow showing capture, interpretation, decision, and feedback with readable static arrows and stage summaries.">
+  <title>Animated Data Flow</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f4f7fb;
+      --muted: #aebbd0;
+      --panel: #101a2b;
+      --panel-2: #152238;
+      --line: #40506a;
+      --cyan: #55d9e5;
+      --amber: #ffc857;
+      --coral: #ff8066;
+      --violet: #a58cff;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-width: 0; }
+
+    body {
+      padding: clamp(12px, 3vw, 28px);
+      background: #09111f;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    .flow-story {
+      width: 100%;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      padding: clamp(18px, 4vw, 34px);
+      border: 1px solid #263752;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 48% 38%, rgba(85, 217, 229, .08), transparent 34%),
+        linear-gradient(145deg, #111d31, #0d1728);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, .24);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(180px, .38fr);
+      gap: 24px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--cyan);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 17ch;
+      font-size: clamp(1.7rem, 4.7vw, 2.75rem);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+      text-wrap: balance;
+    }
+
+    .summary {
+      margin: 0;
+      padding-left: 14px;
+      border-left: 2px solid var(--amber);
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .motion-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px 14px;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    .motion-toggle {
+      min-height: 44px;
+      padding: 9px 15px;
+      border: 1px solid #58708f;
+      border-radius: 999px;
+      background: #182944;
+      color: var(--ink);
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .motion-toggle:hover { border-color: var(--cyan); }
+    .motion-toggle:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    .motion-toggle[aria-disabled="true"] { cursor: default; color: var(--muted); }
+    .motion-status { color: var(--muted); font-size: .76rem; }
+
+    .topology {
+      position: relative;
+      width: 100%;
+      margin-top: 24px;
+      border: 1px solid #2b3b56;
+      border-radius: 20px;
+      background: rgba(6, 13, 25, .54);
+      overflow: hidden;
+    }
+
+    .topology::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .18;
+      background-image:
+        linear-gradient(#50617a 1px, transparent 1px),
+        linear-gradient(90deg, #50617a 1px, transparent 1px);
+      background-size: 30px 30px;
+      mask-image: linear-gradient(to bottom, transparent, black 18%, black 82%, transparent);
+    }
+
+    svg {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: auto;
+      min-height: 330px;
+    }
+
+    .flow-line {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 10 11;
+      animation: line-direction 1.2s linear infinite;
+    }
+
+    .line-a { stroke: var(--cyan); }
+    .line-b { stroke: var(--amber); }
+    .line-c { stroke: var(--coral); }
+    .line-d { stroke: var(--violet); }
+
+    .flow-particle {
+      display: none;
+      r: 6px;
+      filter: drop-shadow(0 0 7px currentColor);
+      animation: particle-travel 3.4s linear infinite;
+      offset-rotate: 0deg;
+    }
+
+    .motion-ready .flow-particle { display: block; }
+
+    .particle-a { color: var(--cyan); fill: var(--cyan); }
+    .particle-b { color: var(--amber); fill: var(--amber); animation-delay: -.85s; }
+    .particle-c { color: var(--coral); fill: var(--coral); animation-delay: -1.7s; }
+    .particle-d { color: var(--violet); fill: var(--violet); animation-delay: -2.55s; }
+
+    .flow-story[data-motion="paused"] .flow-line,
+    .flow-story[data-motion="paused"] .flow-particle {
+      animation-play-state: paused;
+    }
+
+    .node-box { fill: var(--panel-2); stroke-width: 2; }
+    .node-a { stroke: var(--cyan); }
+    .node-b { stroke: var(--amber); }
+    .node-c { stroke: var(--coral); }
+    .node-d { stroke: var(--violet); }
+    .node-kicker { fill: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 1.3px; }
+    .node-title { fill: var(--ink); font-size: 18px; font-weight: 750; }
+    .node-copy { fill: var(--muted); font-size: 12px; }
+    .center-ring { fill: #0d1728; stroke: #42536d; stroke-width: 1.5; }
+    .center-title { fill: var(--ink); font-size: 16px; font-weight: 750; text-anchor: middle; }
+    .center-copy { fill: var(--muted); font-size: 11px; text-anchor: middle; }
+
+    .stage-notes {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .stage-notes li {
+      min-width: 0;
+      padding: 12px 13px;
+      border: 1px solid #2b3b56;
+      border-radius: 12px;
+      background: rgba(21, 34, 56, .74);
+    }
+
+    .stage-notes strong { display: block; font-size: .82rem; }
+    .stage-notes span { display: block; margin-top: 4px; color: var(--muted); font-size: .74rem; }
+    .stage-notes li:nth-child(1) strong { color: var(--cyan); }
+    .stage-notes li:nth-child(2) strong { color: var(--amber); }
+    .stage-notes li:nth-child(3) strong { color: var(--coral); }
+    .stage-notes li:nth-child(4) strong { color: var(--violet); }
+
+    @keyframes line-direction { to { stroke-dashoffset: -21; } }
+    @keyframes particle-travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flow-line, .flow-particle { animation: none !important; }
+      .motion-ready .flow-particle { display: none; }
+    }
+
+    @media (max-width: 620px) {
+      body { padding: 10px; }
+      .flow-story { padding: 18px 12px; border-radius: 18px; }
+      header { grid-template-columns: 1fr; gap: 14px; }
+      .summary { max-width: 55ch; }
+      .motion-toolbar { justify-content: flex-start; }
+      .topology { border-radius: 14px; }
+      svg { min-height: 260px; }
+      .node-kicker, .node-copy, .center-copy { display: none; }
+      .node-title { font-size: 28px; }
+      .center-title { font-size: 24px; }
+      .stage-notes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 390px) {
+      .stage-notes { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="flow-story" data-motion="running" aria-labelledby="flow-title">
+    <header>
+      <div>
+        <p class="eyebrow">Continuous learning loop</p>
+        <h1 id="flow-title">Signals become better decisions</h1>
+      </div>
+      <p class="summary" id="flow-summary">A closed loop captures events, interprets context, acts through policy, and returns measured outcomes as the next signal.</p>
+    </header>
+
+    <div class="motion-toolbar">
+      <button class="motion-toggle" id="motion-toggle" type="button" aria-pressed="false">Pause motion</button>
+      <span class="motion-status" id="motion-status" aria-live="polite">Flow animation is running.</span>
+    </div>
+
+    <!-- ===== EDIT SAMPLE CONTENT: stage labels, descriptions, and path meaning ===== -->
+    <section class="topology" aria-labelledby="flow-title" aria-describedby="flow-summary">
+      <svg viewBox="0 0 720 520" role="img" aria-labelledby="svg-title svg-desc">
+        <title id="svg-title">Four-stage closed data loop</title>
+        <desc id="svg-desc">Clockwise arrows connect Capture to Interpret to Decide to Learn, then return to Capture. Moving dots reinforce direction but are not needed to understand the loop.</desc>
+        <defs>
+          <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#55d9e5"/></marker>
+          <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ffc857"/></marker>
+          <marker id="arrow-coral" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ff8066"/></marker>
+          <marker id="arrow-violet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#a58cff"/></marker>
+        </defs>
+
+        <!-- Route geometry has one source of truth: edit these d attributes only.
+             Each particle's data-path is bound to the matching d value by the script below. -->
+        <path id="path-a" class="flow-line line-a" d="M 180 125 L 540 125" marker-end="url(#arrow-cyan)"/>
+        <path id="path-b" class="flow-line line-b" d="M 585 170 L 585 350" marker-end="url(#arrow-amber)"/>
+        <path id="path-c" class="flow-line line-c" d="M 540 395 L 180 395" marker-end="url(#arrow-coral)"/>
+        <path id="path-d" class="flow-line line-d" d="M 135 350 L 135 170" marker-end="url(#arrow-violet)"/>
+
+        <circle class="flow-particle particle-a" data-path="path-a" cx="0" cy="0"/>
+        <circle class="flow-particle particle-b" data-path="path-b" cx="0" cy="0"/>
+        <circle class="flow-particle particle-c" data-path="path-c" cx="0" cy="0"/>
+        <circle class="flow-particle particle-d" data-path="path-d" cx="0" cy="0"/>
+
+        <g transform="translate(45 70)">
+          <rect class="node-box node-a" width="180" height="100" rx="16"/>
+          <text class="node-kicker" x="18" y="27">01 · INPUT</text>
+          <text class="node-title" x="18" y="53">Capture</text>
+          <text class="node-copy" x="18" y="76">Events · intent · context</text>
+        </g>
+        <g transform="translate(495 70)">
+          <rect class="node-box node-b" width="180" height="100" rx="16"/>
+          <text class="node-kicker" x="18" y="27">02 · SENSE</text>
+          <text class="node-title" x="18" y="53">Interpret</text>
+          <text class="node-copy" x="18" y="76">Enrich · retrieve · score</text>
+        </g>
+        <g transform="translate(495 350)">
+          <rect class="node-box node-c" width="180" height="100" rx="16"/>
+          <text class="node-kicker" x="18" y="27">03 · ACT</text>
+          <text class="node-title" x="18" y="53">Decide</text>
+          <text class="node-copy" x="18" y="76">Policy · route · execute</text>
+        </g>
+        <g transform="translate(45 350)">
+          <rect class="node-box node-d" width="180" height="100" rx="16"/>
+          <text class="node-kicker" x="18" y="27">04 · ADAPT</text>
+          <text class="node-title" x="18" y="53">Learn</text>
+          <text class="node-copy" x="18" y="76">Measure · review · improve</text>
+        </g>
+
+        <g transform="translate(360 260)">
+          <circle class="center-ring" r="80"/>
+          <circle fill="none" stroke="#52637d" stroke-dasharray="2 7" r="62"/>
+          <text class="center-title" y="-6">Observable</text>
+          <text class="center-title" y="15">feedback</text>
+          <text class="center-copy" y="39">every outcome returns</text>
+        </g>
+      </svg>
+    </section>
+
+    <ol class="stage-notes" aria-label="Flow stage details">
+      <li><strong>1 · Capture</strong><span>Normalize the signal without losing its source.</span></li>
+      <li><strong>2 · Interpret</strong><span>Add context and confidence before choosing.</span></li>
+      <li><strong>3 · Decide</strong><span>Act inside explicit policy and permission.</span></li>
+      <li><strong>4 · Learn</strong><span>Return measured outcomes to the next cycle.</span></li>
+    </ol>
+    <!-- ===== EDIT SAMPLE CONTENT END ===== -->
+  </main>
+  <script>
+    const story = document.querySelector(".flow-story");
+    const motionToggle = document.querySelector("#motion-toggle");
+    const motionStatus = document.querySelector("#motion-status");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let userPaused = false;
+
+    document.querySelectorAll(".flow-particle[data-path]").forEach((particle) => {
+      const path = document.getElementById(particle.dataset.path);
+      if (!path) return;
+      particle.style.offsetPath = `path(${JSON.stringify(path.getAttribute("d"))})`;
+    });
+    document.documentElement.classList.add("motion-ready");
+
+    function syncMotionState() {
+      const reduced = reducedMotion.matches;
+      const paused = reduced || userPaused;
+      story.dataset.motion = paused ? "paused" : "running";
+      motionToggle.setAttribute("aria-pressed", String(paused));
+
+      if (reduced) {
+        motionToggle.textContent = "Motion reduced";
+        motionToggle.setAttribute("aria-disabled", "true");
+        motionStatus.textContent = "Continuous motion is off for your reduced-motion preference.";
+        return;
+      }
+
+      motionToggle.removeAttribute("aria-disabled");
+      motionToggle.textContent = userPaused ? "Resume motion" : "Pause motion";
+      motionStatus.textContent = userPaused ? "Flow animation is paused." : "Flow animation is running.";
+    }
+
+    motionToggle.addEventListener("click", () => {
+      if (reducedMotion.matches) return;
+      userPaused = !userPaused;
+      syncMotionState();
+    });
+    if (typeof reducedMotion.addEventListener === "function") {
+      reducedMotion.addEventListener("change", syncMotionState);
+    } else {
+      reducedMotion.addListener(syncMotionState);
+    }
+    syncMotionState();
+  </script>
+</body>
+</html>
