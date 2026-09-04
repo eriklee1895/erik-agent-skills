@@ -10,6 +10,7 @@
 # Local evaluation and runtime artifacts.
 .local-memory/
 .skill-work/
+.playwright-mcp/
 evals/**/outputs/
 doc-fetch-resources/
 **/doc-fetch-resources/
