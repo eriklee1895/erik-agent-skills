@@ -1,0 +1,7 @@
+policy:
+  allow_implicit_invocation: false
+
+interface:
+  display_name: "macOS Disk Deep Scan"
+  short_description: "Read-only disk audit for macOS developer caches"
+  default_prompt: "Use $macos-disk-deep-scan to scan developer disk usage read-only and propose an exact-path cleanup shortlist without deleting anything."
