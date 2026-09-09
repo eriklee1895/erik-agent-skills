@@ -38,6 +38,7 @@ discovered, linked, and installed consistently.
 
 | Skill | Purpose | Install |
 | --- | --- | --- |
+| [macos-disk-deep-scan](../skills/macos-disk-deep-scan/) | Explicit-only, read-only macOS developer disk audit: bounded scans, process/Git checks, and exact-path cleanup advice without deletion. | `npx skills add eriklee1895/erik-agent-skills --skill macos-disk-deep-scan` |
 | [notion-cli](../skills/notion-cli/) | Operate Notion through a guarded helper around the official `ntn` CLI. | `npx skills add eriklee1895/erik-agent-skills --skill notion-cli` |
 | [volcengine-doc-fetcher](../skills/volcengine-doc-fetcher/) | Fetch official Volcano Engine documentation as clean Markdown. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-doc-fetcher` |
 | [volcengine-web-search](../skills/volcengine-web-search/) | Search the web and images through Volcano Engine's search API, with strong Chinese-language coverage. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-web-search` |

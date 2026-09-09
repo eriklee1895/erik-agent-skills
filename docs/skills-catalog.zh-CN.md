@@ -35,6 +35,7 @@
 
 | Skill | 用途 | 安装 |
 | --- | --- | --- |
+| [macos-disk-deep-scan](../skills/macos-disk-deep-scan/) | 仅显式调用的 macOS 开发者磁盘只读审计：限时扫描、进程/Git 复核及精确路径清理建议，不执行删除。 | `npx skills add eriklee1895/erik-agent-skills --skill macos-disk-deep-scan` |
 | [notion-cli](../skills/notion-cli/) | 通过对官方 `ntn` CLI 的安全封装操作 Notion。 | `npx skills add eriklee1895/erik-agent-skills --skill notion-cli` |
 | [volcengine-doc-fetcher](../skills/volcengine-doc-fetcher/) | 将火山引擎官方文档抓取为干净的 Markdown。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-doc-fetcher` |
 | [volcengine-web-search](../skills/volcengine-web-search/) | 通过火山引擎搜索 API 搜索网页和图片，重点覆盖中文内容。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-web-search` |
