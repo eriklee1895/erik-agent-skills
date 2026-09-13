@@ -23,7 +23,7 @@
 | Skill | 用途 | 安装 |
 | --- | --- | --- |
 | [article-illustration](../skills/article-illustration/) | 为文章制作封面、正文插图、图解、信息图和视觉分隔图。 | `npx skills add eriklee1895/erik-agent-skills --skill article-illustration` |
-| [gpt-image-2](../skills/gpt-image-2/) | 使用 OpenAI 图片模型生成、编辑和批量制作位图。 | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-2` |
+| [gpt-image-api](../skills/gpt-image-api/) | 使用 OpenAI GPT Image 2.5 Flare 与 Sunburst 生成、精细编辑、流式生成和批量制作位图。 | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api` |
 | [seedream-image-gen](../skills/seedream-image-gen/) | 使用 Seedream 生成和编辑图片，支持文字设计、标记编辑、扩图与批量工作流。 | `npx skills add eriklee1895/erik-agent-skills --skill seedream-image-gen` |
 | [seedance-video-gen](../skills/seedance-video-gen/) | 使用 Seedance 根据文本、图片或多模态参考生成视频。 | `npx skills add eriklee1895/erik-agent-skills --skill seedance-video-gen` |
 | [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | 为视频和文章媒体工作流生成无人声背景音乐。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-bigmusic-bgm` |

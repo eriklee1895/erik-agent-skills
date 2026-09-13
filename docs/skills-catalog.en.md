@@ -26,7 +26,7 @@ discovered, linked, and installed consistently.
 | Skill | Purpose | Install |
 | --- | --- | --- |
 | [article-illustration](../skills/article-illustration/) | Create article covers, inset illustrations, diagrams, infographics, and visual dividers. | `npx skills add eriklee1895/erik-agent-skills --skill article-illustration` |
-| [gpt-image-2](../skills/gpt-image-2/) | Generate, edit, and batch-create raster images with OpenAI's image model. | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-2` |
+| [gpt-image-api](../skills/gpt-image-api/) | Generate, precisely edit, stream, and batch-create raster images with OpenAI GPT Image 2.5 Flare and Sunburst. | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api` |
 | [seedream-image-gen](../skills/seedream-image-gen/) | Generate and edit images with Seedream, including typography, marker editing, outpainting, and batch workflows. | `npx skills add eriklee1895/erik-agent-skills --skill seedream-image-gen` |
 | [seedance-video-gen](../skills/seedance-video-gen/) | Generate videos with Seedance from text, images, or multimodal references. | `npx skills add eriklee1895/erik-agent-skills --skill seedance-video-gen` |
 | [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | Generate instrumental background music for video and article media workflows. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-bigmusic-bgm` |

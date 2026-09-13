@@ -1,0 +1,49 @@
+{
+  "skill_name": "gpt-image-api",
+  "evals": [
+    {
+      "id": 1,
+      "name": "exact-bilingual-poster",
+      "prompt": "Use GPT Image 2.5 to generate a 2048x1152 bilingual launch poster with exact text ‘曜石计划’ and ‘PROJECT OBSIDIAN’, each exactly once, on a truly transparent PNG background. Optimize quality without automatically choosing the most expensive setting, save it under output/gpt-image-api/, and retain request metadata.",
+      "expected": [
+        "Uses generate with a current Flare or Sunburst model",
+        "Uses native transparent PNG output and verifies alpha",
+        "Quotes exact text, occurrence count, typography, and placement",
+        "Writes a sibling metadata JSON"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "precision-multi-reference-edit",
+      "prompt": "Edit product.png using person.png and mask.png. Put the person into the product scene and change only the jacket to dark green. Preserve identity, product label, camera angle, lighting, and background. Choose the appropriate GPT Image 2.5 model and save a non-destructive result.",
+      "expected": [
+        "Uses edit and orders the base image first",
+        "Role-labels both inputs",
+        "Uses Sunburst for the preservation-sensitive edit",
+        "Uses Change, Preserve, and Avoid constraints",
+        "Does not expose input_fidelity"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "transparent-product-cutout",
+      "prompt": "Extract the glass bottle in bottle.webp onto a real transparent background while preserving the label, reflections, semi-transparent glass, and exact shape. No checkerboard or invented shadow.",
+      "expected": [
+        "Uses edit with bottle.webp as Image 1",
+        "Requests PNG or WebP with background transparent",
+        "Checks decoded alpha before accepting the result"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "auditable-jsonl-batch",
+      "prompt": "Generate 80 distinct image prompts from requests.jsonl with GPT Image 2.5 Flare, bounded concurrency, transient-only retries, no overwrites, and per-image metadata including model, size, quality, timing, request ID, and token usage.",
+      "expected": [
+        "Uses generate-batch rather than n for distinct prompts",
+        "Runs dry-run before the live batch",
+        "Rejects duplicate output names and unknown JSONL fields",
+        "Records sibling metadata for every final output"
+      ]
+    }
+  ]
+}

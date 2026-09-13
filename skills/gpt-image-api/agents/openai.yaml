@@ -1,0 +1,7 @@
+interface:
+  display_name: "GPT Image API"
+  short_description: "Generate and edit with GPT Image 2.5"
+  default_prompt: "Use $gpt-image-api to generate or precisely edit this image with GPT Image 2.5 and save an auditable output."
+
+policy:
+  allow_implicit_invocation: true
