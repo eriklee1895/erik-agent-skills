@@ -44,6 +44,28 @@
         "Rejects duplicate output names and unknown JSONL fields",
         "Records sibling metadata for every final output"
       ]
+    },
+    {
+      "id": 5,
+      "name": "ofox-official-images-api",
+      "prompt": "Use my configured OFOX base URL to generate a Flare image. Keep the current OpenAI Images API request shape and show the resolved request in a dry run before making the call.",
+      "expected": [
+        "Uses client.images.generate and the images/generations endpoint",
+        "Resolves Flare to openai/gpt-image-2.5-flare for OFOX",
+        "Does not introduce a provider-specific endpoint or payload",
+        "Does not expose credentials in the dry run or metadata"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "community-recipe-progressive-disclosure",
+      "prompt": "Create a consistent four-view character sheet and then place the approved character into a rainy street scene without changing the character's face or clothing.",
+      "expected": [
+        "Reads the generation recipe for the character sheet",
+        "Uses a role-labeled edit recipe for the rainy street composition",
+        "Keeps community-derived structures separate from API facts",
+        "Checks the generated sheet and edited result for identity drift"
+      ]
     }
   ]
 }

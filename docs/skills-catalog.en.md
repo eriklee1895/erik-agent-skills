@@ -43,6 +43,13 @@ discovered, linked, and installed consistently.
 | [volcengine-doc-fetcher](../skills/volcengine-doc-fetcher/) | Fetch official Volcano Engine documentation as clean Markdown. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-doc-fetcher` |
 | [volcengine-web-search](../skills/volcengine-web-search/) | Search the web and images through Volcano Engine's search API, with strong Chinese-language coverage. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-web-search` |
 
+## Archived skills
+
+Archived sources remain available for history and migration but are not published,
+installable, or included in the 16-skill active count. The retired
+[`gpt-image-2`](../archive/skills/gpt-image-2/) source is superseded by
+[`gpt-image-api`](../skills/gpt-image-api/).
+
 ## Classification rules
 
 - Classify each skill by its primary user outcome, not by its implementation technology.

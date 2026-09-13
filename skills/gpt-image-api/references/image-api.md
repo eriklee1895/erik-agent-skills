@@ -9,6 +9,20 @@ This reference describes the contract implemented by `scripts/gpt_image_api.py`.
 
 Always send an explicit model. The CLI supports only the Flare and Sunburst aliases and their `2026-09-08` snapshots.
 
+## Provider model names
+
+Every provider uses the same current OpenAI Images API endpoints and request shape.
+Only the provider-facing model ID changes:
+
+| Resolved base URL | Flare wire model | Sunburst wire model |
+| --- | --- | --- |
+| `api.ofox.ai` or earlier `api.ofox.io` | `openai/gpt-image-2.5-flare` | `openai/gpt-image-2.5-sunburst` |
+| OpenAI or any other provider | `gpt-image-2.5-flare` | `gpt-image-2.5-sunburst` |
+
+The CLI records a canonical `model`, the `wire_model`, and the resolved provider
+in dry runs and sibling metadata. Provider detection never changes
+`/v1/images/generations`, `/v1/images/edits`, or any request field.
+
 Custom credentials are an atomic pair: `CUSTOM_OPENAI_API_KEY` is accepted only with `CUSTOM_OPENAI_BASE_URL`, and vice versa. This prevents a standard OpenAI credential from being sent to a custom host. Without that pair, the CLI uses `OPENAI_API_KEY` and optional `OPENAI_BASE_URL`.
 
 ## Shared request fields
@@ -68,7 +82,7 @@ Event types:
 
 ## Output and metadata
 
-Without `--force`, the CLI preflights final images, partials, downscaled copies, and sibling metadata before the API call. Final metadata records request settings, response settings, complete usage when returned, request ID when available, elapsed time, attempts, inputs, roles, and mask.
+Without `--force`, the CLI preflights final images, partials, downscaled copies, and sibling metadata before the API call. Final metadata records request settings, canonical and wire model IDs, provider, response settings, complete usage when returned, request ID when available, elapsed time, attempts, inputs, roles, and mask. Buffered requests emit a heartbeat about every 15 seconds. JSONL batches are capped at 500 jobs and report progress plus a success/failure summary.
 
 ## Errors and retries
 

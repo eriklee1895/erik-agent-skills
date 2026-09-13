@@ -5,7 +5,6 @@ import re
 import unittest
 from pathlib import Path
 
-
 SKILL_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = SKILL_DIR.parents[1]
 
@@ -29,6 +28,8 @@ class SkillContractTests(unittest.TestCase):
             "editing.md",
             "prompting.md",
             "sample-prompts.md",
+            "generation-recipes.md",
+            "editing-recipes.md",
             "community-practices.md",
             "official-links.md",
         ):
@@ -49,13 +50,14 @@ class SkillContractTests(unittest.TestCase):
         self.assertNotIn("$imagegen", text)
         self.assertNotIn("system imagegen", text)
         self.assertNotIn("built-in image_gen", text)
+        self.assertNotIn("openrouter", text)
         self.assertIsNone(re.search(r"gpt-image-2(?![.-]5)", text))
 
     def test_cli_and_eval_contract_are_present(self):
         self.assertTrue((SKILL_DIR / "scripts" / "gpt_image_api.py").is_file())
         evals = json.loads((SKILL_DIR / "evals" / "evals.json").read_text())
         self.assertEqual(evals["skill_name"], "gpt-image-api")
-        self.assertGreaterEqual(len(evals["evals"]), 4)
+        self.assertGreaterEqual(len(evals["evals"]), 6)
 
     def test_catalogs_publish_new_name_and_remove_old_skill_name(self):
         for relative in (
@@ -66,6 +68,12 @@ class SkillContractTests(unittest.TestCase):
             with self.subTest(relative=relative):
                 self.assertIn("gpt-image-api", text)
                 self.assertNotIn("--skill gpt-image-2`", text)
+
+    def test_legacy_skill_is_archived_outside_published_skills(self):
+        self.assertFalse((REPO_ROOT / "skills" / "gpt-image-2").exists())
+        archived = REPO_ROOT / "archive" / "skills" / "gpt-image-2"
+        self.assertTrue((archived / "SKILL.md").is_file())
+        self.assertTrue((archived / "ARCHIVED.md").is_file())
 
 
 if __name__ == "__main__":

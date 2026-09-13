@@ -49,6 +49,7 @@ categorized list, descriptions, and per-skill install commands.
 ## Repository layout
 
 - `skills/` is the canonical publishing source. Each direct child is one skill.
+- `archive/` preserves retired historical sources and is never published or counted.
 - `docs/` contains the bilingual catalog and repository-level documentation.
 - `assets/` contains repository-level visual assets.
 

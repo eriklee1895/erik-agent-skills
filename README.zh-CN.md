@@ -43,6 +43,7 @@ npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen
 ## 仓库结构
 
 - `skills/` 是唯一发布源，每个一级子目录对应一个 skill。
+- `archive/` 保留已停用的历史源码，不参与发布或活跃数量统计。
 - `docs/` 存放双语 Skills 目录和仓库级文档。
 - `assets/` 存放仓库级视觉资源。
 

@@ -40,6 +40,12 @@
 | [volcengine-doc-fetcher](../skills/volcengine-doc-fetcher/) | 将火山引擎官方文档抓取为干净的 Markdown。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-doc-fetcher` |
 | [volcengine-web-search](../skills/volcengine-web-search/) | 通过火山引擎搜索 API 搜索网页和图片，重点覆盖中文内容。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-web-search` |
 
+## 已归档 Skills
+
+归档源码仅用于历史追溯和迁移，不参与发布、安装或 16 个活跃 Skill 的数量统计。
+已停用的 [`gpt-image-2`](../archive/skills/gpt-image-2/) 已由
+[`gpt-image-api`](../skills/gpt-image-api/) 取代。
+
 ## 分类规则
 
 - 按主要用户目标分类，不按底层实现技术分类。

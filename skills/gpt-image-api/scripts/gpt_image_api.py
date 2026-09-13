@@ -25,8 +25,9 @@ import uuid
 from contextlib import ExitStack
 from io import BytesIO
 from pathlib import Path
+from threading import Event, Thread
 from typing import Any, Iterable, Optional
-
+from urllib.parse import urlparse
 
 DEFAULT_MODEL = "gpt-image-2.5-flare"
 ALLOWED_MODELS = {
@@ -64,12 +65,15 @@ MAX_MASK_BYTES = 4 * 1024 * 1024
 MAX_N = 10
 MAX_CONCURRENCY = 25
 MAX_ATTEMPTS = 10
+MAX_BATCH_JOBS = 500
+HEARTBEAT_SECONDS = 15.0
 MIN_PIXELS = 655_360
 MAX_PIXELS = 8_294_400
 MAX_EDGE = 3_840
 EXPERIMENTAL_PIXELS = 2_560 * 1_440
 DEFAULT_OUTPUT = Path("output/gpt-image-api/output.png")
 DEFAULT_BATCH_DIR = Path("output/gpt-image-api/batch")
+OFOX_API_HOSTS = {"api.ofox.ai", "api.ofox.io"}
 
 
 class UsageError(ValueError):
@@ -150,6 +154,31 @@ def resolve_model(value: Optional[str] = None) -> str:
         allowed = ", ".join(sorted(ALLOWED_MODELS | set(MODEL_ALIASES)))
         raise UsageError(f"Unsupported model {candidate!r}. Use one of: {allowed}")
     return candidate
+
+
+def resolve_provider(base_url: Optional[str]) -> str:
+    """Classify only providers that change the GPT Image wire model name."""
+    if not base_url:
+        return "openai"
+    hostname = (urlparse(base_url).hostname or "").lower()
+    return "ofox" if hostname in OFOX_API_HOSTS else "custom"
+
+
+def resolve_wire_model(model: str, base_url: Optional[str]) -> str:
+    """Return the provider-facing model ID without changing the Images API."""
+    canonical = resolve_model(model)
+    if resolve_provider(base_url) == "ofox":
+        return f"openai/{canonical}"
+    return canonical
+
+
+def resolve_provider_spec(
+    spec: dict[str, Any], base_url: Optional[str]
+) -> dict[str, Any]:
+    resolved = dict(spec)
+    resolved["provider"] = resolve_provider(base_url)
+    resolved["wire_model"] = resolve_wire_model(spec["model"], base_url)
+    return resolved
 
 
 def validate_quality(value: str) -> str:
@@ -572,6 +601,26 @@ def _error_code(exc: Any) -> Optional[str]:
     return None
 
 
+def _moderation_detail(exc: Any) -> str:
+    body = getattr(exc, "body", None)
+    if not isinstance(body, dict):
+        return ""
+    error = body.get("error", body)
+    if not isinstance(error, dict):
+        return ""
+    details = error.get("moderation_details")
+    if not isinstance(details, dict):
+        return ""
+    stage = details.get("moderation_stage")
+    categories = details.get("categories")
+    parts = []
+    if stage:
+        parts.append(f"moderation_stage={stage}")
+    if categories:
+        parts.append(f"categories={_json_safe(categories)}")
+    return " ".join(parts)
+
+
 def is_retryable_error(exc: Any) -> bool:
     code = (_error_code(exc) or "").lower()
     if code in {
@@ -610,18 +659,37 @@ def _retry_after(exc: Any, attempt: int) -> float:
     return min(60.0, (2 ** (attempt - 1)) + random.random())
 
 
+def _call_with_heartbeat(operation: Any) -> Any:
+    stopped = Event()
+    started = time.monotonic()
+
+    def report() -> None:
+        while not stopped.wait(HEARTBEAT_SECONDS):
+            elapsed = round(time.monotonic() - started)
+            print(f"Waiting for image API response... {elapsed}s", file=sys.stderr)
+
+    reporter = Thread(target=report, daemon=True)
+    reporter.start()
+    try:
+        return operation()
+    finally:
+        stopped.set()
+        reporter.join(timeout=1.0)
+
+
 def call_with_retry(operation: Any, *, max_attempts: int) -> tuple[Any, int]:
     if not 1 <= max_attempts <= MAX_ATTEMPTS:
         raise UsageError(f"max-attempts must be between 1 and {MAX_ATTEMPTS}")
     for attempt in range(1, max_attempts + 1):
         try:
-            return operation(), attempt
+            return _call_with_heartbeat(operation), attempt
         except Exception as exc:
             if attempt == max_attempts or not is_retryable_error(exc):
                 raise
             delay = _retry_after(exc, attempt)
             _warn(
-                f"transient API failure; retrying in {delay:.1f}s ({attempt}/{max_attempts})"
+                "transient API failure; retrying in "
+                f"{delay:.1f}s ({attempt}/{max_attempts})"
             )
             time.sleep(delay)
     raise RuntimeError("unreachable")
@@ -640,7 +708,8 @@ async def async_call_with_retry(
                 raise
             delay = _retry_after(exc, attempt)
             _warn(
-                f"transient API failure; retrying in {delay:.1f}s ({attempt}/{max_attempts})"
+                "transient API failure; retrying in "
+                f"{delay:.1f}s ({attempt}/{max_attempts})"
             )
             await asyncio.sleep(delay)
     raise RuntimeError("unreachable")
@@ -684,7 +753,6 @@ def _sdk_common_payload(spec: dict[str, Any]) -> dict[str, Any]:
     payload = {
         key: spec[key]
         for key in (
-            "model",
             "prompt",
             "n",
             "size",
@@ -695,6 +763,7 @@ def _sdk_common_payload(spec: dict[str, Any]) -> dict[str, Any]:
         )
         if spec.get(key) is not None
     }
+    payload["model"] = spec.get("wire_model", spec["model"])
     if spec.get("command") == "generate":
         payload["moderation"] = spec["moderation"]
     if spec.get("stream"):
@@ -868,6 +937,7 @@ def run_live_request(
 ) -> list[Path]:
     api_key, base_url = get_api_settings(require_key=True)
     assert api_key is not None
+    spec = resolve_provider_spec(spec, base_url)
     output_paths = build_output_paths(out, spec["output_format"], spec["n"])
     preflight_output_paths(
         output_paths,
@@ -1040,6 +1110,8 @@ def load_batch_jobs(source: Path, out_dir: Path) -> list[dict[str, Any]]:
             )
         artifacts.update(job_artifacts)
         jobs.append({**spec, "out": str(output), "line": line_number})
+        if len(jobs) > MAX_BATCH_JOBS:
+            raise UsageError(f"batch accepts at most {MAX_BATCH_JOBS} jobs")
     if not jobs:
         raise UsageError("batch input contains no jobs")
     return jobs
@@ -1102,6 +1174,7 @@ async def run_batch(
         raise UsageError(f"concurrency must be between 1 and {MAX_CONCURRENCY}")
     api_key, base_url = get_api_settings(require_key=True)
     assert api_key is not None
+    jobs = [resolve_provider_spec(job, base_url) for job in jobs]
     all_paths: list[Path] = []
     for job in jobs:
         all_paths.extend(
@@ -1122,23 +1195,35 @@ async def run_batch(
                     max_attempts=max_attempts,
                 )
                 results.append(result)
+                print(
+                    f"Batch progress: {len(results)}/{len(jobs)} "
+                    f"({result['status']})",
+                    file=sys.stderr,
+                )
                 if result["status"] == "failed":
                     break
         else:
-            results = list(
-                await asyncio.gather(
-                    *[
-                        _run_batch_job(
-                            client=client,
-                            semaphore=semaphore,
-                            job=job,
-                            force=force,
-                            max_attempts=max_attempts,
-                        )
-                        for job in jobs
-                    ]
+            tasks = [
+                asyncio.create_task(
+                    _run_batch_job(
+                        client=client,
+                        semaphore=semaphore,
+                        job=job,
+                        force=force,
+                        max_attempts=max_attempts,
+                    )
                 )
-            )
+                for job in jobs
+            ]
+            for completed in asyncio.as_completed(tasks):
+                result = await completed
+                results.append(result)
+                print(
+                    f"Batch progress: {len(results)}/{len(jobs)} "
+                    f"({result['status']})",
+                    file=sys.stderr,
+                )
+            results.sort(key=lambda item: item["line"])
     finally:
         await client.close()
     return results
@@ -1233,7 +1318,10 @@ def _spec_from_args(args: argparse.Namespace) -> dict[str, Any]:
     return build_generate_spec(**common)
 
 
-def _dry_run_document(spec: dict[str, Any], out: Path) -> dict[str, Any]:
+def _dry_run_document(
+    spec: dict[str, Any], out: Path, base_url: Optional[str]
+) -> dict[str, Any]:
+    spec = resolve_provider_spec(spec, base_url)
     outputs = build_output_paths(out, spec["output_format"], spec["n"])
     return {
         **spec,
@@ -1249,7 +1337,9 @@ def _dry_run_document(spec: dict[str, Any], out: Path) -> dict[str, Any]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate and edit images with OpenAI GPT Image 2.5 via the Image API."
+        description=(
+            "Generate and edit images with OpenAI GPT Image 2.5 via the Image API."
+        )
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -1289,6 +1379,8 @@ def main(argv: Optional[list[str]] = None) -> int:
             )
             jobs = load_batch_jobs(args.input, args.out_dir)
             if args.dry_run:
+                _, base_url = get_api_settings(require_key=False)
+                jobs = [resolve_provider_spec(job, base_url) for job in jobs]
                 print(
                     json.dumps(
                         {
@@ -1311,7 +1403,21 @@ def main(argv: Optional[list[str]] = None) -> int:
                     fail_fast=args.fail_fast,
                 )
             )
-            print(json.dumps({"results": results}, ensure_ascii=False, indent=2))
+            succeeded = sum(item["status"] == "ok" for item in results)
+            print(
+                json.dumps(
+                    {
+                        "summary": {
+                            "total": len(results),
+                            "succeeded": succeeded,
+                            "failed": len(results) - succeeded,
+                        },
+                        "results": results,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
             return 1 if any(item["status"] == "failed" for item in results) else 0
 
         validate_runtime_controls(
@@ -1321,9 +1427,10 @@ def main(argv: Optional[list[str]] = None) -> int:
         )
         spec = _spec_from_args(args)
         if args.dry_run:
+            _, base_url = get_api_settings(require_key=False)
             print(
                 json.dumps(
-                    _dry_run_document(spec, args.out),
+                    _dry_run_document(spec, args.out, base_url),
                     ensure_ascii=False,
                     indent=2,
                 )
@@ -1350,6 +1457,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         detail = f" status={status}" if status is not None else ""
         if code:
             detail += f" code={code}"
+        moderation = _moderation_detail(exc)
+        if moderation:
+            detail += f" {moderation}"
         print(f"API error:{detail} {exc}", file=sys.stderr)
         return 1
 

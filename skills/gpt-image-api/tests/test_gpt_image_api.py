@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import base64
 import importlib.util
 import io
 import os
-import base64
 import tempfile
+import time
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -12,7 +13,6 @@ from types import SimpleNamespace
 from unittest import mock
 
 from PIL import Image
-
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 SCRIPT_PATH = SKILL_DIR / "scripts" / "gpt_image_api.py"
@@ -47,6 +47,40 @@ class ModelAndRequestTests(unittest.TestCase):
     def test_model_shorthands_resolve_to_current_aliases(self):
         self.assertEqual(self.mod.resolve_model("flare"), "gpt-image-2.5-flare")
         self.assertEqual(self.mod.resolve_model("sunburst"), "gpt-image-2.5-sunburst")
+
+    def test_ofox_uses_namespaced_wire_model_only(self):
+        for base_url in (
+            "https://api.ofox.ai/v1",
+            "https://api.ofox.io/v1/",
+        ):
+            with self.subTest(base_url=base_url):
+                self.assertEqual(self.mod.resolve_provider(base_url), "ofox")
+                self.assertEqual(
+                    self.mod.resolve_wire_model("flare", base_url),
+                    "openai/gpt-image-2.5-flare",
+                )
+                self.assertEqual(
+                    self.mod.resolve_wire_model("sunburst", base_url),
+                    "openai/gpt-image-2.5-sunburst",
+                )
+
+    def test_other_providers_keep_official_model_id(self):
+        for base_url in (None, "https://images.example.com/v1"):
+            with self.subTest(base_url=base_url):
+                self.assertEqual(
+                    self.mod.resolve_wire_model("flare", base_url),
+                    "gpt-image-2.5-flare",
+                )
+
+    def test_provider_resolution_does_not_change_images_api_endpoints(self):
+        generate = self.mod.resolve_provider_spec(
+            self.mod.build_generate_spec(prompt="x"), "https://api.ofox.ai/v1"
+        )
+        self.assertEqual(generate["endpoint"], "/v1/images/generations")
+        self.assertEqual(
+            self.mod._sdk_common_payload(generate)["model"],
+            "openai/gpt-image-2.5-flare",
+        )
 
     def test_legacy_or_unknown_model_is_rejected(self):
         for value in ("gpt-image-2", "gpt-image-2.5", "dall-e-3"):
@@ -382,7 +416,8 @@ class OutputAndBatchTests(unittest.TestCase):
             source = root / "jobs.jsonl"
             source.write_text(
                 '"first prompt"\n'
-                '{"prompt":"second prompt","model":"sunburst","quality":"high","out":"hero.png"}\n',
+                '{"prompt":"second prompt","model":"sunburst",'
+                '"quality":"high","out":"hero.png"}\n',
                 encoding="utf-8",
             )
             jobs = self.mod.load_batch_jobs(source, root / "out")
@@ -423,6 +458,17 @@ class OutputAndBatchTests(unittest.TestCase):
             with self.assertRaises(self.mod.UsageError):
                 self.mod.load_batch_jobs(source, root / "out")
 
+    def test_batch_loader_caps_job_count(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "jobs.jsonl"
+            source.write_text(
+                "\n".join(f'{{"prompt":"job {index}"}}' for index in range(501)),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(self.mod.UsageError, "at most 500 jobs"):
+                self.mod.load_batch_jobs(source, root / "out")
+
     def test_batch_loader_rejects_non_integer_numeric_fields(self):
         cases = (
             ('{"prompt":"one","n":true}\n', "n"),
@@ -456,6 +502,36 @@ class OutputAndBatchTests(unittest.TestCase):
         self.assertFalse(self.mod.is_retryable_error(invalid))
         self.assertFalse(self.mod.is_retryable_error(moderation))
         self.assertFalse(self.mod.is_retryable_error(quota))
+
+    def test_buffered_call_emits_heartbeat(self):
+        stderr = io.StringIO()
+
+        def operation():
+            time.sleep(0.03)
+            return "ok"
+
+        with (
+            mock.patch.object(self.mod, "HEARTBEAT_SECONDS", 0.01),
+            redirect_stderr(stderr),
+        ):
+            result, attempts = self.mod.call_with_retry(operation, max_attempts=1)
+        self.assertEqual((result, attempts), ("ok", 1))
+        self.assertIn("Waiting for image API response", stderr.getvalue())
+
+    def test_moderation_detail_includes_stage_and_categories(self):
+        exc = SimpleNamespace(
+            body={
+                "error": {
+                    "moderation_details": {
+                        "moderation_stage": "input",
+                        "categories": {"violence": True},
+                    }
+                }
+            }
+        )
+        detail = self.mod._moderation_detail(exc)
+        self.assertIn("moderation_stage=input", detail)
+        self.assertIn("violence", detail)
 
     def test_dry_run_rejects_invalid_runtime_controls(self):
         stdout = io.StringIO()

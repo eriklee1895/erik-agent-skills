@@ -2,6 +2,12 @@
 
 Community material is empirical guidance, not an OpenAI API contract. Provider-specific fields and model names must not be copied into `scripts/gpt_image_api.py`.
 
+Community patterns are absorbed in two layers: this file preserves evidence and
+confidence; the original parameterized templates in `generation-recipes.md` and
+`editing-recipes.md` make only the stable structural parts reusable. Do not copy
+prompt-farm wording, reconstructed hidden prompts, creator-name imitation, or
+provider-specific API fields into those recipes.
+
 | Practice | Source | Official overlap | Local evaluation | Benefit | Tradeoff |
 | --- | --- | --- | --- | --- | --- |
 | Open with the deliverable and decide dimensions before framing | [Runware prompting guide](https://runware.ai/docs/models/openai-gpt-image-2-5-flare/guides/prompting) | Consistent with OpenAI's intended-use and composition guidance | Not yet benchmarked | Gives the model a concrete layout target | Can overconstrain exploratory ideation |
