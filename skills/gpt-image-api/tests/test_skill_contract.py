@@ -143,6 +143,25 @@ class SkillContractTests(unittest.TestCase):
             {item["name"] for item in evals["evals"]},
         )
 
+    def test_live_eval_plan_and_generation_matrix_are_reproducible(self):
+        plan = (SKILL_DIR / "evals" / "live-eval-plan.md").read_text(
+            encoding="utf-8"
+        )
+        matrix_lines = [
+            line
+            for line in (SKILL_DIR / "evals" / "live" / "generation-matrix.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if line.strip()
+        ]
+        self.assertIn("Generation matrix", plan)
+        self.assertIn("Edit matrix", plan)
+        self.assertIn("Scoring rubric", plan)
+        self.assertEqual(len(matrix_lines), 16)
+        models = {json.loads(line)["model"] for line in matrix_lines}
+        self.assertEqual(models, {"flare", "sunburst"})
+        self.assertTrue((SKILL_DIR / "evals" / "live" / "scorecard-template.md").is_file())
+
     def test_catalogs_publish_new_name_and_remove_old_skill_name(self):
         for relative in (
             "docs/skills-catalog.en.md",
