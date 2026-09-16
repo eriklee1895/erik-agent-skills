@@ -61,10 +61,43 @@
       "name": "community-recipe-progressive-disclosure",
       "prompt": "Create a consistent four-view character sheet and then place the approved character into a rainy street scene without changing the character's face or clothing.",
       "expected": [
-        "Reads the generation recipe for the character sheet",
-        "Uses a role-labeled edit recipe for the rainy street composition",
+        "Loads characters-and-series.md as the one template asset for the character sheet",
+        "Uses the approved sheet as a role-labeled identity reference for the rainy street edit",
         "Keeps community-derived structures separate from API facts",
         "Checks the generated sheet and edited result for identity drift"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "complete-brief-bypasses-templates",
+      "prompt": "Generate one 1536x1024 Flare image: a matte cobalt ceramic sphere centered on warm white seamless paper, eye-level 85mm product photograph, softbox from upper left, precise soft contact shadow, no text, no watermark. Save it as output/gpt-image-api/cobalt-sphere.png.",
+      "expected": [
+        "Treats the prompt as a complete brief and does not load a template asset",
+        "Preserves the supplied subject, framing, lens cue, light, exclusions, model, size, and path",
+        "Does not invent a brand, palette expansion, props, story, or alternative variant",
+        "Runs a dry run and then sends the final prompt verbatim"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "sparse-pose-sheet-uses-one-template",
+      "prompt": "Using hero.png, make a 16-panel running action sheet for the same character. You choose the visual presentation.",
+      "expected": [
+        "Loads only characters-and-series.md and selects the numbered action contact-sheet template",
+        "Locks a 4-by-4 grid, 16 ordered numbered panels, identity, clothing, scale, and full-body visibility",
+        "Uses creative latitude for pose rhythm, presentation treatment, and spacing",
+        "Resolves all placeholders and visually checks cell count, numbering, anatomy, and identity"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "complete-specialized-brief-bypasses-templates",
+      "prompt": "Create one 3:4 six-panel storyboard. Panel 1: a courier enters a rain-soaked station. Panel 2: she checks the broken clock. Panel 3: the lights fail. Panel 4: a red emergency lamp turns on. Panel 5: she finds a sealed silver case under a bench. Panel 6: close-up of her opening it. Keep the same adult courier, yellow raincoat, silver case, station architecture, and blue-black ink-wash style in all panels. No captions, speech bubbles, logos, or watermark. Use Sunburst at 1536x2048 and save storyboard.png.",
+      "expected": [
+        "Treats the storyboard as a complete specialized brief and does not load characters-and-series.md",
+        "Preserves all six ordered beats, continuity anchors, exclusions, model, size, and output path",
+        "Does not add dialogue, new plot beats, alternative layouts, or extra variants",
+        "Runs dry-run and sends the normalized complete brief verbatim"
       ]
     }
   ]

@@ -13,7 +13,7 @@ Generate and edit images with OpenAI's current GPT Image 2.5 Flare and Sunburst 
 - `edit`: provide one to sixteen images when preserving, replacing, combining, extracting, or restyling existing visual content. The first image is the edit target when a mask is present.
 - `generate-batch`: process distinct generation prompts from JSONL with bounded concurrency.
 
-Read [generation.md](references/generation.md) for new images. Read [editing.md](references/editing.md) for any image input, including reference-guided creation. For a complex brief, also read [prompting.md](references/prompting.md).
+Read [generation.md](references/generation.md) for new images. Read [editing.md](references/editing.md) for any image input, including reference-guided creation. For a complex brief, also read [prompting.md](references/prompting.md). A complete brief needs no template, even for a specialized deliverable. For an incomplete brief, read [template-selection.md](references/template-selection.md) and load at most one matching template asset.
 
 ## Choose the model
 
@@ -28,7 +28,7 @@ Read [model-selection.md](references/model-selection.md) before choosing between
 
 1. Collect the intended deliverable, prompt, exact text, dimensions, output path, and constraints.
 2. Inspect every input image, then assign its role by index: edit target, identity reference, product reference, style reference, background, or compositing insert.
-3. Write the prompt. The CLI sends it verbatim and never silently augments it.
+3. Shape the final prompt. Preserve a complete brief; when an incomplete brief needs structural help, adapt one template without stacking templates or constraining unspecified creative choices. Resolve every placeholder. The CLI sends the result verbatim and never silently augments it.
 4. Run `--dry-run` for complex, masked, transparent, high-resolution, or batch requests. Inspect the model, endpoint, prompt, input order, and outputs.
 5. Run the request. Existing files are protected unless `--force` is explicit.
 6. Inspect the actual result: subject, composition, text, identity/product details, unintended drift, and real alpha transparency when requested.
@@ -88,8 +88,12 @@ Each final image receives a sibling `.json` containing the exact prompt, canonic
 - [generation.md](references/generation.md): generation, text, layouts, transparency, and variants.
 - [editing.md](references/editing.md): precise edits, references, masks, compositing, and iterative work.
 - [prompting.md](references/prompting.md): shared GPT Image 2.5 prompt construction.
+- [template-selection.md](references/template-selection.md): when to skip, select, and adapt template assets without limiting creative latitude.
 - [sample-prompts.md](references/sample-prompts.md): compact production-ready examples.
-- [generation-recipes.md](references/generation-recipes.md): parameterized generation templates.
-- [editing-recipes.md](references/editing-recipes.md): parameterized edit templates.
+- [generation-core.md](assets/templates/generation-core.md): photos, editorial illustrations, transparent assets, historical scenes, and game assets.
+- [editing-core.md](assets/templates/editing-core.md): bounded edits, references, identity, products, environments, and iterative repair.
+- [layout-and-text.md](assets/templates/layout-and-text.md): posters, diagrams, UI concepts, slides, and publication layouts.
+- [characters-and-series.md](assets/templates/characters-and-series.md): character sheets, pose grids, recurring characters, storyboards, and collectibles.
+- [brand-product-and-space.md](assets/templates/brand-product-and-space.md): product, brand, campaign, architecture, and development-board briefs.
 - [community-practices.md](references/community-practices.md): evidence-labeled empirical practices.
 - [official-links.md](references/official-links.md): canonical OpenAI documentation.

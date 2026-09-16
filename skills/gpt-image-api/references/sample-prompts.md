@@ -1,9 +1,9 @@
 # GPT Image 2.5 sample prompts
 
 Adapt these examples rather than stacking every field into every request.
-For reusable placeholder-based briefs, continue with
-[generation-recipes.md](generation-recipes.md) or
-[editing-recipes.md](editing-recipes.md).
+For a sparse or specialized brief, use
+[template-selection.md](template-selection.md) to choose at most one reusable
+asset under `assets/templates/`.
 
 ## Product generation
 
