@@ -34,6 +34,11 @@ card descriptions, prices, captions, button labels, or explanatory sentences. Tr
 any unapproved readable string as a critical visual failure and inspect the complete
 image, not only the requested labels.
 
+When occurrence counts matter, state the count globally for the entire canvas, not only
+per region. Explicitly forbid repeating an allowlisted label in navigation, section
+headers, cards, footers, or badges; use icon-only or unlabeled shapes for repeated UI
+affordances.
+
 ## Transparent assets
 
 Set `background=transparent`, use PNG or WebP, and explicitly request a clean isolated subject with real alpha. For cutouts, specify crisp edges, no halos, preserved semi-transparent materials, no checkerboard, and no invented shadow unless wanted. Inspect hair, glass, reflections, and edge pixels. A simple opaque-edged subject passing Alpha validation does not establish that hair, glass, or soft shadows will pass.

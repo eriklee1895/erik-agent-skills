@@ -114,9 +114,9 @@
     {
       "id": 11,
       "name": "strict-infographic-text-allowlist",
-      "prompt": "Generate a landscape retrieval pipeline infographic with exactly five numbered nodes and arrows. The only legible strings permitted are exactly \"QUERY\", \"EMBED\", \"SEARCH\", \"RERANK\", and \"ANSWER\", each once. Use icons and unlabeled shapes only; do not add explanatory sentences, captions, legends, descriptions, fake UI, logos, or watermark.",
+      "prompt": "Generate a landscape retrieval pipeline infographic with exactly five ordered nodes and arrows. Structural index numerals \"1\", \"2\", \"3\", \"4\", and \"5\" are allowed and required once each. The only other legible strings permitted are exactly \"QUERY\", \"EMBED\", \"SEARCH\", \"RERANK\", and \"ANSWER\", each once. Use icons and unlabeled shapes only; do not add explanatory sentences, captions, legends, descriptions, fake UI, logos, or watermark.",
       "expected": [
-        "Defines the five labels as an explicit allowlist",
+        "Defines the five labels and structural numerals as an explicit allowlist",
         "Forbids explanatory copy under or beside nodes",
         "Checks node count, arrow logic, every readable string, and visual hierarchy",
         "Marks any extra readable text as a critical failure"
@@ -142,6 +142,17 @@
         "Records latency, usage, retries, and visual acceptance separately",
         "Does not claim a universal model winner from one workload",
         "Uses Sunburst only when its quality or preservation advantage is necessary"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "strict-ui-single-occurrence",
+      "prompt": "Generate one mobile farmers-market UI concept. Across the entire canvas, render exactly one occurrence of each and never repeat them: \"TODAY'S MARKET\", \"VENDORS\", \"SPECIALS\", and \"PROFILE\". Do not use these strings in both a header and navigation. Use icon-only navigation and unlabeled placeholder bars for all repeated controls and cards. No other legible text, numbers, logos, device frame, browser chrome, status bar, or watermark.",
+      "expected": [
+        "States global occurrence counts, not just a per-region allowlist",
+        "Forbids repeating labels in navigation, headers, cards, footers, or badges",
+        "Uses icon-only or unlabeled placeholders for repeated UI elements",
+        "Marks any extra or repeated readable text as a critical failure"
       ]
     }
   ]

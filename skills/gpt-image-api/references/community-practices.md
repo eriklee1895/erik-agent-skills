@@ -30,4 +30,24 @@ Both transparent spheres passed decoded Alpha validation, and all ten edit calls
 visually usable. These observations justify regression checks, not universal model
 claims; the full scorecard is [here](../evals/live/results/2026-09-16-run-01.md).
 
+The follow-up allowlist run removed the unapproved explanatory copy from both
+infographics and reduced UI copy to placeholders, but both UI outputs repeated the
+allowlisted labels in multiple regions. Treat global occurrence count and repeated
+navigation labels as a separate regression dimension.
+
+The v3 global-count run removed repeated labels from the UI layouts, but introduced a
+precision/recall tradeoff: Flare rendered the structural numerals but omitted all five
+required word labels; Sunburst rendered the five word labels and allowed numerals
+without explanatory copy. Required UI copy should therefore be typeset deterministically
+after the model supplies the visual layout. Keep v2 and v3 as separate evidence; do not
+call the stronger wording a universal fix.
+
+For UI specifically:
+
+- UI: Flare omitted `VENDORS`, `SPECIALS`, and `PROFILE` in v3.
+- UI: Sunburst omitted `PROFILE`.
+
+For the infographic, Flare precision passed but recall failed; Sunburst passed both.
+Keep UI and infographic results as separate categories.
+
 Adopt the structural parts that improve clarity. Do not claim that a community pattern improves GPT Image 2.5 until representative live comparisons show it.

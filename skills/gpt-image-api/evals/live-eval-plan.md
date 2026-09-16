@@ -49,6 +49,10 @@ legible copy is a critical failure even when the requested labels are correct.
 wording after the first run's extra-copy failures. Compare its outputs against the
 original matrix; do not silently replace the original evidence.
 
+`regression-text-matrix-v3.jsonl` adds a global occurrence count and forbids repeating
+allowlisted labels in navigation, section headers, cards, footers, or badges. Keep all
+three generations as separate evidence when judging whether the wording helped.
+
 Run:
 
 ```bash
@@ -90,13 +94,15 @@ pass.
 
 ## Scoring rubric
 
-Score every output from 0–4 on each axis:
+Score the five numeric axes from 0–4:
 
 - **Instruction following:** requested subject/action and exclusions.
 - **Composition/layout:** framing, hierarchy, counts, relationships, and usable space.
 - **Rendering quality:** materials, lighting, anatomy, texture, and coherence.
-- **Text/identity/preservation:** exact text where applicable; identity/product and
-  non-target regions for edits.
+- **Identity/preservation:** identity/product fidelity and non-target regions for edits.
+- **Text precision / recall:** for text-sensitive cases, record separate PASS/FAIL/N/A
+  gates for no unapproved/repeated text and all required strings with their global counts;
+  these are critical gates, not numeric axes.
 - **Artifact correctness:** format, dimensions, alpha, output path, metadata, request ID,
   and usage.
 

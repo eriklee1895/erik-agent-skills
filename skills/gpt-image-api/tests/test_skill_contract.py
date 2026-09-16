@@ -174,6 +174,12 @@ class SkillContractTests(unittest.TestCase):
             {json.loads(line)["model"] for line in regression_lines},
             {"flare", "sunburst"},
         )
+        v3 = SKILL_DIR / "evals" / "live" / "regression-text-matrix-v3.jsonl"
+        self.assertTrue(v3.is_file())
+        v3_lines = [
+            line for line in v3.read_text(encoding="utf-8").splitlines() if line.strip()
+        ]
+        self.assertEqual(len(v3_lines), 4)
 
     def test_live_findings_are_recorded_as_reusable_guidance(self):
         model_text = (SKILL_DIR / "references" / "model-selection.md").read_text(
@@ -194,12 +200,59 @@ class SkillContractTests(unittest.TestCase):
         for needle in ("allowlist", "unapproved", "critical", "Alpha"):
             with self.subTest(file="generation.md", needle=needle):
                 self.assertIn(needle, generation_text)
-        for needle in ("only", "unapproved", "critical failure", "deterministic"):
+        for needle in (
+            "only",
+            "unapproved",
+            "critical failure",
+            "deterministic",
+            "missing",
+        ):
             with self.subTest(file="layout-and-text.md", needle=needle):
                 self.assertIn(needle, layout_text)
-        for needle in ("27", "UI", "extra", "Sunburst"):
+        for needle in ("27", "UI", "extra", "Sunburst", "omitted", "v3"):
             with self.subTest(file="community-practices.md", needle=needle):
                 self.assertIn(needle, community_text)
+        regression_report = (
+            SKILL_DIR / "evals" / "live" / "results" / "2026-09-16-text-regression.md"
+        )
+        self.assertTrue(regression_report.is_file())
+        report_text = regression_report.read_text(encoding="utf-8")
+        for needle in ("v2", "v3", "omitted", "deterministic"):
+            with self.subTest(file=regression_report.name, needle=needle):
+                self.assertIn(needle, report_text)
+        self.assertIn("Flare precision PASS / recall FAIL", report_text)
+        self.assertIn("Sunburst precision PASS / recall PASS", report_text)
+        self.assertIn(
+            "UI: Flare omitted `VENDORS`, `SPECIALS`, and `PROFILE`", report_text
+        )
+        self.assertIn("UI: Sunburst omitted `PROFILE`", report_text)
+        scorecard = (SKILL_DIR / "evals" / "live" / "scorecard-template.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Text precision", scorecard)
+        self.assertIn("Text recall", scorecard)
+        self.assertIn("PASS/FAIL/N/A", scorecard)
+        self.assertIn("critical gate", scorecard)
+        self.assertNotIn("product-hero | flare |  |  |  |  |  | PASS", scorecard)
+        self.assertIn(
+            "| transparent-sphere | flare |  |  |  |  |  |  | N/A |",
+            scorecard,
+        )
+        plan_text = (SKILL_DIR / "evals" / "live-eval-plan.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Text precision", plan_text)
+        self.assertIn("Identity/preservation", plan_text)
+        self.assertNotIn("Text/identity/preservation", plan_text)
+        self.assertIn("five numeric axes", plan_text)
+        self.assertIn("UI: Flare omitted", community_text)
+        self.assertIn("UI: Sunburst omitted", community_text)
+        v3_prompt = (
+            SKILL_DIR / "evals" / "live" / "regression-text-matrix-v3.jsonl"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("numbered nodes", v3_prompt)
+        self.assertIn("ordered nodes", v3_prompt)
+        self.assertIn("eval-run-20260916-01", report_text)
 
     def test_regression_evals_cover_observed_text_failures(self):
         evals = json.loads((SKILL_DIR / "evals" / "evals.json").read_text())
@@ -208,7 +261,8 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("strict-infographic-text-allowlist", names)
         self.assertIn("native-alpha-edge-qa", names)
         self.assertIn("workflow-specific-model-selection", names)
-        self.assertGreaterEqual(len(names), 13)
+        self.assertIn("strict-ui-single-occurrence", names)
+        self.assertGreaterEqual(len(names), 14)
 
     def test_catalogs_publish_new_name_and_remove_old_skill_name(self):
         for relative in (

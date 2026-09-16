@@ -123,14 +123,15 @@ Deliverable: [low/high]-fidelity visual concept for a [desktop/mobile] [product]
 User goal: [one primary task].
 Layout: [navigation pattern], [main regions], [primary action location], and clear hierarchy.
 Content: [required metrics, cards, controls, or states].
-Text allowlist (exact): only "[short labels]", each once. Every other UI field must be blank, unlabeled, or a non-readable placeholder shape; do not invent prices, names, descriptions, captions, badges, or button copy.
+Text allowlist (exact, global count): only "[short labels]", each exactly once in the entire canvas. Do not repeat them in navigation, section headers, cards, footers, or badges. Every other UI field must be blank, unlabeled, or a non-readable placeholder shape; do not invent prices, names, descriptions, captions, badges, or button copy.
 Visual language: [existing design tokens or agent-selected coherent surfaces, borders, type, and color].
 Avoid: unintended device frame, browser chrome, status bar, fake logo, dense body copy, or watermark.
 ```
 
 **Visual QA:** Inspect task hierarchy, alignment, spacing, practical controls, label accuracy,
-platform consistency, overlap, and every legible string. Any unapproved readable text is
-a critical failure. Confirm the concept can be rebuilt deterministically.
+platform consistency, overlap, every legible string, and the global occurrence count of
+each allowlisted label. Any unapproved or repeated readable text is a critical failure.
+Confirm the concept can be rebuilt deterministically.
 
 **Evidence/status:** Official interface-preview pattern plus the current local raster/UI boundary; use code for the shipping interface.
 
