@@ -160,7 +160,8 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(len(matrix_lines), 16)
         models = {json.loads(line)["model"] for line in matrix_lines}
         self.assertEqual(models, {"flare", "sunburst"})
-        self.assertTrue((SKILL_DIR / "evals" / "live" / "scorecard-template.md").is_file())
+        scorecard = SKILL_DIR / "evals" / "live" / "scorecard-template.md"
+        self.assertTrue(scorecard.is_file())
 
     def test_catalogs_publish_new_name_and_remove_old_skill_name(self):
         for relative in (
