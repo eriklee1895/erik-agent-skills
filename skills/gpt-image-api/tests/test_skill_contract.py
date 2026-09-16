@@ -162,6 +162,53 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(models, {"flare", "sunburst"})
         scorecard = SKILL_DIR / "evals" / "live" / "scorecard-template.md"
         self.assertTrue(scorecard.is_file())
+        regression = SKILL_DIR / "evals" / "live" / "regression-text-matrix.jsonl"
+        regression_lines = [
+            line
+            for line in regression.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertIn("regression-text-matrix.jsonl", plan)
+        self.assertEqual(len(regression_lines), 4)
+        self.assertEqual(
+            {json.loads(line)["model"] for line in regression_lines},
+            {"flare", "sunburst"},
+        )
+
+    def test_live_findings_are_recorded_as_reusable_guidance(self):
+        model_text = (SKILL_DIR / "references" / "model-selection.md").read_text(
+            encoding="utf-8"
+        )
+        generation_text = (SKILL_DIR / "references" / "generation.md").read_text(
+            encoding="utf-8"
+        )
+        layout_text = (
+            SKILL_DIR / "assets" / "templates" / "layout-and-text.md"
+        ).read_text(encoding="utf-8")
+        community_text = (
+            SKILL_DIR / "references" / "community-practices.md"
+        ).read_text(encoding="utf-8")
+        for needle in ("2026-09-16", "paired", "latency", "workflow"):
+            with self.subTest(file="model-selection.md", needle=needle):
+                self.assertIn(needle, model_text)
+        for needle in ("allowlist", "unapproved", "critical", "Alpha"):
+            with self.subTest(file="generation.md", needle=needle):
+                self.assertIn(needle, generation_text)
+        for needle in ("only", "unapproved", "critical failure", "deterministic"):
+            with self.subTest(file="layout-and-text.md", needle=needle):
+                self.assertIn(needle, layout_text)
+        for needle in ("27", "UI", "extra", "Sunburst"):
+            with self.subTest(file="community-practices.md", needle=needle):
+                self.assertIn(needle, community_text)
+
+    def test_regression_evals_cover_observed_text_failures(self):
+        evals = json.loads((SKILL_DIR / "evals" / "evals.json").read_text())
+        names = {item["name"] for item in evals["evals"]}
+        self.assertIn("strict-ui-text-allowlist", names)
+        self.assertIn("strict-infographic-text-allowlist", names)
+        self.assertIn("native-alpha-edge-qa", names)
+        self.assertIn("workflow-specific-model-selection", names)
+        self.assertGreaterEqual(len(names), 13)
 
     def test_catalogs_publish_new_name_and_remove_old_skill_name(self):
         for relative in (

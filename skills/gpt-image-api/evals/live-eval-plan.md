@@ -42,6 +42,13 @@ agent behavior, while this plan records observable model and artifact quality.
 | Character consistency sheet | view count, identity, outfit, proportions, scale |
 | Article illustration | thesis/visual metaphor, hierarchy, editorial usability |
 
+The UI and infographic cases use an explicit readable-text allowlist. Any additional
+legible copy is a critical failure even when the requested labels are correct.
+
+`regression-text-matrix.jsonl` repeats those two cases with the strengthened allowlist
+wording after the first run's extra-copy failures. Compare its outputs against the
+original matrix; do not silently replace the original evidence.
+
 Run:
 
 ```bash

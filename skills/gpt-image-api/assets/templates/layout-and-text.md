@@ -70,15 +70,17 @@ and illustration treatment while preserving logical meaning.
 Deliverable: [ratio] educational infographic for [audience].
 Topic: explain [system/process/concept] from [start] to [outcome].
 Structure: exactly [count] stages arranged [direction]; one connector between adjacent stages; no crossing arrows.
-Labels (exact): "[LABEL 1]", "[LABEL 2]", "[LABEL 3]"[, ...], each exactly once.
+Labels (exact allowlist): "[LABEL 1]", "[LABEL 2]", "[LABEL 3]"[, ...], each exactly once.
 Visual encoding: [shape/color] means [concept]; [shape/color] means [concept].
 Style: scan-friendly technical editorial illustration with [background and visual language].
 Accuracy constraints: [required relationships, direction, counts, or scale].
-Avoid: invented facts, other text, decorative arrows, fake controls, logos, or watermark.
+Text constraint: no explanatory sentences, captions, descriptions, or other legible words beyond the label allowlist.
+Avoid: invented facts, other readable text, decorative arrows, fake controls, logos, or watermark.
 ```
 
 **Visual QA:** Verify facts, every label, stage count, relationship, arrow direction,
-legend consistency, reading order, and visual hierarchy—not appearance alone.
+legend consistency, reading order, visual hierarchy, and every legible string—not
+appearance alone. Any unapproved readable text is a critical failure.
 
 **Evidence/status:** Official process-visualization and scientific-diagram patterns from the [OpenAI prompting guide](https://developers.openai.com/api/docs/guides/image-prompting).
 
@@ -121,13 +123,14 @@ Deliverable: [low/high]-fidelity visual concept for a [desktop/mobile] [product]
 User goal: [one primary task].
 Layout: [navigation pattern], [main regions], [primary action location], and clear hierarchy.
 Content: [required metrics, cards, controls, or states].
-Text (exact): only "[short labels]", each once; keep all other copy absent or intentionally abstract.
+Text allowlist (exact): only "[short labels]", each once. Every other UI field must be blank, unlabeled, or a non-readable placeholder shape; do not invent prices, names, descriptions, captions, badges, or button copy.
 Visual language: [existing design tokens or agent-selected coherent surfaces, borders, type, and color].
 Avoid: unintended device frame, browser chrome, status bar, fake logo, dense body copy, or watermark.
 ```
 
 **Visual QA:** Inspect task hierarchy, alignment, spacing, practical controls, label accuracy,
-platform consistency, overlap, and whether the concept can be rebuilt deterministically.
+platform consistency, overlap, and every legible string. Any unapproved readable text is
+a critical failure. Confirm the concept can be rebuilt deterministically.
 
 **Evidence/status:** Official interface-preview pattern plus the current local raster/UI boundary; use code for the shipping interface.
 

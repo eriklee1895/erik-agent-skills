@@ -25,9 +25,18 @@ The requested aspect ratio changes composition rather than merely cropping one l
 - Use higher quality only after a lower setting fails legibility or layout criteria.
 - Finish copy-critical layouts in a deterministic design tool when exact typography is mandatory.
 
+### Strict readable-text allowlist
+
+For UI, infographics, slides, and other text-sensitive images, write an explicit
+allowlist: only the quoted strings may be legible. State that every other field must
+be blank, unlabeled, or a non-readable placeholder shape; do not let the model invent
+card descriptions, prices, captions, button labels, or explanatory sentences. Treat
+any unapproved readable string as a critical visual failure and inspect the complete
+image, not only the requested labels.
+
 ## Transparent assets
 
-Set `background=transparent`, use PNG or WebP, and explicitly request a clean isolated subject with real alpha. For cutouts, specify crisp edges, no halos, preserved semi-transparent materials, no checkerboard, and no invented shadow unless wanted. Inspect hair, glass, reflections, and edge pixels.
+Set `background=transparent`, use PNG or WebP, and explicitly request a clean isolated subject with real alpha. For cutouts, specify crisp edges, no halos, preserved semi-transparent materials, no checkerboard, and no invented shadow unless wanted. Inspect hair, glass, reflections, and edge pixels. A simple opaque-edged subject passing Alpha validation does not establish that hair, glass, or soft shadows will pass.
 
 ## Variants and batches
 

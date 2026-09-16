@@ -99,6 +99,50 @@
         "Does not add dialogue, new plot beats, alternative layouts, or extra variants",
         "Runs dry-run and sends the normalized complete brief verbatim"
       ]
+    },
+    {
+      "id": 10,
+      "name": "strict-ui-text-allowlist",
+      "prompt": "Generate one 1024x1536 mobile farmers-market UI concept. The only legible strings permitted are exactly \"TODAY'S MARKET\", \"VENDORS\", \"SPECIALS\", and \"PROFILE\", each once. All cards, prices, vendor names, captions, buttons, and supporting fields must be blank, unlabeled, or non-readable placeholder shapes. No invented words, numbers, logos, device frame, browser chrome, status bar, or watermark.",
+      "expected": [
+        "Uses the layout-and-text template only if the brief is incomplete",
+        "Carries an explicit readable-text allowlist into the final prompt",
+        "Treats any unapproved readable UI copy as a critical visual failure",
+        "Inspects the complete output rather than checking only the four requested labels"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "strict-infographic-text-allowlist",
+      "prompt": "Generate a landscape retrieval pipeline infographic with exactly five numbered nodes and arrows. The only legible strings permitted are exactly \"QUERY\", \"EMBED\", \"SEARCH\", \"RERANK\", and \"ANSWER\", each once. Use icons and unlabeled shapes only; do not add explanatory sentences, captions, legends, descriptions, fake UI, logos, or watermark.",
+      "expected": [
+        "Defines the five labels as an explicit allowlist",
+        "Forbids explanatory copy under or beside nodes",
+        "Checks node count, arrow logic, every readable string, and visual hierarchy",
+        "Marks any extra readable text as a critical failure"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "native-alpha-edge-qa",
+      "prompt": "Generate an isolated translucent glass bottle on a genuinely transparent PNG background. Preserve the glass edges, internal refraction, and label; no checkerboard, solid backdrop, halo, invented shadow, or extra text.",
+      "expected": [
+        "Sets background transparent and output format PNG",
+        "Inspects decoded Alpha around glass, reflections, and fine edges",
+        "Does not generalize a simple opaque-subject Alpha pass to complex transparency",
+        "Rejects a painted checkerboard or solid background"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "workflow-specific-model-selection",
+      "prompt": "Compare Flare and Sunburst on the same identity-preserving edit with the same prompt, inputs, dimensions, quality, and format. Choose the lowest-latency model only if it meets the same visual acceptance bar.",
+      "expected": [
+        "Changes only the model between paired requests",
+        "Records latency, usage, retries, and visual acceptance separately",
+        "Does not claim a universal model winner from one workload",
+        "Uses Sunburst only when its quality or preservation advantage is necessary"
+      ]
     }
   ]
 }

@@ -21,6 +21,16 @@ CLI shorthands `flare` and `sunburst` resolve to the undated aliases. Metadata a
 4. Check the whole result, not just aesthetics: text, relationships, reference fidelity, unwanted edits, transparency, response time, and accepted-image cost.
 5. If Sunburst passes, test Flare with the same request. Keep Sunburst only when its quality advantage is necessary.
 
+## Local paired observation (2026-09-16)
+
+One run against the configured custom endpoint compared eight identical generation
+prompts and five identical edit prompts per model. Flare's paired-generation median
+was about 78s versus Sunburst's 102s; its paired-edit median was about 22s versus
+Sunburst's 26s. Both models passed the tested product, text-edit, identity, weather,
+Mask, and outpaint calls. This is a workload observation, not a model guarantee:
+repeat the comparison after changing the provider, SDK, snapshot, prompt, size, or
+quality. Use the lowest-latency model only when it meets the same acceptance bar for the workflow.
+
 ## Quality
 
 Both models accept `auto`, `low`, `medium`, `high`, `xhigh`, and `max`.

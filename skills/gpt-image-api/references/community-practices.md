@@ -20,4 +20,14 @@ into template assets.
 | Attach source status and per-template visual QA | [Community 2.5 template pack](https://github.com/wuyoscar/GPT-Image2-Skill/blob/main/skills/gpt-image/references/templates-gpt-image-2.5.md) | Visual inspection and preservation checks overlap official guidance | Structure reviewed; templates not reproduced locally | Makes empirical material auditable and prevents prompt constraints from being mistaken for guarantees | Source model and local verification vary by template |
 | Route by deliverable category, then load one template | [Community industrial template library](https://github.com/freestylefly/awesome-gpt-image-2/blob/main/docs/templates.md) | Intended use and artifact type overlap official deliverable-first guidance | Taxonomy reviewed; individual prompts not imported or benchmarked | Improves retrieval across brand, space, series, publishing, and technical work | Large reverse-engineered libraries contain stale, verbose, or model-specific material |
 
+## Local 2.5 evidence
+
+The 2026-09-16 paired run covered 16 generation jobs, one edit-source generation, and
+10 edits against one configured custom endpoint. All 27 calls succeeded with no retry.
+The UI pair both produced extra readable copy despite an allowlist; Flare's retrieval
+infographic added explanatory sentences while Sunburst kept the five requested labels.
+Both transparent spheres passed decoded Alpha validation, and all ten edit calls were
+visually usable. These observations justify regression checks, not universal model
+claims; the full scorecard is [here](../evals/live/results/2026-09-16-run-01.md).
+
 Adopt the structural parts that improve clarity. Do not claim that a community pattern improves GPT Image 2.5 until representative live comparisons show it.
