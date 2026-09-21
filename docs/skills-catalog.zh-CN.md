@@ -23,6 +23,7 @@
 | Skill | 用途 | 安装 |
 | --- | --- | --- |
 | [article-illustration](../skills/article-illustration/) | 为文章制作封面、正文插图、图解、信息图和视觉分隔图。 | `npx skills add eriklee1895/erik-agent-skills --skill article-illustration` |
+| [gpt-image-2](../skills/gpt-image-2/) | 使用 OpenAI gpt-image-2 模型生成、编辑和批量制作位图。 | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-2` |
 | [gpt-image-api](../skills/gpt-image-api/) | 使用 OpenAI GPT Image 2.5 Flare 与 Sunburst 生成、精细编辑、流式生成和批量制作位图。 | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api` |
 | [seedream-image-gen](../skills/seedream-image-gen/) | 使用 Seedream 生成和编辑图片，支持文字设计、标记编辑、扩图与批量工作流。 | `npx skills add eriklee1895/erik-agent-skills --skill seedream-image-gen` |
 | [seedance-video-gen](../skills/seedance-video-gen/) | 使用 Seedance 根据文本、图片或多模态参考生成视频。 | `npx skills add eriklee1895/erik-agent-skills --skill seedance-video-gen` |
@@ -39,12 +40,6 @@
 | [notion-cli](../skills/notion-cli/) | 通过对官方 `ntn` CLI 的安全封装操作 Notion。 | `npx skills add eriklee1895/erik-agent-skills --skill notion-cli` |
 | [volcengine-doc-fetcher](../skills/volcengine-doc-fetcher/) | 将火山引擎官方文档抓取为干净的 Markdown。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-doc-fetcher` |
 | [volcengine-web-search](../skills/volcengine-web-search/) | 通过火山引擎搜索 API 搜索网页和图片，重点覆盖中文内容。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-web-search` |
-
-## 已归档 Skills
-
-归档源码仅用于历史追溯和迁移，不参与发布、安装或 16 个活跃 Skill 的数量统计。
-已停用的 [`gpt-image-2`](../archive/skills/gpt-image-2/) 已由
-[`gpt-image-api`](../skills/gpt-image-api/) 取代。
 
 ## 分类规则
 

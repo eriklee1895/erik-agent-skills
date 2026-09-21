@@ -5,9 +5,6 @@ description: "Generate, edit, and batch-generate raster images with OpenAI's gpt
 
 # gpt-image-2
 
-> **Archived:** This historical skill is no longer published or maintained. Use
-> [`gpt-image-api`](../../../skills/gpt-image-api/) for current GPT Image 2.5 work.
-
 Generate and edit images with OpenAI's gpt-image-2 model via the Image API.
 
 ## Quick workflow

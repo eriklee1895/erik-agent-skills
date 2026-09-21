@@ -5,7 +5,7 @@
 ![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.jpg)
 
 <p align="center">
-  <a href="docs/skills-catalog.en.md"><img alt="16 curated skills" src="https://img.shields.io/badge/COLLECTION-16_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="docs/skills-catalog.en.md"><img alt="17 curated skills" src="https://img.shields.io/badge/COLLECTION-17_SKILLS-0B1F3A?style=for-the-badge"></a>
   <a href="docs/skills-catalog.en.md"><img alt="3 skill categories" src="https://img.shields.io/badge/CATEGORIES-3-6750A4?style=for-the-badge"></a>
   <a href="https://developers.openai.com/codex/skills"><img alt="Codex ready" src="https://img.shields.io/badge/CODEX-READY-0F9D88?style=for-the-badge&logo=openai&logoColor=white"></a>
   <a href="README.zh-CN.md"><img alt="English and Chinese documentation" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
@@ -26,12 +26,12 @@ level, global, and agent-specific options.
 npx skills add eriklee1895/erik-agent-skills --all
 
 # Install one skill
-npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen
+npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api
 ```
 
 ## Skills
 
-The repository currently includes 16 standalone, cross-project skills across
+The repository currently includes 17 standalone, cross-project skills across
 three areas. The end-to-end writing workflow skills (ideation, polishing,
 WeChat/blog publishing, closeout) stay project-specific to
 [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)
@@ -40,7 +40,7 @@ and are intentionally not published here.
 | Area | Skills | Focus |
 | --- | ---: | --- |
 | Publishing & Channels | 4 | Feishu documents, HTML/whiteboard diagrams, and WeChat article collection |
-| Media | 8 | Image, video, speech, and music generation |
+| Media | 9 | Image, video, speech, and music generation |
 | Tools & Integrations | 4 | Reusable CLIs, documentation retrieval, web search, and developer disk audits |
 
 Browse the [English skills catalog](docs/skills-catalog.en.md) for the complete
@@ -49,7 +49,6 @@ categorized list, descriptions, and per-skill install commands.
 ## Repository layout
 
 - `skills/` is the canonical publishing source. Each direct child is one skill.
-- `archive/` preserves retired historical sources and is never published or counted.
 - `docs/` contains the bilingual catalog and repository-level documentation.
 - `assets/` contains repository-level visual assets.
 

@@ -26,6 +26,7 @@ discovered, linked, and installed consistently.
 | Skill | Purpose | Install |
 | --- | --- | --- |
 | [article-illustration](../skills/article-illustration/) | Create article covers, inset illustrations, diagrams, infographics, and visual dividers. | `npx skills add eriklee1895/erik-agent-skills --skill article-illustration` |
+| [gpt-image-2](../skills/gpt-image-2/) | Generate, edit, and batch-create raster images with OpenAI's gpt-image-2 model. | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-2` |
 | [gpt-image-api](../skills/gpt-image-api/) | Generate, precisely edit, stream, and batch-create raster images with OpenAI GPT Image 2.5 Flare and Sunburst. | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api` |
 | [seedream-image-gen](../skills/seedream-image-gen/) | Generate and edit images with Seedream, including typography, marker editing, outpainting, and batch workflows. | `npx skills add eriklee1895/erik-agent-skills --skill seedream-image-gen` |
 | [seedance-video-gen](../skills/seedance-video-gen/) | Generate videos with Seedance from text, images, or multimodal references. | `npx skills add eriklee1895/erik-agent-skills --skill seedance-video-gen` |
@@ -42,13 +43,6 @@ discovered, linked, and installed consistently.
 | [notion-cli](../skills/notion-cli/) | Operate Notion through a guarded helper around the official `ntn` CLI. | `npx skills add eriklee1895/erik-agent-skills --skill notion-cli` |
 | [volcengine-doc-fetcher](../skills/volcengine-doc-fetcher/) | Fetch official Volcano Engine documentation as clean Markdown. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-doc-fetcher` |
 | [volcengine-web-search](../skills/volcengine-web-search/) | Search the web and images through Volcano Engine's search API, with strong Chinese-language coverage. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-web-search` |
-
-## Archived skills
-
-Archived sources remain available for history and migration but are not published,
-installable, or included in the 16-skill active count. The retired
-[`gpt-image-2`](../archive/skills/gpt-image-2/) source is superseded by
-[`gpt-image-api`](../skills/gpt-image-api/).
 
 ## Classification rules
 

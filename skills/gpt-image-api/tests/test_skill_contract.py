@@ -295,13 +295,13 @@ class SkillContractTests(unittest.TestCase):
             text = (REPO_ROOT / relative).read_text(encoding="utf-8")
             with self.subTest(relative=relative):
                 self.assertIn("gpt-image-api", text)
-                self.assertNotIn("--skill gpt-image-2`", text)
+                self.assertIn("--skill gpt-image-2`", text)
 
-    def test_legacy_skill_is_archived_outside_published_skills(self):
-        self.assertFalse((REPO_ROOT / "skills" / "gpt-image-2").exists())
-        archived = REPO_ROOT / "archive" / "skills" / "gpt-image-2"
-        self.assertTrue((archived / "SKILL.md").is_file())
-        self.assertTrue((archived / "ARCHIVED.md").is_file())
+    def test_previous_gpt_image_skill_remains_published(self):
+        legacy = REPO_ROOT / "skills" / "gpt-image-2"
+        self.assertTrue((legacy / "SKILL.md").is_file())
+        self.assertTrue((legacy / "scripts" / "gpt_image_2.py").is_file())
+        self.assertFalse((REPO_ROOT / "archive" / "skills" / "gpt-image-2").exists())
 
 
 if __name__ == "__main__":
