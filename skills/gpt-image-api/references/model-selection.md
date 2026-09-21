@@ -19,6 +19,8 @@ The agent owns the default: when the user explicitly names a model, honor that
 choice; otherwise choose from the deliverable's quality, fidelity, layout, and
 latency requirements. Do not run both models for an ordinary request. Compare both
 only when the user explicitly requests a comparison or an evaluation requires it.
+The CLI default is Flare as a fallback; after making a routing decision, pass the
+resolved model explicitly so the CLI cannot replace a quality-sensitive choice.
 
 ## Selection procedure
 

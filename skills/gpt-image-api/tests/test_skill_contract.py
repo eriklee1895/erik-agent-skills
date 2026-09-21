@@ -30,10 +30,15 @@ class SkillContractTests(unittest.TestCase):
             "explicit model",
             "Do not run both models",
             "explicitly requests a comparison",
+            "Pass the resolved model",
         ):
             with self.subTest(file="SKILL.md", needle=needle):
                 self.assertIn(needle, skill_text)
-        for needle in ("user explicitly names", "agent owns the default"):
+        for needle in (
+            "user explicitly names",
+            "agent owns the default",
+            "CLI default",
+        ):
             with self.subTest(file="model-selection.md", needle=needle):
                 self.assertIn(needle, model_text)
 

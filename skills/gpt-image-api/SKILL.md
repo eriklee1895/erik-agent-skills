@@ -5,7 +5,7 @@ description: Use when a user wants to generate, edit, or batch-create raster ima
 
 # GPT Image API
 
-Generate and edit images with OpenAI's GPT Image 2.5 Flare and Sunburst models through the Image API. Use the CLI instead of writing SDK scripts.
+Generate and edit images with GPT Image 2.5 Flare or Sunburst via the Image API; use the bundled CLI.
 
 ## Choose the mode
 
@@ -13,13 +13,15 @@ Generate and edit images with OpenAI's GPT Image 2.5 Flare and Sunburst models t
 - `edit`: provide one to sixteen images when preserving, replacing, combining, extracting, or restyling existing visual content. The first image is the edit target when a mask is present.
 - `generate-batch`: process distinct generation prompts from JSONL with bounded concurrency.
 
-Read [generation.md](references/generation.md) for new images and [editing.md](references/editing.md) for image inputs. For complex briefs, also read [prompting.md](references/prompting.md). Complete briefs skip templates; incomplete briefs may load one matching asset via [template-selection.md](references/template-selection.md).
+Read [generation.md](references/generation.md) for new images, [editing.md](references/editing.md) for image inputs, and [prompting.md](references/prompting.md) for complex briefs. Complete briefs skip templates; incomplete briefs may load one asset via [template-selection.md](references/template-selection.md).
 
 ## Choose the model
 
 - When the user does not name a model, the agent chooses by quality, fidelity, layout,
   and latency requirements.
 - An explicit model choice always wins.
+- Pass the resolved model explicitly; omitted `--model` is only a Flare fallback for
+  direct manual calls.
 - Default to `gpt-image-2.5-flare` for everyday generation, drafts, variants, and ordinary edits.
 - Use `gpt-image-2.5-sunburst` when quality or editing precision is the priority: identity and product preservation, dense layouts, difficult compositing, exact text, or final campaign assets.
 - Use a dated `2026-09-08` snapshot when reproducibility matters.
@@ -42,7 +44,7 @@ Read [model-selection.md](references/model-selection.md) before choosing between
 
 ## CLI
 
-Keep the working directory at the user's project so `.env` and relative output paths resolve there. Set `SKILL_DIR` to this installed skill directory, then invoke its bundled script with `uv run`; PEP 723 dependencies are installed in an isolated environment.
+Run the bundled script from the user's project so `.env` and relative output paths resolve. Set `SKILL_DIR` to this skill directory and invoke it with `uv run`.
 
 ```bash
 # Generate
