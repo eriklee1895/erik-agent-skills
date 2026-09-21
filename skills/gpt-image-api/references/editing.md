@@ -26,6 +26,22 @@ Avoid: No <few consequential unwanted additions>.
 
 Describe the finished state rather than an image-processing operation. “Change only the jacket to deep forest-green velvet” is clearer than “apply a green hue shift.”
 
+## Minimal-delta edits
+
+When the target is singular, visible, and unambiguous, prefer a short instruction that
+names only the requested change. Do not re-describe a stable scene just to make the
+prompt longer. Keep the current image as the baseline: unless the user names a variable,
+hold identity, composition, camera, lighting, materials, background, and text fixed.
+
+Use the full `Change / Preserve / Avoid` form when the target is ambiguous, several
+similar objects compete, a mask boundary is involved, or identity/text preservation is
+acceptance-critical. A short prompt is a routing option, not a guarantee of pixel-level
+preservation; inspect the entire result either way.
+
+For a continuing edit chain, state “use the last approved image as the baseline” and
+change one meaningful variable per turn. If a fine-detail edit fails repeatedly, return
+to the clean baseline instead of accumulating more micro-edits.
+
 ## Precision patterns
 
 ### Identity or clothing

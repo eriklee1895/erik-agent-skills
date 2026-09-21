@@ -27,6 +27,31 @@ supporting shadows, repeated textures, and accidental object loss.
 
 **Evidence/status:** Official single-change pattern from the [GPT Image 2.5 editing examples](https://developers.openai.com/api/docs/guides/image-prompting), reinforced by community preservation workflows.
 
+## Conservative restoration or detail recovery
+
+**Use when:** A low-resolution, compressed, noisy, or mildly blurred image should become
+clearer without changing its documented content.
+
+**Fixed requirements:** Lock the source composition, object count, identity, geometry,
+colors, lighting, and any supplied text. Treat the source as evidence, not an invitation
+to invent unsupported detail.
+
+**Creative latitude:** Reconstruct only strongly supported edges, texture, and local
+contrast; choose restrained denoising and sharpening appropriate to the source.
+
+```text
+Image 1: low-resolution source image and final canvas.
+Change: conservatively reduce [compression/noise/blur] and recover supported detail.
+Preserve: exact composition, object count, identity, geometry, colors, lighting, and text.
+Avoid: redesign, beautification, invented objects or letters, halos, oversharpening, or watermark.
+```
+
+**Visual QA:** Compare against the source at the same crop; inspect object identity,
+edges, small text, textures, and whether “recovered” detail is actually invented.
+
+**Evidence/status:** Community restoration pattern; one local Sunburst check improved a
+512×341 derivative while preserving the scene, but this is not lossless restoration.
+
 ## Replace or localize text
 
 **Use when:** Existing in-image copy must be replaced or translated without redesigning it.

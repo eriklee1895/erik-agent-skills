@@ -40,6 +40,9 @@ identity, outfit, scale, background, and whether limbs must stay fully visible.
 **Creative latitude:** Design transitional poses, rhythm, weight shift, camera consistency,
 and line/rendering treatment within the named action.
 
+For difficult motion, start with an 8-panel (4×2) sheet and inspect continuity before
+scaling to 16 panels. This is an iteration heuristic, not a model limit.
+
 ```text
 Image 1: character identity, outfit, color, and accessory reference.
 Deliverable: [rows]-by-[columns] contact sheet showing [ACTION SEQUENCE] in exactly [count] distinct full-body poses.
@@ -53,6 +56,33 @@ Avoid: missing/duplicate numbers, repeated poses, cropped anatomy, extra charact
 accessories, garment patterns, anatomy, full limbs, and constant camera/scale.
 
 **Evidence/status:** Source-attributed community adaptation from a [GPT Image 2.5 pose-sheet workflow](https://github.com/wuyoscar/GPT-Image2-Skill/blob/main/skills/gpt-image/references/templates-gpt-image-2.5.md); the structure is useful but not locally benchmarked across actions.
+
+## Multi-camera continuity sheet
+
+**Use when:** A character and location must remain continuous while a shot list explores
+several camera positions around the same three-dimensional scene.
+
+**Fixed requirements:** Lock identity, wardrobe, architecture, anchor-object positions,
+time, weather, light direction, and spatial relationships across all panels. Vary only
+camera position, distance, focal length, and natural micro-pose.
+
+**Creative latitude:** Choose the shot grid, exact framing, lens feel, and restrained
+editorial treatment while preserving a continuous moment rather than nine redesigns.
+
+```text
+Image 1: character identity and wardrobe reference.
+Deliverable: a [rows]-by-[columns] location-scout sheet with exactly [count] shots of the same scene.
+Continuity lock: same character, face, outfit, architecture, anchor objects, time, weather, and light direction in every panel.
+Shot list: [ordered camera positions, distances, and viewpoints].
+Allowed variation: camera position, distance, focal length, and natural micro-pose only.
+Avoid: new locations, changed wardrobe, duplicated characters, broken 3D perspective, labels, or watermark.
+```
+
+**Visual QA:** Check identity, wardrobe, architecture, anchor-object positions, camera
+logic, perspective continuity, shot order, and any accidental scene redesign.
+
+**Evidence/status:** Two local GPT Image 2.5 runs produced coherent 3×3 sheets with both
+models; this remains a continuity heuristic, not a guarantee for every cast or scene.
 
 ## Continue a character across scenes
 

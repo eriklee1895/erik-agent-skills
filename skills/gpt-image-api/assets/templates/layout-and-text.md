@@ -74,6 +74,7 @@ Labels (exact allowlist): "[LABEL 1]", "[LABEL 2]", "[LABEL 3]"[, ...], each exa
 Visual encoding: [shape/color] means [concept]; [shape/color] means [concept].
 Style: scan-friendly technical editorial illustration with [background and visual language].
 Accuracy constraints: [required relationships, direction, counts, or scale].
+Mechanism encoding: [main path, branch, decision, query, or feedback semantics]; use strong continuous arrows for the main path and weaker/dashed connectors for secondary relations.
 Text constraint: no explanatory sentences, captions, descriptions, or other legible words beyond the label allowlist.
 Avoid: invented facts, other readable text, decorative arrows, fake controls, logos, or watermark.
 ```
@@ -159,6 +160,35 @@ Avoid: invented values, misleading scale, clip art, generic stock photos, decora
 hierarchy, readability at presentation size, and absence of invented numbers.
 
 **Evidence/status:** Official productivity-visual pattern from the [GPT Image 2.5 guide](https://developers.openai.com/api/docs/guides/image-prompting); deterministic charting remains preferable for exact data graphics.
+
+## Visual abstract or executive summary
+
+**Use when:** A report or technical topic must become a single-page visual explanation
+for readers who need the conclusion, evidence, and next actions quickly.
+
+**Fixed requirements:** Lock the supplied facts, conclusion, evidence count, action count,
+reading order, and approved strings. Do not invent metrics, dates, components, citations,
+or conclusions.
+
+**Creative latitude:** Choose a restrained editorial system, information hierarchy,
+icons, spacing, and visual encoding that make the supplied argument scannable.
+
+```text
+Deliverable: one 16:9 [visual abstract/executive summary] for [audience].
+Source truth: use only these supplied facts: [facts].
+Top: [one direct conclusion].
+Middle: exactly [3-5] evidence modules, each with [short label + one factual explanation + one symbol].
+Bottom: exactly [count] implications or next actions: [list].
+Layout: explicit reading order, strong whitespace, restrained editorial hierarchy.
+Text: render only the approved strings and short explanations; no invented numbers or facts.
+Avoid: decorative clutter, fake citations, unsupported claims, extra readable text, logos, or watermark.
+```
+
+**Visual QA:** Verify every fact, label, module/action count, reading order, text string,
+and relationship. For publication-critical copy, finish typography deterministically.
+
+**Evidence/status:** Two local GPT Image 2.5 checks produced usable visual-abstract and
+executive-summary concepts; text-heavy success is sample evidence, not a guarantee.
 
 ## Document or publication page concept
 

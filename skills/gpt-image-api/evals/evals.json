@@ -165,6 +165,50 @@
         "Does not run both models unless comparison is explicitly requested or required by evaluation",
         "Records the resolved model in metadata"
       ]
+    },
+    {
+      "id": 16,
+      "name": "minimal-delta-edit",
+      "prompt": "Edit an approved interior image by moving one clearly identified lamp. Prefer a minimal-delta prompt when the target is unambiguous, preserve the last approved image as the baseline, and inspect the entire frame for drift and coherent relighting.",
+      "expected": [
+        "Uses one targeted edit and does not unnecessarily re-describe the stable scene",
+        "Keeps the approved image as the baseline",
+        "Checks object count, composition, protected objects, and lighting after the edit",
+        "Does not claim pixel-level preservation from a generative edit"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "multi-camera-continuity-sheet",
+      "prompt": "Create a 3x3 location-scout sheet of the same character in the same scene from nine camera positions. Lock identity, wardrobe, architecture, anchor objects, time, weather, and light; vary only camera position, distance, focal length, and natural micro-pose.",
+      "expected": [
+        "Loads the multi-camera continuity scaffold when the brief is incomplete",
+        "Checks panel count, camera order, identity, wardrobe, anchor-object positions, and 3D spatial continuity",
+        "Does not treat nine panels as nine redesigned scenes",
+        "Inspects every panel for labels, extra characters, and continuity drift"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "conservative-image-restoration",
+      "prompt": "Restore a low-resolution or compressed source image conservatively. Reduce supported noise and blur while preserving composition, identity, object count, colors, lighting, and text; do not invent unsupported detail or claim lossless recovery.",
+      "expected": [
+        "Uses the conservative restoration scaffold when the brief is incomplete",
+        "Treats the source as evidence and preserves documented content",
+        "Checks edges, small text, identity, and invented detail against the source",
+        "Reports generative-restoration limitations"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "visual-abstract-executive-summary",
+      "prompt": "Turn supplied technical facts into one 16:9 visual abstract or executive summary with a conclusion, exactly three to five evidence modules, and a fixed number of implications or next actions. Do not invent metrics, dates, components, citations, or extra readable text.",
+      "expected": [
+        "Uses the visual-abstract/executive-summary scaffold when the brief is incomplete",
+        "Keeps source facts and reading order explicit",
+        "Checks every text string, module/action count, relationship, and invented claim",
+        "Treats publication-critical typography as requiring deterministic finishing"
+      ]
     }
   ]
 }

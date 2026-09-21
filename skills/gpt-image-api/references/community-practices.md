@@ -50,4 +50,26 @@ For UI specifically:
 For the infographic, Flare precision passed but recall failed; Sunburst passed both.
 Keep UI and infographic results as separate categories.
 
+The 2026-09-21 article-driven live check used the two community posts
+[赛博踱步](https://mp.weixin.qq.com/s/9dy4JoyqZFHuAWO9utISpA) and
+[远见明察](https://mp.weixin.qq.com/s/Dwbow-EPAmz1y640HJdLcg) as hypothesis sources,
+not as API contracts. It produced 12 accepted outputs plus one transient batch failure
+that succeeded when the failed item was retried. The controlled edit pair tested a one-line
+minimal-delta instruction against the structured `Change / Preserve / Avoid` form on the
+same lamp-move task with both models. Both forms made the intended local edit and plausible
+relighting; the structured form was not visibly superior in this small sample, and latency
+was not monotonic, so do not mandate long prompts for obvious local edits.
+
+The same run produced coherent 3×3 multi-camera continuity sheets with Flare and Sunburst,
+usable 4×4 sixteen-pose action sheets with both models, a readable Sunburst visual abstract,
+and a readable Flare executive-summary concept without obvious extra copy. A conservative
+Sunburst restoration improved a 512×341 derivative, but the result remains generative rather
+than lossless restoration. These outputs support optional scaffolds for minimal-delta edits,
+baseline locking, restoration, multi-camera continuity, and source-grounded one-page summaries;
+they do not establish universal identity, frame, typography, or restoration guarantees.
+
+The first six-job batch had one connection failure and later completed the failed item
+separately. Keep transient retry evidence separate from visual quality, and inspect every
+panel or text string before treating a contact sheet or summary as production-ready.
+
 Adopt the structural parts that improve clarity. Do not claim that a community pattern improves GPT Image 2.5 until representative live comparisons show it.

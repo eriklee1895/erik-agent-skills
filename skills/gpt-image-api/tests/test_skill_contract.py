@@ -210,6 +210,12 @@ class SkillContractTests(unittest.TestCase):
         generation_text = (SKILL_DIR / "references" / "generation.md").read_text(
             encoding="utf-8"
         )
+        editing_text = (SKILL_DIR / "references" / "editing.md").read_text(
+            encoding="utf-8"
+        )
+        character_text = (
+            SKILL_DIR / "assets" / "templates" / "characters-and-series.md"
+        ).read_text(encoding="utf-8")
         layout_text = (
             SKILL_DIR / "assets" / "templates" / "layout-and-text.md"
         ).read_text(encoding="utf-8")
@@ -222,16 +228,34 @@ class SkillContractTests(unittest.TestCase):
         for needle in ("allowlist", "unapproved", "critical", "Alpha"):
             with self.subTest(file="generation.md", needle=needle):
                 self.assertIn(needle, generation_text)
+        for needle in ("Minimal-delta", "baseline", "one meaningful change"):
+            with self.subTest(file="editing.md", needle=needle):
+                self.assertIn(needle, editing_text)
         for needle in (
             "only",
             "unapproved",
             "critical failure",
             "deterministic",
             "missing",
+            "Visual abstract",
         ):
             with self.subTest(file="layout-and-text.md", needle=needle):
                 self.assertIn(needle, layout_text)
-        for needle in ("27", "UI", "extra", "Sunburst", "omitted", "v3"):
+        for needle in ("Multi-camera", "continuity", "8", "16"):
+            with self.subTest(file="characters-and-series.md", needle=needle):
+                self.assertIn(needle, character_text)
+        for needle in (
+            "27",
+            "UI",
+            "extra",
+            "Sunburst",
+            "omitted",
+            "v3",
+            "2026-09-21",
+            "12",
+            "restoration",
+            "transient",
+        ):
             with self.subTest(file="community-practices.md", needle=needle):
                 self.assertIn(needle, community_text)
         regression_report = (
@@ -275,6 +299,18 @@ class SkillContractTests(unittest.TestCase):
         self.assertNotIn("numbered nodes", v3_prompt)
         self.assertIn("ordered nodes", v3_prompt)
         self.assertIn("eval-run-20260916-01", report_text)
+        article_report = (
+            SKILL_DIR
+            / "evals"
+            / "live"
+            / "results"
+            / "2026-09-21-community-articles.md"
+        )
+        self.assertTrue(article_report.is_file())
+        article_report_text = article_report.read_text(encoding="utf-8")
+        for needle in ("12 accepted", "minimal-delta", "multi-camera", "lossless"):
+            with self.subTest(file=article_report.name, needle=needle):
+                self.assertIn(needle, article_report_text)
 
     def test_regression_evals_cover_observed_text_failures(self):
         evals = json.loads((SKILL_DIR / "evals" / "evals.json").read_text())
@@ -285,7 +321,11 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("workflow-specific-model-selection", names)
         self.assertIn("strict-ui-single-occurrence", names)
         self.assertIn("agent-owned-model-default", names)
-        self.assertGreaterEqual(len(names), 15)
+        self.assertIn("minimal-delta-edit", names)
+        self.assertIn("multi-camera-continuity-sheet", names)
+        self.assertIn("conservative-image-restoration", names)
+        self.assertIn("visual-abstract-executive-summary", names)
+        self.assertGreaterEqual(len(names), 19)
 
     def test_catalogs_publish_new_name_and_remove_old_skill_name(self):
         for relative in (
