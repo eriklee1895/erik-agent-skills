@@ -5,7 +5,7 @@ description: Use when a user wants to generate, edit, or batch-create raster ima
 
 # GPT Image API
 
-Generate and edit images with OpenAI's current GPT Image 2.5 Flare and Sunburst models through the Image API. Use the bundled CLI instead of writing one-off SDK scripts.
+Generate and edit images with OpenAI's GPT Image 2.5 Flare and Sunburst models through the Image API. Use the CLI instead of writing SDK scripts.
 
 ## Choose the mode
 
@@ -13,21 +13,26 @@ Generate and edit images with OpenAI's current GPT Image 2.5 Flare and Sunburst 
 - `edit`: provide one to sixteen images when preserving, replacing, combining, extracting, or restyling existing visual content. The first image is the edit target when a mask is present.
 - `generate-batch`: process distinct generation prompts from JSONL with bounded concurrency.
 
-Read [generation.md](references/generation.md) for new images. Read [editing.md](references/editing.md) for any image input, including reference-guided creation. For a complex brief, also read [prompting.md](references/prompting.md). A complete brief needs no template, even for a specialized deliverable. For an incomplete brief, read [template-selection.md](references/template-selection.md) and load at most one matching template asset.
+Read [generation.md](references/generation.md) for new images and [editing.md](references/editing.md) for image inputs. For complex briefs, also read [prompting.md](references/prompting.md). Complete briefs skip templates; incomplete briefs may load one matching asset via [template-selection.md](references/template-selection.md).
 
 ## Choose the model
 
+- When the user does not name a model, the agent chooses by quality, fidelity, layout,
+  and latency requirements.
+- An explicit model choice always wins.
 - Default to `gpt-image-2.5-flare` for everyday generation, drafts, variants, and ordinary edits.
 - Use `gpt-image-2.5-sunburst` when quality or editing precision is the priority: identity and product preservation, dense layouts, difficult compositing, exact text, or final campaign assets.
 - Use a dated `2026-09-08` snapshot when reproducibility matters.
 - Keep `quality=auto` initially. Raise it only to solve an observed quality problem; use `xhigh` or `max` when the improvement justifies the additional latency and token use.
+- Do not run both models for an ordinary request. Compare both only when the user
+  explicitly requests a comparison or the evaluation requires it.
 
 Read [model-selection.md](references/model-selection.md) before choosing between models or pinning a snapshot.
 
 ## Workflow
 
-1. Collect the intended deliverable, prompt, exact text, dimensions, output path, and constraints.
-2. Inspect every input image, then assign its role by index: edit target, identity reference, product reference, style reference, background, or compositing insert.
+1. Collect the deliverable, prompt, exact text, dimensions, output path, and constraints.
+2. Inspect inputs and assign each role by index: edit target, identity, product, style, background, or compositing insert.
 3. Shape the final prompt. Preserve a complete brief; when an incomplete brief needs structural help, adapt one template without stacking templates or constraining unspecified creative choices. Resolve every placeholder. The CLI sends the result verbatim and never silently augments it.
 4. Run `--dry-run` for complex, masked, transparent, high-resolution, or batch requests. Inspect the model, endpoint, prompt, input order, and outputs.
 5. Run the request. Existing files are protected unless `--force` is explicit.

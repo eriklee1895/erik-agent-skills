@@ -13,6 +13,13 @@ Select the model before tuning quality or rewriting the prompt. Keep the same pr
 
 CLI shorthands `flare` and `sunburst` resolve to the undated aliases. Metadata always records the resolved model ID.
 
+## Ownership and overrides
+
+The agent owns the default: when the user explicitly names a model, honor that
+choice; otherwise choose from the deliverable's quality, fidelity, layout, and
+latency requirements. Do not run both models for an ordinary request. Compare both
+only when the user explicitly requests a comparison or an evaluation requires it.
+
 ## Selection procedure
 
 1. Start with Flare when speed matters or the request is routine.

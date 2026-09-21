@@ -20,6 +20,23 @@ class SkillContractTests(unittest.TestCase):
         self.assertIsNone(re.search(r"gpt-image-2(?![.-]5)", text))
         self.assertLess(len(text.split()), 900)
 
+    def test_model_selection_is_agent_owned_with_explicit_user_override(self):
+        skill_text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+        model_text = (SKILL_DIR / "references" / "model-selection.md").read_text(
+            encoding="utf-8"
+        )
+        for needle in (
+            "agent chooses",
+            "explicit model",
+            "Do not run both models",
+            "explicitly requests a comparison",
+        ):
+            with self.subTest(file="SKILL.md", needle=needle):
+                self.assertIn(needle, skill_text)
+        for needle in ("user explicitly names", "agent owns the default"):
+            with self.subTest(file="model-selection.md", needle=needle):
+                self.assertIn(needle, model_text)
+
     def test_entrypoint_routes_to_mode_specific_references(self):
         text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
         for name in (
@@ -262,7 +279,8 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("native-alpha-edge-qa", names)
         self.assertIn("workflow-specific-model-selection", names)
         self.assertIn("strict-ui-single-occurrence", names)
-        self.assertGreaterEqual(len(names), 14)
+        self.assertIn("agent-owned-model-default", names)
+        self.assertGreaterEqual(len(names), 15)
 
     def test_catalogs_publish_new_name_and_remove_old_skill_name(self):
         for relative in (

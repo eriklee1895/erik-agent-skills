@@ -154,6 +154,17 @@
         "Uses icon-only or unlabeled placeholders for repeated UI elements",
         "Marks any extra or repeated readable text as a critical failure"
       ]
+    },
+    {
+      "id": 15,
+      "name": "agent-owned-model-default",
+      "prompt": "Generate a routine product image without naming a model, then generate a preservation-sensitive identity edit while explicitly requesting Flare. Choose the model autonomously for the first request, honor the explicit model for the second, and do not run an unnecessary comparison.",
+      "expected": [
+        "Chooses Flare by default for the routine generation",
+        "Honors an explicit user model choice",
+        "Does not run both models unless comparison is explicitly requested or required by evaluation",
+        "Records the resolved model in metadata"
+      ]
     }
   ]
 }
