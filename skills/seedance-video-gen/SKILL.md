@@ -411,7 +411,7 @@ Agent 按需读取，不必全加载。简单任务（文生视频 4-5s、单镜
 
 | 脚本 | 用途 |
 |---|---|
-| `scripts/grade_seedance_video.py` | 对 `evals/` 中定义的 eval case 跑出的 outputs 打标，用于 prompt/参数回归测试 |
+| `scripts/grade_seedance_video.py` | 对 Seedance 输出目录执行规则化检查，核对视频、manifest 和 prompt 预期 |
 | `scripts/benchmark_seedance_concurrency.py` | 自适应步进式并发容量测试，测量账号的 running 上限和饱和点 |
 
 正常生产使用不需要跑这两个脚本；调参、跑基准、回归测试时使用。

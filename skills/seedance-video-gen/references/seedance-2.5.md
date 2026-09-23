@@ -38,7 +38,7 @@
 
 ## Draft 样片（仅 2.5）
 
-2.5 支持 480p Draft 样片，并通过 Draft task ID 原生生成 1080p 成片。CLI 限制和 API 边界见 [api-reference.md](api-reference.md)；选型、HITL、成本和完整操作见 [draft-mode.md](draft-mode.md)。四候选实测数据见 [Draft 模式价值报告](../evals/draft-mode-value-2026-09-23.md)。
+2.5 支持 480p Draft 样片，并通过 Draft task ID 原生生成 1080p 成片。CLI 限制和 API 边界见 [api-reference.md](api-reference.md)；选型、HITL、成本和完整操作见 [draft-mode.md](draft-mode.md)。
 
 ## 任务类型硬限制（2.5）
 
