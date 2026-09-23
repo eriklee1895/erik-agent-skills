@@ -1,12 +1,12 @@
 ---
 name: seedance-video-gen
 description: |
-  火山引擎 Seedance 2.5 / 2.0 视频生成。用户说”生成视频””Seedance 2.5””即梦””图生视频””文生视频””30秒视频””首尾帧””多模态参考””优化 Seedance 提示词”等时使用；同一套异步 API。默认 2.5；只要 4k 且无 2.5 独有需求则 2.0 standard；4k 与 2.5 能力冲突则先问；便宜预览用 2.0-fast/mini。
+  火山引擎 Seedance 2.5 / 2.0 视频生成。用户说”生成视频””Seedance 2.5””即梦””图生视频””文生视频””30秒视频””Draft样片””首尾帧””多模态参考””优化 Seedance 提示词”等时使用；同一套异步 API。默认 2.5；Draft 样片与 1080p 升版仅 2.5 支持；只要 4k 且无 2.5 独有需求则 2.0 standard。
 ---
 
 # Seedance Video
 
-用火山引擎 Seedance 把文字、图片或多模态参考生成视频。默认 **Seedance 2.5**（`doubao-seedance-2-5-260628`，最长 30s，无 4k、无 fast/mini）。用户明确要 2.0、只要 4k、或便宜预览时切 2.0；4k 与 2.5 独有能力冲突则停下来问。
+用火山引擎 Seedance 把文字、图片或多模态参考生成视频。默认 **Seedance 2.5**（`doubao-seedance-2-5-260628`，最长 30s，无 4k、无 fast/mini）。2.5 可用 Draft 样片挑选镜头，再凭选中的任务 ID 生成 1080p 成片；2.0 系列不支持 Draft。用户明确要 2.0、只要 4k、或独立的低价预览时切 2.0；4k 与 2.5 独有能力冲突则停下来问。
 
 ## 何时使用
 
@@ -31,15 +31,25 @@ description: |
 ## 快速用法
 
 > **默认模型**：省略 `--model` = Seedance 2.5 `doubao-seedance-2-5-260628`。2.5 无 fast/mini、无 4k。
-> **何时切 2.0**：用户明确要 2.0 / 即梦 2.0（没说 fast/mini）→ standard；只要 4k 且无 2.5 独有需求 → 直接 2.0 standard + 4k；4k 且要 2.5 能力 → 先问。便宜预览/批量 → fast/mini。决策树见下方。
+> **何时切 2.0**：用户明确要 2.0 / 即梦 2.0（没说 fast/mini）→ standard；只要 4k 且无 2.5 独有需求 → 直接 2.0 standard + 4k；4k 且要 2.5 能力 → 先问。独立的低价预览/批量 → fast/mini。决策树见下方。
 > **时长**：2.5 为 4–30s / `-1`；2.0 为 4–15s / `-1`。脚本 CLI 默认仍是 5s（控成本）；官方 2.5 API 默认是 `-1`。
 > **2.5 首帧/首尾帧**：`--ratio` **必须** `adaptive`（画幅锁到首帧图）。编辑：`--ratio adaptive --duration -1`；延长：`--ratio adaptive`。
+> **2.5 Draft**：`--draft` 默认选 480p；看过样片并选定 task ID 后，`promote-draft --task-id` 原生生成 1080p。两步分别计费，Draft ID 7 天有效。2.0 系列不可用。
 
 ```bash
 # 文生视频（默认 2.5，终稿 1080p；2.5 的 1080p 是 10-bit HEVC）
 uv run scripts/generate_seedance_video.py \
   --prompt "一只橘猫在阳光下缓慢眨眼，微风吹动毛发，镜头轻微推进" \
   --duration 5 --ratio 1:1 --resolution 1080p
+
+# 2.5 Draft：先生成并下载 480p 样片；不写 --resolution 时自动选 480p
+uv run scripts/generate_seedance_video.py \
+  --draft --prompt "一只橘猫在阳光下缓慢眨眼，微风吹动毛发，镜头轻微推进" \
+  --duration 5 --ratio 1:1
+
+# 看过样片并选定其 manifest.json 中的 task_id 后，生成并下载 1080p 成片
+uv run scripts/generate_seedance_video.py promote-draft \
+  --task-id cgt-20260923xxxxx-xxxx
 
 # 文生视频（2.0 fast 快速预览档：单价低、同参数 token 数与 standard 相同；最高 720p）
 uv run scripts/generate_seedance_video.py \
@@ -130,6 +140,7 @@ uv run scripts/generate_seedance_video.py create \
 - 批量生成素材备选库
 
 读 JSON 文件，每个 shot 一个 object，可独立覆盖任意参数。
+`--draft` 可用于整批 2.5 样片；JSON 中单个 shot 的 `"draft": true/false` 可覆盖批量默认值。Draft shot 省略 resolution 时自动选 480p。
 
 ```bash
 # 准备 shots.json
@@ -146,6 +157,10 @@ uv run scripts/generate_seedance_video.py batch-submit \
   --shots-file /tmp/shots.json \
   --model doubao-seedance-2-0-fast-260128 \
   --resolution 480p
+
+# 多个 2.5 候选镜头先生成 Draft 样片（每个 task 独立）；挑选后逐个 promote-draft
+uv run scripts/generate_seedance_video.py batch-submit \
+  --shots-file /tmp/shots.json --draft --wait --output-dir output/draft-shots
 
 # 加 --wait：等所有完成 + 自动下载到指定目录（可选）
 uv run scripts/generate_seedance_video.py batch-submit \
@@ -166,16 +181,24 @@ uv run scripts/generate_seedance_video.py create --enable-web-search \
 
 Seedance 视频生成是**强迭代**工作流，不是一次出片。下面是决策启发式，不是固定流水线——根据任务复杂度、用户阶段（探索 / 微调 / 出片）和反馈取舍。
 
+### Draft 样片（仅 2.5）
+
+目标为 2.5 的 1080p 且需要探索或比较镜头方向时，先用 `--draft` 生成 480p 样片；选中后用 `promote-draft` 从相同任务升版。一次成片即满意则直接生成 1080p。实测中 Draft 的单条成本更低，但没有观测到更短的服务端等待时间。
+
+- 用户明确要 Draft 或比较多个镜头时直接开始样片；流程不明确且会影响是否出终稿时，只问一次选「先看 Draft」还是「直接 1080p」。
+- 样片完成后展示视频和 task ID，让用户选择升版或指出一个修改方向并创建新 Draft。用户已授权自动挑选时可继续升版。
+- 两阶段参数继承、成本、时效和 HITL 操作见 [references/draft-mode.md](references/draft-mode.md)；API 字段边界见 [references/api-reference.md](references/api-reference.md#draft-升版请求的字段边界)。
+
 ### 判断任务形态
 
 先搞清楚用户处于哪个阶段，这决定你后面投入多少优化：
 
 | 阶段 | 特征 | 策略 |
 |---|---|---|
-| 探索/脑暴 | 用户自己也不清楚要什么、想看可能性 | 2.0-fast + 480p/720p + 4-5s，一次 2-3 个变体；或 2.5 短时长看质量上限 |
-| 调参/迭代 | 已有初版，要修具体问题（换脸/字幕/运镜） | 保留原 prompt，小步修改；预览用 2.0-fast，质量问题改用 2.5 |
+| 探索/脑暴 | 用户自己也不清楚要什么、想看可能性 | 独立低价预览用 2.0-fast；若目标是 2.5 的 1080p 且要从多个方案挑选，用 2.5 Draft |
+| 调参/迭代 | 已有初版，要修具体问题（换脸/字幕/运镜） | 保留原 prompt，小步修改；2.5 1080p 的候选迭代用 Draft，新输入建新 Draft 任务 |
 | 出片/交付 | 要最终成品 | **默认 2.5** + 目标分辨率（2.5 最高 1080p HEVC；只要 4k 且无 2.5 独有需求 → 2.0 standard）|
-| 批量素材 | 多段落独立配图/产品多角度 | batch-submit + 2.0-fast/mini |
+| 批量素材 | 多段落独立配图/产品多角度 | 单独使用素材：batch-submit + 2.0-fast/mini；需挑选 2.5 的 1080p 成片：batch-submit --draft |
 
 ### 模型 / 分辨率 / 时长选择启发式
 
@@ -186,15 +209,16 @@ Seedance 视频生成是**强迭代**工作流，不是一次出片。下面是�
 | 用户说了什么 | 立刻做什么 |
 |---|---|
 | 没指定模型 | **2.5** `doubao-seedance-2-5-260628` |
+| 明确要 Draft/样片，或为 2.5 的 1080p 从多次抽卡中挑选 | **2.5** `--draft` 生成 480p；挑选后用 `promote-draft` 升版 1080p |
 | 明确要 2.0 / seedance 2.0 / 即梦 2.0，没说 fast/mini | **2.0 standard** `doubao-seedance-2-0-260128`。便宜预览/批量才 fast/mini |
 | 明确要 4k，且没有 2.5 独有需求 | **直接 2.0 standard + `--resolution 4k`**，并告知一句：`4k 只能 Seedance 2.0 standard，2.5 最高 1080p。` |
 | 要 4k **且** 要 2.5 独有能力 | **停下来让用户选**：A) 4k + 2.0（最长 15s，无那些 2.5 能力）或 B) 留在 2.5 用 1080p。不要擅自猜 |
 
-**2.5 独有需求**（命中才算和 4k 冲突）：30s、整数秒时间戳硬切、仅音频参考、omni 编辑/延长、mov 后期。
+**2.5 独有需求**（命中才算和 4k 冲突）：Draft 样片升版、30s、整数秒时间戳硬切、仅音频参考、omni 编辑/延长、mov 后期。
 
 2.5 **没有** fast/mini。4s 480p(16:9) 时 2.0 三模型均为 **40,594** tokens、2.5 为 **38,830**，仅差 ~5%——**fast/mini 便宜在单价，不在 token 用量**（选模型按能力，不按价格；具体单价见 api-reference 价格页链接）。
 
-- **分辨率**：预览 → 480p；社媒/草稿 → 720p（CLI 默认）；2.5 终稿 → 1080p（10-bit HEVC）；4k → 仅 2.0 standard（10-bit HEVC，并发 1）
+- **分辨率**：2.5 Draft 固定 480p（`--draft` 自动选），Draft 升版固定 1080p；普通预览 → 480p；社媒/草稿 → 720p（CLI 默认）；2.5 终稿 → 1080p（10-bit HEVC）；4k → 仅 2.0 standard（10-bit HEVC，并发 1）
 - **时长**：单一动作 → 4-5s；对白/多镜头 → 8-12s；2.0 复杂叙事 → 12-15s 或拆 task；2.5 完整故事可一次 15-30s，prompt 用整数秒时间戳。480p 文生 token ≈ `38830 × (duration/4)`
 - **ratio**：竖屏 9:16、横屏 16:9、方 1:1、宽银幕 21:9。**2.5 首帧/编辑/延长必须 `adaptive`**。CLI 文生默认仍是 `16:9`（官方 2.5 API 默认 `adaptive`）
 - **音频**：对话/旁白/广告 → 默认生成；后期自配 → `--no-generate-audio`。仅音频参考：**仅 2.5 允许**（Ark live 已通）；参考须是有语义的 wav/mp3
@@ -207,6 +231,7 @@ Seedance 视频生成是**强迭代**工作流，不是一次出片。下面是�
 | 用户说了什么 | 立刻用的参数 | 实测注意 |
 |---|---|---|
 | 「一条 16–30 秒」「不要拆成多段再拼」 | `--duration 16–30`，prompt 连续整数秒 | 16s 480p live 成片 16.06s，token 154,120 ≈ 4s 的 4 倍 |
+| 「先看 2.5 样片，选中后做 1080p」 | `--draft`，选定后 `promote-draft --task-id ...` | Draft 仅 480p，升版仅 1080p；两次正常计费；用户选样片时 HITL |
 | 「第 N 秒切镜 / Hard cut / 0-4s 再 4-8s」 | 分段 prompt：`GLOBAL STYLE` + `Shot N: 0-xs … Hard cut.` | live：4s 硬切会换镜头；「航拍拉升」等运镜动词只部分兑现，景别边界比动词可靠 |
 | 「只有配乐/旁白，没有图」 | `--reference-audio file.wav`（不要配图） | Ark **允许仅音频**（create+succeeded）。纯正弦几乎不驱动画面；`generate_audio=true` 会重做音轨，不是原样贴参考 |
 | 「用这张图当第一帧」 | `--first-frame` + **`--ratio adaptive`** | 非 adaptive → HTTP 400 `TaskTypeConstraint`。adaptive 画幅锁首帧（响应 ratio 如 `427:240`） |
@@ -216,7 +241,7 @@ Seedance 视频生成是**强迭代**工作流，不是一次出片。下面是�
 | 「参考图超过 9 / 视频超过 3」 | 默认 2.5；每元素仍各 1 份 | 上限 30/10/10 共 50，不要堆满 |
 | 白模 / 宫格 / 多关键帧 / 跨镜锁身份 | prompt-guide **§3**（白模/宫格/关键帧）；跨镜锁 **§2** | 宫格 ≤15；关键帧第一句见 §3.1 |
 
-**不要用 2.5**：只要便宜预览/批量短片 → `--model doubao-seedance-2-0-fast-260128` 或 mini。要 4k 见上方决策树（无 2.5 独有需求才切 2.0 standard；脚本会拦截 2.5+4k）。2.5 无 fast。
+**独立的便宜预览/批量短片**可用 `--model doubao-seedance-2-0-fast-260128` 或 mini；这类任务不能凭视频任务 ID 升版为 2.5 成片。要 4k 见上方决策树（无 2.5 独有需求才切 2.0 standard；脚本会拦截 2.5+4k）。2.5 无 fast。
 
 ### 2.5 复杂镜头怎么写（吃满能力）
 
@@ -274,16 +299,16 @@ Seedance skill 不负责生成或获取素材——它只消费调用方传入�
 第一次生成结果不满意很正常。典型迭代模式：
 1. 看视频：问题是人/动作/运镜/光影/字幕/音频中哪一个？
 2. 对应修正 prompt 或换参考素材（一次只改一个维度）
-3. 2.0-fast 快速验证（或短时长 2.5）
-4. 通过后再用 2.5（或 2.0 standard 4k）+ 目标分辨率出终稿
+3. 若最终要 2.5 的 1080p 且需抽卡，用 2.5 Draft 验证并挑选；独立低价预览可用 2.0-fast
+4. 选中的 Draft 用 `promote-draft` 升版；其他情况按目标模型和分辨率直接生成终稿
 - 常见问题的 prompt 层解法见 [references/prompt-guide.md](references/prompt-guide.md) 和 [references/key-constraints.md](references/key-constraints.md) 的翻车清单
 - 同一 prompt 生成 2-3 次挑最好的，对复杂 shot 是划算的
 
 ### 交付
 
-报告用户：输出目录、视频路径、task_id、是否终稿还是预览版。失败时把 `manifest.json` 的 error 字段转成可执行建议（"分辨率参数错了改用 720p"而不是"API 返回 400"）。
+报告用户：输出目录、视频路径、task_id、是否终稿还是预览版。Draft 样片还要保留 task ID，供 7 天内升版。失败时把 `manifest.json` 的 error 字段转成可执行建议（"分辨率参数错了改用 720p"而不是"API 返回 400"）。
 
-需要追溯/复盘/分享终稿时，把最终 prompt 写入输出目录的 `prompt.md`；一次性预览和失败的尝试不必留 artifact。
+需要追溯/复盘/分享终稿时，把最终 prompt 写入输出目录的 `prompt.md`；Draft 升版请求不再包含 prompt，可从来源 Draft 输出目录保留或复制 `prompt.md`。一次性预览和失败的尝试不必留 artifact。
 
 ## 输出目录
 
@@ -291,7 +316,7 @@ Seedance skill 不负责生成或获取素材——它只消费调用方传入�
 output/seedance/YYYY-MM-DD-<slug>/
 ├── video.mp4               # 或 video.mov（2.5 `--output-format mov`）
 ├── manifest.json           # task_id, model, params, video_url, usage, output paths
-├── prompt.md               # 最终提示词
+├── prompt.md               # 普通生成/Draft 的提示词；升版时从来源 Draft 保留
 └── last-frame.jpg          # 仅当 --return-last-frame
 ```
 
@@ -301,6 +326,7 @@ output/seedance/YYYY-MM-DD-<slug>/
 
 - `duration`：2.5 = `4–30` 或 `-1`；2.0 = `4–15` 或 `-1`。CLI 默认 `5`。编辑必须 `-1`。**延长的 duration 是成片总时长**。
 - `resolution`：`480p` / `720p` / `1080p` / `4k`；CLI 默认 `720p`。**2.5 最高 1080p（10-bit HEVC），无 4k**。2.0-fast/mini 最高 720p。**4k 仅 2.0 standard**。
+- `draft`：**仅 2.5**。`--draft` 自动选 480p，显式指定其他分辨率会被拦截；选中样片后 `promote-draft` 固定输出 1080p。2.0/fast/mini 都不支持。Draft 和成片分别按正常 480p、1080p 计费。
 - `ratio`：六档 + `adaptive`。CLI 文生默认 `16:9`。**2.5 首帧/首尾帧、编辑、延长必须 `adaptive`**（脚本会拦截）。
 - 多模态上限：2.5 = 图 30 + 视 10 + 音 10（共 50）；2.0 = 图 9 + 视 3 + 音 3（共 15）。但超 1–5 个主体 / 1–8 张参考图后是「需要抽卡」而非报错，仍建议 4-5 个素材黄金配比（稳定性数字见 key-constraints.md）。
 - 仅音频参考：2.5 ✅（Ark live 已通，脚本不拦）；2.0 ❌（必须配图或视频）。参考须有语义的 wav/mp3。
@@ -326,6 +352,8 @@ output/seedance/YYYY-MM-DD-<slug>/
 | `--duration` | 2.5: 4–30 / -1；2.0: 4–15 / -1；CLI 默认 5。编辑必须 -1；延长 = 成片总时长 |
 | `--ratio` | 六档 + adaptive；2.5 首帧/编辑/延长必须 adaptive |
 | `--resolution` | 480p/720p/1080p/4k；2.5 无 4k |
+| `--draft` | 仅 2.5；生成 480p 样片，省略 `--resolution` 时自动选 480p；batch-submit 也可用 |
+| `promote-draft --task-id ID` | 从成功的 2.5 Draft 任务生成 1080p，默认轮询并下载；`--create-only` 只提交 |
 | `--output-format` | 2.5 only：`mp4`（默认不传）或 `mov` |
 | `--omni-reference-task-type` | 2.5 only：`auto` / `reference` / `edit` / `extend` |
 | `--generate-audio` / `--no-generate-audio` | 是否生成音频 |
@@ -347,7 +375,8 @@ Agent 按需读取，不必全加载。简单任务（文生视频 4-5s、单镜
 
 | 文件 | 用途 | 何时读 |
 |---|---|---|
-| `references/seedance-2.5.md` | 2.5 vs 2.0 差异、任务类型锁定、新参数、prompt 增量、不兼容点 | 用 2.5 / 30s / 首帧 / 编辑延长 / mov 之前 |
+| `references/seedance-2.5.md` | 2.5 vs 2.0 能力差异、任务类型锁定、新参数、prompt 增量、不兼容点 | 用 2.5 / 30s / 首帧 / 编辑延长 / mov 之前 |
+| `references/draft-mode.md` | Draft 选型、HITL 挑片、成本与两阶段工作流 | 用户明确要样片、需要探索 2.5 1080p 镜头，或准备升版 Draft 时 |
 | `references/key-constraints.md` | 能力边界、硬限制、翻车清单、并发、4k | 第一次用 / API 报错 / 4k 或多模态 |
 | `references/multimodal-reference.md` | 多模态输入、asset://、编辑/延长 | 准备参考素材时 |
 | `references/prompt-guide.md` | 2.5-first 提示词公式；2.0 见附录 A | 写 prompt / 迭代失败时 |
@@ -362,6 +391,8 @@ Agent 按需读取，不必全加载。简单任务（文生视频 4-5s、单镜
 | `400 InvalidParameter.TaskTypeConstraint` | 2.5 首帧/编辑/延长参数和任务类型不一致。首帧必须 `--ratio adaptive`；编辑还要 `--duration -1` |
 | 脚本拒绝 `--resolution 4k` | 2.5 / 2.0-fast / mini 无 4k；4k 用 `--model doubao-seedance-2-0-260128` |
 | 脚本拒绝 `--resolution 1080p` | 仅 2.0-fast/mini 最高 720p；2.5 支持 1080p |
+| `--draft` 被脚本拒绝 | Draft 仅 Seedance 2.5 且仅 480p；移除 2.0 `--model`，并省略 `--resolution` 或设为 480p |
+| `promote-draft` 拒绝来源任务 | 来源必须是 7 天内已成功的 2.5 Draft task ID；普通 480p 任务不能升版 |
 | 脚本拒绝 2.5 首帧非 adaptive | 改 `--ratio adaptive`（画幅锁首帧） |
 | 脚本拒绝仅音频参考 | 改 `--model doubao-seedance-2-5-260628` |
 | 想批量找历史任务 | `list-tasks --status succeeded --model doubao-seedance-2-5-260628` |

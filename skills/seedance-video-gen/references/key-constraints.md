@@ -28,7 +28,8 @@
 | ✅ 编辑视频 | 替换主体、增删改元素、局部重绘/修复 |
 | ✅ 延长视频 | 2.0 总时长建议 ≤15s。**2.5 ratio 必须 adaptive**；`--duration` = 成片总时长；可多轮延长 |
 | ✅ 生成有声视频 | `generate_audio=true`；2.0 最长 15s，**2.5 最长 30s** |
-| ✅ 4k 输出 | **仅** 2.0 standard `doubao-seedance-2-0-260128`；2.5 最高 1080p 10-bit HEVC。只要 4k、无 2.5 独有需求 → 直接切 2.0；同时要 30s/整数秒硬切/仅音频/omni 编辑延长/mov → 停下来让用户选 |
+| ✅ Draft 样片升版 | **仅 2.5**：480p Draft 初筛，选定 task ID 后原生生成 1080p；2.0 系列不支持。详见 [draft-mode.md](draft-mode.md) |
+| ✅ 4k 输出 | **仅** 2.0 standard `doubao-seedance-2-0-260128`；2.5 最高 1080p 10-bit HEVC。只要 4k、无 2.5 独有需求 → 直接切 2.0；同时要 Draft/30s/整数秒硬切/仅音频/omni 编辑延长/mov → 停下来让用户选 |
 | ✅ 文字生成 | 广告语、字幕（需同步音频节奏）、对话气泡 |
 | ✅ 联网搜索 | `tools: [{"type":"web_search"}]`，仅纯文本输入（见下方约束） |
 | ✅ 返回尾帧图 | `return_last_frame=true`，用于链式续写 |

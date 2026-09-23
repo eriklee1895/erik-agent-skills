@@ -1,6 +1,6 @@
 # Seedance 2.5 vs 2.0
 
-来源：火山方舟公开文档（[教程 2607688](https://www.volcengine.com/docs/82379/2607688)、[提示词 2607689](https://www.volcengine.com/docs/82379/2607689)、[创建任务 1520757](https://www.volcengine.com/docs/82379/1520757)）。同一套 `POST/GET/DELETE /contents/generations/tasks`。
+来源：火山方舟公开文档（[Seedance 2.5 教程](https://docs.volcengine.com/docs/ark/seedance-2-5)、[提示词 2607689](https://www.volcengine.com/docs/82379/2607689)、[创建任务 1520757](https://www.volcengine.com/docs/82379/1520757)）。同一套 `POST/GET/DELETE /contents/generations/tasks`。
 
 ## 模型 ID
 
@@ -11,7 +11,7 @@
 | 2.0 fast | `doubao-seedance-2-0-fast-260128` | 最高 720p，更便宜 |
 | 2.0 mini | `doubao-seedance-2-0-mini-260615` | 最高 720p，批量最便宜 |
 
-本 skill **默认 2.5**。用户明确要 2.0 / 即梦 2.0（没说 fast/mini）→ standard。只要 4k、没有 2.5 独有需求（30s、整数秒硬切、仅音频、omni 编辑/延长、mov）→ 直接 2.0 standard + 4k，并告知「4k 只能 Seedance 2.0 standard，2.5 最高 1080p。」两者都要 → 停下来让用户选 A) 4k+2.0（≤15s）或 B) 2.5+1080p，不要猜。便宜预览/批量才 fast/mini。
+本 skill **默认 2.5**。用户明确要 2.0 / 即梦 2.0（没说 fast/mini）→ standard。只要 4k、没有 2.5 独有需求（Draft 样片升版、30s、整数秒硬切、仅音频、omni 编辑/延长、mov）→ 直接 2.0 standard + 4k，并告知「4k 只能 Seedance 2.0 standard，2.5 最高 1080p。」两者都要 → 停下来让用户选 A) 4k+2.0（≤15s）或 B) 2.5+1080p，不要猜。独立的低价预览/批量可用 fast/mini。
 
 ## 能力对照
 
@@ -28,12 +28,17 @@
 | 编辑 | 较松 | **ratio=adaptive 且 duration=-1**；成片时长≈源片；参考视频 4–30s |
 | 延长 | 总时长建议 ≤15s | ratio **必须 adaptive**；`--duration` = **成片总时长**（不是再延长 N 秒）；建议 mov 进出 |
 | 新参数 | 无 | `omni_reference_task_type`、`output_format` |
+| Draft 样片 | ❌ 2.0 standard/fast/mini 均不支持 | `draft=true` 生成 480p；凭 Draft task ID 再原生生成 1080p |
 | 时间戳 | 不响应，只认镜头序号 | **响应整数秒**（`0-3s`、`[1s-4s]`、`第 5s`） |
 | 多视图 / 自由宽高比 | 固定六档 | 输入素材可出 **[0.4, 2.5]** 任意比（adaptive） |
 | web_search | ✅ 仅纯文本 | ✅ 同样 |
 | 计费 | 按 completion_tokens 计费；同分辨率 token 数与 2.5 接近（4s 480p≈40.6k） | **比 2.0 约 1.5×**；fast/mini 是低价批量档；含视频输入（编辑/延长）单价更低；无免费额度，开通门槛同 2.0（余额≥200 或资源包）。实时单价见 [价格页 1544106](https://www.volcengine.com/docs/82379/1544106) |
 | 并发（官方） | 企业 600 RPM / 10 concurrent；4k RPM 15 / running 1 | 与 2.0 非 4k 相同；**无 4k 档** |
 | 人脸 | 禁止真人人脸输入（asset:// / 授权 / 信任产物除外） | 同样 |
+
+## Draft 样片（仅 2.5）
+
+2.5 支持 480p Draft 样片，并通过 Draft task ID 原生生成 1080p 成片。CLI 限制和 API 边界见 [api-reference.md](api-reference.md)；选型、HITL、成本和完整操作见 [draft-mode.md](draft-mode.md)。四候选实测数据见 [Draft 模式价值报告](../evals/draft-mode-value-2026-09-23.md)。
 
 ## 任务类型硬限制（2.5）
 
@@ -75,15 +80,17 @@
 | 2.5 编辑 + 指定 duration | 脚本拒绝；必须 `-1` |
 | 2.0 + `--output-format mov` | 脚本拒绝 |
 | 2.0 + `--omni-reference-task-type` | 脚本拒绝 |
+| 2.0 + `--draft` | 脚本拒绝；Draft 仅支持 2.5 |
+| 2.5 + `--draft --resolution 720p/1080p` | 脚本拒绝；Draft 样片只能 480p |
 | 2.0 + 仅 `--reference-audio` | 脚本拒绝；改 2.5 |
 | 2.0 + duration 16–30 | 脚本拒绝 |
-| 2.5 无 cheap 变体 | 预览请显式 `--model doubao-seedance-2-0-fast-260128` |
+| 2.5 无 fast/mini 变体 | 独立低价预览可用 2.0-fast；要升版为 2.5 原生 1080p 则用 Draft |
 
-`frames` / `seed`（入参）/ `camera_fixed` / `draft` 两代都不接受。
+`frames` / `seed`（入参）/ `camera_fixed` 两代都不接受；`draft` 仅 2.5 接受。
 
 ## 怎么吃满 2.5（不要只换 model id）
 
-1. 超过 15s、要秒级剪辑点、仅音频、>9 图、白模/宫格/关键帧、精确编辑/延长、mov 后期 → **必须 2.5**。
+1. Draft 样片升版、超过 15s、要秒级剪辑点、仅音频、>9 图、白模/宫格/关键帧、精确编辑/延长、mov 后期 → **必须 2.5**。
 2. 多切镜 / 跨镜锁脸：按 [prompt-guide.md](prompt-guide.md) §2 写，不要只换 model id 仍写一句话。
 3. 跨镜头不换脸：参考图锁身份，比纯文字稳；每人一份清晰特写脸，全身板去脸。
 4. 50 参考是天花板：一个稳定元素一份素材。堆满会更糊。
@@ -101,7 +108,8 @@ OpenMontage 的 fal.ai / Runway / Comfy 路径常把 2.5 写成 **仅 480p/720p*
 | `model` | — | 2.5 | 质量默认走新模型 |
 | `duration` | `-1` | `5` | 避免意外生成 30s 账单 |
 | `ratio` | `adaptive` | `16:9` | 文生可复现；首帧必须自己改 adaptive |
-| `resolution` | `720p` | `720p` | 一致 |
+| `resolution` | 普通任务 `720p`；Draft 样片只允许 `480p` | 普通任务 `720p`；`--draft` 未指定时 `480p` | Draft 自动选所需分辨率 |
+| `draft` | 不传（普通任务） | 不传；`--draft` 时传 `true` | 仅 2.5 支持 |
 | `output_format` | `mp4` | 不传 | 一致 |
 
 ## 实测（2026-09-03，火山方舟 live API）
@@ -170,4 +178,3 @@ OpenMontage 的 fal.ai / Runway / Comfy 路径常把 2.5 写成 **仅 480p/720p*
 - **2.5 自产片回灌编辑/延长 = 零时长误差**（官方承诺，live 证实）；非 2.5 来源片预期 ±0.3~0.4s。
 - **模型矩阵确认完整**：官方模型列表（1330310，2026-09-02 更新）2.x 在列仅本 skill 支持的 4 个 ID，无 2.5 lite/turbo/fast、无更新的 2.x；1.5-pro 已标注"即将下线"，1.0 系列本 skill 明确不支持。
 - **2.5 产物 video_url 下载上限 100 次**（官方 1521309；URL 仍 24h 有效）。
-
