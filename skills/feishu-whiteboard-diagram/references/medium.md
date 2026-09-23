@@ -26,7 +26,7 @@
 
 ## 和 feishu-html-diagram 的分工
 
-需要运动或 Tab 才能看懂 → HTML5。需要同事改节点和连线 → 画板。两者都要就拆成两块，不要混。
+来源明确、指标精简、以静态比较为目的且需要同事改节点 → 原生画板；布局见 [data-report-style.md](data-report-style.md)。需要动态筛选、切换、演示或探索数据 → HTML5。两者都要就拆成两块，不要混。
 
 ## Mermaid：写源码，飞书转画板
 

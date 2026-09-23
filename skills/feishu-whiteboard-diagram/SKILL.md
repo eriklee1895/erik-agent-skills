@@ -1,6 +1,6 @@
 ---
 name: feishu-whiteboard-diagram
-description: Use when 飞书/Lark 文档需要新增、改版或审查可二次编辑的原生画板图表，尤其是架构、流程、分层、循环、对比、枢纽、时间线、泳道、四象限和焦点+细节；需要动画交互、真实 UI 或照片时不使用。
+description: Use when 飞书/Lark 文档需要新增、改版或审查可二次编辑的原生画板，尤其是架构、流程、分层、枢纽、时间线、泳道、四象限、定性对比或静态质量 / 性能 / 成本基准图；需要动画、筛选、交互探索、真实 UI 或照片时不使用。
 metadata:
   author: liyuheng.erik
   requires:
@@ -30,19 +30,19 @@ metadata:
 
 - 不是 `lark-whiteboard` 的替代品，不复制其 CLI、scene 骨架和身份分流表。
 - 不是 `feishu-html-diagram`：不需要动画、Tab、D3 时，不要用 HTML5 冒充画板。
-- 不是社区 35 套 `design.md` 文件仓库。色板只精选 6 套，见 [palettes.md](references/palettes.md)。
-- 不是只会画浅色胶囊流程图。按关系选原型：分叉、对比列、枢纽、时间线、泳道、四象限、焦点+细节；默认奶油底 + 墨边 + 单焦点，见 [composition.md](references/composition.md)。
+- 不是社区 35 套 `design.md` 文件仓库。色板只精选 7 套，见 [palettes.md](references/palettes.md)。
+- 不是只会画浅色胶囊流程图。按关系选原型：分叉、对比列、枢纽、时间线、泳道、四象限、焦点+细节；概念图默认奶油底 + 墨边 + 单焦点，定量评测图可选白页橙灰报告风格，见 [composition.md](references/composition.md)。
 - `<whiteboard type="mermaid">` 交给飞书服务端转成画板，本 skill 不渲染 Mermaid。
 
 ## 适用 / 不适用
 
 | 适用 | 不适用 |
 |---|---|
-| 写飞书文档时插入架构、流程、闭环、多列运行图、编号层级 | 微信 / Notion / 博客配图 → 走对应发布 skill |
-| 需要同事在飞书里继续改节点和连线 | 需要动画、交互、探索式数据 → `feishu-html-diagram` |
-| 一张图回答一个论点（职责、流向、恢复什么） | 现场工作坊贴便签 → 空白画板，走 `lark-whiteboard` |
+| 技术文档需要可编辑图来解释架构、流程、分层或关系 | 微信 / Notion / 博客配图 → 走对应发布 skill |
+| 来源明确、指标精简且需要节点可编辑的静态模型 / 基准对比 | 需要动态筛选或交互探索 → `feishu-html-diagram` |
 | 用户给了飞书文档 URL，要求「配图 / 画到画板」 | 真实 UI、照片 → `<img>`（按 `lark-doc`） |
-| 已有画板需要保真改版或只读质量审查 | 用户只要文字润色 → `lark-doc` |
+| 已有画板需要保真改版或只读质量审查 | 现场工作坊拖拽、贴便签 → 空白画板，走 `lark-whiteboard` |
+| 一张图回答一个论点（职责、流向、恢复什么） | 用户只要文字润色 → `lark-doc` |
 
 同一文档可以有多张画板。一个论点一张图。
 
@@ -58,8 +58,9 @@ metadata:
 |---|---|
 | 用户已给出 Mermaid/PlantUML，或图是思维导图 / 时序 / 类图 / 饼图 / 甘特 | 把源码放进 `<whiteboard type="mermaid">`（或 PlantUML），飞书自动转画板；不要重画成 SVG 架构 |
 | 判断多、回路多、需要原生菱形，卡片对齐要求一般 | DSL `dagre` + `diamond`，按官方 DSL 路径 |
-| 分层条带、多列运行图、编号层级、页脚结论、层间 API 标注；以及分叉 / 对比 / 枢纽 / 时间线 / 泳道 / 四象限 / 焦点+细节 | **UTF-8 SVG，只用可识别原生形状** |
-| 需要运动、Tab、D3 | `feishu-html-diagram` |
+| 分层条带、多列运行图、编号层级、页脚结论、层间 API 标注；以及分叉 / 定性对比 / 枢纽 / 时间线 / 泳道 / 四象限 / 焦点+细节 | **UTF-8 SVG，只用可识别原生形状** |
+| 来源明确、指标精简且需节点可编辑的静态模型评测 / 基准对比 | **UTF-8 SVG + [白页橙灰报告风格](references/data-report-style.md)**；按指标选择配对条形图或主图 + 结论卡片 |
+| 需要动画、Tab、动态筛选或交互式数据探索 | `feishu-html-diagram` |
 | 真实界面或照片 | 图片 |
 
 精美技术文档图**默认走 SVG**。理由见 [介质边界](references/medium.md)。
@@ -101,16 +102,19 @@ bash /resolved/skill-dir/scripts/preflight.sh
 9. 泳道（多角色握手）
 10. 四象限（两个维度、四个去处）
 11. 焦点+细节（一块大卡 + 右侧支持）
+12. 定量评测（同尺度指标配对条形图、时间 / 成本双面板，或指标主图 + 结论卡片；细则见 [白页橙灰报告风格](references/data-report-style.md)）
 
 没有合适的就用「标题 + 分区卡片 + 少量语义连线 + 必要时的页脚结论条」现编，不要硬套成均等胶囊流程图。
 
 ### 2. 按文档精排上色，并先定焦点
 
-读取 [视觉系统](references/visual-system.md)、[构图](references/composition.md) 和 [色板](references/palettes.md)，只采用与当前图匹配的一种原型和一套色板。循环 / 分叉 / 枢纽默认 **Riso Brut**；对比列用 **Riptide Cobalt**；时间线可用 **Coral**；四象限用 **Grove**；焦点+细节可用 **Avocado Press**。分层条带才用浅色分组。不要浅灰外框套均等胶囊。
+按选定模式读取视觉参考，不必加载所有色板。概念图读取 [视觉系统](references/visual-system.md) 与 [构图](references/composition.md)，再选一套色板；定量报告读取 [白页橙灰报告风格](references/data-report-style.md) 与对应色板。概念图中循环 / 分叉 / 枢纽默认 **Riso Brut**，定性权衡用 **Riptide Cobalt**，时间线可用 **Coral**，四象限用 **Grove**，焦点+细节可用 **Avocado Press**。分层条带才用浅色分组。不要浅灰外框套均等胶囊。
 
 ### 3. 写 SVG（精排默认路径）
 
 硬约束和实测映射见 [介质约束](references/constraints.md)。最小骨架：
+
+下面的骨架只示范 **Riso Brut 概念图**。定量报告使用 [White Report](references/data-report-style.md) 的布局和色板，不要沿用这里的奶油底与粗墨边。
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 820">
@@ -151,19 +155,8 @@ npx -y @larksuite/whiteboard-cli@^0.2.13 -i /absolute/path/to/diagram.svg -o /ab
 
 通过后，用 `lark-whiteboard` 把 SVG/DSL/Mermaid 写入已有 `board_token`。文档正文里先写一句「这张图回答什么」，再放画板块。证据层见 [写入与验证](references/write-verify.md)。
 
-## 相关文件
+## 评测与来源
 
-- [`references/medium.md`](references/medium.md) — 画板 / Mermaid / HTML5 / 图片，以及和官方 skill 的分工
-- [`references/grammars.md`](references/grammars.md) — 文档精排布局语法（含社区原型）
-- [`references/composition.md`](references/composition.md) — 间距、字号阶梯、焦点靠尺寸、反套路
-- [`references/palettes.md`](references/palettes.md) — 6 套社区精选色板，按气质选用
-- [`references/constraints.md`](references/constraints.md) — 社区经验 + 实测映射
-- [`references/write-verify.md`](references/write-verify.md) — 本地验和证据层；写入命令回官方 skill
-- [`references/brief-review.md`](references/brief-review.md) — 新建、改版、审查共用的事实契约与交付门禁
-- [`scripts/lint_svg.py`](scripts/lint_svg.py) — SVG 介质预检
-- [`scripts/preflight.sh`](scripts/preflight.sh) — 运行时依赖
-- [`evals/scenarios.md`](evals/scenarios.md) — 行为场景
-- [`evals/human-eval.md`](evals/human-eval.md) — 飞书 Web/桌面记分卡
-- [`evals/evals.json`](evals/evals.json) — 可交给评测框架的行为场景；结果未运行时不得写成通过
-- [`evals/fixtures/human-eval/`](evals/fixtures/human-eval/) — 分层/循环/分叉/对比/枢纽/时间线/泳道/四象限/焦点+细节 + Mermaid/HTML/空白板评测包
+- [`evals/scenarios.md`](evals/scenarios.md) 与 [`evals/evals.json`](evals/evals.json) — 行为评测场景；未运行时不得写成通过
+- [`evals/human-eval.md`](evals/human-eval.md) 与 [`evals/fixtures/human-eval/`](evals/fixtures/human-eval/) — 飞书体验记分卡与候选图
 - [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) — 社区来源、吸收范围与许可证声明
