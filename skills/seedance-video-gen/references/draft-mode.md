@@ -65,4 +65,4 @@ Draft 路径 = N × 480p + 1 × 1080p
 
 被升版任务会继承原 Draft 的模型、prompt、素材、seed、音频设置、ratio 和 duration。升版是再次推理，主体、构图和运动方向在实测样例中得以延续，细节仍会改变；不要把它当作逐像素超分。升版请求的禁止字段和允许重设字段见 [api-reference.md](api-reference.md#draft-升版请求的字段边界)。
 
-完整数据、逐任务 ID、耗时口径及测试限制见 [Draft 模式价值实测报告](../evals/draft-mode-value-2026-09-23.md)。官方说明见[Seedance 2.5 教程](https://docs.volcengine.com/docs/ark/seedance-2-5)和[模型价格表](https://docs.volcengine.com/docs/ark/model-pricing)。
+官方说明见[Seedance 2.5 教程](https://docs.volcengine.com/docs/ark/seedance-2-5)和[模型价格表](https://docs.volcengine.com/docs/ark/model-pricing)。
