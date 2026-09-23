@@ -1,10 +1,9 @@
 # 构图（解释图，不是均等流程图）
 
-色板见 [palettes.md](palettes.md) 和 [visual-system.md](visual-system.md)。社区真正拉开差距的是：
-奶油画布、墨边 3–4px、**只有一个饱和焦点且它最大**、次级步骤是安静的描边盒。
-35 套 `design.md` 不搬进来；构图和这 6 套色板要吸收。当前本地候选图在 [evals/fixtures/human-eval/](../evals/fixtures/human-eval/)，历史 Human eval 与待复核状态见 [human-eval.md](../evals/human-eval.md)。
+色板见 [palettes.md](palettes.md) 和 [visual-system.md](visual-system.md)。概念图默认使用奶油画布、墨边 3–4px、**只有一个饱和焦点且它最大**、次级步骤是安静的描边盒。定量评测可选白页橙灰报告风格，细则见 [data-report-style.md](data-report-style.md)。
+35 套 `design.md` 不搬进来；只吸收适合本 skill 的构图和 7 套精选色板。当前本地候选图在 [evals/fixtures/human-eval/](../evals/fixtures/human-eval/)，历史 Human eval 与待复核状态见 [human-eval.md](../evals/human-eval.md)。
 
-循环 / 分叉 / 枢纽默认 **Riso Brut**。对比列用 **Riptide Cobalt**。时间线可用 **Coral**。四象限用 **Grove**。焦点+细节可用 **Avocado Press**。分层条带可以继续用浅色分组。
+循环 / 分叉 / 枢纽默认 **Riso Brut**。定性对比列用 **Riptide Cobalt**；量化对比读 [白页橙灰报告风格](data-report-style.md) 并用 **White Report**。时间线可用 **Coral**。四象限用 **Grove**。焦点+细节可用 **Avocado Press**。分层条带可以继续用浅色分组。
 
 ## 间距（8 的倍数）
 
@@ -17,7 +16,7 @@
 | 有箭头的缝 | 48–64 |
 | 硬阴影偏移 | 10 |
 
-不要浅灰大外框。结构用色块，让奶油底透出来。
+概念图不要浅灰大外框；结构用色块，让奶油底透出来。White Report 是例外：数据面板可用白底细灰边，分隔线应轻，不用粗黑边或硬阴影。
 
 ## 字号
 
@@ -51,6 +50,7 @@
 | X 然后 Y，中途分叉再汇合 | 流水线 + 分叉 | **分叉那一段放大、上色**，准备步骤保持安静盒 |
 | 谁决策 / 谁执行 | 同上；判断是色块不是细菱形 | 工具回路整段放大；直接回答是短支 |
 | 三选一、权衡 | 对比列 | 每行的更优格，或整列结论带 |
+| 有基线和候选值的定量评测 | 配对横条或主图 + 结论卡 | 同尺度指标成对比较；时间和成本分别使用各自坐标轴，详见 [data-report-style.md](data-report-style.md) |
 | 一个核心带 N 个方面 | 枢纽 + 卫星 | 枢纽最大 |
 | 阶段 / 里程碑 | 时间线 | 高潮那一段 |
 | 层 / 协议 | 分层条带 | 当前要讲的层略高 |
@@ -64,7 +64,7 @@
 - 均等彩色胶囊 + 细箭头 = AI 流程图。改成安静盒 + 一个色块。
 - 绕场虚线、空列壳、浅灰外框、图内「蓝=动作」图例。
 - 判断用又细又高的菱形。改成大色块，文案写在块内。
-- 一张图用完整 6 套色板。
+- 一张图混用多套色板。
 - 把用户任务或风格名写上画布。
 
 Mermaid 时序仍写源码，飞书自动转画板。

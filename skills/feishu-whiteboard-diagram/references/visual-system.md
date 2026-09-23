@@ -2,7 +2,8 @@
 
 目标气质：飞书文档里的技术说明图——可打印、可再编辑。2026-09-03 的上一版获 Human eval **Accept**；当前候选已补对比度与验证约束，完成新的飞书体验复核前不要沿用旧结论。
 
-- **解释图（循环、分叉、对比、枢纽、时间线、泳道、四象限、焦点+细节）**：奶油底 + 4px 墨边 + `rx=0` + **一个更大的饱和焦点**。色值见 [palettes.md](palettes.md)，构图见 [composition.md](composition.md)。基准图在 [evals/fixtures/human-eval/](../evals/fixtures/human-eval/)。
+- **解释图（循环、分叉、定性对比、枢纽、时间线、泳道、四象限、焦点+细节）**：奶油底 + 4px 墨边 + `rx=0` + **一个更大的饱和焦点**。色值见 [palettes.md](palettes.md)，构图见 [composition.md](composition.md)。基准图在 [evals/fixtures/human-eval/](../evals/fixtures/human-eval/)。
+- **定量评测 / 基准报告**：可选 White Report 的白底橙灰数据图风格，使用细灰网格和轻分隔线；详见 [data-report-style.md](data-report-style.md)。
 - **分层条带 / 编号层级**：才用下面这套浅色分组，让每一层一种职责色。不要把这套涂到循环图上。
 
 不是暗色监控大屏，也不是插画海报。
@@ -19,7 +20,7 @@
 | orange | `#E85A1F` | 判断、分叉、硬阴影强调；小字使用墨色 |
 | yellow | `#F5C518` | 编号、点，少用 |
 
-硬阴影：同形状副本偏移 **+10px**，无 blur。连线 `stroke-width="3"`，卡片边框 `4`。焦点必须 **比邻居大**，染色但一样大仍像草稿。其它色板（Coral / Riptide / Grove / Avocado）见 [palettes.md](palettes.md)，一张图只用一套。
+硬阴影：同形状副本偏移 **+10px**，无 blur。连线 `stroke-width="3"`，卡片边框 `4`。焦点必须 **比邻居大**，染色但一样大仍像草稿。其它色板（Coral / Riptide / White Report / Grove / Avocado / Pin & Paper）见 [palettes.md](palettes.md)，一张图只用一套。
 
 ## 分层条带例外（浅色分组）
 
