@@ -142,6 +142,26 @@ def validate_resolution(model: str, resolution: str) -> None:
             f"Use --resolution 720p or 480p."
         )
 
+
+def resolve_resolution(resolution: str | None, draft: bool) -> str:
+    """Keep the normal 720p default while Draft defaults to its required 480p."""
+    return resolution if resolution is not None else ("480p" if draft else "720p")
+
+
+def validate_draft(model: str, draft: bool, resolution: str) -> None:
+    if not draft:
+        return
+    if not is_seedance_25(model):
+        raise SystemExit(
+            f"Error: Draft mode is Seedance 2.5 only. Use --model {MODEL_2_5}."
+        )
+    if resolution != "480p":
+        raise SystemExit(
+            "Error: Seedance 2.5 Draft mode requires --resolution 480p. "
+            "Omit --resolution to select 480p automatically."
+        )
+
+
 def validate_web_search_mode(content: list[dict[str, Any]], enable_web_search: bool) -> None:
     if enable_web_search:
         non_text = [c for c in content if c.get("type") != "text"]
@@ -499,6 +519,46 @@ def video_filename_from_payload(payload: dict[str, Any]) -> str:
     return f"video.{fmt}"
 
 
+def build_promote_draft_payload(
+    draft_task_id: str,
+    model: str = MODEL_2_5,
+    *,
+    output_format: str | None = None,
+    watermark: bool | None = None,
+    return_last_frame: bool = False,
+    priority: int | None = None,
+) -> dict[str, Any]:
+    """Build the deliberately minimal second-step request for a Draft task.
+
+    Prompt, references, duration, ratio, seed, audio and omni task type are
+    inherited by Ark and must not be sent again, even with identical values.
+    """
+    if not draft_task_id.strip():
+        raise SystemExit("Error: --task-id must be a non-empty Draft task ID.")
+    if not is_seedance_25(model):
+        raise SystemExit("Error: only Seedance 2.5 Draft tasks can be promoted.")
+    if output_format is not None and output_format not in VALID_OUTPUT_FORMATS:
+        raise SystemExit(
+            f"Error: unsupported output_format '{output_format}'. Valid: {sorted(VALID_OUTPUT_FORMATS)}"
+        )
+    if priority is not None and not (0 <= priority <= 9):
+        raise SystemExit("Error: --priority must be between 0 and 9.")
+    payload: dict[str, Any] = {
+        "model": model,
+        "content": [{"type": "draft_task", "draft_task": {"id": draft_task_id}}],
+        "resolution": "1080p",
+    }
+    if output_format is not None:
+        payload["output_format"] = output_format
+    if watermark is not None:
+        payload["watermark"] = watermark
+    if return_last_frame:
+        payload["return_last_frame"] = True
+    if priority is not None:
+        payload["priority"] = priority
+    return payload
+
+
 def _image_mime(ext: str) -> str:
     return {
         "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
@@ -532,7 +592,10 @@ def _media_mime(ext: str, item_type: str) -> str:
 def build_payload(args: argparse.Namespace) -> dict[str, Any]:
     validate_model(args.model)
     validate_ratio(args.ratio)
-    validate_resolution(args.model, args.resolution)
+    draft = getattr(args, "draft", False)
+    resolution = resolve_resolution(args.resolution, draft)
+    validate_draft(args.model, draft, resolution)
+    validate_resolution(args.model, resolution)
     validate_duration(args.duration, args.model)
 
     prompt = args.prompt
@@ -571,7 +634,7 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
         "content": content,
         "duration": args.duration,
         "ratio": args.ratio,
-        "resolution": args.resolution,
+        "resolution": resolution,
         "generate_audio": args.generate_audio,
         "watermark": args.watermark,
     }
@@ -581,6 +644,8 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
         payload["priority"] = args.priority
     if args.enable_web_search:
         payload["tools"] = [{"type": "web_search"}]
+    if draft:
+        payload["draft"] = True
     apply_25_payload_fields(payload, args.model, output_format, omni_task_type)
     return payload
 
@@ -632,7 +697,7 @@ def build_payload_from_shot(shot: dict[str, Any], defaults: dict[str, Any]) -> d
 
     Shot keys (all optional except prompt):
       prompt, model, duration, ratio, resolution, generate_audio, watermark,
-      return_last_frame, output_format, omni_reference_task_type,
+      return_last_frame, output_format, omni_reference_task_type, draft,
       first_frame, last_frame, reference_image, reference_video, reference_audio.
     Values for *_frame and reference_* can be a single path/URL string or a list.
     Missing shot keys fall back to the defaults dict.
@@ -665,7 +730,10 @@ def build_payload_from_shot(shot: dict[str, Any], defaults: dict[str, Any]) -> d
     # Validate every per-shot param that defaults would otherwise silently override.
     model = shot.get("model", defaults.get("model", DEFAULT_MODEL))
     ratio = shot.get("ratio", defaults.get("ratio", "16:9"))
-    resolution = shot.get("resolution", defaults.get("resolution", "720p"))
+    draft = shot.get("draft", defaults.get("draft", False))
+    if not isinstance(draft, bool):
+        raise SystemExit("Error: shot 'draft' must be a JSON boolean (true or false).")
+    resolution = resolve_resolution(shot.get("resolution", defaults.get("resolution")), draft)
     duration = shot.get("duration", defaults.get("duration", 5))
     output_format = shot.get("output_format", defaults.get("output_format"))
     omni_task_type = shot.get(
@@ -673,6 +741,7 @@ def build_payload_from_shot(shot: dict[str, Any], defaults: dict[str, Any]) -> d
     )
     validate_model(model)
     validate_ratio(ratio)
+    validate_draft(model, draft, resolution)
     validate_resolution(model, resolution)
     validate_duration(duration, model)
     validate_mode_constraints(content, model)
@@ -689,6 +758,8 @@ def build_payload_from_shot(shot: dict[str, Any], defaults: dict[str, Any]) -> d
     }
     if shot.get("return_last_frame") or defaults.get("return_last_frame"):
         payload["return_last_frame"] = True
+    if draft:
+        payload["draft"] = True
     apply_25_payload_fields(payload, model, output_format, omni_task_type)
     return payload
 
@@ -708,6 +779,17 @@ async def _create_task_async(
     )
     if resp.status_code >= 400:
         raise SystemExit(f"Error creating task: HTTP {resp.status_code} {resp.text}")
+    return resp.json()
+
+
+async def _get_task_async(
+    client: httpx.AsyncClient, api_key: str, base_url: str, task_id: str
+) -> dict[str, Any]:
+    url = f"{base_url}/contents/generations/tasks/{task_id}"
+    headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/json"}
+    resp = await _request_with_retry(client, "GET", url, headers=headers, timeout=60)
+    if resp.status_code >= 400:
+        raise SystemExit(f"Error reading Draft task: HTTP {resp.status_code} {resp.text}")
     return resp.json()
 
 
@@ -794,6 +876,7 @@ def write_manifest(
         "service_tier": task_response.get("service_tier"),
         "priority": task_response.get("priority"),
         "draft": task_response.get("draft"),
+        "draft_task_id": task_response.get("draft_task_id"),
         "framespersecond": task_response.get("framespersecond"),
         "execution_expires_after": task_response.get("execution_expires_after"),
         "task_created_at": task_response.get("created_at"),
@@ -814,6 +897,48 @@ def write_prompt(output_dir: Path, prompt: str) -> Path:
     path = output_dir / "prompt.md"
     path.write_text(f"# Seedance Prompt\n\n{prompt}\n", encoding="utf-8")
     return path
+
+
+async def _wait_download_and_record(
+    client: httpx.AsyncClient,
+    api_key: str,
+    base_url: str,
+    payload: dict[str, Any],
+    task_id: str,
+    output_dir: Path,
+    poll_interval: int,
+    max_wait: int,
+    verbose: bool,
+) -> int:
+    print(f"Polling (interval={poll_interval}s, max_wait={max_wait}s) ...")
+    result = await _poll_task_async(
+        client, api_key, base_url, task_id, poll_interval, max_wait, verbose,
+    )
+    status = result.get("status")
+    print(f"Final status: {status}")
+
+    video_path: Path | None = None
+    last_frame_path: Path | None = None
+    # Canonical success status is "succeeded" per official API.
+    # "completed" is NOT a real status but accept it defensively for forward-compat.
+    if status in {"succeeded", "completed"}:
+        video_url = result.get("content", {}).get("video_url")
+        if video_url:
+            video_path = output_dir / video_filename_from_payload(payload)
+            print(f"Downloading video to {video_path} ...")
+            await _download_video_async(client, video_url, video_path)
+        last_frame_url = result.get("content", {}).get("last_frame_url")
+        if last_frame_url:
+            last_frame_path = output_dir / "last-frame.jpg"
+            print(f"Downloading last frame to {last_frame_path} ...")
+            await _download_video_async(client, last_frame_url, last_frame_path)
+    else:
+        print(f"Task did not succeed: {result.get('error')}")
+
+    manifest_path = write_manifest(output_dir, payload, result, video_path, last_frame_path)
+    print(f"Manifest: {manifest_path}")
+    print(f"Output dir: {output_dir}")
+    return 0 if status in {"succeeded", "completed"} else 1
 
 
 async def cmd_generate_async(args: argparse.Namespace) -> int:
@@ -847,37 +972,13 @@ async def cmd_generate_async(args: argparse.Namespace) -> int:
         print(f"Creating task at {base_url} ...")
         task = await _create_task_async(client, api_key, base_url, payload)
         task_id = task.get("id")
+        if not task_id:
+            raise SystemExit(f"Error: task creation returned no id: {task}")
         print(f"Task ID: {task_id}")
-
-        print(f"Polling (interval={args.poll_interval}s, max_wait={args.max_wait}s) ...")
-        result = await _poll_task_async(
-            client, api_key, base_url, task_id, args.poll_interval, args.max_wait, args.verbose,
+        return await _wait_download_and_record(
+            client, api_key, base_url, payload, task_id, output_dir,
+            args.poll_interval, args.max_wait, args.verbose,
         )
-        status = result.get("status")
-        print(f"Final status: {status}")
-
-        video_path: Path | None = None
-        last_frame_path: Path | None = None
-        # Canonical success status is "succeeded" per official API.
-        # "completed" is NOT a real status but accept it defensively for forward-compat.
-        if status in {"succeeded", "completed"}:
-            video_url = result.get("content", {}).get("video_url")
-            if video_url:
-                video_path = output_dir / video_filename_from_payload(payload)
-                print(f"Downloading video to {video_path} ...")
-                await _download_video_async(client, video_url, video_path)
-            last_frame_url = result.get("content", {}).get("last_frame_url")
-            if last_frame_url:
-                last_frame_path = output_dir / "last-frame.jpg"
-                print(f"Downloading last frame to {last_frame_path} ...")
-                await _download_video_async(client, last_frame_url, last_frame_path)
-        else:
-            print(f"Task did not succeed: {result.get('error')}")
-
-        manifest_path = write_manifest(output_dir, payload, result, video_path, last_frame_path)
-        print(f"Manifest: {manifest_path}")
-        print(f"Output dir: {output_dir}")
-        return 0 if status in {"succeeded", "completed"} else 1
 
 
 def cmd_generate(args: argparse.Namespace) -> int:
@@ -896,6 +997,60 @@ def cmd_create(args: argparse.Namespace) -> int:
     task = asyncio.run(_run())
     print(json.dumps(task, ensure_ascii=False, indent=2))
     return 0
+
+
+async def cmd_promote_draft_async(args: argparse.Namespace) -> int:
+    # A dry run is deliberately local: it shows the exact second-step body
+    # without looking up the source task or making a video-generation request.
+    if args.dry_run:
+        payload = build_promote_draft_payload(
+            args.task_id,
+            output_format=args.output_format,
+            watermark=args.watermark,
+            return_last_frame=args.return_last_frame,
+            priority=args.priority,
+        )
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0
+
+    api_key, base_url = get_auth()
+    async with httpx.AsyncClient() as client:
+        source = await _get_task_async(client, api_key, base_url, args.task_id)
+        if source.get("status") != "succeeded":
+            raise SystemExit(
+                f"Error: Draft task {args.task_id} must be succeeded before promotion "
+                f"(current status: {source.get('status')})."
+            )
+        if source.get("draft") is not True:
+            raise SystemExit(f"Error: task {args.task_id} is not a Draft task.")
+        created_at = source.get("created_at")
+        if isinstance(created_at, (int, float)) and time.time() - created_at >= 7 * 86400:
+            raise SystemExit("Error: Draft task ID has expired after 7 days; create a new Draft task.")
+        payload = build_promote_draft_payload(
+            args.task_id,
+            model=source.get("model", ""),
+            output_format=args.output_format,
+            watermark=args.watermark,
+            return_last_frame=args.return_last_frame,
+            priority=args.priority,
+        )
+        print(f"Promoting Draft task {args.task_id} to 1080p ...")
+        task = await _create_task_async(client, api_key, base_url, payload)
+        task_id = task.get("id")
+        if not task_id:
+            raise SystemExit(f"Error: promotion returned no task id: {task}")
+        print(f"Final task ID: {task_id}")
+        if args.create_only:
+            return 0
+        output_dir = make_output_dir(args.output_dir, f"promoted-draft-{args.task_id}")
+        return await _wait_download_and_record(
+            client, api_key, base_url, payload, task_id, output_dir,
+            args.poll_interval, args.max_wait, args.verbose,
+        )
+
+
+def cmd_promote_draft(args: argparse.Namespace) -> int:
+    return asyncio.run(cmd_promote_draft_async(args))
 
 
 def cmd_poll(args: argparse.Namespace) -> int:
@@ -1040,6 +1195,7 @@ async def cmd_batch_submit_async(args: argparse.Namespace) -> int:
         "duration": args.duration,
         "ratio": args.ratio,
         "resolution": args.resolution,
+        "draft": args.draft,
         "generate_audio": args.generate_audio,
         "watermark": args.watermark,
         "return_last_frame": args.return_last_frame,
@@ -1066,6 +1222,7 @@ async def cmd_batch_submit_async(args: argparse.Namespace) -> int:
                     "shot_index": idx,
                     "prompt": payload["content"][0]["text"][:100],
                     "model": payload["model"],
+                    "draft": payload.get("draft", False),
                     "task_id": resp.get("id"),
                     "status": "submitted",
                     "status_code": 200,
@@ -1196,7 +1353,7 @@ def parse_args() -> argparse.Namespace:
     # subcommand AND not a top-level-only flag (--help/--version/-h reach argparse's
     # top-level help). Flag-first invocations (e.g. `--prompt ...`, `--model ...`)
     # ARE auto-prefixed with `generate`, matching the SKILL.md quick-start examples.
-    known_commands = {"generate", "create", "poll", "download", "list-tasks", "cancel-task", "batch-submit"}
+    known_commands = {"generate", "create", "promote-draft", "poll", "download", "list-tasks", "cancel-task", "batch-submit"}
     if sys.argv[1:] and sys.argv[1] not in known_commands and sys.argv[1] not in {"-h", "--help", "--version"}:
         sys.argv.insert(1, "generate")
 
@@ -1221,7 +1378,14 @@ def parse_args() -> argparse.Namespace:
             ),
         )
         p.add_argument("--ratio", default="16:9", choices=sorted(VALID_RATIOS))
-        p.add_argument("--resolution", default="720p", choices=sorted(VALID_RESOLUTIONS))
+        p.add_argument(
+            "--resolution", default=None, choices=sorted(VALID_RESOLUTIONS),
+            help="Default 720p; with --draft, default 480p and only 480p is allowed.",
+        )
+        p.add_argument(
+            "--draft", action="store_true",
+            help="Seedance 2.5 only: create a 480p Draft preview for later 1080p promotion.",
+        )
         p.add_argument("--generate-audio", action=argparse.BooleanOptionalAction, default=True)
         p.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=False)
         p.add_argument("--return-last-frame", action="store_true")
@@ -1260,6 +1424,21 @@ def parse_args() -> argparse.Namespace:
     create = subparsers.add_parser("create", help="Create task only")
     _add_common(create)
 
+    promote = subparsers.add_parser(
+        "promote-draft", help="Generate a 1080p final video from a succeeded Seedance 2.5 Draft task"
+    )
+    promote.add_argument("--task-id", required=True, help="Succeeded Draft task ID, valid for 7 days")
+    promote.add_argument("--output-format", choices=sorted(VALID_OUTPUT_FORMATS), default=None)
+    promote.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=None)
+    promote.add_argument("--return-last-frame", action="store_true")
+    promote.add_argument("--priority", type=int)
+    promote.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR)
+    promote.add_argument("--poll-interval", type=int, default=DEFAULT_POLL_INTERVAL)
+    promote.add_argument("--max-wait", type=int, default=DEFAULT_MAX_WAIT)
+    promote.add_argument("--create-only", action="store_true", help="Submit final task and return its ID without polling")
+    promote.add_argument("--dry-run", action="store_true", help="Print the minimal 1080p request without calling the API")
+    promote.add_argument("--verbose", action="store_true")
+
     poll = subparsers.add_parser("poll", help="Poll an existing task")
     poll.add_argument("--task-id", required=True)
     poll.add_argument("--poll-interval", type=int, default=DEFAULT_POLL_INTERVAL)
@@ -1288,7 +1467,8 @@ def parse_args() -> argparse.Namespace:
     batch.add_argument("--model", default=DEFAULT_MODEL, choices=sorted(VALID_MODELS))
     batch.add_argument("--duration", type=int, default=5)
     batch.add_argument("--ratio", default="16:9", choices=sorted(VALID_RATIOS))
-    batch.add_argument("--resolution", default="720p", choices=sorted(VALID_RESOLUTIONS))
+    batch.add_argument("--resolution", default=None, choices=sorted(VALID_RESOLUTIONS))
+    batch.add_argument("--draft", action="store_true", help="Create Seedance 2.5 Draft previews; defaults to 480p")
     batch.add_argument("--generate-audio", action=argparse.BooleanOptionalAction, default=True)
     batch.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=False)
     batch.add_argument("--return-last-frame", action="store_true")
@@ -1314,6 +1494,8 @@ def main() -> int:
         return cmd_generate(args)
     if command == "create":
         return cmd_create(args)
+    if command == "promote-draft":
+        return cmd_promote_draft(args)
     if command == "poll":
         return cmd_poll(args)
     if command == "download":
