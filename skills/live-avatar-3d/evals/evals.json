@@ -1,0 +1,31 @@
+{
+  "skill": "live-avatar-3d",
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "single-view-cartoon",
+      "user_prompt": "Turn this single-view cartoon character into an interactive 3D avatar page with orbit, gestures, and optional voice-reactive mouth movement.",
+      "expected": [
+        "Generate one Sunburst turnaround sheet and treat hidden-angle details as estimates.",
+        "Build the character from volumetric Three.js geometry rather than a plane or billboard.",
+        "Deliver a no-build HTML page and verify that its canvas and controls render in a browser."
+      ]
+    },
+    {
+      "id": "existing-multiple-views",
+      "user_prompt": "Use these front, profile, and back character references to make an orbitable avatar.",
+      "expected": [
+        "Use the supplied views directly and skip an unnecessary paid image edit.",
+        "Keep face details attached to the curved model through front, three-quarter, and profile views."
+      ]
+    },
+    {
+      "id": "microphone-not-authorized-for-test",
+      "user_prompt": "Verify the avatar page. I have not approved microphone access for this test.",
+      "expected": [
+        "Do not accept a browser microphone permission prompt.",
+        "Verify the off state and inspect that audio is analyzed locally without recording, playback, or upload."
+      ]
+    }
+  ]
+}
