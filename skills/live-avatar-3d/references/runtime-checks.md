@@ -51,7 +51,8 @@ response does not prove that WebGL initialized. Confirm all of the following:
 - at 375 px and desktop width there is no horizontal overflow or cropped face
 - `prefers-reduced-motion` stops automatic movement while manual controls work
 - the microphone starts only after a click, updates the mouth from the analyser,
-  and stops cleanly when stopped, hidden, or unloaded
+  and stops cleanly when stopped, hidden, or unloaded; also verify that a stream
+  resolving after a hidden-page cancellation is immediately stopped
 
 Do not grant microphone permission just to complete browser verification. If the
 user has not authorized microphone access for this test, verify the off state

@@ -26,6 +26,22 @@
         "Do not accept a browser microphone permission prompt.",
         "Verify the off state and inspect that audio is analyzed locally without recording, playback, or upload."
       ]
+    },
+    {
+      "id": "pending-microphone-permission-then-hide",
+      "user_prompt": "Start the microphone, hide the page while permission is pending, then resolve permission.",
+      "expected": [
+        "Invalidate the pending microphone request when the page is hidden or unloaded.",
+        "Stop every track from a stream that resolves after cancellation and leave the UI in the off state."
+      ]
+    },
+    {
+      "id": "face-markings-follow-curved-surface",
+      "user_prompt": "Build the sample moth avatar and inspect its cheek markings from the front and three-quarter views.",
+      "expected": [
+        "Cheek spots remain visibly attached to the curved head from both views.",
+        "Spots rotate with the head instead of floating independently or sinking behind the surface."
+      ]
     }
   ]
 }

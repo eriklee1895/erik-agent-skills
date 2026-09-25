@@ -291,6 +291,7 @@
       let elapsed = 0;
       let nextAutoBlink = 3.4;
       let micStream = null;
+      let micRequestId = 0;
       let audioContext = null;
       let analyser = null;
       let audioData = null;
@@ -326,10 +327,17 @@
           micStatus.textContent = 'Microphone access is unavailable in this browser context.';
           return;
         }
+        const requestId = ++micRequestId;
         micButton.disabled = true;
         micStatus.textContent = 'Waiting for microphone permission…';
         try {
-          micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          if (requestId !== micRequestId || document.hidden) {
+            stream.getTracks().forEach(track => track.stop());
+            if (requestId === micRequestId) await stopMicrophone();
+            return;
+          }
+          micStream = stream;
           audioContext = new (window.AudioContext || window.webkitAudioContext)();
           analyser = audioContext.createAnalyser();
           analyser.fftSize = 512;
@@ -339,31 +347,41 @@
           micButton.setAttribute('aria-pressed', 'true');
           micStatus.textContent = 'Listening locally. Speak to move the mouth.';
           micStream.getAudioTracks().forEach(track => {
-            track.addEventListener('ended', stopMicrophone, { once: true });
+            track.addEventListener('ended', () => {
+              if (requestId === micRequestId) stopMicrophone();
+            }, { once: true });
           });
         } catch (error) {
+          const cancelled = requestId !== micRequestId || document.hidden;
+          if (cancelled) {
+            if (requestId === micRequestId) await stopMicrophone();
+            return;
+          }
           await stopMicrophone();
           const denied = error?.name === 'NotAllowedError' || error?.name === 'SecurityError';
           micStatus.textContent = denied
             ? 'Microphone permission was not granted. The avatar still works without it.'
             : 'Microphone could not start. The avatar still works without it.';
         } finally {
-          micButton.disabled = false;
+          if (requestId === micRequestId) micButton.disabled = false;
         }
       }
 
       stopMicrophone = async function () {
-        if (micStream) micStream.getTracks().forEach(track => track.stop());
+        micRequestId += 1;
+        const stream = micStream;
         micStream = null;
         analyser = null;
         audioData = null;
         mouthLevel = 0;
+        if (stream) stream.getTracks().forEach(track => track.stop());
         if (audioContext && audioContext.state !== 'closed') await audioContext.close().catch(() => {});
         audioContext = null;
+        micButton.disabled = false;
         micButton.textContent = 'Start microphone';
         micButton.setAttribute('aria-pressed', 'false');
         micMeterFill.style.width = '0%';
-        if (!document.hidden) micStatus.textContent = 'Microphone is off.';
+        micStatus.textContent = 'Microphone is off.';
       };
       micButton.addEventListener('click', () => {
         if (micStream) stopMicrophone();
@@ -485,14 +503,26 @@
       head.position.set(0, 1.08, 0);
       root.add(head);
       ellipsoid(head, mint, [0, 0, 0], [0.61, 0.58, 0.49]);
+      const headRadii = { x: 0.61, y: 0.58, z: 0.49 };
+      function frontSurfaceZ(x, y, offset = 0.012) {
+        const remaining = 1 - (x / headRadii.x) ** 2 - (y / headRadii.y) ** 2;
+        return headRadii.z * Math.sqrt(Math.max(0, remaining)) + offset;
+      }
 
       const eyes = new THREE.Group();
       head.add(eyes);
       ellipsoid(eyes, eyeMaterial, [-0.19, 0.06, 0.425], [0.072, 0.105, 0.045]);
       ellipsoid(eyes, eyeMaterial, [0.19, 0.06, 0.425], [0.072, 0.105, 0.045]);
-      ellipsoid(head, coral, [-0.37, -0.11, 0.31], [0.052, 0.043, 0.026]);
-      ellipsoid(head, coral, [-0.3, -0.14, 0.35], [0.044, 0.036, 0.024]);
-      ellipsoid(head, coral, [0.37, -0.11, 0.31], [0.052, 0.043, 0.026]);
+      for (const side of [-1, 1]) {
+        for (const [xOffset, y, scale] of [
+          [0.37, -0.11, [0.052, 0.043, 0.026]],
+          [0.30, -0.14, [0.044, 0.036, 0.024]],
+          [0.40, -0.20, [0.03, 0.026, 0.018]]
+        ]) {
+          const x = side * xOffset;
+          ellipsoid(head, coral, [x, y, frontSurfaceZ(x, y)], scale);
+        }
+      }
       const mouth = new THREE.Group();
       mouth.position.set(0, -0.18, 0.476);
       head.add(mouth);
