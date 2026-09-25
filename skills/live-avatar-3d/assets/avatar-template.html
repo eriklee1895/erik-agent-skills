@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f1eee5">
+  <title>Live Avatar Studio</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202b29;
+      --muted: #52635e;
+      --line: #d9e0d8;
+      --paper: #f5f3ec;
+      --panel: #fffefa;
+      --mint: #dcebe0;
+      --mint-strong: #8eb5a0;
+      --coral: #c85f4e;
+      --focus: #285e57;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font: 15px/1.45 "Inter", "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+      padding: 24px;
+    }
+    button { font: inherit; }
+    .studio {
+      width: min(1320px, 100%);
+      min-height: min(820px, calc(100vh - 48px));
+      margin: 0 auto;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: 0 24px 72px rgba(37, 55, 49, .09);
+    }
+    .topbar {
+      min-height: 72px;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; letter-spacing: -.02em; }
+    .brand-mark {
+      width: 34px; height: 34px; border-radius: 11px;
+      display: grid; place-items: center;
+      background: var(--mint); color: #356a57; font-size: 12px; font-weight: 800;
+    }
+    .top-note { color: var(--muted); font-size: 12px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 324px; min-height: 0; }
+    .stage {
+      position: relative;
+      min-width: 0;
+      height: min(680px, calc(100vh - 148px));
+      min-height: 480px;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.96), rgba(229,240,230,.78) 42%, rgba(205,224,212,.9) 100%);
+    }
+    #avatar-stage { position: absolute; inset: 0; }
+    #avatar-stage canvas { display: block; width: 100%; height: 100%; outline: none; }
+    #avatar-stage canvas:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+    .stage-heading, .stage-footer { position: absolute; z-index: 2; pointer-events: none; }
+    .stage-heading { top: 24px; left: 26px; max-width: min(55%, 420px); }
+    .eyebrow, .section-label {
+      color: #4f6a5e; font-size: 10px; font-weight: 800;
+      letter-spacing: .15em; text-transform: uppercase;
+    }
+    h1 { margin: 7px 0 4px; font-size: clamp(23px, 3vw, 34px); line-height: 1.08; letter-spacing: -.045em; }
+    .stage-heading p { margin: 0; color: var(--muted); font-size: 12px; }
+    .stage-footer {
+      left: 24px; bottom: 20px; padding: 5px 9px; border-radius: 999px;
+      background: rgba(245,243,236,.82); color: #4a6056; font-size: 12px;
+      backdrop-filter: blur(6px);
+    }
+    .side-toggle {
+      position: absolute; z-index: 3; top: 22px; right: 22px;
+      min-height: 44px; padding: 0 14px; pointer-events: auto;
+    }
+    .controls {
+      padding: 23px 20px 20px;
+      border-left: 1px solid var(--line);
+      background: linear-gradient(180deg, #fffefa, #faf9f3);
+      display: flex; flex-direction: column; gap: 22px;
+    }
+    .control-section { border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+    .section-label { margin: 0 0 12px; display: flex; justify-content: space-between; gap: 12px; }
+    .section-label span:last-child { color: #5a6d65; font-size: 9px; }
+    .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .button-grid .wide { grid-column: 1 / -1; }
+    .control-button {
+      min-height: 46px; padding: 9px 12px;
+      border: 1px solid #cfd9d1; border-radius: 12px;
+      background: #fff; color: var(--ink); font-weight: 650; font-size: 13px;
+      cursor: pointer; transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .control-button.wide { width: 100%; }
+    .control-button:hover { background: #f0f6f0; border-color: #9eb9a7; transform: translateY(-1px); }
+    .control-button[aria-pressed="true"] { background: #e7f1e9; border-color: #83ab94; }
+    .control-button.primary { border-color: #2f6558; background: #2f6558; color: #fff; }
+    .control-button.primary:hover { background: #25564b; }
+    .control-button:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .control-button:disabled { cursor: not-allowed; opacity: .56; transform: none; }
+    .helper, .status { margin: 9px 0 0; color: var(--muted); font-size: 12px; }
+    .status { min-height: 18px; }
+    .mic-meter { height: 5px; margin-top: 12px; overflow: hidden; border-radius: 99px; background: #e6ebe5; }
+    .mic-meter-fill { width: 0; height: 100%; border-radius: inherit; background: var(--coral); transition: width .08s linear; }
+    .privacy-note { padding: 12px; border-radius: 12px; background: #f1f5ef; color: #53665c; font-size: 11px; }
+    .motion-note { margin-top: auto; color: #53665d; font-size: 11px; }
+    .load-error {
+      position: absolute; z-index: 5; inset: auto 18px 18px;
+      padding: 12px 14px; border: 1px solid #e8b8ae; border-radius: 12px;
+      background: #fff4f0; color: #7f3026; font-size: 13px;
+    }
+    .load-error[hidden] { display: none; }
+    @media (max-width: 920px) {
+      body { padding: 14px; }
+      .layout { grid-template-columns: minmax(0, 1fr) 290px; }
+      .stage { min-height: 480px; }
+      .controls { padding: 19px 16px; }
+    }
+    @media (max-width: 720px) {
+      .studio { min-height: 0; border-radius: 18px; }
+      .topbar { min-height: 64px; padding: 12px 16px; }
+      .top-note { max-width: 150px; text-align: right; }
+      .layout { display: flex; flex-direction: column; }
+      .stage { min-height: 54vh; height: 520px; max-height: 680px; }
+      .stage-heading { top: 18px; left: 18px; }
+      .side-toggle { top: 14px; right: 14px; }
+      .controls { border-left: 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .control-section { min-width: 0; }
+      .privacy-note, .motion-note { grid-column: 1 / -1; }
+    }
+    @media (max-width: 480px) {
+      body { padding: 8px; }
+      .topbar { align-items: flex-start; }
+      .top-note { max-width: 112px; font-size: 11px; }
+      .stage { min-height: 430px; height: 54vh; }
+      .stage-heading { max-width: 54%; }
+      .stage-heading p { display: none; }
+      .controls { grid-template-columns: 1fr; padding: 16px; }
+      .privacy-note, .motion-note { grid-column: auto; }
+      .control-section { padding-bottom: 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="studio">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">3D</span><span>Live Avatar Studio</span></div>
+      <div class="top-note">A local character preview</div>
+    </header>
+    <main class="layout">
+      <section class="stage" aria-label="Interactive 3D avatar stage">
+        <div id="avatar-stage"></div>
+        <div class="stage-heading">
+          <div class="eyebrow">Character preview</div>
+          <h1 id="avatar-name">Cloud Moth</h1>
+          <p>Drag or use arrow keys to orbit · scroll or pinch to zoom</p>
+        </div>
+        <button id="view-button" class="control-button side-toggle" type="button" aria-pressed="false">Side view</button>
+        <div class="stage-footer" id="scene-status" role="status" aria-live="polite">Loading 3D scene…</div>
+        <div id="scene-error" class="load-error" role="alert" hidden></div>
+      </section>
+      <aside class="controls" aria-label="Avatar controls">
+        <section class="control-section" aria-labelledby="motion-label">
+          <h2 id="motion-label" class="section-label"><span>Motion</span><span>PLAY</span></h2>
+          <div class="button-grid">
+            <button class="control-button" id="nod-button" type="button">Nod</button>
+            <button class="control-button" id="shake-button" type="button">Shake</button>
+            <button class="control-button" id="blink-button" type="button">Blink</button>
+            <button class="control-button" id="wiggle-button" type="button">Wiggle antennae</button>
+            <button class="control-button wide" id="pause-button" type="button" aria-pressed="false">Pause motion</button>
+          </div>
+          <p class="helper">Gestures are user-triggered; idle motion can be paused.</p>
+        </section>
+        <section class="control-section" aria-labelledby="voice-label">
+          <h2 id="voice-label" class="section-label"><span>Voice response</span><span>OPTIONAL</span></h2>
+          <button class="control-button primary wide" id="mic-button" type="button" aria-pressed="false">Start microphone</button>
+          <div class="mic-meter" aria-hidden="true"><div id="mic-meter-fill" class="mic-meter-fill"></div></div>
+          <p id="mic-status" class="status" role="status" aria-live="polite">Microphone is off.</p>
+        </section>
+        <div class="privacy-note">Microphone audio is analyzed in this browser to animate the mouth. It is not recorded, played, or sent anywhere.</div>
+        <div class="motion-note">Use the view button for a profile check. Drag with a mouse or touch to inspect the model from other angles.</div>
+      </aside>
+    </main>
+  </div>
+  <script type="module">
+    const stage = document.querySelector('#avatar-stage');
+    const sceneStatus = document.querySelector('#scene-status');
+    const sceneError = document.querySelector('#scene-error');
+    const micStatus = document.querySelector('#mic-status');
+    const micButton = document.querySelector('#mic-button');
+    const micMeterFill = document.querySelector('#mic-meter-fill');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    let stopMicrophone = () => {};
+
+    function showSceneError(message) {
+      sceneStatus.textContent = '3D preview unavailable.';
+      sceneError.textContent = message;
+      sceneError.hidden = false;
+    }
+
+    try {
+      const THREE = await import('three');
+      const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 40);
+      const frontPosition = new THREE.Vector3(0, 1.05, 5.15);
+      const sidePosition = new THREE.Vector3(5.15, 1.05, 0);
+      const targetYForStage = width => width < 480 ? 0.92 : 0.66;
+      camera.position.copy(frontPosition);
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFShadowMap;
+      renderer.domElement.tabIndex = 0;
+      renderer.domElement.setAttribute('aria-label', 'Three-dimensional cloud moth character. Use arrow keys to orbit.');
+      stage.appendChild(renderer.domElement);
+
+      scene.add(new THREE.HemisphereLight(0xf8fff8, 0x51665d, 2.1));
+      const keyLight = new THREE.DirectionalLight(0xfff4df, 3.1);
+      keyLight.position.set(-3.8, 6, 5);
+      keyLight.castShadow = true;
+      scene.add(keyLight);
+      const rimLight = new THREE.DirectionalLight(0x8ab89d, 1.7);
+      rimLight.position.set(4, 2, -4);
+      scene.add(rimLight);
+
+      const ground = new THREE.Mesh(
+        new THREE.CircleGeometry(1.65, 64),
+        new THREE.MeshBasicMaterial({ color: 0x8eaa96, transparent: true, opacity: 0.16 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.48;
+      scene.add(ground);
+
+      const character = buildCharacter(THREE, scene);
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, targetYForStage(stage.clientWidth), 0);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.07;
+      controls.minDistance = 3.1;
+      controls.maxDistance = 7.2;
+      controls.minPolarAngle = 0.55;
+      controls.maxPolarAngle = 2.35;
+      controls.rotateSpeed = 0.65;
+      controls.zoomSpeed = 0.8;
+      controls.listenToKeyEvents(renderer.domElement);
+      controls.update();
+
+      function resize() {
+        const width = Math.max(1, stage.clientWidth);
+        const height = Math.max(1, stage.clientHeight);
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.fov = width < 480 ? 42 : width < 720 ? 38 : 34;
+        controls.target.y = targetYForStage(width);
+        camera.updateProjectionMatrix();
+        controls.update();
+      }
+      const resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(stage);
+      resize();
+
+      let paused = false;
+      let activeGesture = null;
+      let elapsed = 0;
+      let nextAutoBlink = 3.4;
+      let micStream = null;
+      let micRequestId = 0;
+      let audioContext = null;
+      let analyser = null;
+      let audioData = null;
+      let mouthLevel = 0;
+      const timer = new THREE.Timer();
+
+      function triggerGesture(type) {
+        activeGesture = { type, time: 0 };
+      }
+      document.querySelector('#nod-button').addEventListener('click', () => triggerGesture('nod'));
+      document.querySelector('#shake-button').addEventListener('click', () => triggerGesture('shake'));
+      document.querySelector('#blink-button').addEventListener('click', () => triggerGesture('blink'));
+      document.querySelector('#wiggle-button').addEventListener('click', () => triggerGesture('wiggle'));
+      document.querySelector('#pause-button').addEventListener('click', event => {
+        paused = !paused;
+        event.currentTarget.setAttribute('aria-pressed', String(paused));
+        event.currentTarget.textContent = paused ? 'Resume motion' : 'Pause motion';
+      });
+
+      let sideView = false;
+      document.querySelector('#view-button').addEventListener('click', event => {
+        sideView = !sideView;
+        camera.position.copy(sideView ? sidePosition : frontPosition);
+        controls.target.set(0, targetYForStage(stage.clientWidth), 0);
+        controls.update();
+        event.currentTarget.setAttribute('aria-pressed', String(sideView));
+        event.currentTarget.textContent = sideView ? 'Front view' : 'Side view';
+        sceneStatus.textContent = sideView ? 'Profile view.' : 'Front view.';
+      });
+
+      async function startMicrophone() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          micStatus.textContent = 'Microphone access is unavailable in this browser context.';
+          return;
+        }
+        const requestId = ++micRequestId;
+        micButton.disabled = true;
+        micStatus.textContent = 'Waiting for microphone permission…';
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          if (requestId !== micRequestId || document.hidden) {
+            stream.getTracks().forEach(track => track.stop());
+            if (requestId === micRequestId) await stopMicrophone();
+            return;
+          }
+          micStream = stream;
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 512;
+          audioData = new Uint8Array(analyser.fftSize);
+          audioContext.createMediaStreamSource(micStream).connect(analyser);
+          micButton.textContent = 'Stop microphone';
+          micButton.setAttribute('aria-pressed', 'true');
+          micStatus.textContent = 'Listening locally. Speak to move the mouth.';
+          micStream.getAudioTracks().forEach(track => {
+            track.addEventListener('ended', () => {
+              if (requestId === micRequestId) stopMicrophone();
+            }, { once: true });
+          });
+        } catch (error) {
+          const cancelled = requestId !== micRequestId || document.hidden;
+          if (cancelled) {
+            if (requestId === micRequestId) await stopMicrophone();
+            return;
+          }
+          await stopMicrophone();
+          const denied = error?.name === 'NotAllowedError' || error?.name === 'SecurityError';
+          micStatus.textContent = denied
+            ? 'Microphone permission was not granted. The avatar still works without it.'
+            : 'Microphone could not start. The avatar still works without it.';
+        } finally {
+          if (requestId === micRequestId) micButton.disabled = false;
+        }
+      }
+
+      stopMicrophone = async function () {
+        micRequestId += 1;
+        const stream = micStream;
+        micStream = null;
+        analyser = null;
+        audioData = null;
+        mouthLevel = 0;
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        if (audioContext && audioContext.state !== 'closed') await audioContext.close().catch(() => {});
+        audioContext = null;
+        micButton.disabled = false;
+        micButton.textContent = 'Start microphone';
+        micButton.setAttribute('aria-pressed', 'false');
+        micMeterFill.style.width = '0%';
+        micStatus.textContent = 'Microphone is off.';
+      };
+      micButton.addEventListener('click', () => {
+        if (micStream) stopMicrophone();
+        else startMicrophone();
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopMicrophone();
+      });
+      window.addEventListener('pagehide', stopMicrophone);
+      window.addEventListener('beforeunload', stopMicrophone);
+
+      function updateMicrophone() {
+        if (!analyser || !audioData) {
+          mouthLevel *= 0.82;
+        } else {
+          analyser.getByteTimeDomainData(audioData);
+          let sum = 0;
+          for (const value of audioData) {
+            const sample = (value - 128) / 128;
+            sum += sample * sample;
+          }
+          mouthLevel = Math.min(1, Math.sqrt(sum / audioData.length) * 5.5);
+          micMeterFill.style.width = `${Math.round(mouthLevel * 100)}%`;
+        }
+        character.mouth.scale.y = character.baseMouthY * (1 + mouthLevel * 4.2);
+      }
+
+      function updateGesture(delta) {
+        if (!activeGesture) return;
+        activeGesture.time += delta;
+        const duration = activeGesture.type === 'blink' ? 0.24 : 0.9;
+        const progress = Math.min(1, activeGesture.time / duration);
+        const envelope = Math.sin(Math.PI * progress);
+        const motionScale = reducedMotion.matches ? 0.45 : 1;
+        const { type } = activeGesture;
+        character.head.rotation.x = type === 'nod' ? Math.sin(progress * Math.PI * 4) * 0.38 * envelope * motionScale : 0;
+        character.head.rotation.y = type === 'shake' ? Math.sin(progress * Math.PI * 4) * 0.48 * envelope * motionScale : 0;
+        if (type === 'blink') character.eyes.scale.y = Math.max(0.08, 1 - envelope * 0.94);
+        if (type === 'wiggle') {
+          character.antennaLeft.rotation.z = envelope * 0.4 * motionScale;
+          character.antennaRight.rotation.z = -envelope * 0.4 * motionScale;
+        }
+        if (progress >= 1) {
+          character.head.rotation.set(0, 0, 0);
+          character.eyes.scale.y = 1;
+          character.antennaLeft.rotation.z = 0;
+          character.antennaRight.rotation.z = 0;
+          activeGesture = null;
+        }
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        timer.update();
+        const delta = Math.min(timer.getDelta(), 0.05);
+        elapsed += delta;
+        controls.update();
+        if (!paused && !reducedMotion.matches) {
+          character.root.position.y = Math.sin(elapsed * 1.55) * 0.035;
+          character.root.scale.y = 1 + Math.sin(elapsed * 1.55) * 0.012;
+          character.wingLeft.rotation.z = Math.sin(elapsed * 1.2) * 0.035;
+          character.wingRight.rotation.z = -Math.sin(elapsed * 1.2) * 0.035;
+          if (elapsed > nextAutoBlink && !activeGesture) {
+            triggerGesture('blink');
+            nextAutoBlink = elapsed + 3.2 + Math.random() * 2.2;
+          }
+        } else if (paused || reducedMotion.matches) {
+          character.root.position.y = 0;
+          character.root.scale.y = 1;
+          character.wingLeft.rotation.z = 0;
+          character.wingRight.rotation.z = 0;
+        }
+        updateGesture(delta);
+        updateMicrophone();
+        renderer.render(scene, camera);
+      }
+      sceneStatus.textContent = 'Ready.';
+      animate();
+    } catch (error) {
+      console.error('3D avatar failed to initialize:', error);
+      showSceneError('The 3D engine did not load. Check the network connection and reload this page.');
+    }
+
+    function buildCharacter(THREE, scene) {
+      const root = new THREE.Group();
+      scene.add(root);
+      const material = (color, roughness = 0.88) => new THREE.MeshStandardMaterial({ color, roughness });
+      const mint = material('#c8dfc2');
+      const mintShadow = material('#9fc5a7');
+      const cream = material('#f4efdc');
+      const gold = material('#eab64f', 0.72);
+      const coral = material('#d76e5c', 0.72);
+      const brown = material('#73533a', 0.78);
+      const eyeMaterial = material('#173142', 0.24);
+      const mouthMaterial = material('#683841', 0.5);
+      const sphere = new THREE.SphereGeometry(1, 32, 24);
+
+      function ellipsoid(parent, mat, position, scale) {
+        const mesh = new THREE.Mesh(sphere, mat);
+        mesh.position.set(...position);
+        mesh.scale.set(...scale);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        parent.add(mesh);
+        return mesh;
+      }
+      function tube(parent, points, radius, mat) {
+        const curve = new THREE.CatmullRomCurve3(points.map(point => new THREE.Vector3(...point)));
+        const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 20, radius, 8, false), mat);
+        mesh.castShadow = true;
+        parent.add(mesh);
+        return mesh;
+      }
+
+      // MODEL-SPECIFIC GEOMETRY: adapt this volume-based example to the supplied character.
+      const body = ellipsoid(root, mint, [0, 0.14, 0], [0.48, 0.61, 0.39]);
+      body.rotation.z = -0.04;
+      const head = new THREE.Group();
+      head.position.set(0, 1.08, 0);
+      root.add(head);
+      ellipsoid(head, mint, [0, 0, 0], [0.61, 0.58, 0.49]);
+      const headRadii = { x: 0.61, y: 0.58, z: 0.49 };
+      function frontSurfaceZ(x, y, offset = 0.012) {
+        const remaining = 1 - (x / headRadii.x) ** 2 - (y / headRadii.y) ** 2;
+        return headRadii.z * Math.sqrt(Math.max(0, remaining)) + offset;
+      }
+
+      const eyes = new THREE.Group();
+      head.add(eyes);
+      ellipsoid(eyes, eyeMaterial, [-0.19, 0.06, 0.425], [0.072, 0.105, 0.045]);
+      ellipsoid(eyes, eyeMaterial, [0.19, 0.06, 0.425], [0.072, 0.105, 0.045]);
+      for (const side of [-1, 1]) {
+        for (const [xOffset, y, scale] of [
+          [0.37, -0.11, [0.052, 0.043, 0.026]],
+          [0.30, -0.14, [0.044, 0.036, 0.024]],
+          [0.40, -0.20, [0.03, 0.026, 0.018]]
+        ]) {
+          const x = side * xOffset;
+          ellipsoid(head, coral, [x, y, frontSurfaceZ(x, y)], scale);
+        }
+      }
+      const mouth = new THREE.Group();
+      mouth.position.set(0, -0.18, 0.476);
+      head.add(mouth);
+      ellipsoid(mouth, mouthMaterial, [0, 0, 0], [0.085, 0.024, 0.022]);
+      const baseMouthY = mouth.scale.y;
+
+      const antennaLeft = new THREE.Group();
+      const antennaRight = new THREE.Group();
+      antennaLeft.position.set(-0.2, 0.48, 0);
+      antennaRight.position.set(0.2, 0.48, 0);
+      head.add(antennaLeft, antennaRight);
+      tube(antennaLeft, [[0, 0, 0], [-0.02, 0.2, 0.02], [-0.12, 0.35, 0.03]], 0.035, mintShadow);
+      tube(antennaRight, [[0, 0, 0], [0.02, 0.2, 0.02], [0.12, 0.35, 0.03]], 0.035, mintShadow);
+      const leafLeft = ellipsoid(antennaLeft, gold, [-0.14, 0.38, 0.04], [0.18, 0.095, 0.07]);
+      const leafRight = ellipsoid(antennaRight, gold, [0.14, 0.38, 0.04], [0.18, 0.095, 0.07]);
+      leafLeft.rotation.z = -0.45;
+      leafRight.rotation.z = 0.45;
+
+      function makeWing(side) {
+        const wing = new THREE.Group();
+        wing.position.set(side * 0.34, -0.2, -0.25);
+        wing.scale.x = side;
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0.12);
+        shape.bezierCurveTo(0.22, 0.6, 0.72, 0.83, 1.05, 0.6);
+        shape.bezierCurveTo(1.42, 0.35, 1.25, -0.35, 0.9, -0.62);
+        shape.bezierCurveTo(0.48, -0.91, 0.11, -0.5, 0, 0.12);
+        const outer = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, {
+          depth: 0.075, bevelEnabled: true, bevelSegments: 2, steps: 1,
+          bevelSize: 0.035, bevelThickness: 0.035
+        }), mintShadow);
+        outer.castShadow = true;
+        wing.add(outer);
+        const innerShape = new THREE.Shape();
+        innerShape.moveTo(0.13, 0.08);
+        innerShape.bezierCurveTo(0.34, 0.45, 0.74, 0.63, 0.98, 0.48);
+        innerShape.bezierCurveTo(1.2, 0.3, 1.08, -0.29, 0.82, -0.47);
+        innerShape.bezierCurveTo(0.48, -0.68, 0.2, -0.4, 0.13, 0.08);
+        const inner = new THREE.Mesh(new THREE.ExtrudeGeometry(innerShape, {
+          depth: 0.03, bevelEnabled: true, bevelSegments: 1, steps: 1,
+          bevelSize: 0.014, bevelThickness: 0.014
+        }), cream);
+        inner.position.z = 0.065;
+        wing.add(inner);
+        root.add(wing);
+        return wing;
+      }
+      const wingLeft = makeWing(-1);
+      const wingRight = makeWing(1);
+
+      const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.075, 12, 40), cream);
+      scarf.rotation.x = Math.PI / 2;
+      scarf.position.set(0, 0.68, 0.02);
+      scarf.castShadow = true;
+      root.add(scarf);
+      const scarfKnot = ellipsoid(root, coral, [0.08, 0.66, 0.37], [0.14, 0.12, 0.1]);
+      scarfKnot.rotation.z = -0.25;
+      ellipsoid(root, coral, [0.18, 0.43, 0.37], [0.095, 0.24, 0.06]).rotation.z = -0.35;
+
+      for (const side of [-1, 1]) {
+        ellipsoid(root, mintShadow, [side * 0.21, -0.44, 0.03], [0.105, 0.19, 0.12]);
+        ellipsoid(root, brown, [side * 0.22, -0.56, 0.11], [0.18, 0.13, 0.25]);
+      }
+      return { root, head, eyes, mouth, baseMouthY, antennaLeft, antennaRight, wingLeft, wingRight };
+    }
+  </script>
+</body>
+</html>

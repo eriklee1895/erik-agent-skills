@@ -26,6 +26,7 @@
 | [gpt-image-2](../skills/gpt-image-2/) | 使用 OpenAI gpt-image-2 模型生成、编辑和批量制作位图。 | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-2` |
 | [gpt-image-api](../skills/gpt-image-api/) | 使用 OpenAI GPT Image 2.5 Flare 与 Sunburst 生成、精细编辑、流式生成和批量制作位图。 | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api` |
 | [seedream-image-gen](../skills/seedream-image-gen/) | 使用 Seedream 生成和编辑图片，支持文字设计、标记编辑、扩图与批量工作流。 | `npx skills add eriklee1895/erik-agent-skills --skill seedream-image-gen` |
+| [live-avatar-3d](../skills/live-avatar-3d/) | 将角色图制作成无需构建步骤的交互式 3D 网页头像，支持环视、动作和可选的本地麦克风嘴型。 | `npx skills add eriklee1895/erik-agent-skills --skill live-avatar-3d` |
 | [seedance-video-gen](../skills/seedance-video-gen/) | 使用 Seedance 根据文本、图片或多模态参考生成视频。 | `npx skills add eriklee1895/erik-agent-skills --skill seedance-video-gen` |
 | [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | 为视频和文章媒体工作流生成无人声背景音乐。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-bigmusic-bgm` |
 | [volcengine-tts](../skills/volcengine-tts/) | 使用火山引擎语音合成模型生成语音音频。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-tts` |

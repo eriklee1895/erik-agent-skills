@@ -1,0 +1,4 @@
+interface:
+  display_name: "Live Avatar 3D"
+  short_description: "Build an interactive 3D avatar page from a character image"
+  default_prompt: "Use $live-avatar-3d to turn this character image into an interactive 3D avatar."
