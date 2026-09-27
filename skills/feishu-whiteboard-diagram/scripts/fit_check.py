@@ -150,6 +150,27 @@ def _inherited_attr(
     return None
 
 
+def _marker_padding(
+    element: ET.Element,
+    markers: dict[str, ET.Element],
+) -> float:
+    padding = 0.0
+    stroke_width = _number(element.attrib.get("stroke-width"), 1.0)
+    for attribute in ("marker-start", "marker-end"):
+        value = element.attrib.get(attribute, "")
+        match = re.fullmatch(r"url\(#([^)]+)\)", value.strip())
+        if not match:
+            continue
+        marker = markers.get(match.group(1))
+        if marker is None:
+            continue
+        marker_width = _number(marker.attrib.get("markerWidth"), 3.0)
+        marker_height = _number(marker.attrib.get("markerHeight"), 3.0)
+        scale = stroke_width if marker.attrib.get("markerUnits", "strokeWidth") == "strokeWidth" else 1.0
+        padding = max(padding, max(marker_width, marker_height) * scale)
+    return padding
+
+
 def _element_bbox(
     element: ET.Element,
     view_box: tuple[float, float, float, float],
@@ -237,6 +258,11 @@ def check_svg_fit(
         )
 
     parent_map = {child: parent for parent in root.iter() for child in parent}
+    markers = {
+        element.attrib["id"]: element
+        for element in root.iter()
+        if _local_name(element.tag) == "marker" and element.attrib.get("id")
+    }
     bbox: tuple[float, float, float, float] | None = None
     unmeasured = False
     for element in root.iter():
@@ -283,10 +309,8 @@ def check_svg_fit(
             )
             unmeasured = True
         candidate = _element_bbox(element, view_box, parent_map)
-        if candidate is not None and (
-            element.attrib.get("marker-start") or element.attrib.get("marker-end")
-        ):
-            candidate = _expand(candidate, 6)
+        if candidate is not None:
+            candidate = _expand(candidate, _marker_padding(element, markers))
         bbox = _merge(bbox, candidate)
 
     if bbox is None:

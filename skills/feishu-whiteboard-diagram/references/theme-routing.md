@@ -25,6 +25,7 @@ python3 scripts/theme_router.py --purpose architecture --tone technical
 
 相同的显式输入必须得到相同的主题。`user_theme`、`brand_theme` 和改版时的 `existing_theme` 依次覆盖语义路由；
 没有显式主题时，先按 `diagram_purpose`，再按 `article_tone`，最后回退到 `light-technical`。
+其中 `article_tone=benchmark` 只会把通用 `comparison` 或明确的 `benchmark` 用途路由到 `white-report`；架构、流程和状态图仍由用途优先，保持 `light-technical`。
 
 ## 开工契约字段
 

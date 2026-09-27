@@ -97,6 +97,20 @@ class FitCheckTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertIn("canvas-bleed", {finding.code for finding in result.findings})
 
+    def test_measures_actual_marker_dimensions(self):
+        result = self.check(
+            '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+              <defs>
+                <marker id="large" markerWidth="50" markerHeight="50" refX="25" refY="25">
+                  <path d="M0 0 L50 25 L0 50 z"/>
+                </marker>
+              </defs>
+              <line data-role="edge" x1="20" y1="50" x2="90" y2="50" stroke="#000000" marker-end="url(#large)"/>
+            </svg>'''
+        )
+        self.assertFalse(result.ok)
+        self.assertIn("canvas-bleed", {finding.code for finding in result.findings})
+
 
 if __name__ == "__main__":
     unittest.main()

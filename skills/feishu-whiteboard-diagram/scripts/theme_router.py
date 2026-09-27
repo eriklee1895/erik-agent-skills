@@ -40,7 +40,7 @@ def resolve_theme(
 
     purpose = (diagram_purpose or "").strip().lower()
     tone = (article_tone or "").strip().lower()
-    if tone == "benchmark":
+    if purpose == "comparison" and tone == "benchmark":
         return "white-report"
     if purpose == "timeline":
         return "coral" if tone in {"creative", "product"} else "light-technical"
