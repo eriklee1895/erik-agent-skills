@@ -10,9 +10,11 @@ discovered, linked, and installed consistently.
 > checks, WeChat rendering/publishing, blog publishing, and post-publication
 > closeout) are specific to Erik's
 > [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)
-> project and are intentionally not published here.
+> project and are intentionally not published here. This catalog's Writing
+> category contains only standalone, reusable skills for content expression,
+> document delivery, and source-material collection.
 
-## Publishing & Channels
+## Writing
 
 | Skill | Purpose | Install |
 | --- | --- | --- |
@@ -36,7 +38,7 @@ discovered, linked, and installed consistently.
 | [volcengine-transcribe](../skills/volcengine-transcribe/) | Transcribe audio/video to text with Volcano Engine's speech recognition and generate SRT/VTT subtitles; speaker diarization and ffmpeg video extraction built in. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-transcribe` |
 | [seed-audio-gen](../skills/seed-audio-gen/) | Generate complete mixed audio scenes (voice + SFX + BGM) with the generative seed-audio-1.0 model; multi-reference voice cloning, sound effects, and directed dialogue in one call. | `npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen` |
 
-## Tools & Integrations
+## General Utilities
 
 | Skill | Purpose | Install |
 | --- | --- | --- |
