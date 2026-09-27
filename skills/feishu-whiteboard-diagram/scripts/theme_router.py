@@ -39,13 +39,14 @@ def resolve_theme(
             return explicit.strip().lower()
 
     purpose = (diagram_purpose or "").strip().lower()
+    tone = (article_tone or "").strip().lower()
+    if tone == "benchmark":
+        return "white-report"
     if purpose == "timeline":
-        tone = (article_tone or "").strip().lower()
         return "coral" if tone in {"creative", "product"} else "light-technical"
     if purpose in PURPOSE_THEMES:
         return PURPOSE_THEMES[purpose]
 
-    tone = (article_tone or "").strip().lower()
     return TONE_THEMES.get(tone, "light-technical")
 
 

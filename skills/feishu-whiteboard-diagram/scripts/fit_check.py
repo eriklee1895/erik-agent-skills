@@ -137,9 +137,23 @@ def _point_bbox(values: list[float]) -> tuple[float, float, float, float] | None
     return (min(xs), min(ys), max(xs), max(ys))
 
 
+def _inherited_attr(
+    element: ET.Element,
+    parent_map: dict[ET.Element, ET.Element],
+    name: str,
+) -> str | None:
+    node: ET.Element | None = element
+    while node is not None:
+        if name in node.attrib:
+            return node.attrib[name]
+        node = parent_map.get(node)
+    return None
+
+
 def _element_bbox(
     element: ET.Element,
     view_box: tuple[float, float, float, float],
+    parent_map: dict[ET.Element, ET.Element],
 ) -> tuple[float, float, float, float] | None:
     tag = _local_name(element.tag)
     x0, y0, width, height = view_box
@@ -182,13 +196,15 @@ def _element_bbox(
         return _expand(_point_bbox(_numbers(path_data)), _stroke_padding(element))
     if tag in {"text", "tspan"}:
         text = " ".join("".join(element.itertext()).split())
-        if not text or "x" not in element.attrib or "y" not in element.attrib:
+        x_value = _inherited_attr(element, parent_map, "x")
+        y_value = _inherited_attr(element, parent_map, "y")
+        if not text or x_value is None or y_value is None:
             return None
-        font_size = _number(element.attrib.get("font-size"), 16)
+        font_size = _number(_inherited_attr(element, parent_map, "font-size"), 16)
         text_width = _text_width(text, font_size)
-        x = _number(element.attrib.get("x"))
-        y = _number(element.attrib.get("y"))
-        anchor = element.attrib.get("text-anchor", "start")
+        x = _number(x_value) + _number(element.attrib.get("dx"))
+        y = _number(y_value) + _number(element.attrib.get("dy"))
+        anchor = _inherited_attr(element, parent_map, "text-anchor") or "start"
         if anchor == "middle":
             x -= text_width / 2
         elif anchor == "end":
@@ -231,7 +247,7 @@ def check_svg_fit(
             if _local_name(node.tag) in {"defs", "marker"}:
                 inside_defs = True
                 break
-        if inside_defs or _local_name(element.tag) in {"svg", "defs", "marker"}:
+        if inside_defs:
             continue
         tag = _local_name(element.tag)
         if "transform" in element.attrib:
@@ -243,6 +259,8 @@ def check_svg_fit(
                 )
             )
             unmeasured = True
+        if tag in {"svg", "defs", "marker"}:
+            continue
         if tag == "g":
             continue
         if tag not in MEASURABLE_TAGS:
@@ -255,8 +273,6 @@ def check_svg_fit(
             )
             unmeasured = True
             continue
-        if tag == "tspan" and "x" not in element.attrib:
-            continue
         if tag == "path" and re.search(r"[a-z]", element.attrib.get("d", "")):
             findings.append(
                 Finding(
@@ -266,7 +282,12 @@ def check_svg_fit(
                 )
             )
             unmeasured = True
-        bbox = _merge(bbox, _element_bbox(element, view_box))
+        candidate = _element_bbox(element, view_box, parent_map)
+        if candidate is not None and (
+            element.attrib.get("marker-start") or element.attrib.get("marker-end")
+        ):
+            candidate = _expand(candidate, 6)
+        bbox = _merge(bbox, candidate)
 
     if bbox is None:
         level = "error" if unmeasured else "warning"

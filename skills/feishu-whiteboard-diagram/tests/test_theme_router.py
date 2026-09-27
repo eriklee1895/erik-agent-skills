@@ -64,6 +64,15 @@ class ThemeRouterTests(unittest.TestCase):
             ),
         )
 
+    def test_benchmark_tone_overrides_generic_comparison_theme(self):
+        self.assertEqual(
+            "white-report",
+            MODULE.resolve_theme(
+                diagram_purpose="comparison",
+                article_tone="benchmark",
+            ),
+        )
+
     def test_unknown_inputs_use_light_technical(self):
         self.assertEqual("light-technical", MODULE.resolve_theme())
 

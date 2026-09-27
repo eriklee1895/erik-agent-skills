@@ -68,11 +68,30 @@ class FitCheckTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertIn("unmeasured-transform", {finding.code for finding in result.findings})
 
-    def test_measures_path_and_tspan_content(self):
+    def test_fails_closed_for_root_svg_transform(self):
+        result = self.check(
+            '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" transform="translate(-20 0)">
+              <rect x="80" y="80" width="240" height="80" fill="#FFFFFF"/>
+            </svg>'''
+        )
+        self.assertFalse(result.ok)
+        self.assertIn("unmeasured-transform", {finding.code for finding in result.findings})
+
+    def test_measures_path_content(self):
         result = self.check(
             '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240">
               <path d="M-4 80 L120 80 L120 160" fill="none"/>
-              <text x="80" y="210" font-size="20"><tspan>越界文字</tspan></text>
+            </svg>'''
+        )
+        self.assertFalse(result.ok)
+        self.assertIn("canvas-bleed", {finding.code for finding in result.findings})
+
+    def test_measures_inherited_tspan_content(self):
+        result = self.check(
+            '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240">
+              <text x="80" y="160" font-size="16">
+                <tspan x="380" dx="20" font-size="24">越界文字</tspan>
+              </text>
             </svg>'''
         )
         self.assertFalse(result.ok)
