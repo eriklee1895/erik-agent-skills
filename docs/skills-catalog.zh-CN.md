@@ -7,9 +7,9 @@
 
 > 端到端**写作工作流** skills（选题构思、文章润色、发布前检查、微信排版/发布、博客发布、任务收尾）
 > 与 Erik 的 [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)
-> 项目环境强耦合，有意不收录在本仓库，随该项目分发。
+> 项目环境强耦合，有意不收录在本仓库，随该项目分发。本目录的「写作」分类只收录独立可复用的内容表达、文档落地与素材获取 skills。
 
-## 发布与渠道
+## 写作
 
 | Skill | 用途 | 安装 |
 | --- | --- | --- |
@@ -33,7 +33,7 @@
 | [volcengine-transcribe](../skills/volcengine-transcribe/) | 用火山引擎语音识别将音视频转写为文本并生成 SRT/VTT 字幕；内置说话人分离与 ffmpeg 视频抽音轨。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-transcribe` |
 | [seed-audio-gen](../skills/seed-audio-gen/) | 用生成式 seed-audio-1.0 模型一次生成人声+音效+BGM 的完整音频场景；支持多参考音色克隆、音效和导演式对白。 | `npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen` |
 
-## 工具与集成
+## 通用工具
 
 | Skill | 用途 | 安装 |
 | --- | --- | --- |

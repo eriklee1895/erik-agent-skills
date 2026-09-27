@@ -39,9 +39,9 @@ and are intentionally not published here.
 
 | Area | Skills | Focus |
 | --- | ---: | --- |
-| Publishing & Channels | 4 | Feishu documents, HTML/whiteboard diagrams, and WeChat article collection |
+| Writing | 4 | Feishu documents/diagrams and WeChat article collection |
 | Media | 10 | Image, video, speech, music, and interactive avatar creation |
-| Tools & Integrations | 4 | Reusable CLIs, documentation retrieval, web search, and developer disk audits |
+| General Utilities | 4 | Reusable CLIs, documentation retrieval, web search, and developer disk audits |
 
 Browse the [English skills catalog](docs/skills-catalog.en.md) for the complete
 categorized list, descriptions, and per-skill install commands.
