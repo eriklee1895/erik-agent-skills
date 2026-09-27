@@ -1,22 +1,22 @@
 # 构图（解释图，不是均等流程图）
 
-色板见 [palettes.md](palettes.md) 和 [visual-system.md](visual-system.md)。概念图默认使用奶油画布、墨边 3–4px、**只有一个饱和焦点且它最大**、次级步骤是安静的描边盒。定量评测可选白页橙灰报告风格，细则见 [data-report-style.md](data-report-style.md)。
-35 套 `design.md` 不搬进来；只吸收适合本 skill 的构图和 7 套精选色板。当前本地候选图在 [evals/fixtures/human-eval/](../evals/fixtures/human-eval/)，历史 Human eval 与待复核状态见 [human-eval.md](../evals/human-eval.md)。
+色板见 [palettes.md](palettes.md)、[visual-system.md](visual-system.md) 和 [theme-routing.md](theme-routing.md)。技术架构默认使用近白画布、浅色分组、1.5–2px 边框和**一个由尺寸、留白与边界共同建立的焦点**；文章明确需要编辑感时，才使用奶油画布、3–4px 墨边和饱和焦点。定量评测可选白页橙灰报告风格，细则见 [data-report-style.md](data-report-style.md)。
+35 套 `design.md` 不搬进来；只吸收适合本 skill 的构图和 8 个主题家族。当前本地候选图在 [evals/fixtures/human-eval/](../evals/fixtures/human-eval/)，历史 Human eval 与待复核状态见 [human-eval.md](../evals/human-eval.md)。
 
-循环 / 分叉 / 枢纽默认 **Riso Brut**。定性对比列用 **Riptide Cobalt**；量化对比读 [白页橙灰报告风格](data-report-style.md) 并用 **White Report**。时间线可用 **Coral**。四象限用 **Grove**。焦点+细节可用 **Avocado Press**。分层条带可以继续用浅色分组。
+技术架构、流程、分层和多列运行图默认 **Light Technical**。只有文章明确需要编辑型 / 概念型视觉时，循环 / 分叉 / 枢纽才使用 **Riso Brut**。定性对比列用 **Riptide Cobalt**；量化对比读 [白页橙灰报告风格](data-report-style.md) 并用 **White Report**。时间线可用 **Coral**。四象限用 **Grove**。焦点+细节可用 **Avocado Press**。
 
 ## 间距（8 的倍数）
 
 | Token | 值 |
 |---|---|
-| 画布边距 | 64–80 |
-| 标题块 → 主体 | 48–64 |
-| 列沟槽 | 32–40 |
-| 卡片内边距 | 20–28 |
+| 画布边距 | 80 |
+| 标题块 → 主体 | 56–72 |
+| 列沟槽 | 40 |
+| 卡片内边距 | 24–32 |
 | 有箭头的缝 | 48–64 |
-| 硬阴影偏移 | 10 |
+| 硬阴影偏移 | 默认不用；编辑型主题 10 |
 
-概念图不要浅灰大外框；结构用色块，让奶油底透出来。White Report 是例外：数据面板可用白底细灰边，分隔线应轻，不用粗黑边或硬阴影。
+Light Technical 不用浅灰大外框；结构用浅色分组和轻边界，让近白画布透出来。White Report 是例外：数据面板可用白底细灰边，分隔线应轻，不用粗黑边或硬阴影。编辑型主题才允许奶油底、粗墨边和声明过的硬阴影。
 
 ## 字号
 
@@ -28,11 +28,11 @@
 | 正文 | 16 | 400 |
 | 标注 | 14–16 | 500 |
 
-深色块上的字用奶油或白，且够大。不要 12px。
+浅色主题默认使用墨色文字；深色块上的字用奶油或白，且够大。不要 12px。
 
 ## 焦点
 
-染色但一样大 = 还是草稿。焦点必须 **更大 + 饱和填充 +（可选）硬阴影**。邻居用白/奶油描边盒、墨字。
+染色但一样大 = 还是草稿。焦点必须 **更大 + 更多留白 + 明确边界**；编辑型主题可以再加饱和填充和硬阴影。邻居使用白 / 浅色底、轻边框和墨字。
 
 ## 密度与删减
 

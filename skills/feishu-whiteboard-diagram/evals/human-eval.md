@@ -4,7 +4,7 @@
 
 ## 当前候选（2026-09-04）
 
-安全门禁、parser contract、连线 lint、文字对比度和事实复核已进入新候选。当前最高证据层是 **`local-render-valid`**：11 张 SVG 自有 lint 全部 exit 0，固定 `whiteboard-cli@0.2.13` 全部 0 error、warning 与基线一致，PNG 已目视复核。详见 [`current-local-evidence.md`](fixtures/human-eval/current-local-evidence.md)。
+安全门禁、parser contract、连线 lint、文字对比度和事实复核已进入新候选。历史候选的最高证据层是 **`local-render-valid`**；新增的 `15-light-architecture.svg` 是本轮 Light Technical 主题候选，需按同一流程重新纳入飞书体验复核。详见 [`current-local-evidence.md`](fixtures/human-eval/current-local-evidence.md)。
 
 在 Web / 桌面重新打开并逐图填写记分表之前，**不得沿用旧版的 `feishu-experience-valid`**。
 
@@ -16,7 +16,7 @@
 | 评测人 / 日期 | 李玉恒 · 2026-09-03 |
 | 最高证据层 | 当时有人在飞书打开并确认，但在线记分表为空；不视为逐图可审计证据。 |
 | 评测文档 | https://bytedance.my.larkoffice.com/docx/MoiudXbwaonw61xo2Uem0E9qyQg |
-| 视觉基准 | 本目录 fixtures：奶油底 + 4px 墨边 + 一个更大的饱和焦点；分层条带才用浅色分组。不要退回均等胶囊流程图。 |
+| 历史视觉基准 | 旧版 fixtures：奶油底 + 4px 墨边 + 一个更大的饱和焦点；分层条带才用浅色分组。它不覆盖新的 Light Technical 默认主题。 |
 
 这份历史结论只覆盖当时的色板与 fixtures。后续改构图、parser 或默认色板，先跑本地验证，再建新的评测文档；不要覆盖历史文档伪装成同一轮结果。
 
@@ -94,6 +94,7 @@ bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh --yes
 | 12 | `12-swimlane.svg` | SVG 泳道 | Agent 车道上色 |
 | 13 | `13-quadrant.svg` | SVG 四象限 · Grove | 右上 SKILL.md 最大 |
 | 14 | `14-focus-detail.svg` | SVG 焦点+细节 · Avocado | 左边判断最大 |
+| 15 | `15-light-architecture.svg` | SVG 技术架构默认主题 · Light Technical | 近白画布、浅色执行边界、蓝色只保留给主语义 |
 
 ## 记分卡
 

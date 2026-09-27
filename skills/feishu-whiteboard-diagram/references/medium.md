@@ -49,5 +49,7 @@
 - `opacity` 不可靠，浅色用实心更浅 hex。
 - 焦点靠 **尺寸**，染色但一样大仍像草稿流程图。
 - 反均等卡片、反绕场虚线、反空列壳。细节见 [composition.md](composition.md)。
+- 主题要按阅读场景路由：技术文档默认 Light Technical，编辑型色板必须有明确理由。细节见 [theme-routing.md](theme-routing.md)。
+- 渲染前先做几何 fit-check，再做 `lint_svg.py`、`whiteboard-cli --check` 和 PNG 目视；机械缺陷与审美判断分开。
 - 本地 PNG 看构图；飞书导出常被垫成方画布，且文字颜色不一定准。
 - 官方 DSL 适合自动分层和原生菱形；层间双侧 API、编号签、跨列页脚仍用 SVG。

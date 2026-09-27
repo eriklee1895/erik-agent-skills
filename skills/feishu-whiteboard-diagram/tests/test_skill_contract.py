@@ -20,6 +20,13 @@ class SkillContractTests(unittest.TestCase):
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("THIRD_PARTY_NOTICES.md", skill)
 
+    def test_visual_contract_links_theme_routing_and_fit_check(self):
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("theme-routing.md", skill)
+        self.assertTrue((ROOT / "references" / "theme-routing.md").exists())
+        self.assertTrue((ROOT / "references" / "community-practice.md").exists())
+        self.assertTrue((ROOT / "scripts" / "fit_check.py").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

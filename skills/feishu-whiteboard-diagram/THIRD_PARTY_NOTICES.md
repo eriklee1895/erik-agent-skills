@@ -13,7 +13,7 @@ This skill incorporates selected design-system ideas and adapted documentation f
 
 - Source: https://github.com/LcpMarvel/feishu-whiteboard-pro
 - Reviewed revision: `27e22ff6a8735723c0dca203c3ac7a5db89514c1`
-- Adapted scope: spacing rhythm, focal hierarchy, composition archetypes, bounded critique, and fact/design review concepts.
+- Adapted scope: spacing rhythm, focal hierarchy, composition archetypes, bounded critique, fit-check, and fact/design review concepts.
 - Copyright: Copyright (c) 2026 Zara Zhang (@zarazhangrui) — palette templates and medium rules; Copyright (c) 2026 LcpMarvel — composition, critique, fit-check, gated-pipeline, and palette-generation layers.
 
 ## MIT License
