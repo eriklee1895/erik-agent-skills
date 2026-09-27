@@ -20,6 +20,7 @@ EXPECTED_WARNINGS = {
     "12-swimlane.svg": 3,
     "13-quadrant.svg": 1,
     "14-focus-detail.svg": 1,
+    "15-light-architecture.svg": 0,
 }
 
 

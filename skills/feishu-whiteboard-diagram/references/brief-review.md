@@ -7,6 +7,9 @@
 ```yaml
 thesis: 一张图只回答的一句话
 audience: 谁在什么文档宽度下阅读
+article_tone: technical | research | product | reliability | creative | governance | benchmark
+diagram_purpose: architecture | process | state | comparison | timeline | quadrant | focus-detail | swimlane
+formality: restrained | balanced | expressive
 source_facts:
   - 原文明确给出的实体、数字、状态和职责
 relationships:
@@ -17,7 +20,10 @@ allowed_inferences: []
 unknowns: []
 grammar: layered-strip | task-loop | comparison | hub | timeline | swimlane | quadrant | focus-detail | custom
 focal: 唯一的第一视觉落点
-palette: 一套色板
+theme: light-technical | white-report | riso-brut | coral | grove | avocado-press | riptide-cobalt | pin-paper
+theme_reason: 为什么这套主题服务于文章与图的阅读任务
+accent_budget: neutral | one-accent | semantic-status
+color_semantics: 颜色各自表达什么；无语义就不用
 cuts: 为默认文档宽度主动删掉或拆到下一张图的内容
 ```
 
@@ -27,6 +33,10 @@ cuts: 为默认文档宽度主动删掉或拆到下一张图的内容
 - 不确定但必须呈现的内容标成「待确认」；不要用确定连线伪装。
 - 默认不超过 12 个主信息块。超过时拆成「总览 + 细节」，而不是缩到 12px。
 - 一张图一种主语法、一个焦点、最多两个解释性 callout。
+- 主题选择优先级是：品牌 / 用户明确指定 → 已有画板视觉身份 → 图的语义 → 文章主题 → `light-technical`。
+- 技术架构、服务边界和系统拓扑没有明确风格要求时，必须使用 `light-technical`；Riso / Coral 等编辑型主题需要契约中的理由。
+- 颜色必须有语义或层级作用。去掉颜色后，结构仍应能靠位置、边界、字号、编号和箭头读懂。
+- 近白技术主题的普通面积以 `canvas` / `surface` 为主；饱和色不得同时成为多个等权焦点。
 - 页脚只有在它增加新结论或收束跨列边界时才保留；若正文导语和图已说清楚，就删除。
 
 ## 改版契约
@@ -51,8 +61,9 @@ cuts: 为默认文档宽度主动删掉或拆到下一张图的内容
 2. **层级**：第一眼只有一个焦点，第二层信息明显弱一档。
 3. **平衡**：视觉重量没有全部堆在一角，留白是有意的。
 4. **密度**：默认文档宽度下能读；没有靠缩小字号硬塞。
-5. **对比度**：`data-bg` 已标注的文字通过 lint；其余目视无弱对比。
-6. **对齐**：卡片边缘、文字起点和 connector 端点落在共同栅格。
+5. **色彩语义**：主题与文章气质、图的用途一致；绿色 / 橙色 / 红色没有被误当作装饰或边界。
+6. **对比度**：`data-bg` 已标注的文字通过 lint；其余目视无弱对比。
+7. **对齐与留白**：卡片边缘、文字起点和 connector 端点落在共同栅格，画布没有大块无意空白。
 
 每项记 `pass / weak / fail`，只修最弱的一项并合并其它机械错误，一次重渲确认。无 `fail` 且最多一个 `weak` 才交付。只审查请求到此停止；用户没要求修，不写回飞书。
 

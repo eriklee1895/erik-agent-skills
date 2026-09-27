@@ -85,6 +85,7 @@ class FixtureGeneratorTests(unittest.TestCase):
             "12-swimlane.svg": GENERATOR.swimlane_handshake(),
             "13-quadrant.svg": GENERATOR.reuse_quadrant(),
             "14-focus-detail.svg": GENERATOR.focus_detail(),
+            "15-light-architecture.svg": GENERATOR.light_architecture(),
             "eval-doc.xml": GENERATOR.EVAL_DOC,
         }
         for name, generated in expected.items():

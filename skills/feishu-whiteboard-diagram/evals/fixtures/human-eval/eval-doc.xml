@@ -105,6 +105,12 @@
       <td><p>焦点+细节 · Avocado</p></td>
       <td><p>左边判断最大，右边三张小卡不要均分</p></td>
     </tr>
+    <tr>
+      <td><p>15</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>技术架构默认主题 · Light Technical</p></td>
+      <td><p>近白画布、浅色执行边界、蓝色只保留给主语义</p></td>
+    </tr>
   </tbody>
 </table>
 <h1 seq="auto">分层条带</h1>
@@ -149,6 +155,9 @@
 <h1 seq="auto">焦点+细节</h1>
 <p>这张图回答：判断这一步到底看什么。左边一块焦点，右边三张支持卡。Avocado Press。</p>
 <whiteboard type="svg" path="@./14-focus-detail.svg"/>
+<h1 seq="auto">技术架构默认主题</h1>
+<p>这张图验证 Light Technical：近白画布承载结构，蓝色只保留给主边界、焦点和请求链。</p>
+<whiteboard type="svg" path="@./15-light-architecture.svg"/>
 <h1 seq="auto">记分表</h1>
 <p>每张图复制一行。Web / 桌面都打开过再把最高证据层写成 feishu-experience-valid。</p>
 <table>
@@ -189,5 +198,6 @@
     <tr><td><p>12</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
     <tr><td><p>13</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
     <tr><td><p>14</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>15</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
   </tbody>
 </table>
