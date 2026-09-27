@@ -16,6 +16,16 @@
 `diagram_purpose` 决定图怎么读；`article_tone` 决定图给人的气质；`theme` 是两者合并后的明确选择。
 如果两者冲突，优先保证语义清楚：一张可靠性状态图可以有温暖气质，但失败 / 中断 / 成功仍要用可解释的状态色。
 
+实际路由由 [scripts/theme_router.py](../scripts/theme_router.py) 固定实现；需要复核时运行：
+
+```bash
+python3 scripts/theme_router.py --purpose architecture --tone technical
+# light-technical
+```
+
+相同的显式输入必须得到相同的主题。`user_theme`、`brand_theme` 和改版时的 `existing_theme` 依次覆盖语义路由；
+没有显式主题时，先按 `diagram_purpose`，再按 `article_tone`，最后回退到 `light-technical`。
+
 ## 开工契约字段
 
 在不进入画布的事实契约中补充：

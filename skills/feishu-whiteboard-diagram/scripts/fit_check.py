@@ -19,6 +19,18 @@ from pathlib import Path
 
 
 NUMBER_RE = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
+MEASURABLE_TAGS = {
+    "circle",
+    "ellipse",
+    "line",
+    "path",
+    "polygon",
+    "polyline",
+    "rect",
+    "text",
+    "tspan",
+}
+MARGIN_EPSILON = 2.0
 
 
 @dataclass(frozen=True)
@@ -99,6 +111,32 @@ def _text_width(text: str, font_size: float) -> float:
     return width_units * font_size
 
 
+def _stroke_padding(element: ET.Element) -> float:
+    return max(0.0, _number(element.attrib.get("stroke-width")) / 2)
+
+
+def _expand(
+    bbox: tuple[float, float, float, float] | None,
+    padding: float,
+) -> tuple[float, float, float, float] | None:
+    if bbox is None:
+        return None
+    return (
+        bbox[0] - padding,
+        bbox[1] - padding,
+        bbox[2] + padding,
+        bbox[3] + padding,
+    )
+
+
+def _point_bbox(values: list[float]) -> tuple[float, float, float, float] | None:
+    if len(values) < 2:
+        return None
+    xs = values[0::2]
+    ys = values[1::2]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
 def _element_bbox(
     element: ET.Element,
     view_box: tuple[float, float, float, float],
@@ -112,34 +150,41 @@ def _element_bbox(
         h = _number(element.attrib.get("height"))
         if x == x0 and y == y0 and w == width and h == height:
             return None
-        return (x, y, x + w, y + h) if w >= 0 and h >= 0 else None
+        return _expand((x, y, x + w, y + h), _stroke_padding(element)) if w >= 0 and h >= 0 else None
     if tag == "circle":
         cx = _number(element.attrib.get("cx"))
         cy = _number(element.attrib.get("cy"))
         radius = _number(element.attrib.get("r"))
-        return (cx - radius, cy - radius, cx + radius, cy + radius)
+        return _expand((cx - radius, cy - radius, cx + radius, cy + radius), _stroke_padding(element))
     if tag == "ellipse":
         cx = _number(element.attrib.get("cx"))
         cy = _number(element.attrib.get("cy"))
         rx = _number(element.attrib.get("rx"))
         ry = _number(element.attrib.get("ry"))
-        return (cx - rx, cy - ry, cx + rx, cy + ry)
+        return _expand((cx - rx, cy - ry, cx + rx, cy + ry), _stroke_padding(element))
     if tag == "line":
         x1 = _number(element.attrib.get("x1"))
         y1 = _number(element.attrib.get("y1"))
         x2 = _number(element.attrib.get("x2"))
         y2 = _number(element.attrib.get("y2"))
-        return (min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2))
+        return _expand((min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)), _stroke_padding(element))
     if tag == "polyline":
         values = _numbers(element.attrib.get("points"))
         if len(values) < 2:
             return None
-        xs = values[0::2]
-        ys = values[1::2]
-        return (min(xs), min(ys), max(xs), max(ys))
-    if tag == "text" and (element.text or "").strip():
+        return _expand(_point_bbox(values), _stroke_padding(element))
+    if tag == "polygon":
+        return _expand(_point_bbox(_numbers(element.attrib.get("points"))), _stroke_padding(element))
+    if tag == "path":
+        path_data = element.attrib.get("d") or ""
+        if re.search(r"[a-z]", path_data):
+            return None
+        return _expand(_point_bbox(_numbers(path_data)), _stroke_padding(element))
+    if tag in {"text", "tspan"}:
+        text = " ".join("".join(element.itertext()).split())
+        if not text or "x" not in element.attrib or "y" not in element.attrib:
+            return None
         font_size = _number(element.attrib.get("font-size"), 16)
-        text = " ".join((element.text or "").split())
         text_width = _text_width(text, font_size)
         x = _number(element.attrib.get("x"))
         y = _number(element.attrib.get("y"))
@@ -177,6 +222,7 @@ def check_svg_fit(
 
     parent_map = {child: parent for parent in root.iter() for child in parent}
     bbox: tuple[float, float, float, float] | None = None
+    unmeasured = False
     for element in root.iter():
         node = element
         inside_defs = False
@@ -185,14 +231,46 @@ def check_svg_fit(
             if _local_name(node.tag) in {"defs", "marker"}:
                 inside_defs = True
                 break
-        if inside_defs or _local_name(element.tag) in {"svg", "defs", "marker", "tspan"}:
+        if inside_defs or _local_name(element.tag) in {"svg", "defs", "marker"}:
             continue
+        tag = _local_name(element.tag)
+        if "transform" in element.attrib:
+            findings.append(
+                Finding(
+                    "error",
+                    "unmeasured-transform",
+                    f"<{tag}> uses transform; fit-check cannot safely resolve transformed geometry",
+                )
+            )
+            unmeasured = True
+        if tag == "g":
+            continue
+        if tag not in MEASURABLE_TAGS:
+            findings.append(
+                Finding(
+                    "error",
+                    "unmeasured-geometry",
+                    f"<{tag}> is not measurable by fit-check",
+                )
+            )
+            unmeasured = True
+            continue
+        if tag == "tspan" and "x" not in element.attrib:
+            continue
+        if tag == "path" and re.search(r"[a-z]", element.attrib.get("d", "")):
+            findings.append(
+                Finding(
+                    "error",
+                    "unmeasured-path",
+                    "Relative path commands are not safely measurable",
+                )
+            )
+            unmeasured = True
         bbox = _merge(bbox, _element_bbox(element, view_box))
 
     if bbox is None:
-        findings.append(
-            Finding("warning", "empty-content", "No measurable native content found")
-        )
+        level = "error" if unmeasured else "warning"
+        findings.append(Finding(level, "empty-content", "No measurable native content found"))
         return FitResult(tuple(findings), bbox, view_box)
 
     vx, vy, vw, vh = view_box
@@ -215,7 +293,7 @@ def check_svg_fit(
         "bottom": bottom - max_y,
     }
     for side, available in margins.items():
-        if 0 <= available < margin:
+        if 0 <= available < margin - MARGIN_EPSILON:
             findings.append(
                 Finding(
                     "warning",

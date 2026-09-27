@@ -26,6 +26,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertTrue((ROOT / "references" / "theme-routing.md").exists())
         self.assertTrue((ROOT / "references" / "community-practice.md").exists())
         self.assertTrue((ROOT / "scripts" / "fit_check.py").exists())
+        self.assertTrue((ROOT / "scripts" / "theme_router.py").exists())
 
 
 if __name__ == "__main__":

@@ -882,6 +882,83 @@ def multicolumn_runtime() -> str:
     return svg(w, h, "".join(parts))
 
 
+def light_architecture() -> str:
+    """Technical-document baseline: near-white surfaces and one blue boundary."""
+    w, h = 1600, 940
+    canvas = "#F8FAFC"
+    surface = "#FFFFFF"
+    border = "#CBD5E1"
+    ink = "#1F2937"
+    muted = "#475569"
+    accent = "#2563EB"
+    accent_text = "#1D4ED8"
+    accent_soft = "#EFF6FF"
+    parts: list[str] = [rect(0, 0, w, h, canvas, canvas, sw=0, rx=0)]
+    parts.extend(
+        [
+            t(80, 120, "Agent 系统边界：请求、执行与基础设施", size=40, weight=700, fill=ink),
+            t(80, 160, "近白画布承载结构，颜色只标记主边界和可解释的状态。", size=18, fill=muted),
+        ]
+    )
+
+    parts.extend(
+        [
+            rect(80, 224, 360, 140, surface, border, sw=2, rx=12),
+            t(104, 272, "用户 / 入口", size=22, weight=700, fill=ink),
+            t(104, 308, "提交任务与确认需求", size=16, fill=muted),
+            rect(520, 208, 440, 172, accent_soft, accent, sw=2, rx=16),
+            t(740, 272, "请求协调", size=26, weight=700, fill=accent_text, anchor="middle", background=accent_soft),
+            t(740, 316, "鉴权、排队、确认运行边界", size=16, fill=ink, anchor="middle", background=accent_soft),
+            rect(1040, 224, 440, 140, surface, border, sw=2, rx=12),
+            t(1064, 272, "结果投影", size=22, weight=700, fill=ink),
+            t(1064, 308, "向用户返回可读状态", size=16, fill=muted),
+            line(440, 294, 520, 294, accent, marker="arrow-blue", sw=2),
+            line(960, 294, 1040, 294, accent, marker="arrow-blue", sw=2),
+            poly("740,380 740,440", accent, marker="arrow-blue", sw=2),
+        ]
+    )
+
+    parts.extend(
+        [
+            rect(80, 440, 1440, 240, accent_soft, accent, sw=2, rx=16),
+            t(112, 486, "执行边界", size=24, weight=700, fill=accent_text, background=accent_soft),
+            t(112, 516, "真正承接任务、调用工具并产出可交付结果的运行区域", size=16, fill=ink, background=accent_soft),
+        ]
+    )
+    cards = [
+        (112, 400, "Researcher", "事实与资料准备"),
+        (560, 400, "Planner", "任务拆解与执行计划"),
+        (1008, 480, "Editor / Delivery", "编译、检查与发布"),
+    ]
+    for x, card_width, title, detail in cards:
+        parts.extend(
+            [
+                rect(x, 548, card_width, 96, surface, border, sw=1.5, rx=12),
+                t(x + 24, 588, title, size=20, weight=700, fill=ink),
+                t(x + 24, 616, detail, size=16, fill=muted),
+            ]
+        )
+
+    parts.extend(
+        [
+            t(80, 736, "共享基础设施", size=24, weight=700, fill=ink),
+        ]
+    )
+    for x, title, detail in [
+        (80, "MySQL", "业务状态与元数据"),
+        (580, "Redis", "队列与临时事件"),
+        (1080, "TOS", "媒体与工程归档"),
+    ]:
+        parts.extend(
+            [
+                rect(x, 760, 440, 100, surface, border, sw=2, rx=12),
+                t(x + 24, 802, title, size=20, weight=700, fill=ink),
+                t(x + 24, 830, detail, size=16, fill=muted),
+            ]
+        )
+    return svg(w, h, "".join(parts))
+
+
 def recovery_layers() -> str:
     parts: list[str] = [
         t(48, 52, "三层状态，三种恢复粒度", size=28, weight=700),
@@ -1857,6 +1934,12 @@ EVAL_DOC = """<title>飞书画板精美图表 · Human Eval</title>
       <td><p>焦点+细节 · Avocado</p></td>
       <td><p>左边判断最大，右边三张小卡不要均分</p></td>
     </tr>
+    <tr>
+      <td><p>15</p></td>
+      <td><p>SVG 画板</p></td>
+      <td><p>技术架构默认主题 · Light Technical</p></td>
+      <td><p>近白画布、浅色执行边界、蓝色只保留给主语义</p></td>
+    </tr>
   </tbody>
 </table>
 <h1 seq="auto">分层条带</h1>
@@ -1901,6 +1984,9 @@ EVAL_DOC = """<title>飞书画板精美图表 · Human Eval</title>
 <h1 seq="auto">焦点+细节</h1>
 <p>这张图回答：判断这一步到底看什么。左边一块焦点，右边三张支持卡。Avocado Press。</p>
 <whiteboard type="svg" path="@./14-focus-detail.svg"/>
+<h1 seq="auto">技术架构默认主题</h1>
+<p>这张图验证 Light Technical：近白画布承载结构，蓝色只保留给主边界、焦点和请求链。</p>
+<whiteboard type="svg" path="@./15-light-architecture.svg"/>
 <h1 seq="auto">记分表</h1>
 <p>每张图复制一行。Web / 桌面都打开过再把最高证据层写成 feishu-experience-valid。</p>
 <table>
@@ -1941,6 +2027,7 @@ EVAL_DOC = """<title>飞书画板精美图表 · Human Eval</title>
     <tr><td><p>12</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
     <tr><td><p>13</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
     <tr><td><p>14</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
+    <tr><td><p>15</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td><td><p>—</p></td></tr>
   </tbody>
 </table>
 """
@@ -1961,6 +2048,7 @@ def main() -> None:
     write(OUT / "12-swimlane.svg", swimlane_handshake())
     write(OUT / "13-quadrant.svg", reuse_quadrant())
     write(OUT / "14-focus-detail.svg", focus_detail())
+    write(OUT / "15-light-architecture.svg", light_architecture())
     write(OUT / "eval-doc.xml", EVAL_DOC)
     print(f"wrote fixtures to {OUT}")
     for path in sorted(OUT.glob("*.svg")):

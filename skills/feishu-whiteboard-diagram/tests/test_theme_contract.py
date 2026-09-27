@@ -20,6 +20,7 @@ class ThemeContractTests(unittest.TestCase):
         self.assertIn("技术架构", self.routing)
         self.assertIn("#F8FAFC", self.routing)
         self.assertIn("默认主题", self.visual)
+        self.assertIn("scripts/theme_router.py", self.routing)
 
     def test_theme_selection_has_explicit_precedence(self):
         self.assertIn("品牌 / 用户明确指定", self.routing)

@@ -48,6 +48,36 @@ class FitCheckTests(unittest.TestCase):
         self.assertTrue(result.ok, result.findings)
         self.assertIn("deadspace-bottom", {finding.code for finding in result.findings})
 
+    def test_measures_polygon_content_for_canvas_bleed(self):
+        result = self.check(
+            '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240">
+              <polygon points="-4,80 120,80 120,160" fill="#FFFFFF"/>
+            </svg>'''
+        )
+        self.assertFalse(result.ok)
+        self.assertIn("canvas-bleed", {finding.code for finding in result.findings})
+
+    def test_fails_closed_for_unresolved_transforms(self):
+        result = self.check(
+            '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240">
+              <g transform="rotate(15)">
+                <rect x="80" y="80" width="240" height="80" fill="#FFFFFF"/>
+              </g>
+            </svg>'''
+        )
+        self.assertFalse(result.ok)
+        self.assertIn("unmeasured-transform", {finding.code for finding in result.findings})
+
+    def test_measures_path_and_tspan_content(self):
+        result = self.check(
+            '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240">
+              <path d="M-4 80 L120 80 L120 160" fill="none"/>
+              <text x="80" y="210" font-size="20"><tspan>越界文字</tspan></text>
+            </svg>'''
+        )
+        self.assertFalse(result.ok)
+        self.assertIn("canvas-bleed", {finding.code for finding in result.findings})
+
 
 if __name__ == "__main__":
     unittest.main()

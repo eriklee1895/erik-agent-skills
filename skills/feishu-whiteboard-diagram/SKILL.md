@@ -68,7 +68,7 @@ metadata:
 ## 主题路由（先选气质，再画图）
 
 不要因为“这是技术图”就自动使用 Riso Brut，也不要因为“这是架构图”就把每层都染成不同鲜艳颜色。
-先写 [主题路由](references/theme-routing.md) 中的 `article_tone`、`diagram_purpose`、`formality`、`theme` 和 `accent_budget`，
+先写 [主题路由](references/theme-routing.md) 中的 `article_tone`、`diagram_purpose`、`formality`、`theme` 和 `accent_budget`，必要时用 `scripts/theme_router.py` 复核，
 再选择构图。选择优先级是：品牌 / 用户明确指定 → 已有画板视觉身份 → 图的语义 → 文章主题 → `light-technical` 默认。
 
 默认策略：

@@ -59,8 +59,9 @@ DSL 字段和官方 parser 清单以 `lark-whiteboard` 的 `elements/`、`routes
 ## 渲染前 fit-check
 
 社区实践把可预测的几何缺陷放在渲染前处理。本 skill 提供轻量的
-`python3 scripts/fit_check.py diagram.svg --json`：它检查 UTF-8 / `viewBox`、内容是否出血、外边距是否明显不足，
-以及右侧 / 底部是否存在大块 dead space。它不能代替 PNG 目视，也不能判断事实是否正确；`lint_svg.py`、
+`python3 scripts/fit_check.py diagram.svg --json`：它检查 UTF-8 / `viewBox`、rect / circle / line / polygon / path / text
+内容是否出血、外边距是否明显不足，以及右侧 / 底部是否存在大块 dead space。对无法安全估算的相对 path 或 transform，
+它会 **fail closed**，不会把“未测量”报告成通过。它不能代替 PNG 目视，也不能判断事实是否正确；`lint_svg.py`、
 `whiteboard-cli --check` 和真实飞书体验仍各自负责自己的证据层。
 
 默认目标是约 80px 外边距和 80px 以上才报告的大块空白。固定 fixture 可以记录有意 warning，但新增 warning 必须解释。
