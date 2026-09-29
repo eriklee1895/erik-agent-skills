@@ -1,0 +1,127 @@
+{
+  "skill": "avatar-creator",
+  "version": 3,
+  "scenarios": [
+    {
+      "id": "ambiguous-set",
+      "user_prompt": "帮我做一套 avatar。",
+      "expected": [
+        "Ask whether this means distinct characters or variants of one character before generating.",
+        "Ask one focused question, not a provider/format/style questionnaire."
+      ]
+    },
+    {
+      "id": "specified-identity-series",
+      "user_prompt": "用我选定的企鹅图做 9 张不同职业的套图，每张单独 PNG，角色长相不变，职业你来定，直接完成。",
+      "expected": [
+        "Proceed without asking the user to approve professions or reselect the character.",
+        "Use the chosen image as the identity reference for each output; vary occupations while preserving the face and proportions.",
+        "Deliver nine separate PNGs, not just a contact sheet."
+      ]
+    },
+    {
+      "id": "unspecified-avatar-asset",
+      "user_prompt": "做一个头像素材，形式还没想好。",
+      "expected": [
+        "Ask one focused question about single image, image set, or looping media.",
+        "Do not add interactive-runtime production as a capability of avatar-creator."
+      ]
+    },
+    {
+      "id": "interactive-out-of-scope",
+      "user_prompt": "做一个鼠标可旋转、按钮挥手的 3D avatar，参考图已给。",
+      "expected": [
+        "Treat this as outside avatar-creator scope; it must not build or orchestrate an interactive runtime.",
+        "At skill selection, choose the independent live-avatar-3d skill if available, not avatar-creator as an umbrella.",
+        "Do not substitute a GIF/video for requested orbit and button interaction."
+      ]
+    },
+    {
+      "id": "explore-then-animate",
+      "user_prompt": "做一只原创毛绒小怪物，先给我几个方向挑，选好后再做循环动画。",
+      "expected": [
+        "Generate a small, structurally varied candidate set and present numbered options.",
+        "Wait for the user's selection before producing the final animation; do not ask all animation parameters upfront."
+      ]
+    },
+    {
+      "id": "simple-edit",
+      "user_prompt": "给这张 avatar 去掉背景，保留其他细节，输出透明 PNG。",
+      "expected": [
+        "Route directly to image editing, retaining the selected provider if one exists.",
+        "Do not force exploration, plush styling, or animation questions; verify real alpha transparency."
+      ]
+    },
+    {
+      "id": "resume-approved-loop",
+      "context": "User picked candidate B and approved the fixed 10s recipe with GIF and MP4 output. A run directory already contains a task ID; first waiting period timed out.",
+      "user_prompt": "继续。",
+      "expected": [
+        "Run the bundled script with --resume and the same output directory; do not submit another task.",
+        "Preserve candidate B and the verbatim prompt; count the existing task against any attempt limit.",
+        "Check actions and loop seam; same endpoint images do not prove seamless playback."
+      ]
+    },
+    {
+      "id": "distinct-family-grid",
+      "user_prompt": "做36个不同角色供我选，6x6一张图，身体轮廓和比例要不同，其他你决定。",
+      "expected": [
+        "Proceed with a structured diversity plan, one full character per cell and exactly 36 characters.",
+        "Do not impose single-character identity invariants on the entire family or substitute 36 standalone files for the requested sheet."
+      ]
+    },
+    {
+      "id": "transparent-gif-delivery",
+      "user_prompt": "用这张角色图做一个透明背景的循环 GIF，放在网页角落，挥手就行。",
+      "expected": [
+        "Recognize an animated asset request, not interactive 3D.",
+        "Explain before paid generation that the fixed preset is opaque and includes a turn/approach, which conflicts with transparent wave-only output.",
+        "Do not silently rewrite the fixed prompt, imply alpha support, or invoke another skill to bypass the conflict."
+      ]
+    },
+    {
+      "id": "standalone-missing-provider",
+      "context": "Only avatar-creator is installed. No image generation or video tools, API credentials, or media provider skills are available.",
+      "user_prompt": "做一张原创 avatar，其他你定，直接给成图。",
+      "expected": [
+        "Explain that generation capability is unavailable and identify the minimal missing capability.",
+        "Do not claim a prompt is a generated image, invent sibling paths, silently install tools, or claim to have rendered an artifact."
+      ]
+    },
+    {
+      "id": "standalone-fixed-animation",
+      "context": "Only avatar-creator is installed. uv, ffmpeg, ffprobe and ARK_API_KEY are available. The user has selected an original character PNG.",
+      "user_prompt": "做动图。",
+      "expected": [
+        "Invoke the bundled scripts/animate_avatar.py with the selected image and a fresh output directory.",
+        "Use identical first/last frames, the verbatim fixed prompt, and the fixed 10s preset; do not ask for a provider or install/load seedance-video-gen.",
+        "Inspect and deliver actual GIF and MP4 files."
+      ]
+    },
+    {
+      "id": "fixed-prompt-under-improvement-pressure",
+      "context": "The fixed animation preset is active and a reference character has been selected.",
+      "user_prompt": "按这个 skill 直接做，细节你处理，别再问。",
+      "expected": [
+        "Keep the exact two-line fixed prompt including 过程种; do not append character locks or substitute a subtle idle animation.",
+        "Handle encoding and task recovery through the bundled script without extra requirement questions."
+      ]
+    },
+    {
+      "id": "explicit-duration-conflict",
+      "user_prompt": "用这个角色做个4秒动图，必须4秒。",
+      "expected": [
+        "Explain that this fixed recipe is 10 seconds and resolve the explicit mismatch before submitting.",
+        "Do not promise 4 seconds while submitting 10 or silently edit the script preset."
+      ]
+    },
+    {
+      "id": "rendered-3d-image-in-scope",
+      "user_prompt": "做一张有3D毛绒质感的平头哥头像，PNG就行。",
+      "expected": [
+        "Treat 3D as the rendering style of a static image and use avatar-creator.",
+        "Do not build a Three.js page, ask about orbit controls, or require live-avatar-3d."
+      ]
+    }
+  ]
+}
