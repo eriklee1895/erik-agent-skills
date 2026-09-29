@@ -5,7 +5,7 @@
 ![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.jpg)
 
 <p align="center">
-  <a href="docs/skills-catalog.zh-CN.md"><img alt="18 个精选 Skills" src="https://img.shields.io/badge/COLLECTION-18_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="docs/skills-catalog.zh-CN.md"><img alt="19 个精选 Skills" src="https://img.shields.io/badge/COLLECTION-19_SKILLS-0B1F3A?style=for-the-badge"></a>
   <a href="docs/skills-catalog.zh-CN.md"><img alt="3 个 Skills 分类" src="https://img.shields.io/badge/CATEGORIES-3-6750A4?style=for-the-badge"></a>
   <a href="https://developers.openai.com/codex/skills"><img alt="Codex Ready" src="https://img.shields.io/badge/CODEX-READY-0F9D88?style=for-the-badge&logo=openai&logoColor=white"></a>
   <a href="README.md"><img alt="中英文文档" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
@@ -28,17 +28,20 @@ npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api
 
 ## Skills
 
-仓库目前收录 18 个可跨项目独立使用的 skills，分为三类。端到端写作工作流 skills
+仓库目前收录 19 个可跨项目独立使用的 skills，分为三类。端到端写作工作流 skills
 （选题构思、润色、微信/博客发布、任务收尾）与 [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)
 项目环境强耦合，有意保留在该项目内，不收录于本仓库。
 
 | 分类 | 数量 | 能力范围 |
 | --- | ---: | --- |
 | 写作 | 4 | 飞书文档/图表与微信文章抓取 |
-| 媒体 | 10 | 图片、视频、语音、音乐与交互式头像制作 |
+| 媒体 | 11 | 图片、视频、语音、音乐与头像单图、套图、循环动画及交互式 3D 制作 |
 | 通用工具 | 4 | 可复用 CLI、文档抓取、联网搜索与开发者磁盘审计 |
 
 完整分类、skill 清单、用途说明及单独安装命令见[中文 Skills 目录](docs/skills-catalog.zh-CN.md)。
+
+头像相关能力分为两个独立 skill：`avatar-creator` 制作单图、套图及循环 GIF/MP4
+素材；`live-avatar-3d` 制作 Three.js 交互式角色。两者可使用同一张角色参考图，互不依赖。
 
 ## 仓库结构
 

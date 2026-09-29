@@ -1,0 +1,4 @@
+interface:
+  display_name: "Avatar Creator"
+  short_description: "Create avatar images, consistent sets, and looping GIF/MP4"
+  default_prompt: "Use $avatar-creator to create avatar images or looping media, reusing confirmed choices and asking only about consequential missing requirements."

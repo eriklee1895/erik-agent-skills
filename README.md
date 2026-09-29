@@ -5,7 +5,7 @@
 ![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.jpg)
 
 <p align="center">
-  <a href="docs/skills-catalog.en.md"><img alt="18 curated skills" src="https://img.shields.io/badge/COLLECTION-18_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="docs/skills-catalog.en.md"><img alt="19 curated skills" src="https://img.shields.io/badge/COLLECTION-19_SKILLS-0B1F3A?style=for-the-badge"></a>
   <a href="docs/skills-catalog.en.md"><img alt="3 skill categories" src="https://img.shields.io/badge/CATEGORIES-3-6750A4?style=for-the-badge"></a>
   <a href="https://developers.openai.com/codex/skills"><img alt="Codex ready" src="https://img.shields.io/badge/CODEX-READY-0F9D88?style=for-the-badge&logo=openai&logoColor=white"></a>
   <a href="README.zh-CN.md"><img alt="English and Chinese documentation" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
@@ -31,7 +31,7 @@ npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api
 
 ## Skills
 
-The repository currently includes 18 standalone, cross-project skills across
+The repository currently includes 19 standalone, cross-project skills across
 three areas. The end-to-end writing workflow skills (ideation, polishing,
 WeChat/blog publishing, closeout) stay project-specific to
 [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)
@@ -40,11 +40,15 @@ and are intentionally not published here.
 | Area | Skills | Focus |
 | --- | ---: | --- |
 | Writing | 4 | Feishu documents/diagrams and WeChat article collection |
-| Media | 10 | Image, video, speech, music, and interactive avatar creation |
+| Media | 11 | Image, video, speech, music, and avatar images, sets, loops, and interactive 3D |
 | General Utilities | 4 | Reusable CLIs, documentation retrieval, web search, and developer disk audits |
 
 Browse the [English skills catalog](docs/skills-catalog.en.md) for the complete
 categorized list, descriptions, and per-skill install commands.
+
+For avatars, `avatar-creator` produces images, image sets, and looping GIF/MP4
+assets. `live-avatar-3d` independently builds interactive Three.js characters.
+They can share a character reference image; neither skill requires the other.
 
 ## Repository layout
 
