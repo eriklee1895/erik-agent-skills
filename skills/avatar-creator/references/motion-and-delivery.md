@@ -7,7 +7,9 @@ import, invoke, or require any other skill. Runtime requirements: Python 3.10+,
 `uv` (for declared Python dependencies), `ffmpeg`, `ffprobe`, and `ARK_API_KEY`.
 The script supports macOS/Linux file locking. Set credentials in the environment
 or the working directory's `.env`; environment values take precedence.
-`ARK_BASE_URL` optionally selects the configured Ark-compatible endpoint.
+`ARK_BASE_URL` optionally selects an HTTPS Ark-compatible endpoint. Cleartext
+HTTP is accepted only for loopback hosts used by offline tests; credentials and
+query/fragment components are rejected.
 
 Only a local PNG, JPEG, or WebP is accepted. Use the selected single-character
 master, not the entire candidate sheet. Both first and last frames use the same

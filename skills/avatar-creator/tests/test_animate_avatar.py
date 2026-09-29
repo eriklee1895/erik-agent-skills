@@ -116,7 +116,7 @@ class AvatarCliTests(unittest.TestCase):
         picture.save(self.image)
         self.output = self.root / "output"
 
-    def run_cli(self, *args, server=None, script=SCRIPT, no_tools=False):
+    def run_cli(self, *args, server=None, script=SCRIPT, no_tools=False, base_url=None):
         env = os.environ.copy()
         for key in tuple(env):
             if key.upper().endswith("_PROXY") or key in ("ARK_API_KEY", "ARK_BASE_URL"):
@@ -125,6 +125,8 @@ class AvatarCliTests(unittest.TestCase):
         if server:
             env["ARK_API_KEY"] = "offline-test-key"
             env["ARK_BASE_URL"] = server.origin + "/api/v3"
+        if base_url:
+            env["ARK_BASE_URL"] = base_url
         if no_tools:
             env["PATH"] = str(self.root / "no-executables")
         result = subprocess.run(
@@ -193,6 +195,17 @@ class AvatarCliTests(unittest.TestCase):
                 "--image", self.image, "--out", self.output, server=server, no_tools=True,
             )
             self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(server.posts, [])
+            self.assertEqual(server.gets, [])
+
+    def test_cleartext_public_ark_endpoint_is_rejected_before_submission(self):
+        with FakeArk(self.output) as server:
+            result = self.run_cli(
+                "--image", self.image, "--out", self.output,
+                server=server, base_url="http://example.invalid/api/v3",
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("HTTPS", result.stderr)
             self.assertEqual(server.posts, [])
             self.assertEqual(server.gets, [])
 

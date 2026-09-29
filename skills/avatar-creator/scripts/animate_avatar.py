@@ -9,6 +9,7 @@ import argparse
 import base64
 import fcntl
 import hashlib
+import ipaddress
 import io
 import json
 import math
@@ -20,6 +21,7 @@ import shutil
 import subprocess
 import sys
 import time
+from urllib.parse import urlsplit
 
 import httpx
 from PIL import Image
@@ -40,6 +42,7 @@ PRESET = {
 }
 BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 TERMINAL_FAILURES = {"failed", "cancelled", "expired"}
+LOOPBACK_NAMES = {"localhost"}
 
 
 class RunError(Exception):
@@ -193,6 +196,28 @@ def require_auth():
     if not key:
         raise RunError("Set ARK_API_KEY in the environment or working directory .env.")
     return {"Authorization": "Bearer " + key}
+
+
+def api_base_url():
+    base = os.environ.get("ARK_BASE_URL", BASE_URL).strip().rstrip("/")
+    try:
+        parsed = urlsplit(base)
+        host = parsed.hostname
+        # Accessing .port also validates malformed port numbers.
+        _ = parsed.port
+    except ValueError as exc:
+        raise RunError("ARK_BASE_URL must be a valid HTTPS URL.") from exc
+    loopback = host in LOOPBACK_NAMES
+    if host and not loopback:
+        try:
+            loopback = ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            pass
+    if not host or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise RunError("ARK_BASE_URL must be an HTTPS URL without credentials, query, or fragment.")
+    if parsed.scheme != "https" and not (parsed.scheme == "http" and loopback):
+        raise RunError("ARK_BASE_URL must use HTTPS; HTTP is allowed only for loopback tests.")
+    return base
 
 
 def http_error(response):
@@ -400,6 +425,7 @@ def execute(args):
             )
         )
         return
+    base = api_base_url()
     check_tools()
     if args.resume and not out.is_dir():
         raise RunError("No saved run at --out; --resume never creates a task.")
@@ -410,7 +436,6 @@ def execute(args):
         except BlockingIOError as exc:
             raise RunError("This run is already active in another process.") from exc
         manifest_path = out / "manifest.json"
-        base = os.environ.get("ARK_BASE_URL", BASE_URL).rstrip("/")
         if args.resume:
             if args.image:
                 raise RunError(
