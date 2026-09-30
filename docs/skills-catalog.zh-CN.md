@@ -25,6 +25,7 @@
 | [article-illustration](../skills/article-illustration/) | 为文章制作封面、正文插图、图解、信息图和视觉分隔图。 | `npx skills add eriklee1895/erik-agent-skills --skill article-illustration` |
 | [gpt-image-2](../skills/gpt-image-2/) | 使用 OpenAI gpt-image-2 模型生成、编辑和批量制作位图。 | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-2` |
 | [gpt-image-api](../skills/gpt-image-api/) | 使用 OpenAI GPT Image 2.5 Flare 与 Sunburst 生成、精细编辑、流式生成和批量制作位图。 | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api` |
+| [openrouter-image](../skills/openrouter-image/) | 通过 OpenRouter 统一图像 API 使用 GPT Image 2.5 Sunburst/Flare 与 Gemini 3.1 Flash（Nano Banana 2）生成和编辑图片；CLI 会在调用前校验各模型的参数方言。 | `npx skills add eriklee1895/erik-agent-skills --skill openrouter-image` |
 | [seedream-image-gen](../skills/seedream-image-gen/) | 使用 Seedream 生成和编辑图片，支持文字设计、标记编辑、扩图与批量工作流。 | `npx skills add eriklee1895/erik-agent-skills --skill seedream-image-gen` |
 | [avatar-creator](../skills/avatar-creator/) | 制作静态头像、不同角色家族、同角色套图及固定 Seedance GIF/MP4 动画。图片使用可用图像工具；动图需 Ark 凭据、uv 和 ffmpeg，不依赖其他 skill。不负责交互式 3D 程序。 | `npx skills add eriklee1895/erik-agent-skills --skill avatar-creator` |
 | [live-avatar-3d](../skills/live-avatar-3d/) | 将角色图制作成无需构建步骤的交互式 3D 网页头像，支持环视、动作和可选的本地麦克风嘴型。 | `npx skills add eriklee1895/erik-agent-skills --skill live-avatar-3d` |

@@ -1,0 +1,26 @@
+{
+  "skill_name": "openrouter-image",
+  "evals": [
+    {
+      "id": 0,
+      "name": "sunburst-text-poster",
+      "prompt": "帮我做一张竖版的中秋游园会活动海报，要大字排版：主标题“中秋游园会”，副标题“9月29日晚 城市中央公园”，底部一行“猜灯谜 · 赏月 · 看花灯”，文字必须准确清晰。保存到指定输出目录。",
+      "expected_output": "通过 skill 的 CLI 调用 sunburst 生成 3:4 PNG；三处文案逐字正确，输出 png + json 元数据",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "banana-ultrawide-scene",
+      "prompt": "生成一张超宽幅（21:9）的重庆山城夜景，高低错落的楼房、江水反光、暖黄色灯火，细节丰富，要 4K。用 OpenRouter 上的 Nano Banana 2。",
+      "expected_output": "调用 banana（gemini-3.1-flash-image），aspect 21:9、resolution 4K；不使用 quality 参数；输出 21:9 PNG",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "batch-mixed-dialects",
+      "prompt": "我有三张图要一起跑，帮我批量生成：1) 一张 flare 的“咖啡馆窗边的橘猫”，16:9，high；2) 一张 sunburst 的极简商务海报，标题“季度复盘”，3:4，high；3) 一张 banana 的宽幅雪山湖泊，4K。一次性跑完并告诉我每张的成本。",
+      "expected_output": "写出 JSONL（前两条 gpt dialect 用 quality，第三条 banana 用 resolution），运行 batch 子命令，三张图全部成功，batch-summary.json 存在并报告每张 cost",
+      "files": []
+    }
+  ]
+}
