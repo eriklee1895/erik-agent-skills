@@ -150,8 +150,8 @@ Output names must not collide within a batch (case-insensitive), including
 numbered variants, metadata, and the reserved `batch-summary.json`.
 For n>1, previews list `name-1.png`, `name-2.png`, etc. Providers may return fewer
 than n images; one returned image uses `name.png`, and the summary records the
-actual saved paths. Existing files at chosen targets are replaced after a
-complete write; use a fresh output directory to keep older runs.
+actual saved paths. Existing images at chosen targets are overwritten; use a
+fresh output directory to keep older runs.
 
 The entire batch is parsed, validated, and its references loaded before the
 first API call. An invalid row reports its physical **1-based line number** and
@@ -173,8 +173,10 @@ Execution exits 0 when all jobs succeed and 1 if any job fails.
 Requests are attempted once, with no automatic retries. Before retrying, inspect
 the summary and saved metadata and create a JSONL containing only the jobs you
 want to retry. A timeout alone does not establish the final server outcome;
-check OpenRouter's activity records when cost is unknown. Response checks cover
-the JSON/data/base64 structure, not visual quality or pixel dimensions.
+check OpenRouter's activity records when cost is unknown. Images are decoded and
+saved one at a time; if a later item is malformed, completed images and reported
+cost remain in the summary. Checks cover JSON/data/base64, not visual quality
+or pixel dimensions. JSON checkpoints preserve existing file permissions.
 
 Offline regression tests (standard library only):
 

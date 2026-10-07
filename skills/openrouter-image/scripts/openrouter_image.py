@@ -22,6 +22,7 @@ import binascii
 import http.client
 import json
 import os
+import stat
 import tempfile
 import time
 import urllib.error
@@ -233,44 +234,41 @@ def reserved_outputs(out: Path, count: int) -> list[Path]:
     return targets
 
 
-def write_bytes_atomic(path: Path, data: bytes):
-    """Replace a file only after the complete contents have been written."""
-    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=f".{path.name}.", delete=False) as f:
-        temporary = Path(f.name)
-        try:
-            f.write(data)
-            f.close()
-            temporary.replace(path)
-        finally:
-            f.close()
+def write_json(path: Path, value):
+    """Checkpoint JSON atomically while preserving an existing file's mode."""
+    mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else None
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix=f".{path.name}.", delete=False) as f:
+            temporary = Path(f.name)
+            f.write(json.dumps(value, ensure_ascii=False, indent=1).encode("utf-8"))
+        if mode is not None:
+            temporary.chmod(mode)
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
             temporary.unlink(missing_ok=True)
 
 
-def write_json(path: Path, value):
-    write_bytes_atomic(path, json.dumps(value, ensure_ascii=False, indent=1).encode("utf-8"))
-
-
 def save_images(resp: dict, out: Path, paths: list[Path] | None = None) -> list[Path]:
-    """Decode all images first; paths also tracks completed writes on disk errors."""
+    """Save images one at a time; retain completed paths if a later item fails."""
     if not isinstance(resp, dict):
         raise GenerationError("response must be a JSON object.")
     items = resp.get("data")
     if not isinstance(items, list) or not items:
         raise GenerationError("response contained no image data array.")
-    decoded = []
-    for i, item in enumerate(items):
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if paths is None:
+        paths = []
+    for i, (target, item) in enumerate(zip(output_paths(out, len(items)), items)):
         b64 = item.get("b64_json") if isinstance(item, dict) else None
         if not isinstance(b64, str) or not b64:
             raise GenerationError(f"response data[{i}] must contain a non-empty b64_json string.")
         try:
-            decoded.append(base64.b64decode(b64, validate=True))
+            data = base64.b64decode(b64, validate=True)
         except (binascii.Error, ValueError):
             raise GenerationError(f"response data[{i}] contains invalid base64.") from None
-    out.parent.mkdir(parents=True, exist_ok=True)
-    if paths is None:
-        paths = []
-    for target, data in zip(output_paths(out, len(items)), decoded):
-        write_bytes_atomic(target, data)
+        target.write_bytes(data)
         paths.append(target)
     return paths
 

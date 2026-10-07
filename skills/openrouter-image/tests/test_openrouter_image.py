@@ -7,6 +7,7 @@ import io
 import json
 import os
 import re
+import stat
 import tempfile
 import unittest
 import urllib.error
@@ -463,11 +464,10 @@ class BatchReliabilityTests(OfflineTests):
 
 
 class ImageSavingTests(OfflineTests):
-    def test_malformed_responses_do_not_save_partial_or_empty_images(self):
-        valid = self.api.return_value["data"][0]
+    def test_malformed_responses_do_not_save_empty_images(self):
         cases = (None, [], {"data": None}, {"data": {}}, {"data": [None]},
-                 {"data": [valid, {}]}, {"data": [valid, {"b64_json": "!!!"}]},
-                 {"data": [{"b64_json": 123}]}, {"data": [{"b64_json": "é"}]})
+                 {"data": [{"b64_json": "!!!"}]}, {"data": [{"b64_json": 123}]},
+                 {"data": [{"b64_json": "é"}]})
         for response in cases:
             with self.subTest(response=response):
                 self.api.return_value = response
@@ -478,6 +478,40 @@ class ImageSavingTests(OfflineTests):
                 entry = json.loads((self.out / "batch-summary.json").read_text())[0]
                 self.assertEqual(entry["outputs"], [])
                 self.assertNotEqual(entry["status"], "ok")
+
+    def test_valid_first_image_is_kept_when_later_response_item_is_bad(self):
+        valid = self.api.return_value["data"][0]
+        for invalid in ({}, {"b64_json": "!!!"}):
+            with self.subTest(invalid=invalid):
+                self.api.return_value = {"data": [valid, invalid], "usage": {"cost": 0.01}}
+                self.write_jobs([{"name": "poster", "prompt": "Poster", "n": 2}])
+                with redirect_stdout(io.StringIO()):
+                    self.assertEqual(mod.run_batch(self.input, self.out, 123), 1)
+                entry = json.loads((self.out / "batch-summary.json").read_text())[0]
+                self.assertEqual(entry["outputs"], [str(self.out / "poster-1.png")])
+                self.assertEqual(entry["cost"], 0.01)
+                self.assertEqual((self.out / "poster-1.png").read_bytes(), b"image bytes")
+                self.assertFalse((self.out / "poster-2.png").exists())
+
+    @unittest.skipIf(os.name == "nt", "POSIX file permissions")
+    def test_existing_image_permissions_are_preserved(self):
+        self.out.mkdir()
+        target = self.out / "poster.png"
+        target.write_bytes(b"old image")
+        target.chmod(0o644)
+        self.run_cli("generate", "--prompt", "Poster", "--out", str(target))
+        self.assertEqual(target.read_bytes(), b"image bytes")
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o644)
+
+    @unittest.skipIf(os.name == "nt", "POSIX file permissions")
+    def test_existing_json_permissions_are_preserved(self):
+        self.out.mkdir()
+        target = self.out / "batch-summary.json"
+        target.write_text("[]")
+        target.chmod(0o640)
+        mod.write_json(target, [{"status": "ok"}])
+        self.assertEqual(json.loads(target.read_text()), [{"status": "ok"}])
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o640)
 
     def test_single_cli_reports_network_and_json_errors_without_retry(self):
         errors = (urllib.error.URLError("connection reset"), TimeoutError("timed out"),
@@ -510,12 +544,12 @@ class ImageSavingTests(OfflineTests):
 
     def test_partial_disk_failure_reports_completed_paths_and_cost(self):
         self.api.return_value["data"] *= 2
-        original = mod.write_bytes_atomic
+        original = Path.write_bytes
         def fail_second(path, data):
             if path.name == "poster-2.png":
                 raise OSError("disk full")
             original(path, data)
-        with mock.patch.object(mod, "write_bytes_atomic", side_effect=fail_second):
+        with mock.patch.object(Path, "write_bytes", autospec=True, side_effect=fail_second):
             result = mod.execute_request(self.request(n=2), self.out / "poster.png", 123)
         self.assertEqual(result["error_type"], "output")
         self.assertEqual(result["cost"], 0.01)
