@@ -99,6 +99,11 @@ unchanged regions from drifting.
 ## Batch from JSONL
 
 ```bash
+# Validate every job and inspect normalized requests without API calls or output files
+python3 scripts/openrouter_image.py batch \
+  --input prompts.jsonl --out-dir output/batch --dry-run
+
+# Execute after inspecting the preview
 python3 scripts/openrouter_image.py batch \
   --input prompts.jsonl --out-dir output/batch
 ```
@@ -106,14 +111,40 @@ python3 scripts/openrouter_image.py batch \
 Each line is one job:
 
 ```json
-{"name":"poster", "model":"sunburst", "prompt":"…", "aspect":"3:4", "quality":"high"}
-{"name":"wide-scene", "model":"banana", "prompt":"…", "aspect":"21:9", "resolution":"4K"}
+{"name":"poster", "model":"sunburst", "prompt":"…", "aspect_ratio":"3:4", "quality":"high"}
+{"name":"wide-scene", "model":"banana", "prompt":"…", "aspect_ratio":"21:9", "resolution":"4K"}
 ```
 
 Supported job fields: `name`, `model` (alias or full id), `prompt`,
 `aspect_ratio`, `quality` / `resolution` (per dialect), `n`, `background`,
 `images` (reference paths), `output_compression`. Results and a
 `batch-summary.json` land in the output directory.
+
+Use `aspect_ratio` in JSONL. Legacy `aspect` remains accepted; if both keys are
+present, their values must match. The `generate` / `edit` CLI flag is still
+`--aspect`.
+
+`prompt` is required and must be a non-empty string. Defaults apply only when a
+field is omitted: model=`sunburst`, aspect_ratio=`1:1`, n=1, GPT quality=`auto`,
+banana resolution=`1K`, images=[]; unnamed outputs use `job-000`, etc., based on
+the physical zero-based row. Explicit nulls, empty strings, invalid types or
+model values, dialect mismatches, and unknown fields (including typos) are
+errors. `images` must be a list of reference path strings; paths resolve from
+the current working directory, as they do for `--image`. Blank lines and lines
+starting with `#` are ignored.
+
+The entire batch is parsed, validated, and its references loaded before the
+first API call. An invalid row reports its physical **1-based line number** and
+stops the batch before any API calls or output writes. `--dry-run` performs the
+same preflight and prints JSON with each job's line, name, model alias, normalized
+request, and output target. API failures during execution can still leave
+partial results; preflight cannot predict provider failures.
+
+Offline regression tests (standard library only):
+
+```bash
+python3 -m unittest discover -s skills/openrouter-image/tests -v
+```
 
 ## Quick parameter reference
 
