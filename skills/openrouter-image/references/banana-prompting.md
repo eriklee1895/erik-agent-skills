@@ -71,7 +71,7 @@ canvas is actually used.
 - **Multiple variants in one call**: banana returns one image; the GPT models
   return up to 10 via `--n`.
 
-## Variance: inspect every result
+## Variance: review critical content
 
 Nano Banana 2 has noticeable per-call variance. In same-day side-by-side
 probes, one run rendered all fixed Chinese text flawlessly while another
@@ -79,7 +79,9 @@ duplicated a phrase ("时代时代") and a 国风 prompt picked up stray gibberi
 small characters. Treat any single output as one sample, not a guarantee:
 
 - For text/critical deliverables, read every string in the result.
-- Rerun on error before changing the prompt — failures are often stochastic.
+- If a result needs another attempt, account for the extra generation cost.
+- Treat ratio/resolution as best effort; accept provider dimensions unless the
+  user explicitly requires exact pixels.
 - When the brief is fixed across many images, batch one-job-per-line and
   expect to regenerate a fraction of them.
 
@@ -88,5 +90,5 @@ small characters. Treat any single output as one sample, not a guarantee:
 - Need transparency: generate the subject on a clean flat background and run a
   downstream cutout (e.g. rembg). Edges will be cutout-quality, not native
   soft-alpha — prefer a GPT model when the edge matters.
-- Need several candidates: issue separate calls (parallel in a batch JSONL with
-  one job each).
+- Need several candidates: issue separate calls (a batch JSONL runs one job
+  at a time).

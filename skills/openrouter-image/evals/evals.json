@@ -12,7 +12,7 @@
       "id": 1,
       "name": "banana-ultrawide-scene",
       "prompt": "生成一张超宽幅（21:9）的重庆山城夜景，高低错落的楼房、江水反光、暖黄色灯火，细节丰富，要 4K。用 OpenRouter 上的 Nano Banana 2。",
-      "expected_output": "调用 banana（gemini-3.1-flash-image），aspect 21:9、resolution 4K；不使用 quality 参数；输出 21:9 PNG",
+      "expected_output": "调用 banana（gemini-3.1-flash-image），aspect_ratio 21:9、resolution 4K；不使用 quality 参数；保存 PNG，ratio/resolution 按 best effort 接受 provider 尺寸，不因像素偏差自动重试",
       "files": []
     },
     {
@@ -20,6 +20,13 @@
       "name": "batch-mixed-dialects",
       "prompt": "我有三张图要一起跑，帮我批量生成：1) 一张 flare 的“咖啡馆窗边的橘猫”，16:9，high；2) 一张 sunburst 的极简商务海报，标题“季度复盘”，3:4，high；3) 一张 banana 的宽幅雪山湖泊，4K。一次性跑完并告诉我每张的成本。",
       "expected_output": "写出 JSONL（前两条 gpt dialect 用 quality，第三条 banana 用 resolution），运行 batch 子命令，三张图全部成功，batch-summary.json 存在并报告每张 cost",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "batch-output-collision",
+      "prompt": "检查两条批量生图任务：第一条 name=poster、sunburst、n=2，第二条 name=poster-1、flare、n=1。先验证，发现问题就说明原因，不要付费生成。",
+      "expected_output": "构造 JSONL 并运行 batch --dry-run；报告第二行输出路径与第一行 poster-1.png 冲突，退出非零；没有 API 调用或输出写入",
       "files": []
     }
   ]

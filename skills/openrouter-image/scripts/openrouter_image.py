@@ -18,9 +18,11 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
+import http.client
 import json
 import os
-import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -69,6 +71,10 @@ MODELS: dict[str, dict] = {
 }
 
 ALIASES = {m["id"]: name for name, m in MODELS.items()}
+
+
+class GenerationError(ValueError):
+    """An expected configuration or response error, safe to report to the user."""
 
 
 def resolve_model(value: str) -> str:
@@ -184,7 +190,7 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
 def call_api(body: dict, timeout: int) -> dict:
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
-        raise SystemExit(
+        raise GenerationError(
             "OPENROUTER_API_KEY is not set. Add it to your environment or a .env file: "
             "OPENROUTER_API_KEY=sk-or-...  (create at https://openrouter.ai/keys)")
     headers = {
@@ -199,19 +205,72 @@ def call_api(body: dict, timeout: int) -> dict:
         return json.loads(r.read())
 
 
-def save_images(resp: dict, out: Path) -> list[Path]:
-    items = resp.get("data") or []
-    if not items:
-        raise SystemExit(f"response contained no images: {json.dumps(resp)[:300]}")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    paths = []
+def output_paths(out: Path, count: int) -> list[Path]:
+    return [out] if count == 1 else [
+        out.with_name(f"{out.stem}-{i + 1}{out.suffix}") for i in range(count)
+    ]
+
+
+def check_output_targets(targets: list[Path]):
+    """Catch existing directories and file parents without creating outputs."""
+    for target in targets:
+        if target.exists() and not target.is_file():
+            raise SystemExit(f"output target is not a file: {target}")
+        parent = target.parent
+        while not parent.exists():
+            parent = parent.parent
+        if not parent.is_dir():
+            raise SystemExit(f"output parent is not a directory: {parent}")
+
+
+def reserved_outputs(out: Path, count: int) -> list[Path]:
+    meta = out.with_suffix(".json")
+    if str(out.resolve()).casefold() == str(meta.resolve()).casefold():
+        raise SystemExit("image output would overwrite its .json metadata; use an image filename.")
+    # Reserve the unnumbered path too: a provider may return only one variant.
+    targets = list(dict.fromkeys([out, *output_paths(out, count), meta]))
+    check_output_targets(targets)
+    return targets
+
+
+def write_bytes_atomic(path: Path, data: bytes):
+    """Replace a file only after the complete contents have been written."""
+    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=f".{path.name}.", delete=False) as f:
+        temporary = Path(f.name)
+        try:
+            f.write(data)
+            f.close()
+            temporary.replace(path)
+        finally:
+            f.close()
+            temporary.unlink(missing_ok=True)
+
+
+def write_json(path: Path, value):
+    write_bytes_atomic(path, json.dumps(value, ensure_ascii=False, indent=1).encode("utf-8"))
+
+
+def save_images(resp: dict, out: Path, paths: list[Path] | None = None) -> list[Path]:
+    """Decode all images first; paths also tracks completed writes on disk errors."""
+    if not isinstance(resp, dict):
+        raise GenerationError("response must be a JSON object.")
+    items = resp.get("data")
+    if not isinstance(items, list) or not items:
+        raise GenerationError("response contained no image data array.")
+    decoded = []
     for i, item in enumerate(items):
-        b64 = item.get("b64_json")
-        if not b64:
-            raise SystemExit(f"data[{i}] has no b64_json: {json.dumps(item)[:200]}")
-        target = out if len(items) == 1 else out.with_name(
-            f"{out.stem}-{i + 1}{out.suffix}")
-        target.write_bytes(base64.b64decode(b64))
+        b64 = item.get("b64_json") if isinstance(item, dict) else None
+        if not isinstance(b64, str) or not b64:
+            raise GenerationError(f"response data[{i}] must contain a non-empty b64_json string.")
+        try:
+            decoded.append(base64.b64decode(b64, validate=True))
+        except (binascii.Error, ValueError):
+            raise GenerationError(f"response data[{i}] contains invalid base64.") from None
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if paths is None:
+        paths = []
+    for target, data in zip(output_paths(out, len(items)), decoded):
+        write_bytes_atomic(target, data)
         paths.append(target)
     return paths
 
@@ -225,8 +284,35 @@ def write_meta(out: Path, body: dict, resp: dict, elapsed: float, paths: list[Pa
         "usage": resp.get("usage"),
         "elapsed_seconds": round(elapsed, 1),
     }
-    out.with_suffix(".json").write_text(
-        json.dumps(meta, ensure_ascii=False, indent=1))
+    write_json(out.with_suffix(".json"), meta)
+
+
+def execute_request(body: dict, out: Path, timeout: int) -> dict:
+    """Attempt once; retain known costs and saved paths even when saving fails."""
+    result = {"status": "ok", "outputs": [], "cost": None}
+    paths = []
+    started = time.monotonic()
+    try:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        resp = call_api(body, timeout)
+        if isinstance(resp, dict) and isinstance(resp.get("usage"), dict):
+            result["cost"] = resp["usage"].get("cost")
+        save_images(resp, out, paths)
+        write_meta(out, body, resp, time.monotonic() - started, paths)
+    except urllib.error.HTTPError as exc:
+        result.update(status=f"HTTP {exc.code}: {exc.read(200).decode(errors='replace')}",
+                      error_type="http")
+    except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as exc:
+        result.update(status=f"network error: {exc}", error_type="network")
+    except (json.JSONDecodeError, UnicodeError) as exc:
+        result.update(status=f"invalid JSON response: {exc}", error_type="response")
+    except GenerationError as exc:
+        result.update(status=str(exc), error_type="generation")
+    except OSError as exc:
+        result.update(status=f"could not save output: {exc}", error_type="output")
+    result["outputs"] = [str(p) for p in paths]
+    result["elapsed_seconds"] = round(time.monotonic() - started, 1)
+    return result
 
 
 # ----------------------------- batch -----------------------------
@@ -257,6 +343,8 @@ def prepare_batch_job(job: dict, line_number: int, out_dir: Path) -> dict:
     name = job.get("name", f"job-{line_number - 1:03d}")
     if not isinstance(name, str) or not name.strip():
         raise SystemExit("name must be a non-empty string.")
+    if name in (".", "..") or any(char in name for char in ("/", "\\", "\x00")):
+        raise SystemExit("name must be a filename stem without path separators.")
     images = job.get("images", [])
     if not isinstance(images, list) or any(
             not isinstance(path, str) or not path.strip() for path in images):
@@ -273,18 +361,30 @@ def prepare_batch_job(job: dict, line_number: int, out_dir: Path) -> dict:
         job.get("output_compression"),
     )
     return {"line": line_number, "name": name, "model_alias": model_name,
-            "request": body, "outputs": [str(out_dir / f"{name}.png")]}
+            "request": body, "outputs": [str(p) for p in output_paths(
+                out_dir / f"{name}.png", body["n"])]}
 
 
 def preflight_batch(input_path: Path, out_dir: Path) -> list[dict]:
     """Prepare every request before allowing any paid execution."""
     jobs = []
+    summary_path = out_dir / "batch-summary.json"
+    check_output_targets([summary_path])
+    # Case-insensitive reservations keep batches portable across filesystems.
+    reserved = {str(summary_path.resolve()).casefold(): "batch summary"}
     for line_number, line in enumerate(input_path.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
         if line and not line.startswith("#"):
             try:
                 job = json.loads(line)
-                jobs.append(prepare_batch_job(job, line_number, out_dir))
+                prepared = prepare_batch_job(job, line_number, out_dir)
+                out = out_dir / f"{prepared['name']}.png"
+                for target in reserved_outputs(out, prepared["request"]["n"]):
+                    key = str(target.resolve()).casefold()
+                    if key in reserved:
+                        raise SystemExit(f"output collision at {target} with {reserved[key]}.")
+                    reserved[key] = f"line {line_number}"
+                jobs.append(prepared)
             except json.JSONDecodeError as exc:
                 raise SystemExit(f"batch line {line_number}: invalid JSON: {exc.msg}.") from None
             except (SystemExit, OSError) as exc:
@@ -292,33 +392,32 @@ def preflight_batch(input_path: Path, out_dir: Path) -> list[dict]:
     return jobs
 
 
-def run_batch(input_path: Path, out_dir: Path, timeout: int, dry_run: bool = False):
+def run_batch(input_path: Path, out_dir: Path, timeout: int, dry_run: bool = False) -> int:
     jobs = preflight_batch(input_path, out_dir)
     if dry_run:
         print(json.dumps({"jobs": jobs}, ensure_ascii=False, indent=1))
-        return
+        return 0
 
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"batch: {len(jobs)} job(s)")
 
     summary = []
+    summary_path = out_dir / "batch-summary.json"
+    write_json(summary_path, summary)
     for job in jobs:
         name, body = job["name"], job["request"]
-        out = Path(job["outputs"][0])
-        t = time.time()
-        try:
-            resp = call_api(body, timeout)
-            paths = save_images(resp, out)
-            write_meta(out, body, resp, time.time() - t, paths)
-            status, cost = "ok", (resp.get("usage") or {}).get("cost")
-            print(f"  [line {job['line']}] ok  {name} -> {', '.join(str(p) for p in paths)} (${cost})")
-        except urllib.error.HTTPError as e:
-            status = f"HTTP {e.code}: {e.read().decode()[:200]}"
-            print(f"  [line {job['line']}] FAIL {name}: {status}")
-        summary.append({"name": name, "status": status})
-
-    (out_dir / "batch-summary.json").write_text(
-        json.dumps(summary, ensure_ascii=False, indent=1))
+        result = execute_request(body, out_dir / f"{name}.png", timeout)
+        summary.append({"name": name, "line": job["line"], "model": body["model"], **result})
+        # Checkpoint before the next paid call, including failed attempts.
+        write_json(summary_path, summary)
+        if result["status"] == "ok":
+            print(f"  [line {job['line']}] ok  {name} -> {', '.join(result['outputs'])} (${result['cost']})")
+        else:
+            print(f"  [line {job['line']}] FAIL {name}: {result['status']}")
+        if result.get("error_type") == "output":
+            print("batch stopped after a local save failure; remaining jobs were not attempted.")
+            break
+    return int(any(entry["status"] != "ok" for entry in summary))
 
 
 # ----------------------------- main -----------------------------
@@ -365,7 +464,9 @@ def main():
     load_env()
 
     if args.command == "batch":
-        run_batch(Path(args.input), Path(args.out_dir), args.timeout, args.dry_run)
+        code = run_batch(Path(args.input), Path(args.out_dir), args.timeout, args.dry_run)
+        if code:
+            raise SystemExit(code)
         return
 
     model_name = resolve_model(args.model)
@@ -381,24 +482,19 @@ def main():
         model_name, prompt, args.aspect, args.quality, args.resolution,
         args.background, args.n, refs, args.output_compression)
     out = Path(args.out)
+    reserved_outputs(out, body["n"])
 
     if args.dry_run:
         print(json.dumps({"model_alias": model_name, "request": body,
-                          "outputs": [str(out)]}, ensure_ascii=False, indent=1))
+                          "outputs": [str(p) for p in output_paths(out, body["n"])]},
+                         ensure_ascii=False, indent=1))
         return
 
-    t = time.time()
-    try:
-        resp = call_api(body, args.timeout)
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode()
-        raise SystemExit(f"OpenRouter rejected the request (HTTP {e.code}):\n{detail}")
-    elapsed = time.time() - t
-    paths = save_images(resp, out)
-    write_meta(out, body, resp, elapsed, paths)
-    cost = (resp.get("usage") or {}).get("cost")
-    print(f"saved {len(paths)} image(s) in {elapsed:.0f}s (${cost}):")
-    for p in paths:
+    result = execute_request(body, out, args.timeout)
+    if result["status"] != "ok":
+        raise SystemExit(f"{result['status']} (reported cost: {result['cost']}; saved: {result['outputs']})")
+    print(f"saved {len(result['outputs'])} image(s) in {result['elapsed_seconds']:.0f}s (${result['cost']}):")
+    for p in result["outputs"]:
         print(f"  {p}")
 
 
