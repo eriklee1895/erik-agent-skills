@@ -131,7 +131,7 @@ class BatchTests(OfflineTests):
             "background": ["", "glass", True, [], {}],
             "n": [0, 11, 1.5, "1", True, [], {}],
             "images": ["reference.png", 1, {}, [1], [""], [False]],
-            "output_compression": ["80", 1.5, True, [], {}],
+            "output_compression": [-1, 101, "80", 1.5, True, [], {}],
         }
         for field, values in cases.items():
             for value in values:
@@ -158,6 +158,7 @@ class BatchTests(OfflineTests):
         invalid_rows = (
             {"prompt": "Bad ratio", "aspect_ratio": "7:3"},
             {"prompt": "Bad quality", "quality": "ultra"},
+            {"prompt": "Bad compression", "output_compression": 101},
             {"prompt": "Conflict", "aspect_ratio": "3:4", "aspect": "21:9"},
             {"prompt": "Missing ref", "images": [str(self.root / "missing.png")]},
             {"prompt": "Bad ref format", "images": [str(self.root / "ref.gif")]},
@@ -228,6 +229,17 @@ class BatchTests(OfflineTests):
 
 
 class RequestTests(OfflineTests):
+    def test_output_compression_bounds_match_model_matrix(self):
+        for model in ("sunburst", "flare"):
+            for value in (0, 100):
+                with self.subTest(model=model, compression=value):
+                    self.assertEqual(self.request(model_name=model, compression=value)[
+                        "output_compression"], value)
+            for value in (-1, 101):
+                with self.subTest(model=model, compression=value):
+                    with self.assertRaisesRegex(SystemExit, "output_compression.*0.*100"):
+                        self.request(model_name=model, compression=value)
+
     def test_all_model_matrix_quality_and_resolution_values_are_accepted(self):
         for model in ("sunburst", "flare"):
             for quality in ("auto", "low", "medium", "high", "xhigh", "max"):

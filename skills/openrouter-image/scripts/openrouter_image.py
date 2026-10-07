@@ -38,6 +38,7 @@ MODELS: dict[str, dict] = {
                           "16:9", "9:16", "21:9", "auto"],
         "qualities": ["auto", "low", "medium", "high", "xhigh", "max"],
         "backgrounds": ["auto", "transparent", "opaque"],
+        "compression_range": (0, 100),
         "n_max": 10,
         "refs_max": 16,
         "streaming": True,
@@ -49,6 +50,7 @@ MODELS: dict[str, dict] = {
                           "16:9", "9:16", "21:9", "auto"],
         "qualities": ["auto", "low", "medium", "high", "xhigh", "max"],
         "backgrounds": ["auto", "transparent", "opaque"],
+        "compression_range": (0, 100),
         "n_max": 10,
         "refs_max": 16,
         "streaming": True,
@@ -153,6 +155,11 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
             if background != "auto":
                 body["background"] = background
         if compression is not None:
+            minimum, maximum = m["compression_range"]
+            if not minimum <= compression <= maximum:
+                raise SystemExit(
+                    f"{model_name} output_compression must be between {minimum} "
+                    f"and {maximum}; got {compression}.")
             body["output_compression"] = compression
     else:  # banana
         if quality is not None:

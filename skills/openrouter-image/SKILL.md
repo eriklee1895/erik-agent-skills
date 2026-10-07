@@ -119,6 +119,7 @@ Supported job fields: `name`, `model` (alias or full id), `prompt`,
 `aspect_ratio`, `quality` / `resolution` (per dialect), `n`, `background`,
 `images` (reference paths), `output_compression`. Results and a
 `batch-summary.json` land in the output directory.
+`output_compression` is GPT-only and must be an integer from 0 to 100.
 
 Use `aspect_ratio` in JSONL. Legacy `aspect` remains accepted; if both keys are
 present, their values must match. The `generate` / `edit` CLI flag is still
