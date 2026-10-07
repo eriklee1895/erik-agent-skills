@@ -38,6 +38,7 @@ MODELS: dict[str, dict] = {
                           "16:9", "9:16", "21:9", "auto"],
         "qualities": ["auto", "low", "medium", "high", "xhigh", "max"],
         "backgrounds": ["auto", "transparent", "opaque"],
+        "compression_range": (0, 100),
         "n_max": 10,
         "refs_max": 16,
         "streaming": True,
@@ -49,6 +50,7 @@ MODELS: dict[str, dict] = {
                           "16:9", "9:16", "21:9", "auto"],
         "qualities": ["auto", "low", "medium", "high", "xhigh", "max"],
         "backgrounds": ["auto", "transparent", "opaque"],
+        "compression_range": (0, 100),
         "n_max": 10,
         "refs_max": 16,
         "streaming": True,
@@ -70,6 +72,8 @@ ALIASES = {m["id"]: name for name, m in MODELS.items()}
 
 
 def resolve_model(value: str) -> str:
+    if not isinstance(value, str):
+        raise SystemExit("model must be a string (alias or full OpenRouter id).")
     if value in MODELS:
         return value
     if value in ALIASES:
@@ -114,6 +118,8 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
         raise SystemExit(
             f"{model_name} does not accept aspect_ratio '{aspect}'. Allowed: "
             f"{', '.join(m['aspect_ratios'])}")
+    if type(n) is not int:
+        raise SystemExit("n must be an integer.")
     if n < 1 or n > m["n_max"]:
         raise SystemExit(
             f"{model_name} returns at most n={m['n_max']} image(s) per request; got n={n}.")
@@ -121,8 +127,10 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
         raise SystemExit(
             f"{model_name} accepts at most {m['refs_max']} reference image(s); "
             f"got {len(refs)}.")
-    if not prompt.strip():
-        raise SystemExit("prompt is empty.")
+    if not isinstance(prompt, str) or not prompt.strip():
+        raise SystemExit("prompt must be a non-empty string.")
+    if compression is not None and type(compression) is not int:
+        raise SystemExit("output_compression must be an integer.")
 
     body: dict = {"model": m["id"], "prompt": prompt, "aspect_ratio": aspect, "n": n}
 
@@ -136,12 +144,22 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
             raise SystemExit(
                 f"{model_name} has no 'resolution' parameter — it uses '--quality' "
                 "(low..max) and aspect_ratio instead. Drop --resolution.")
-        body["quality"] = quality or "auto"
-        if background and background != "auto":
+        if quality is not None and quality not in m["qualities"]:
+            raise SystemExit(
+                f"{model_name} does not accept quality '{quality}'. Allowed: "
+                f"{', '.join(m['qualities'])}")
+        body["quality"] = "auto" if quality is None else quality
+        if background is not None:
             if background not in m["backgrounds"]:
                 raise SystemExit(f"unknown background '{background}'.")
-            body["background"] = background
+            if background != "auto":
+                body["background"] = background
         if compression is not None:
+            minimum, maximum = m["compression_range"]
+            if not minimum <= compression <= maximum:
+                raise SystemExit(
+                    f"{model_name} output_compression must be between {minimum} "
+                    f"and {maximum}; got {compression}.")
             body["output_compression"] = compression
     else:  # banana
         if quality is not None:
@@ -154,7 +172,11 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
                 "transparent PNGs. Use sunburst/flare for that.")
         if compression is not None:
             raise SystemExit(f"{model_name} does not support output_compression.")
-        body["resolution"] = resolution or "1K"
+        if resolution is not None and resolution not in m["resolutions"]:
+            raise SystemExit(
+                f"{model_name} does not accept resolution '{resolution}'. Allowed: "
+                f"{', '.join(m['resolutions'])}")
+        body["resolution"] = "1K" if resolution is None else resolution
 
     return body
 
@@ -209,41 +231,90 @@ def write_meta(out: Path, body: dict, resp: dict, elapsed: float, paths: list[Pa
 
 # ----------------------------- batch -----------------------------
 
-def run_batch(input_path: Path, out_dir: Path, timeout: int):
+BATCH_FIELDS = {
+    "name", "model", "prompt", "aspect_ratio", "aspect", "quality", "resolution",
+    "n", "background", "images", "output_compression",
+}
+
+
+def prepare_batch_job(job: dict, line_number: int, out_dir: Path) -> dict:
+    """Normalize and validate one JSONL job without network or output writes."""
+    if not isinstance(job, dict):
+        raise SystemExit("each job must be a JSON object.")
+    unknown = set(job) - BATCH_FIELDS
+    if unknown:
+        raise SystemExit(f"unknown job field(s): {', '.join(sorted(unknown))}.")
+    for field, value in job.items():
+        if value is None:
+            raise SystemExit(f"{field} cannot be null; omit it to use the default.")
+    if "prompt" not in job:
+        raise SystemExit("prompt is required.")
+    if "aspect_ratio" in job and "aspect" in job and job["aspect_ratio"] != job["aspect"]:
+        raise SystemExit("conflicting aspect_ratio and legacy aspect values; use aspect_ratio.")
+
+    model_name = resolve_model(job.get("model", "sunburst"))
+    # Keep existing unnamed output names based on the physical, zero-based row.
+    name = job.get("name", f"job-{line_number - 1:03d}")
+    if not isinstance(name, str) or not name.strip():
+        raise SystemExit("name must be a non-empty string.")
+    images = job.get("images", [])
+    if not isinstance(images, list) or any(
+            not isinstance(path, str) or not path.strip() for path in images):
+        raise SystemExit("images must be a list of non-empty reference path strings.")
+    body = build_request(
+        model_name,
+        job["prompt"],
+        job.get("aspect_ratio", job.get("aspect", "1:1")),
+        job.get("quality"),
+        job.get("resolution"),
+        job.get("background"),
+        job.get("n", 1),
+        [Path(path) for path in images],
+        job.get("output_compression"),
+    )
+    return {"line": line_number, "name": name, "model_alias": model_name,
+            "request": body, "outputs": [str(out_dir / f"{name}.png")]}
+
+
+def preflight_batch(input_path: Path, out_dir: Path) -> list[dict]:
+    """Prepare every request before allowing any paid execution."""
     jobs = []
-    for i, line in enumerate(input_path.read_text().splitlines()):
+    for line_number, line in enumerate(input_path.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
         if line and not line.startswith("#"):
-            jobs.append((i, json.loads(line)))
+            try:
+                job = json.loads(line)
+                jobs.append(prepare_batch_job(job, line_number, out_dir))
+            except json.JSONDecodeError as exc:
+                raise SystemExit(f"batch line {line_number}: invalid JSON: {exc.msg}.") from None
+            except (SystemExit, OSError) as exc:
+                raise SystemExit(f"batch line {line_number}: {exc}") from None
+    return jobs
+
+
+def run_batch(input_path: Path, out_dir: Path, timeout: int, dry_run: bool = False):
+    jobs = preflight_batch(input_path, out_dir)
+    if dry_run:
+        print(json.dumps({"jobs": jobs}, ensure_ascii=False, indent=1))
+        return
+
+    out_dir.mkdir(parents=True, exist_ok=True)
     print(f"batch: {len(jobs)} job(s)")
 
     summary = []
-    for i, job in jobs:
-        model_name = resolve_model(job.get("model", "sunburst"))
-        name = job.get("name") or f"job-{i:03d}"
-        out = out_dir / f"{name}.png"
-        refs = [Path(p) for p in job.get("images", [])]
-        body = build_request(
-            model_name,
-            job["prompt"],
-            job.get("aspect_ratio", "1:1"),
-            job.get("quality"),
-            job.get("resolution"),
-            job.get("background"),
-            job.get("n", 1),
-            refs,
-            job.get("output_compression"),
-        )
+    for job in jobs:
+        name, body = job["name"], job["request"]
+        out = Path(job["outputs"][0])
         t = time.time()
         try:
             resp = call_api(body, timeout)
             paths = save_images(resp, out)
             write_meta(out, body, resp, time.time() - t, paths)
             status, cost = "ok", (resp.get("usage") or {}).get("cost")
-            print(f"  [{i}] ok  {name} -> {', '.join(str(p) for p in paths)} (${cost})")
+            print(f"  [line {job['line']}] ok  {name} -> {', '.join(str(p) for p in paths)} (${cost})")
         except urllib.error.HTTPError as e:
             status = f"HTTP {e.code}: {e.read().decode()[:200]}"
-            print(f"  [{i}] FAIL {name}: {status}")
+            print(f"  [line {job['line']}] FAIL {name}: {status}")
         summary.append({"name": name, "status": status})
 
     (out_dir / "batch-summary.json").write_text(
@@ -287,12 +358,14 @@ def main():
     b.add_argument("--input", required=True)
     b.add_argument("--out-dir", required=True)
     b.add_argument("--timeout", type=int, default=600)
+    b.add_argument("--dry-run", action="store_true",
+                   help="validate all jobs and print requests without calling the API or writing outputs")
 
     args = parser.parse_args()
     load_env()
 
     if args.command == "batch":
-        run_batch(Path(args.input), Path(args.out_dir), args.timeout)
+        run_batch(Path(args.input), Path(args.out_dir), args.timeout, args.dry_run)
         return
 
     model_name = resolve_model(args.model)
