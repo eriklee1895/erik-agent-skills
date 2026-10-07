@@ -1,6 +1,6 @@
 ---
 name: openrouter-image
-description: "Generate and edit images through OpenRouter's unified image API with a curated model shortlist: GPT Image 2.5 Sunburst/Flare and Gemini 3.1 Flash (Nano Banana 2). Use whenever the user wants to create or modify a picture via OpenRouter — photo, poster, text-heavy layout, product shot, illustration, multi-reference composite or edit, variants, or a JSONL batch — especially when they name OpenRouter, Nano Banana, Sunburst/Flare, or want one key across several top image models. The CLI validates each model's parameter dialect (quality tiers vs resolution, n limits, transparency, reference caps) before calling, so requests don't fail at the API. Do not use this skill for SVG, code-native diagrams, or deterministic layout."
+description: "Generate and edit raster images through OpenRouter with GPT Image 2.5 Sunburst/Flare or Gemini 3.1 Flash (Nano Banana 2). Use for OpenRouter image requests: photos, posters, text-heavy layouts, product shots, illustrations, reference-guided edits or composites, variants, and JSONL batches. Especially relevant when the user names OpenRouter, Sunburst, Flare, or Nano Banana, or wants one API key across these models. Includes model-specific parameter validation, dry-run previews, and per-call cost records."
 ---
 
 # openrouter-image
@@ -39,7 +39,16 @@ inside it, no other skill is required.
    `--resolution`, n=1, no transparency.
 4. For complex requests, run `--dry-run` first and inspect the exact JSON body.
 5. Run the script with `python3` (standard library only, no install needed).
-6. Inspect the saved image and its sibling `.json` metadata (request, usage/cost).
+6. Return the saved images and report cost from sibling `.json` metadata or the
+   batch summary. Review text, identity, or other content when the brief needs it.
+
+Ratio and resolution are **best effort**: send the selected supported values and
+accept the provider's output dimensions. The CLI does not crop, resize, reject,
+or regenerate an image because its pixels differ from the requested ratio.
+
+The examples run from this skill's directory. From another directory, use the
+full path to `scripts/openrouter_image.py`; reference and prompt-file paths still
+resolve from the current working directory.
 
 Authentication: `OPENROUTER_API_KEY` in the environment or a `.env` file.
 
@@ -120,6 +129,8 @@ Supported job fields: `name`, `model` (alias or full id), `prompt`,
 `images` (reference paths), `output_compression`. Results and a
 `batch-summary.json` land in the output directory.
 `output_compression` is GPT-only and must be an integer from 0 to 100.
+It is ignored for PNG output; it controls JPEG/WebP compression when those
+formats are returned by the provider.
 
 Use `aspect_ratio` in JSONL. Legacy `aspect` remains accepted; if both keys are
 present, their values must match. The `generate` / `edit` CLI flag is still
@@ -134,12 +145,38 @@ errors. `images` must be a list of reference path strings; paths resolve from
 the current working directory, as they do for `--image`. Blank lines and lines
 starting with `#` are ignored.
 
+`name` is a filename stem, not a path: no `/`, `\`, NUL, `.` or `..` names.
+Output names must not collide within a batch (case-insensitive), including
+numbered variants, metadata, and the reserved `batch-summary.json`.
+For n>1, previews list `name-1.png`, `name-2.png`, etc. Providers may return fewer
+than n images; one returned image uses `name.png`, and the summary records the
+actual saved paths. Existing images at chosen targets are overwritten; use a
+fresh output directory to keep older runs.
+
 The entire batch is parsed, validated, and its references loaded before the
 first API call. An invalid row reports its physical **1-based line number** and
 stops the batch before any API calls or output writes. `--dry-run` performs the
 same preflight and prints JSON with each job's line, name, model alias, normalized
-request, and output target. API failures during execution can still leave
-partial results; preflight cannot predict provider failures.
+request, and expected output paths. Existing directories at file targets and
+file parents are rejected before execution. Preflight cannot predict provider
+failures or later filesystem changes.
+
+Batch execution is sequential. `batch-summary.json` is replaced atomically
+after each attempted job, before the next API call. Each entry includes `name`,
+`line`, `model`, `status`, actual `outputs`, `cost`, and `elapsed_seconds`; failures
+also have `error_type`. `cost: null` means no cost was reported, not zero spend.
+HTTP, network, and malformed-response errors are recorded and later jobs can
+continue. A local save failure stops the batch to avoid more paid calls; the
+summary contains only attempted jobs and retains any saved paths and known cost.
+Execution exits 0 when all jobs succeed and 1 if any job fails.
+
+Requests are attempted once, with no automatic retries. Before retrying, inspect
+the summary and saved metadata and create a JSONL containing only the jobs you
+want to retry. A timeout alone does not establish the final server outcome;
+check OpenRouter's activity records when cost is unknown. Images are decoded and
+saved one at a time; if a later item is malformed, completed images and reported
+cost remain in the summary. Checks cover JSON/data/base64, not visual quality
+or pixel dimensions. JSON checkpoints preserve existing file permissions.
 
 Offline regression tests (standard library only):
 
@@ -164,6 +201,8 @@ doesn't support) is caught with an explanatory message before the API call.
 
 - The returned `.json` records `usage.cost` per call — check it for spend.
 - Error codes: 402 out of credit, 404 unknown model / no provider, 429 rate
-  limited, 502 upstream failure (failed generations are not billed).
+  limited, 502 upstream failure. OpenRouter documents failed generations as
+  unbilled; a local save failure after receiving an image is a different outcome
+  and can retain a reported cost. See the [Image API documentation](https://openrouter.ai/docs/guides/overview/multimodal/image-generation).
 - Streaming (SSE) is supported by the two GPT models but not yet exposed by this
   CLI; buffered generation is the default.

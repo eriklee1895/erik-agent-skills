@@ -15,16 +15,17 @@ knowledge, mirroring [banana-prompting.md](banana-prompting.md).
 
 ## sunburst vs flare
 
-Same family, same per-token price; the difference is the speed/quality point:
+Same family; September measurements showed this speed/quality tradeoff:
 
 - **sunburst** = base/quality model. Slower (~34s at high), most literal and
   precise — use for finals, text-heavy and edit-critical work.
 - **flare** = small/speed model. Faster (~18s at high), quality "comparable to
   GPT Image 2" — use for drafts, exploration, high-volume everyday work.
 
-They cost the same per call; flare saves time, not money. To spend less, lower
-`--quality`. The quality gap between them widens as the task gets harder (more
-references, more demanding edits), so a good working rhythm is flare to find
+They shared the same token price in the September tests; actual call cost
+depends on usage. To reduce the detail budget, lower `--quality`. The quality
+gap between them widens as the task gets harder (more references, more demanding
+edits), so a good working rhythm is flare to find
 the direction, sunburst to finish.
 
 ## Parameter model

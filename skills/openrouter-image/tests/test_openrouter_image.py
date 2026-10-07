@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import base64
+import http.client
 import importlib.util
 import io
 import json
 import os
 import re
+import stat
 import tempfile
 import unittest
 import urllib.error
@@ -89,8 +91,8 @@ class BatchTests(OfflineTests):
         self.assertEqual(metadata["request"]["aspect_ratio"], "3:4")
         self.assertEqual(metadata["usage"]["cost"], 0.01)
         summary = json.loads((self.out / "batch-summary.json").read_text())
-        self.assertEqual(summary, [{"name": f"poster-{i}", "status": "ok"}
-                                   for i in range(3)])
+        self.assertEqual([(entry["name"], entry["status"]) for entry in summary],
+                         [(f"poster-{i}", "ok") for i in range(3)])
 
     def test_conflicting_aspect_keys_fail_before_api(self):
         self.write_jobs([{"prompt": "A poster", "aspect_ratio": "3:4", "aspect": "21:9"}])
@@ -223,9 +225,14 @@ class BatchTests(OfflineTests):
     def test_http_failure_still_writes_batch_summary(self):
         self.api.side_effect = urllib.error.HTTPError(
             mod.API_URL, 429, "rate limited", {}, io.BytesIO(b"slow down"))
-        self.run_batch([{"name": "poster", "prompt": "Poster"}])
-        self.assertEqual(json.loads((self.out / "batch-summary.json").read_text()),
-                         [{"name": "poster", "status": "HTTP 429: slow down"}])
+        self.write_jobs([{"name": "poster", "prompt": "Poster"}])
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(mod.run_batch(self.input, self.out, 123), 1)
+        entry = json.loads((self.out / "batch-summary.json").read_text())[0]
+        self.assertEqual(entry["name"], "poster")
+        self.assertEqual(entry["status"], "HTTP 429: slow down")
+        self.assertIsNone(entry["cost"])
+        self.assertEqual(entry["outputs"], [])
 
 
 class RequestTests(OfflineTests):
@@ -317,6 +324,243 @@ class RequestTests(OfflineTests):
                         self.run_cli(command, "--model", model, "--prompt", "Poster",
                                      f"--{field}", value, "--out", str(self.out / "bad.png"))
                     self.api.assert_not_called()
+
+
+class BatchReliabilityTests(OfflineTests):
+    def execute_batch(self, jobs):
+        self.write_jobs(jobs)
+        with redirect_stdout(io.StringIO()):
+            code = mod.run_batch(self.input, self.out, 123)
+        return code, json.loads((self.out / "batch-summary.json").read_text())
+
+    def test_colliding_output_names_fail_before_any_api_calls(self):
+        cases = (
+            [{"name": "poster"}, {"name": "poster"}],
+            [{"name": "Poster"}, {"name": "poster"}],
+            [{"name": "poster", "n": 2}, {"name": "poster-1"}],
+            [{"name": "poster", "n": 2}, {"name": "poster"}],
+            [{"name": "batch-summary"}],
+        )
+        for rows in cases:
+            with self.subTest(rows=rows):
+                self.write_jobs([{"prompt": "Poster", **row} for row in rows])
+                with self.assertRaisesRegex(SystemExit, r"batch line \d+: .*collision"):
+                    mod.run_batch(self.input, self.out, 123)
+                self.api.assert_not_called()
+                self.assertFalse(self.out.exists())
+
+    def test_batch_names_cannot_write_outside_output_directory(self):
+        for name in ("../escape", str(self.root / "escape"), "nested/poster", "nested\\poster", ".", "..", "bad\x00name"):
+            with self.subTest(name=name):
+                self.write_jobs([{"prompt": "Poster", "name": name}])
+                with self.assertRaisesRegex(SystemExit, "batch line 1: .*name"):
+                    mod.run_batch(self.input, self.out, 123)
+                self.api.assert_not_called()
+                self.assertFalse(self.out.exists())
+
+    def test_existing_directory_at_later_output_aborts_before_api(self):
+        (self.out / "second.png").mkdir(parents=True)
+        self.write_jobs([{"name": name, "prompt": "Poster"} for name in ("first", "second")])
+        with self.assertRaisesRegex(SystemExit, "batch line 2: .*output"):
+            mod.run_batch(self.input, self.out, 123)
+        self.api.assert_not_called()
+        self.assertFalse((self.out / "first.png").exists())
+
+    def test_variant_dry_runs_list_numbered_output_paths(self):
+        self.write_jobs([{"name": "poster", "prompt": "Poster", "n": 2}])
+        batch = json.loads(self.run_cli("batch", "--input", str(self.input),
+                                       "--out-dir", str(self.out), "--dry-run"))
+        single = json.loads(self.run_cli("generate", "--prompt", "Poster", "--n", "2",
+                                        "--out", str(self.out / "poster.png"), "--dry-run"))
+        expected = [str(self.out / "poster-1.png"), str(self.out / "poster-2.png")]
+        self.assertEqual(batch["jobs"][0]["outputs"], expected)
+        self.assertEqual(single["outputs"], expected)
+        self.api.assert_not_called()
+        self.assertFalse(self.out.exists())
+
+    def test_success_summary_records_cost_model_line_and_actual_outputs(self):
+        self.api.return_value["data"] *= 2
+        code, summary = self.execute_batch([{"name": "poster", "prompt": "Poster", "n": 2}])
+        self.assertEqual(code, 0)
+        self.assertEqual(summary[0]["status"], "ok")
+        self.assertEqual(summary[0]["line"], 1)
+        self.assertEqual(summary[0]["model"], mod.MODELS["sunburst"]["id"])
+        self.assertEqual(summary[0]["cost"], 0.01)
+        self.assertEqual(summary[0]["outputs"], [str(self.out / "poster-1.png"),
+                                                  str(self.out / "poster-2.png")])
+        self.assertGreaterEqual(summary[0]["elapsed_seconds"], 0)
+        self.assertTrue(all(Path(p).read_bytes() == b"image bytes" for p in summary[0]["outputs"]))
+
+    def test_network_failure_is_recorded_without_retry_and_later_jobs_continue(self):
+        response = self.api.return_value
+        self.api.side_effect = [response, urllib.error.URLError("connection reset"), response]
+        code, summary = self.execute_batch([{"name": name, "prompt": name}
+                                            for name in ("first", "failed", "last")])
+        self.assertEqual(code, 1)
+        self.assertEqual(self.api.call_count, 3)
+        self.assertEqual([entry["status"] for entry in summary][::2], ["ok", "ok"])
+        self.assertIn("connection reset", summary[1]["status"])
+        self.assertIsNone(summary[1]["cost"])
+        self.assertEqual(summary[1]["outputs"], [])
+        self.assertTrue((self.out / "first.json").exists())
+        self.assertTrue((self.out / "last.png").exists())
+
+    def test_completed_jobs_are_checkpointed_before_the_next_request(self):
+        response = self.api.return_value
+        def next_call(body, timeout):
+            if body["prompt"] == "second":
+                checkpoint = json.loads((self.out / "batch-summary.json").read_text())
+                self.assertEqual(len(checkpoint), 1)
+                self.assertEqual(checkpoint[0]["name"], "first")
+                self.assertEqual(checkpoint[0]["cost"], 0.01)
+            return response
+        self.api.side_effect = next_call
+        self.execute_batch([{"name": name, "prompt": name} for name in ("first", "second")])
+
+    def test_interrupt_preserves_completed_job_summary(self):
+        self.api.side_effect = [self.api.return_value, KeyboardInterrupt()]
+        self.write_jobs([{"name": name, "prompt": name} for name in ("first", "second")])
+        with redirect_stdout(io.StringIO()), self.assertRaises(KeyboardInterrupt):
+            mod.run_batch(self.input, self.out, 123)
+        summary = json.loads((self.out / "batch-summary.json").read_text())
+        self.assertEqual(len(summary), 1)
+        self.assertEqual(summary[0]["name"], "first")
+        self.assertEqual(summary[0]["status"], "ok")
+
+    def test_batch_cli_exits_nonzero_for_failed_jobs(self):
+        self.api.side_effect = TimeoutError("timed out")
+        self.write_jobs([{"name": "poster", "prompt": "Poster"}])
+        with self.assertRaises(SystemExit) as error:
+            self.run_cli("batch", "--input", str(self.input), "--out-dir", str(self.out))
+        self.assertEqual(error.exception.code, 1)
+        self.assertEqual(self.api.call_count, 1)
+        entry = json.loads((self.out / "batch-summary.json").read_text())[0]
+        self.assertIn("timed out", entry["status"])
+        self.assertIsNone(entry["cost"])
+
+    def test_metadata_failure_preserves_saved_paths_and_reported_cost(self):
+        with mock.patch.object(mod, "write_meta", side_effect=OSError("disk full")):
+            code, summary = self.execute_batch([{"name": "poster", "prompt": "Poster"}])
+        self.assertEqual(code, 1)
+        self.assertIn("disk full", summary[0]["status"])
+        self.assertEqual(summary[0]["cost"], 0.01)
+        self.assertEqual(summary[0]["outputs"], [str(self.out / "poster.png")])
+        self.assertTrue((self.out / "poster.png").exists())
+
+    def test_local_save_failure_stops_before_remaining_paid_calls(self):
+        with mock.patch.object(mod, "write_meta", side_effect=OSError("disk full")):
+            code, summary = self.execute_batch([{"name": name, "prompt": name}
+                                                for name in ("first", "second")])
+        self.assertEqual(code, 1)
+        self.api.assert_called_once()
+        self.assertEqual(len(summary), 1)
+        self.assertEqual(summary[0]["name"], "first")
+
+    def test_one_returned_variant_uses_reserved_unnumbered_path(self):
+        code, summary = self.execute_batch([{"name": "poster", "prompt": "Poster", "n": 2}])
+        self.assertEqual(code, 0)
+        self.assertEqual(summary[0]["outputs"], [str(self.out / "poster.png")])
+        self.assertEqual((self.out / "poster.png").read_bytes(), b"image bytes")
+
+
+class ImageSavingTests(OfflineTests):
+    def test_malformed_responses_do_not_save_empty_images(self):
+        cases = (None, [], {"data": None}, {"data": {}}, {"data": [None]},
+                 {"data": [{"b64_json": "!!!"}]}, {"data": [{"b64_json": 123}]},
+                 {"data": [{"b64_json": "é"}]})
+        for response in cases:
+            with self.subTest(response=response):
+                self.api.return_value = response
+                self.write_jobs([{"name": "poster", "prompt": "Poster"}])
+                with redirect_stdout(io.StringIO()):
+                    self.assertEqual(mod.run_batch(self.input, self.out, 123), 1)
+                self.assertEqual(list(self.out.glob("*.png")), [])
+                entry = json.loads((self.out / "batch-summary.json").read_text())[0]
+                self.assertEqual(entry["outputs"], [])
+                self.assertNotEqual(entry["status"], "ok")
+
+    def test_valid_first_image_is_kept_when_later_response_item_is_bad(self):
+        valid = self.api.return_value["data"][0]
+        for invalid in ({}, {"b64_json": "!!!"}):
+            with self.subTest(invalid=invalid):
+                self.api.return_value = {"data": [valid, invalid], "usage": {"cost": 0.01}}
+                self.write_jobs([{"name": "poster", "prompt": "Poster", "n": 2}])
+                with redirect_stdout(io.StringIO()):
+                    self.assertEqual(mod.run_batch(self.input, self.out, 123), 1)
+                entry = json.loads((self.out / "batch-summary.json").read_text())[0]
+                self.assertEqual(entry["outputs"], [str(self.out / "poster-1.png")])
+                self.assertEqual(entry["cost"], 0.01)
+                self.assertEqual((self.out / "poster-1.png").read_bytes(), b"image bytes")
+                self.assertFalse((self.out / "poster-2.png").exists())
+
+    @unittest.skipIf(os.name == "nt", "POSIX file permissions")
+    def test_existing_image_permissions_are_preserved(self):
+        self.out.mkdir()
+        target = self.out / "poster.png"
+        target.write_bytes(b"old image")
+        target.chmod(0o644)
+        self.run_cli("generate", "--prompt", "Poster", "--out", str(target))
+        self.assertEqual(target.read_bytes(), b"image bytes")
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o644)
+
+    @unittest.skipIf(os.name == "nt", "POSIX file permissions")
+    def test_existing_json_permissions_are_preserved(self):
+        self.out.mkdir()
+        target = self.out / "batch-summary.json"
+        target.write_text("[]")
+        target.chmod(0o640)
+        mod.write_json(target, [{"status": "ok"}])
+        self.assertEqual(json.loads(target.read_text()), [{"status": "ok"}])
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o640)
+
+    def test_single_cli_reports_network_and_json_errors_without_retry(self):
+        errors = (urllib.error.URLError("connection reset"), TimeoutError("timed out"),
+                  http.client.IncompleteRead(b"prefix", 5), ConnectionResetError("connection reset"),
+                  json.JSONDecodeError("bad JSON", "x", 0))
+        for error in errors:
+            with self.subTest(error=error):
+                self.api.reset_mock()
+                self.api.side_effect = error
+                with self.assertRaises(SystemExit) as caught:
+                    self.run_cli("generate", "--prompt", "Poster", "--out", str(self.out / "poster.png"))
+                self.assertNotEqual(caught.exception.code, 0)
+                self.api.assert_called_once()
+                self.assertFalse((self.out / "poster.png").exists())
+
+    def test_image_target_cannot_overwrite_its_metadata(self):
+        for n in (1, 2):
+            with self.subTest(n=n), self.assertRaisesRegex(SystemExit, "metadata"):
+                self.run_cli("generate", "--prompt", "Poster", "--n", str(n),
+                             "--out", str(self.out / "poster.json"))
+            self.api.assert_not_called()
+        self.assertFalse(self.out.exists())
+
+    def test_ratio_remains_best_effort_without_pixel_validation(self):
+        # The API boundary is mocked; no image codec or dimension checker is needed.
+        self.run_cli("generate", "--prompt", "Poster", "--aspect", "3:4",
+                     "--out", str(self.out / "poster.png"))
+        self.assertEqual(self.api.call_args.args[0]["aspect_ratio"], "3:4")
+        self.assertEqual((self.out / "poster.png").read_bytes(), b"image bytes")
+
+    def test_partial_disk_failure_reports_completed_paths_and_cost(self):
+        self.api.return_value["data"] *= 2
+        original = Path.write_bytes
+        def fail_second(path, data):
+            if path.name == "poster-2.png":
+                raise OSError("disk full")
+            original(path, data)
+        with mock.patch.object(Path, "write_bytes", autospec=True, side_effect=fail_second):
+            result = mod.execute_request(self.request(n=2), self.out / "poster.png", 123)
+        self.assertEqual(result["error_type"], "output")
+        self.assertEqual(result["cost"], 0.01)
+        self.assertEqual(result["outputs"], [str(self.out / "poster-1.png")])
+        self.assertFalse((self.out / "poster-2.png").exists())
+
+    def test_output_directory_creation_failure_prevents_paid_call(self):
+        with mock.patch.object(Path, "mkdir", side_effect=PermissionError("read only directory")):
+            with self.assertRaisesRegex(SystemExit, "read only directory"):
+                self.run_cli("generate", "--prompt", "Poster", "--out", str(self.out / "poster.png"))
+        self.api.assert_not_called()
 
 
 if __name__ == "__main__":

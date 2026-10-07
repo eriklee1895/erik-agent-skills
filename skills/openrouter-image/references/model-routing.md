@@ -1,14 +1,15 @@
 # Model routing guide
 
 Three curated models behind one OpenRouter image API. The guidance here is
-grounded in ~75 real paid calls run on 2026-09-30 (our own matrix plus a
-cross-model probe), not just vendor marketing.
+grounded in ~75 paid calls run on 2026-09-30 (our own matrix plus a cross-model
+probe). Costs, latency, and behavior below are historical observations; use
+current API capabilities and returned usage for today's requests.
 
 ## Decision matrix
 
 | If the job is… | Choose | Why |
 |---|---|---|
-| Final deliverable; must be *exactly* as specified | **sunburst** | highest precision for text, layout, edits |
+| Final deliverable; precision is the priority | **sunburst** | strongest observed precision for text, layout, edits |
 | Many verbatim labels / dense infographic / slide | **sunburst** | most reliable typography & hierarchy |
 | Precise count or numbering | **sunburst** | follows structural constraints closest |
 | Multi-image edit where nothing may drift | **sunburst** | best subject/region preservation |
@@ -18,19 +19,20 @@ cross-model probe), not just vendor marketing.
 | Conversational edit of an existing image | **banana** | plain-language change, rest preserved |
 | Ultra-wide / ultra-tall (8:1, 21:9), native 4K | **banana** | extreme formats + genuinely native 4K |
 
-## sunburst vs flare — same family, same price, different speed
+## sunburst vs flare — September observations
 
-Both are GPT Image 2.5 with identical parameters and **identical per-token
-pricing**; flare is the *small/speed* model, sunburst is the *base/quality*
-model. Measured directly:
+Both are GPT Image 2.5 with identical parameters. In the September tests they
+had **identical per-token pricing**; flare is the *small/speed* model, sunburst
+is the *base/quality* model. Measured directly:
 
 | quality high, real work | cost median | latency median | image tokens |
 |---|---|---|---|
 | sunburst | $0.042 | **34s** | 1372 |
 | flare | $0.042 | **18s** | 1372 |
 
-So the common mental model "flare = cheaper" is wrong — **flare saves time, not
-money**. To spend less, lower `--quality`, not the model. Flare's quality is
+In those tests **flare saved time at the same token price**. Lower `--quality`
+to reduce the request's detail budget; compare reported usage for actual spend.
+Flare's quality is
 described by OpenAI as "comparable to GPT Image 2"; sunburst beats it, and the
 gap widens with task difficulty (blind-arena deltas vs the previous gen: text-
 to-image sunburst +40 / flare +18; multi-image edit +81 / +47). Use flare to
@@ -84,8 +86,9 @@ result was inconsistent: our matrix rendered every fixed string flawlessly,
 while a parallel cross-model probe produced a duplicated phrase
 ("时代时代") and, on a 国风 image, stray gibberish small text. Nano Banana 2
 has **real per-call output variance**. Do not certify it from a single good
-result — for production work, generate, inspect, and rerun on failure. The GPT
-models were stable across the same tests.
+result. Review critical text and subject preservation before accepting a
+deliverable; each retry is another generation request. The GPT models were
+stable across the same tests.
 
 ## Chinese / bilingual text
 
@@ -131,12 +134,16 @@ not duplicated here — no need to pay for the same model through two gateways.
 |---|---|
 | OpenRouter | GPT Image 2.5 Sunburst/Flare, Gemini 3.1 Flash |
 
-## Evidence
+## Evidence and current capabilities
 
-- Our 45-call matrix: `output/skill-research/live-findings.md` + `live/matrix.json`
-- Full API reference field test: `research/01-openrouter-images-api.md`
-- GPT 2.5 official/arena data: `research/03-gpt-image-2.5.md`
-- 16-model cross probe (variance data): `research/04-landscape.md`
+The historical research logs are not bundled with this published skill. The
+local matrix in `scripts/openrouter_image.py` is curated; when an endpoint
+changes, compare it with the official capability records before updating it:
+
+- [Image API guide](https://openrouter.ai/docs/guides/overview/multimodal/image-generation)
+- [Image model capabilities](https://openrouter.ai/api/v1/images/models)
+- Per-endpoint capabilities and pricing: use each model's `endpoints` URL from
+  the model capability response.
 
 ## Links
 
