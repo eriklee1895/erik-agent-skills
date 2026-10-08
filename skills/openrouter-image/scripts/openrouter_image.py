@@ -8,7 +8,7 @@
 Supported model shortlist (deliberately curated, not the full OpenRouter catalog):
   sunburst  openai/gpt-image-2.5-sunburst   precision tier (quality 6 tiers, n<=10)
   flare     openai/gpt-image-2.5-flare      speed tier  (same parameter matrix)
-  banana    google/gemini-3.1-flash-image   Nano Banana 2 (resolution tiers, n=1)
+  banana    google/gemini-nano-banana-2.1   Nano Banana 2.1 (resolution tiers, n=1)
 
 The two GPT models and the Gemini model speak different parameter dialects;
 this script validates requests against each model's matrix before calling.
@@ -32,7 +32,8 @@ from pathlib import Path
 API_URL = "https://openrouter.ai/api/v1/images"
 
 # Parameter matrices transcribed from
-# GET https://openrouter.ai/api/v1/images/models (2026-09-30).
+# GET https://openrouter.ai/api/v1/images/models and the banana per-endpoint
+# record (2026-10-08). Thinking/search are not exposed on this Image API route.
 MODELS: dict[str, dict] = {
     "sunburst": {
         "id": "openai/gpt-image-2.5-sunburst",
@@ -59,12 +60,12 @@ MODELS: dict[str, dict] = {
         "streaming": True,
     },
     "banana": {
-        "id": "google/gemini-3.1-flash-image",
+        "id": "google/gemini-nano-banana-2.1",
         "dialect": "banana",
         "aspect_ratios": ["1:1", "1:4", "1:8", "2:3", "3:2", "3:4",
                           "4:1", "4:3", "4:5", "5:4", "8:1", "9:16",
                           "16:9", "21:9"],
-        "resolutions": ["512", "1K", "2K", "4K"],
+        "resolutions": ["1K", "2K", "4K"],
         "n_max": 1,
         "refs_max": 14,
         "streaming": False,
@@ -103,16 +104,33 @@ def load_env():
             break
 
 
+IMAGE_EXTENSIONS = {
+    "image/png": (".png",),
+    "image/jpeg": (".jpg", ".jpeg"),
+    "image/webp": (".webp",),
+}
+
+
+def image_mime(raw: bytes) -> str:
+    """Identify supported raster bytes without trusting a filename or MIME label."""
+    if raw.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if raw.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if raw.startswith(b"RIFF") and raw[8:12] == b"WEBP":
+        return "image/webp"
+    raise GenerationError("image bytes must be PNG, JPEG, or WebP.")
+
+
 def data_url(path: Path) -> str:
-    suffix = path.suffix.lower()
-    mime = {".png": "image/png", ".jpg": "image/jpeg",
-            ".jpeg": "image/jpeg", ".webp": "image/webp"}.get(suffix)
-    if not mime:
-        raise SystemExit(f"reference must be png/jpg/webp: {path}")
     if not path.is_file():
         raise SystemExit(f"reference not found: {path}")
-    b64 = base64.b64encode(path.read_bytes()).decode()
-    return f"data:{mime};base64,{b64}"
+    raw = path.read_bytes()
+    try:
+        mime = image_mime(raw)
+    except GenerationError as exc:
+        raise SystemExit(f"invalid reference {path}: {exc}") from None
+    return f"data:{mime};base64,{base64.b64encode(raw).decode()}"
 
 
 def build_request(model_name: str, prompt: str, aspect: str, quality: str | None,
@@ -171,8 +189,8 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
     else:  # banana
         if quality is not None:
             raise SystemExit(
-                f"{model_name} (Nano Banana 2) has no 'quality' tiers — it uses "
-                "'--resolution' (512/1K/2K/4K). Drop --quality.")
+                f"{model_name} (Nano Banana 2.1) has no 'quality' tiers — it uses "
+                "'--resolution' (1K/2K/4K). Drop --quality.")
         if background is not None:
             raise SystemExit(
                 f"{model_name} has no background control and cannot produce "
@@ -229,7 +247,11 @@ def reserved_outputs(out: Path, count: int) -> list[Path]:
     if str(out.resolve()).casefold() == str(meta.resolve()).casefold():
         raise SystemExit("image output would overwrite its .json metadata; use an image filename.")
     # Reserve the unnumbered path too: a provider may return only one variant.
-    targets = list(dict.fromkeys([out, *output_paths(out, count), meta]))
+    images = list(dict.fromkeys([out, *output_paths(out, count)]))
+    # Reserve every supported encoding: output suffixes are unknown pre-call.
+    suffixes = [suffix for values in IMAGE_EXTENSIONS.values() for suffix in values]
+    candidates = [path.with_suffix(suffix) for path in images for suffix in suffixes]
+    targets = list(dict.fromkeys([*images, *candidates, meta]))
     check_output_targets(targets)
     return targets
 
@@ -268,6 +290,9 @@ def save_images(resp: dict, out: Path, paths: list[Path] | None = None) -> list[
             data = base64.b64decode(b64, validate=True)
         except (binascii.Error, ValueError):
             raise GenerationError(f"response data[{i}] contains invalid base64.") from None
+        extensions = IMAGE_EXTENSIONS[image_mime(data)]
+        if target.suffix.lower() not in extensions:
+            target = target.with_suffix(extensions[0])
         target.write_bytes(data)
         paths.append(target)
     return paths
@@ -440,7 +465,7 @@ def main():
     g = sub.add_parser("generate", help="text-to-image")
     add_common(g)
     g.add_argument("--quality", help="auto|low|medium|high|xhigh|max (GPT models)")
-    g.add_argument("--resolution", help="512|1K|2K|4K (banana)")
+    g.add_argument("--resolution", help="1K|2K|4K (Nano Banana 2.1)")
     g.add_argument("--background", help="transparent|opaque (GPT models)")
     g.add_argument("--output-compression", type=int)
 

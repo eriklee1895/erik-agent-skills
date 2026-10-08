@@ -16,6 +16,8 @@ from pathlib import Path
 from unittest import mock
 
 
+PNG_BYTES = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6nAAAAABJRU5ErkJggg==")
+
 SKILL_DIR = Path(__file__).resolve().parents[1]
 SCRIPT_PATH = SKILL_DIR / "scripts" / "openrouter_image.py"
 spec = importlib.util.spec_from_file_location("openrouter_image", SCRIPT_PATH)
@@ -31,7 +33,7 @@ class OfflineTests(unittest.TestCase):
         self.input = self.root / "jobs.jsonl"
         self.out = self.root / "out"
         self.api = self.enterContext(mock.patch.object(mod, "call_api", return_value={
-            "data": [{"b64_json": base64.b64encode(b"image bytes").decode()}],
+            "data": [{"b64_json": base64.b64encode(PNG_BYTES).decode()}],
             "usage": {"cost": 0.01},
         }))
         self.enterContext(mock.patch.object(mod, "load_env"))
@@ -86,7 +88,7 @@ class BatchTests(OfflineTests):
         bodies = self.run_batch(jobs)
         self.assertEqual([body["aspect_ratio"] for body in bodies], ["3:4"] * 3)
         self.assertTrue(all("aspect" not in body for body in bodies))
-        self.assertEqual((self.out / "poster-1.png").read_bytes(), b"image bytes")
+        self.assertEqual((self.out / "poster-1.png").read_bytes(), PNG_BYTES)
         metadata = json.loads((self.out / "poster-1.json").read_text())
         self.assertEqual(metadata["request"]["aspect_ratio"], "3:4")
         self.assertEqual(metadata["usage"]["cost"], 0.01)
@@ -188,7 +190,7 @@ class BatchTests(OfflineTests):
 
     def test_batch_dry_run_prints_normalized_requests_and_writes_nothing(self):
         reference = self.root / "ref.png"
-        reference.write_bytes(b"reference bytes")
+        reference.write_bytes(PNG_BYTES)
         self.write_jobs([
             {"name": "poster", "prompt": "Poster", "aspect": "3:4", "images": [str(reference)]},
             {"name": "wide", "model": "banana", "prompt": "Lake", "aspect_ratio": "21:9",
@@ -204,7 +206,7 @@ class BatchTests(OfflineTests):
         self.assertEqual(preview["jobs"][0]["outputs"], [str(self.out / "poster.png")])
         self.assertEqual(preview["jobs"][1]["request"]["resolution"], "4K")
         ref_url = preview["jobs"][0]["request"]["input_references"][0]["image_url"]["url"]
-        self.assertEqual(base64.b64decode(ref_url.split(",")[1]), b"reference bytes")
+        self.assertEqual(base64.b64decode(ref_url.split(",")[1]), PNG_BYTES)
         self.api.assert_not_called()
         self.assertFalse(self.out.exists())
 
@@ -253,7 +255,7 @@ class RequestTests(OfflineTests):
                 with self.subTest(model=model, quality=quality):
                     body = self.request(model_name=model, quality=quality)
                     self.assertEqual(body["quality"], quality)
-        for resolution in ("512", "1K", "2K", "4K"):
+        for resolution in ("1K", "2K", "4K"):
             with self.subTest(resolution=resolution):
                 body = self.request(model_name="banana", resolution=resolution)
                 self.assertEqual(body["resolution"], resolution)
@@ -300,7 +302,7 @@ class RequestTests(OfflineTests):
 
     def test_edit_dry_run_preserves_banana_resolution_and_reference(self):
         reference = self.root / "product.png"
-        reference.write_bytes(b"reference bytes")
+        reference.write_bytes(PNG_BYTES)
         prompt_file = self.root / "prompt.txt"
         prompt_file.write_text("Preserve product.\nChange background.", encoding="utf-8")
         preview = json.loads(self.run_cli(
@@ -389,7 +391,7 @@ class BatchReliabilityTests(OfflineTests):
         self.assertEqual(summary[0]["outputs"], [str(self.out / "poster-1.png"),
                                                   str(self.out / "poster-2.png")])
         self.assertGreaterEqual(summary[0]["elapsed_seconds"], 0)
-        self.assertTrue(all(Path(p).read_bytes() == b"image bytes" for p in summary[0]["outputs"]))
+        self.assertTrue(all(Path(p).read_bytes() == PNG_BYTES for p in summary[0]["outputs"]))
 
     def test_network_failure_is_recorded_without_retry_and_later_jobs_continue(self):
         response = self.api.return_value
@@ -460,7 +462,7 @@ class BatchReliabilityTests(OfflineTests):
         code, summary = self.execute_batch([{"name": "poster", "prompt": "Poster", "n": 2}])
         self.assertEqual(code, 0)
         self.assertEqual(summary[0]["outputs"], [str(self.out / "poster.png")])
-        self.assertEqual((self.out / "poster.png").read_bytes(), b"image bytes")
+        self.assertEqual((self.out / "poster.png").read_bytes(), PNG_BYTES)
 
 
 class ImageSavingTests(OfflineTests):
@@ -490,7 +492,7 @@ class ImageSavingTests(OfflineTests):
                 entry = json.loads((self.out / "batch-summary.json").read_text())[0]
                 self.assertEqual(entry["outputs"], [str(self.out / "poster-1.png")])
                 self.assertEqual(entry["cost"], 0.01)
-                self.assertEqual((self.out / "poster-1.png").read_bytes(), b"image bytes")
+                self.assertEqual((self.out / "poster-1.png").read_bytes(), PNG_BYTES)
                 self.assertFalse((self.out / "poster-2.png").exists())
 
     @unittest.skipIf(os.name == "nt", "POSIX file permissions")
@@ -500,7 +502,7 @@ class ImageSavingTests(OfflineTests):
         target.write_bytes(b"old image")
         target.chmod(0o644)
         self.run_cli("generate", "--prompt", "Poster", "--out", str(target))
-        self.assertEqual(target.read_bytes(), b"image bytes")
+        self.assertEqual(target.read_bytes(), PNG_BYTES)
         self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o644)
 
     @unittest.skipIf(os.name == "nt", "POSIX file permissions")
@@ -540,7 +542,7 @@ class ImageSavingTests(OfflineTests):
         self.run_cli("generate", "--prompt", "Poster", "--aspect", "3:4",
                      "--out", str(self.out / "poster.png"))
         self.assertEqual(self.api.call_args.args[0]["aspect_ratio"], "3:4")
-        self.assertEqual((self.out / "poster.png").read_bytes(), b"image bytes")
+        self.assertEqual((self.out / "poster.png").read_bytes(), PNG_BYTES)
 
     def test_partial_disk_failure_reports_completed_paths_and_cost(self):
         self.api.return_value["data"] *= 2
