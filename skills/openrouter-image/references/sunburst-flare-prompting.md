@@ -15,24 +15,26 @@ knowledge, mirroring [banana-prompting.md](banana-prompting.md).
 
 ## sunburst vs flare
 
-Same family; September measurements showed this speed/quality tradeoff:
+Same family, same per-token price; the difference is the speed/quality point:
 
-- **sunburst** = base/quality model. Slower (~34s at high), most literal and
-  precise — use for finals, text-heavy and edit-critical work.
-- **flare** = small/speed model. Faster (~18s at high), quality "comparable to
+- **sunburst** = base/quality model — use for finals, text-heavy and edit-critical
+  work.
+- **flare** = small/speed model, quality "comparable to
   GPT Image 2" — use for drafts, exploration, high-volume everyday work.
 
-They shared the same token price in the September tests; actual call cost
-depends on usage. To reduce the detail budget, lower `--quality`. The quality
-gap between them widens as the task gets harder (more references, more demanding
-edits), so a good working rhythm is flare to find
-the direction, sunburst to finish.
+Historical 2026-09-30 skill probes measured ~34s/18s medians at high. These are
+not current latency guarantees or a matched comparison with Nano Banana 2.1.
+
+Their per-token rates match; equal cost per call is not guaranteed because
+token consumption can differ. Flare prioritizes speed. To spend less, try lower
+`--quality` and check actual usage. For demanding references or edits, evaluate
+Sunburst; a useful workflow is Flare for exploration and Sunburst for final work.
 
 ## Parameter model
 
 | Lever | Values | Notes |
 |---|---|---|
-| `--quality` | auto/low/medium/high/xhigh/max | reasoning budget; the detail lever |
+| `--quality` | auto/low/medium/high/xhigh/max | rendering detail, latency, and cost tradeoff |
 | `--n` | 1–10 | distinct variants of one prompt |
 | `--aspect` | 1:1, 3:2, 2:3, 4:3, 3:4, 16:9, 9:16, 21:9, auto | `auto` allowed |
 | `--background` | auto/transparent/opaque | transparency is native |
@@ -81,8 +83,8 @@ when only composition varies.
 
 ## Behavior to expect
 
-- These models are the most **literal** of the three — framing and product form
-  are preserved rather than re-imagined.
+- These models support controlled generation and editing. Inspect framing and
+  product form after each edit rather than treating preservation as guaranteed.
 - **flare** occasionally adds unrequested text/decoration; if the canvas must
   stay clean, use the allowlist wording or switch to sunburst.
 - **Mask edits are a guide, not a hard pixel boundary** — the model is nudged
@@ -91,8 +93,10 @@ when only composition varies.
 - Mask handling on upstream gateways has shown occasional hiccups (a region
   flattened to black); rerun critical mask edits rather than trusting one try.
 
-## When NOT to use these — pick banana instead
+## When Banana may fit better
 
-- Fusing more than ~6 references at once (banana takes 14 and is built for it).
+- Reference-based recontextualization where banana's behavior suits the brief;
+  reference count alone does not favor banana (GPT accepts 16, banana 14).
 - Extreme ratios like 8:1 / 1:8.
-- A creatively different reinterpretation rather than a literal result.
+- Output canvases beyond GPT Image 2.5's documented edge/pixel limits. More
+  output pixels alone do not imply better visual detail.

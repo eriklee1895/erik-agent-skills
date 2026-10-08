@@ -5,14 +5,14 @@
       "id": 0,
       "name": "sunburst-text-poster",
       "prompt": "帮我做一张竖版的中秋游园会活动海报，要大字排版：主标题“中秋游园会”，副标题“9月29日晚 城市中央公园”，底部一行“猜灯谜 · 赏月 · 看花灯”，文字必须准确清晰。保存到指定输出目录。",
-      "expected_output": "通过 skill 的 CLI 调用 sunburst 生成 3:4 PNG；三处文案逐字正确，输出 png + json 元数据",
+      "expected_output": "通过 skill 的 CLI 调用 sunburst 生成 3:4 图像；三处文案逐字正确，输出图片及 JSON 元数据，使用元数据 outputs 中的实际路径与格式。",
       "files": []
     },
     {
       "id": 1,
       "name": "banana-ultrawide-scene",
-      "prompt": "生成一张超宽幅（21:9）的重庆山城夜景，高低错落的楼房、江水反光、暖黄色灯火，细节丰富，要 4K。用 OpenRouter 上的 Nano Banana 2。",
-      "expected_output": "调用 banana（gemini-3.1-flash-image），aspect_ratio 21:9、resolution 4K；不使用 quality 参数；保存 PNG，ratio/resolution 按 best effort 接受 provider 尺寸，不因像素偏差自动重试",
+      "prompt": "生成一张超宽幅（21:9）的重庆山城夜景，高低错落的楼房、江水反光、暖黄色灯火，细节丰富，要 4K。用 OpenRouter 上的 Nano Banana 2.1。",
+      "expected_output": "调用 banana（google/gemini-nano-banana-2.1），aspect 21:9、resolution 4K；不使用 quality/thinking/search 参数；检查实际尺寸与宽幅伪影，实际比例可能是近似值，需要精确比例时说明裁剪需求；不凭文件尺寸声称原生细节；输出图片及元数据。",
       "files": []
     },
     {
@@ -24,6 +24,69 @@
     },
     {
       "id": 3,
+      "name": "banana-2-1-exact-copy",
+      "prompt": "用 Nano Banana 2.1 生成 2K 中英双语竖版海报：标题“智能体新纪元”，副标题“AGENT NEXT”，三个信息区分别写“更强推理”“更长上下文”“更低延迟”，底部“2026年10月18日 上海”。只出现这些文字，每段一次。希望启用 high thinking。",
+      "expected_output": "读取 banana prompting；按文字白名单、位置、次数构造提示词并用 banana/2K/3:4；说明当前 OpenRouter Image API 不暴露 thinking，不能发送虚构参数；生成后逐字检查并记录 usage。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "banana-2-1-no-512",
+      "prompt": "用 OpenRouter Nano Banana 2.1 快速生成一张 512px 的咖啡馆草稿。",
+      "expected_output": "说明 2.1 无 512px 档，提供或采用 1K 草稿并明确说明调整；CLI 对 --resolution 512 在网络请求前报错，不偷偷调用旧模型。",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "banana-reference-authority",
+      "prompt": "参考图已提供：person.png 是人物，product.png 是产品。合成同一个人手持该产品，保留雀斑、卷发、眼镜及产品瓶盖结构和标签 ERIK LAB / SERUM 21。接下来只改背景，如果连续编辑后细节漂移怎么办？",
+      "expected_output": "按 --image 顺序给参考图编号并声明身份/产品角色和具体保留项；后续传入已批准构图，漂移时补回原始人物/产品参考并从批准底图重做，不承诺像素完全不变，不继续累积错误。",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "banana-search-access-boundary",
+      "prompt": "用这个 skill 的 banana CLI 启用 Google Search，生成今天实时新闻的信息图并给我事实来源。",
+      "expected_output": "识别模型能力和 /images 路由边界：本 CLI 无 search/tools 控制；先通过适当搜索核验事实再把事实提供给生成提示词，不声称 prompting 自动联网，不把搜索来源冒充生图工具返回来源。",
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "banana-actual-image-format",
+      "prompt": "用 Nano Banana 2.1 生成一个蓝色杯子，保存到 output/cup.png，随后把生成图作为参考只改背景。",
+      "expected_output": "按返回图像字节识别格式；若为 JPEG，则保存 cup.jpg 并在 cup.json 的 outputs 记录真实路径，不伪装成 PNG；后续参考 MIME 按图像字节确定为 image/jpeg，旧扩展名不可信。",
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "banana-large-heading-budget",
+      "prompt": "用 Nano Banana 2.1 做一张只有大字标题“智能体新纪元”和副标题“AGENT NEXT”的海报，我希望速度快、成本低。",
+      "expected_output": "优先尝试 1K 与明确文案，不机械要求 2K；检查可读性，细字或细节不足时再提高分辨率；报告实际费用与实际尺寸。",
+      "files": []
+    },
+    {
+      "id": 9,
+      "name": "banana-exact-instance-count",
+      "prompt": "用 Nano Banana 2.1 生成 8:1 河边咖啡馆宽幅图，咖啡馆外必须正好三辆自行车。",
+      "expected_output": "提示词明确数量，生成后独立数自行车，不将景观好看或无接缝视为数量合格；数量不符时明确报告并修改或重试，不声称已满足三辆。",
+      "files": []
+    },
+    {
+      "id": 10,
+      "name": "banana-format-versus-quality-routing",
+      "prompt": "我需要一个 8:1 超宽背景，再做一张密集中文文字、品牌标签和构图必须精确的最终海报。Nano Banana 2.1 是否应该全包？",
+      "expected_output": "超宽背景选 banana，精确最终海报优先评估 sunburst；区分画幅/输出尺寸优势与图像质量优势，不把更多像素或14张参考图写成全面超过 GPT 2.5。",
+      "files": []
+    },
+    {
+      "id": 11,
+      "name": "banana-comparison-evidence-boundary",
+      "prompt": "Nano Banana 2.1 能用 Google Search 和14张参考图，所以它的事实准确性和人物一致性一定比 GPT Image 2.5 强吧？",
+      "expected_output": "说明搜索和多参考能力并非2.1首次新增；当前CLI无搜索控制，外层GPT工作流也可先搜索；GPT路径可接16参考图；现有12次banana测试未做匹配GPT对照，不能据此宣称更强准确性、一致性、速度或更低成本。",
+      "files": []
+    },
+    {
+      "id": 12,
       "name": "batch-output-collision",
       "prompt": "检查两条批量生图任务：第一条 name=poster、sunburst、n=2，第二条 name=poster-1、flare、n=1。先验证，发现问题就说明原因，不要付费生成。",
       "expected_output": "构造 JSONL 并运行 batch --dry-run；报告第二行输出路径与第一行 poster-1.png 冲突，退出非零；没有 API 调用或输出写入",
