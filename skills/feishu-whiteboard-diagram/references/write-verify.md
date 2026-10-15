@@ -38,6 +38,6 @@ npx -y @larksuite/whiteboard-cli@^0.2.13 -i diagram.svg -o diagram.png -f svg
 | `lint-valid` | `lint_svg.py` 无 error | 写明跳过 |
 | `local-render-valid` | `--check` 无 error，并目视过 PNG | 不得声称「已在飞书验证」 |
 | `feishu-write-valid` | 已按官方 skill 写入且 fetch 到目标位置 | 本地成功 ≠ 已写入 |
-| `feishu-experience-valid` | 人在飞书 Web 或桌面打开过画板 | 导出 PNG 不能代替 |
+| `feishu-experience-valid` | 人在指定飞书 Web / 桌面表面打开画板，确认可读与可编辑；拖动绑定另行验证 | 导出 PNG 或仅打开不能代替 |
 
 飞书 preview 常被垫成近方形大画布，宽图会浮在白边里。那是导出行为。把本地 `diagram.png` 给用户看版式。没有登录时，交付本地文件，并列出未跑的官方写入步骤。

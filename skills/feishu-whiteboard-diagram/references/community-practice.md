@@ -3,24 +3,22 @@
 本 skill 借鉴两个公开社区项目的可验证做法，但不复制它们的模板库、脚本或完整工作流：
 
 - [beautiful-feishu-whiteboard](https://github.com/zarazhangrui/beautiful-feishu-whiteboard)：色板目录、飞书 SVG 介质限制、原生形状、渲染后目视修正和“不要把提示词写进画布”。
-- [feishu-whiteboard-pro](https://github.com/LcpMarvel/feishu-whiteboard-pro)：8px 节奏、构图原型、焦点必须靠尺寸建立、渲染前 fit-check，以及机械检查和设计评审分离。
+- [feishu-whiteboard-pro](https://github.com/LcpMarvel/feishu-whiteboard-pro)：8px 节奏、构图原型、尺寸与留白建立层级、渲染前 fit-check，以及机械检查和设计评审分离。
 
 ## 吸收的玩法
 
-### 1. 先选气质，再开唯一色板
+### 1. 先判断气质，再选用或设计配色
 
-社区目录按 restrained / balanced / bold 和 formality 选风格；本 skill 将它收窄成 `formality + article_tone + diagram_purpose`，
-先选 `theme`，再只读取对应色板说明。不要为了比较颜色而一次加载多套 `design.md`，也不要一张图混用多套主色板。
+社区目录按 restrained / balanced / bold 和 formality 选风格；本 skill 用 `formality + article_tone + diagram_purpose` 辅助判断，允许预置、改编与自定义。可比较少量候选，再把背景、文字、边框和角色色整合成一致的体系；不需要加载完整模板库。
 
 ### 2. 把构图当作语法
 
 使用固定的 8px 间距节奏、约 80px 外边距、约 40px 同排沟槽和约 32px 卡片内边距；标题默认左对齐。
 从流水线、泳道、枢纽、对比列、分层、时间线、四象限、焦点+细节中按关系选一个主骨架，而不是从均等卡片开始。
 
-### 3. 焦点由尺寸和颜色共同建立
+### 3. 阅读层级由任务决定
 
-饱和色本身不等于焦点。真正的焦点要更大、留白更多，竞争节点要降级；否则一张图会有多个“第一视觉”。
-浅色技术主题也要保留一个明确焦点，只是用浅底、边框和轻量色带代替大面积饱和块。
+尺寸、留白、位置、颜色与字重共同组织阅读。关键判断可突出单卡，相邻区域可以共同聚焦，主线可以串联流程；中性比较保持方案等权。检查视线路径与事实含义，不把“最大且唯一饱和”当成所有图的规则。
 
 ### 4. 先 fit-check，再 render → look → fix
 
