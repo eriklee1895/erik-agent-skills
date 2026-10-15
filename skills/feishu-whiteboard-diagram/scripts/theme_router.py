@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve a Feishu whiteboard theme from explicit authority and diagram intent."""
+"""Suggest a palette; preserve explicit identity and the agent's chosen design."""
 
 from __future__ import annotations
 
@@ -29,12 +29,13 @@ def resolve_theme(
     user_theme: str | None = None,
     brand_theme: str | None = None,
     existing_theme: str | None = None,
+    selected_theme: str | None = None,
     diagram_purpose: str | None = None,
     article_tone: str | None = None,
 ) -> str:
-    """Resolve one stable theme using the documented authority order."""
+    """Return an advisory suggestion, not an allowlist or visual-quality verdict."""
 
-    for explicit in (user_theme, brand_theme, existing_theme):
+    for explicit in (user_theme, brand_theme, existing_theme, selected_theme):
         if explicit and explicit.strip():
             return explicit.strip().lower()
 
@@ -44,6 +45,8 @@ def resolve_theme(
         return "white-report"
     if purpose == "timeline":
         return "coral" if tone in {"creative", "product"} else "light-technical"
+    if tone in {"creative", "governance"}:
+        return TONE_THEMES[tone]
     if purpose in PURPOSE_THEMES:
         return PURPOSE_THEMES[purpose]
 
@@ -55,6 +58,11 @@ def main() -> int:
     parser.add_argument("--user-theme")
     parser.add_argument("--brand-theme")
     parser.add_argument("--existing-theme")
+    parser.add_argument(
+        "--theme",
+        dest="selected_theme",
+        help="Agent-selected preset, adaptation or custom palette",
+    )
     parser.add_argument("--purpose", dest="diagram_purpose")
     parser.add_argument("--tone", dest="article_tone")
     args = parser.parse_args()
@@ -63,6 +71,7 @@ def main() -> int:
             user_theme=args.user_theme,
             brand_theme=args.brand_theme,
             existing_theme=args.existing_theme,
+            selected_theme=args.selected_theme,
             diagram_purpose=args.diagram_purpose,
             article_tone=args.article_tone,
         )

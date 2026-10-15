@@ -85,6 +85,45 @@ class ThemeRouterTests(unittest.TestCase):
     def test_unknown_inputs_use_light_technical(self):
         self.assertEqual("light-technical", MODULE.resolve_theme())
 
+    def test_agent_choice_can_use_a_custom_palette_for_architecture(self):
+        self.assertEqual(
+            "custom-plum-stone",
+            MODULE.resolve_theme(
+                selected_theme="custom-plum-stone",
+                diagram_purpose="architecture",
+                article_tone="technical",
+            ),
+        )
+
+    def test_agent_choice_does_not_override_user_brand_or_existing_identity(self):
+        for key in ("user_theme", "brand_theme", "existing_theme"):
+            with self.subTest(authority=key):
+                self.assertEqual(
+                    "brand-teal",
+                    MODULE.resolve_theme(
+                        **{key: "brand-teal"},
+                        selected_theme="white-report",
+                        diagram_purpose="benchmark",
+                    ),
+                )
+
+    def test_article_tone_informs_suggestion_without_a_selected_theme(self):
+        self.assertEqual(
+            "grove",
+            MODULE.resolve_theme(
+                diagram_purpose="architecture", article_tone="governance"
+            ),
+        )
+
+    def test_agent_choice_can_adapt_a_benchmark_to_its_article(self):
+        self.assertEqual(
+            "custom-teal-report",
+            MODULE.resolve_theme(
+                selected_theme="custom-teal-report",
+                diagram_purpose="benchmark", article_tone="benchmark",
+            ),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

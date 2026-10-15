@@ -1,6 +1,6 @@
 {
   "skill_name": "feishu-whiteboard-diagram",
-  "status": "scenarios-defined-results-not-recorded",
+  "status": "mixed-evidence-see-dated-observations-in-scenarios",
   "evals": [
     {
       "id": 1,
@@ -17,10 +17,10 @@
     {
       "id": 2,
       "prompt": "给 Hermes 普通任务循环画一张飞书画板：用户任务 → 加载上下文 → LLM 判断；直接回答或执行工具后虚线回填。插入到授权章节。",
-      "expected_output": "An editable task-loop board with one enlarged tool branch and a short dashed return edge.",
+      "expected_output": "An editable task-loop board with a clear tool branch and a short dashed return edge.",
       "files": [],
       "expectations": [
-        "Uses quiet preparation boxes and one physically larger focal branch",
+        "Uses a clear decision/tool hierarchy suited to the selected article palette; enlargement is optional",
         "Labels the feedback edge as return/result rather than a new forward action",
         "Uses lark-whiteboard for the authorized write path",
         "Distinguishes write verification from client experience verification"
@@ -90,6 +90,42 @@
         "Performs no write or overwrite",
         "Names the weakest review axis with evidence",
         "Separates local preview evidence from live Feishu experience"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "为温暖克制的技术文章画用户请求 → 服务入口 → 任务执行，解释入口与执行的边界。没有指定色板，自行选择，先本地 SVG 和 PNG。",
+      "expected_output": "An article-appropriate preset, adapted or custom palette and a faithful local diagram.",
+      "files": [],
+      "expectations": [
+        "Does not force blue solely because the purpose is architecture",
+        "Explains palette choice using article tone",
+        "Preserves the supplied facts and relationship",
+        "Validates the actual color pairs and local artifact without claiming Feishu acceptance"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "中性对比 A 的 UI 和执行同进程与 B 的两个进程由本地 API 连接，不推荐任何一方。自行选择配色，省略无用辅助文字，只做本地。",
+      "expected_output": "A readable neutral comparison with equally weighted alternatives.",
+      "files": [],
+      "expectations": [
+        "Does not fabricate a winner or performance claims",
+        "Allows equal-size equal-weight alternatives",
+        "Can omit a footer when no new supporting content is needed",
+        "Uses a coherent preset, adapted or custom palette with the same quality checks"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "品牌主色 #0F766E。画示意测量：基线/候选延迟 480/360ms，成本 0.30/0.24 单位每请求。适配品牌，准确呈现差异，不推断全局优胜，只做本地。",
+      "expected_output": "A brand-aware report with separate metric scales and stable series semantics.",
+      "files": [],
+      "expectations": [
+        "Preserves brand identity without mandating orange candidate bars",
+        "Uses separate units and axes for latency and cost",
+        "Uses only supplied values and reproducible calculations",
+        "Does not infer product quality or claim live Feishu validation"
       ]
     }
   ]

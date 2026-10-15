@@ -2,13 +2,13 @@
 
 Evaluate whether an agent uses this skill to insert a native Feishu whiteboard into a document, not an HTML5 block, screenshot, or invented API. For a request that does not authorize a Feishu write, the correct result stops at local SVG/DSL + PNG and names the unrun evidence steps.
 
-Status: these are scenario specifications, not recorded pass results. Machine-readable copies live in [`evals.json`](evals.json). Do not claim behavioral validation until baseline and with-skill runs have been recorded for the target models.
+Status: most entries are scenario specifications. Dated observations below distinguish design-only reviews, individual local artifact runs, and live acceptance. Machine-readable scenarios live in [`evals.json`](evals.json). Individual samples do not establish repeated behavioral reliability.
 
 ## 1. Layered architecture in a design-review doc
 
 **Prompt.** “在这篇飞书设计评审文档里，用画板画出支付网关的四层：接入、协议、会话、后端适配。每层写清职责和边界，层间标上行/下行 API。先本地准备，先别写文档。”
 
-**Pass.** Chooses a native whiteboard (SVG layered-strip grammar). Pastel fill + same-hue border, inner white cards, footer or thesis line. Runs lint + `whiteboard-cli --check` + PNG. Reports at most `local-render-valid`. Does not emit HTML5 XML.
+**Pass.** Chooses a native whiteboard (SVG layered-strip grammar). Palette follows the article; boundaries, responsibilities and APIs remain clear. Optional supporting information adds value. Runs lint + `whiteboard-cli --check` + PNG. Reports at most `local-render-valid`. Does not emit HTML5 XML.
 
 **Fail.** Mermaid-only boxes with no 职责/边界 columns; HTML5 block; claiming Feishu verification from a local PNG.
 
@@ -16,9 +16,9 @@ Status: these are scenario specifications, not recorded pass results. Machine-re
 
 **Prompt.** “给 Hermes 普通任务循环画一张飞书画板：用户任务 → 加载上下文 → LLM 判断；直接回答或执行工具后虚线回填。插入到授权章节。”
 
-**Pass.** Quiet ink boxes, orange color-block for 判断, enlarged tool-loop band, short dashed backfill labeled 结果回填. Reads `lark-whiteboard` for the write path; does not invent CLI flags. Distinguishes write vs client evaluation.
+**Pass.** Preparation, decision and tool branch are visually distinguishable using the selected palette and reading hierarchy, with a short dashed backfill labeled 结果回填. Reads `lark-whiteboard` for the write path; does not invent CLI flags. Distinguishes write vs client evaluation.
 
-**Fail.** All-blue Mermaid flowchart with no role colors; wrap-around dashed loop around the canvas; HTML5 animation as the only artifact.
+**Fail.** A layout that obscures the decision/tool relation; an unexplained feedback route; HTML5 animation as the only artifact.
 
 ## 3. Thread / Turn / Item recovery
 
@@ -62,6 +62,16 @@ Status: these are scenario specifications, not recorded pass results. Machine-re
 
 Fixtures and scorecard: [`human-eval.md`](human-eval.md), [`fixtures/human-eval/`](fixtures/human-eval/).
 
+## Reference-driven semantic value chain
+
+**Prompt.** “参考这张精排技术图，画成可编辑画板：数据采集 → 聚合 → 评估 → 行动。中间两列宽，两端窄；四种浅色表示职责。评估标签从上方回流聚合，聚合也从下方直达行动；下面另外放来源给出的三步落地顺序。不要改写参考图去迎合单焦点模板。暂不写飞书。”
+
+**Pass.** Uses `semantic-columns` with `semantic-zones` and a coherent article-appropriate palette, a central two-column focal region, and separate main/feedback/bypass channels. Keeps the rollout band subordinate and uses only supplied step names and order. Checks raw node types and arrow properties when studying the reference; does not call an exported SVG the author's source. Uses native marker arrows, checks contrast, and distinguishes logical font size from actual document-width readability. Reports local evidence only.
+
+**Fail.** Forces all roles into one blue accent, removes a factual bypass, invents rollout order, copies small low-contrast badge text, or treats separate triangle images as proof of native connector direction or drag binding.
+
+**2026-10-15 evaluation.** A read-only baseline review identified conflicts around role colors, compulsory single-card focus, footer rules, and composing a subordinate rollout band. A fresh independent follow-up using the updated skill produced a compatible design recipe, kept missing rollout labels unspecified, and withheld live-write and editing claims. It independently reran fit/lint only. This is one design-level scenario check, not a repeated behavioral evaluation or live creation acceptance; parser conversion and PNG inspection remain separate local evidence. Review findings also led to conditional board creation, aligned experience criteria, and stronger endpoint/channel/dash regression assertions.
+
 ## 8. Restyle without semantic drift
 
 **Prompt.** “把现有飞书画板改成 Grove 风格，只换视觉，不要改节点、文字、数字和箭头关系。”
@@ -77,3 +87,41 @@ Fixtures and scorecard: [`human-eval.md`](human-eval.md), [`fixtures/human-eval/
 **Pass.** Treats arrows as factual claims. Uses neutral grouping, marks relationships unknown, or asks for the missing facts without inventing calls, ownership, states, or causality.
 
 **Fail.** Adds plausible-looking arrows or responsibilities solely to fill the layout.
+
+
+## 10. Autonomous palette for article atmosphere
+
+**Prompt.** “为一篇语气温暖克制、反思同步服务边界的技术文章配图。事实：用户请求 → 服务入口 → 任务执行，讨论入口与执行之间的边界。没有指定色板，请自行选择。先做本地 SVG 和 PNG。”
+
+**Pass.** Chooses or adapts a preset, or designs a custom palette with an article-based reason. Keeps the supplied chain and boundary, passes the same local checks, and does not require extra approval for a custom palette.
+
+**Fail.** Forces a blue technical theme solely because the diagram is architecture, ignores article atmosphere, or adds unsupported services.
+
+## 11. Neutral comparison with no winner
+
+**Prompt.** “技术文章中对比两种实验架构，不推荐任何一方：A 把 UI 和执行放在同一进程；B 把 UI 和执行放在两个进程，用本地 API 连接。自行选择适合平静文章的配色和构图，省略无用辅助文字。只做本地。”
+
+**Pass.** Keeps alternatives equally weighted, explains process boundaries accurately, and can omit the footer. Colors identify roles or aid the article atmosphere without declaring a winner. Any palette follows the same validation.
+
+**Fail.** Enlarges one option, creates a winning cell or adds invented performance advantages to satisfy a focal template.
+
+## 12. Brand-aware quantitative report
+
+**Prompt.** “品牌文档主色是 #0F766E。用可编辑静态图呈现示意测量：基线延迟 480ms、候选 360ms；基线成本 0.30 单位/请求、候选 0.24。适配品牌，准确说明差异，不推断产品质量或全局优胜。只做本地。”
+
+**Pass.** Adapts report styling to the brand, keeps data-series mapping consistent, separates units/scales, and uses sourced values or reproducible calculations. Teal does not automatically mean success; an orange/gray palette is optional.
+
+**Fail.** Replaces supplied brand teal with mandatory orange, mixes units on one axis, or invents quality conclusions.
+
+**2026-10-15 baseline.** An independent read-only evaluation of these three tasks identified architecture-first theme routing, a closed preset vocabulary, compulsory enlarged focus, and orange/gray series instructions as obstacles. It proposed task-compatible designs but produced no artifacts; after-change artifact runs are recorded separately when completed.
+
+
+**2026-10-15 after-change artifact samples.** Three fresh independent executions used the updated skill and wrote only to temporary local directories. Their final artifacts were rendered and visually inspected; none wrote Feishu or edited the skill source.
+
+| Task | Actual autonomous choice | Final fit / lint | Parser check | Native conversion |
+|---|---|---|---|---|
+| Warm technical article | Adapted Grove: parchment, forest text / flow, terracotta boundary marker; equal entry / execution cards | No findings | 0 errors / 0 warnings | 4 shapes, 6 text, 4 connectors; no embedded SVG |
+| Neutral architecture comparison | Custom warm stone, identical visual treatment for both options; no winner or footer; undirected local API link | No findings | 0 errors / 0 warnings | 8 shapes, 11 text, 1 connector; no embedded SVG |
+| Brand report | Custom white / slate / brand teal; latency and cost on separate axes | No findings | 0 errors / 0 warnings | 9 shapes, 30 text, 12 connectors; no embedded SVG |
+
+The warm-article sample initially had a top-margin warning and passed after a local spacing revision. Report arithmetic was checked: latency −120ms / 25%, cost −0.06 / 20%. A parent review inspected all three PNGs. These runs support local rendering and native conversion for these individual artifacts; they do not prove repeated model reliability, default Feishu document-width readability, live editability, drag binding, or human acceptance. Review also removed a stale winner-oriented comparison heading and clarified that an undirected relationship can use the existing `spoke` lint category.

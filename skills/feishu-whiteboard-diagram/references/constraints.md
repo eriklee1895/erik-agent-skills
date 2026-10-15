@@ -29,7 +29,7 @@ DSL 字段和官方 parser 清单以 `lark-whiteboard` 的 `elements/`、`routes
 - 逻辑画布约 1400–1600 宽，高度随内容；不要假 16:9。
 - 容器宽度按 CJK ≈ 1em、Latin ≈ 0.6em 预留，宁可过宽。
 - 箭头：`<defs>` 里一个 `marker`，线或折线写 `marker-end="url(#arrow)"`。禁止在线头再画三角形。
-- 有向边写 `data-role="edge"`；无向辐射线、坐标轴、分隔线分别取 `data-role="spoke"`、`data-role="axis"`、`data-role="divider"`。lint 据此区分漏箭头与合法无向线，并核对 marker ID 是否存在。
+- 有向边写 `data-role="edge"`；无向关系线（含辐射）、坐标轴、分隔线分别取 `data-role="spoke"`、`data-role="axis"`、`data-role="divider"`。来源只给出连接关系、未给调用方向时，可用 `spoke`，不补造箭头。lint 据此区分漏箭头与合法无向线，并核对 marker ID 是否存在。
 - 文字放在非白色块上时写 `data-bg="#实际背景色"`。lint 对普通文字要求至少 4.5:1；≥24px 或 ≥19px/700 的大字允许 3:1。背景发生变化时同步改 `data-bg`。
 - 变换只用 `translate` / `rotate` / `scale`；避免 `skewX` / `skewY` / `matrix(...)`。
 - 编号签压住层边框是有意重叠，`--check` 可能 warn；无意的卡片互压必须改。

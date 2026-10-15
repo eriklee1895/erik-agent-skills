@@ -4,6 +4,8 @@
 
 ## 开工契约
 
+字段与取值为填写示例，颜色角色、气质与主题名称可按文章扩展；简单任务可合并为简短笔记。
+
 ```yaml
 thesis: 一张图只回答的一句话
 audience: 谁在什么文档宽度下阅读
@@ -18,12 +20,15 @@ relationships:
     meaning: 请求 / 返回 / 包含 / 依赖
 allowed_inferences: []
 unknowns: []
-grammar: layered-strip | task-loop | comparison | hub | timeline | swimlane | quadrant | focus-detail | custom
-focal: 唯一的第一视觉落点
-theme: light-technical | white-report | riso-brut | coral | grove | avocado-press | riptide-cobalt | pin-paper
+grammar: layered-strip | task-loop | comparison | hub | timeline | swimlane | quadrant | focus-detail | semantic-columns | custom
+focal: 阅读重心，可为单卡、复合区域、主线或等权比较
+reading_hierarchy: 读者先看什么、怎样比较、如何理解关系
+theme: 预置名、改编名或 custom-描述；不是允许列表
+palette_source: preset | adapted | custom
 theme_reason: 为什么这套主题服务于文章与图的阅读任务
-accent_budget: neutral | one-accent | semantic-status
-color_semantics: 颜色各自表达什么；无语义就不用
+accent_budget: neutral | one-accent | semantic-status | semantic-zones | data-series | mixed
+color_semantics: 角色、状态、系列映射，以及背景、层级和文章气质的视觉用途
+supporting_region: conclusion | boundary | next-steps | source | none
 cuts: 为默认文档宽度主动删掉或拆到下一张图的内容
 ```
 
@@ -32,12 +37,12 @@ cuts: 为默认文档宽度主动删掉或拆到下一张图的内容
 - 箭头、数字、角色、状态、所有者和因果关系都是事实声明。来源没有，就不补造。
 - 不确定但必须呈现的内容标成「待确认」；不要用确定连线伪装。
 - 默认不超过 12 个主信息块。超过时拆成「总览 + 细节」，而不是缩到 12px。
-- 一张图一种主语法、一个焦点、最多两个解释性 callout。
-- 主题选择优先级是：品牌 / 用户明确指定 → 已有画板视觉身份 → 图的语义 → 文章主题 → `light-technical`。
-- 技术架构、服务边界和系统拓扑没有明确风格要求时，必须使用 `light-technical`；Riso / Coral 等编辑型主题需要契约中的理由。
-- 颜色必须有语义或层级作用。去掉颜色后，结构仍应能靠位置、边界、字号、编号和箭头读懂。
-- 近白技术主题的普通面积以 `canvas` / `surface` 为主；饱和色不得同时成为多个等权焦点。
-- 页脚只有在它增加新结论或收束跨列边界时才保留；若正文导语和图已说清楚，就删除。
+- 一张图保持清楚的主阅读任务。单卡、复合区域、主线或等权比较都可建立层级；辅助说明不应压过主任务。
+- 品牌 / 用户明确指定优先，改版保留已有视觉身份；再综合图的语义与文章主题自主设计。`light-technical` 仅在缺少线索时提供起点。
+- 可用预置、改编或自定义配色，均说明与文章和阅读任务的关系，使用相同的检查标准；无需因自定义配色额外申请许可。
+- 颜色可表达语义、组织层级或呼应文章气质。去掉颜色后，事实关系仍应能靠位置、边界、文字、编号和箭头读懂。
+- 颜色数量和面积服务于层级、角色、状态或数据系列。等权方案可以同大同重，结论强调必须有来源依据。
+- 辅助区域可放结论、边界、后续步骤或来源，也可省略；步骤顺序有来源依据，内容不重复正文导语。
 
 ## 改版契约
 
@@ -58,10 +63,10 @@ cuts: 为默认文档宽度主动删掉或拆到下一张图的内容
 先检查证据，再评视觉：
 
 1. **事实**：逐条核对契约中的实体、文字、数字与关系；没有虚构箭头。
-2. **层级**：第一眼只有一个焦点，第二层信息明显弱一档。
+2. **层级**：标题、主体与必要细节可区分；视线路径清楚，等权比较没有被无依据地突出一方。
 3. **平衡**：视觉重量没有全部堆在一角，留白是有意的。
 4. **密度**：默认文档宽度下能读；没有靠缩小字号硬塞。
-5. **色彩语义**：主题与文章气质、图的用途一致；绿色 / 橙色 / 红色没有被误当作装饰或边界。
+5. **色彩语义**：配色与文章气质、图的用途一致；角色、状态、数据系列按声明核对。装饰色可辅助层级与气质，不应制造事实、胜负或状态暗示。
 6. **对比度**：`data-bg` 已标注的文字通过 lint；其余目视无弱对比。
 7. **对齐与留白**：卡片边缘、文字起点和 connector 端点落在共同栅格，画布没有大块无意空白。
 

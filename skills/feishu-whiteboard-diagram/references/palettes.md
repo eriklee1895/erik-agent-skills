@@ -1,30 +1,44 @@
-# 色板（精选，不搬 35 套文件）
+# 配色家族：可选预置与验证状态
 
-社区 `beautiful-feishu-whiteboard` 有 35 套换肤模板；`feishu-whiteboard-pro` 的样板用其中几套把构图做出来。
-本 skill **不复制**那些 `templates/*/design.md`。这里只留 8 个可解释的主题家族：一个技术文档默认主题、五个概念 / 决策主题、一个时间线主题，以及一套定量报告主题。
-2026-09-03 的上一版曾获 Human eval **Accept**；该结论不覆盖新增的 White Report。新模式的实际飞书体验仍待评审；不要把旧结论写成新色板的通过证据，也不要扩成 35 套或退回全蓝 pastel 流程图。
-选气质，不要把多套色板同时涂在一张图上。
+这里保留 8 个参考家族。它们是自主设计的起点，可以直接采用、改编或跳过；`theme` 允许自定义名称。先按 [选择方法](theme-routing.md) 判断文章气质、读者与颜色任务，再挑需要的条目，不必加载完整模板库。
 
-默认：技术架构、流程、分层和系统边界用 **Light Technical**。定性权衡用 **Riptide Cobalt**。量化评测与基准报告用 **White Report**。时间线可用 **Coral**。四象限用 **Grove**。焦点+细节可用 **Avocado Press**。只有文章明确需要编辑型 / 概念型视觉时，循环、分叉、枢纽才使用 **Riso Brut**。
+## 选型索引
 
-## 怎么选
+| 家族 | 气质与颜色关系 | 可尝试的场景 | 文字搭配 |
+|---|---|---|---|
+| Light Technical | 近白、蓝灰、轻边界 | 克制的说明或系统边界 | 深灰配近白；白字配深蓝 |
+| Riso Brut | 奶油、墨色、绿 / 橙，可有硬阴影 | 表现力较强的概念解释 | 奶油字配深绿；橙底配墨字 |
+| Coral | 奶油、珊瑚、深墨 | 温暖叙事、时间线、技术随笔 | 珊瑚底配墨字 |
+| White Report | 白、灰、橙色系列 | 静态报告，可改为品牌系列色 | 橙条内深字，白底标签用深橙 |
+| Riptide Cobalt | 奶油、钴蓝、深墨 | 清晰对比、结构说明 | 白字配钴蓝；深墨配奶油 |
+| Avocado Press | 白、深蓝、浅 lime | 清爽说明、局部强调 | 深蓝配白 / lime；白字配深蓝 |
+| Pin & Paper | 白、钴蓝、浅黄 | 有识别度的轻快排版 | 深蓝配白 / 黄 |
+| Grove | 羊皮纸、森林绿、陶土 | 温暖克制的技术、治理或评审文章 | 森林绿配羊皮纸；浅字配陶土 |
 
-| 气质 | 用 | 不要 |
-|---|---|---|
-| 技术架构、系统边界、流程说明 | Light Technical | 把整层涂成饱和色、把绿色误当成功态 |
-| 文章明确需要编辑型 / 概念型视觉 | Riso Brut | 把编辑型海报风当成技术图默认 |
-| 定性权衡 / 选项对比 | Riptide Cobalt | 每格一种颜色 |
-| 模型评测、性能 / 成本基准 | White Report | 不同单位共用坐标轴、用颜色暗示未经说明的结论 |
-| 温暖一点的闭环 / 时间线 | Coral | 霓虹 |
-| 白页双色、一块大焦点 | Avocado Press | 四色全开、均等四宫格 |
-| 白页双色、偏品牌 | Pin & Paper | 白贴白没描边 |
-| 更克制、决策四象限 | Grove | 海报大字铺满 |
+场景是建议，同一张架构图或时间线都可以使用不同家族。整个图保持一致的背景、文字、边框与角色映射；一致性不等于固定双色或固定一个强调色。
 
-一张图只用一套主色板。Light Technical、White Report、Avocado Press、Pin & Paper 用白或近白底；Riso / Coral / Riptide 用奶油底；Grove 用羊皮纸底。Light Technical 结构靠边界、位置、字号和浅色分组，普通边框 1.5–2px，不使用硬阴影；编辑型概念图才使用 3–4px 墨边和声明过的硬阴影。14–18px 普通文字与背景至少 4.5:1；≥24px 或 ≥19px/700 的大字至少 3:1。SVG 中用 `data-bg` 交给 lint 复核。
+## 验证状态与使用范围
 
-## Light Technical（技术文档默认）
+2026-10-15 重新计算下文声明的小字配对，均以未舍入值达到 4.5:1；这只覆盖指定配对。计算使用 [lint_svg.py](../scripts/lint_svg.py) 的对比度实现，不证明整张图的观感。
 
-这是面向技术文章、架构设计、服务边界和 Agent 运行图的中性浅色主题。它把“颜色是语义”的原则放在“颜色好看”之前。
+| 家族 | 本次配对最低对比度（约） | 现有可运行构图样例 / 本地证据 | 飞书体验状态 |
+|---|---|---|---|
+| Light Technical | 5.17:1 | [15-light-architecture.svg](../evals/fixtures/human-eval/15-light-architecture.svg)；[semantic-value-chain.svg](../evals/fixtures/semantic-value-chain.svg) 是角色色改编，另有本地记录 | 当前样例未获逐图体验认可 |
+| Riso Brut | 4.86:1 | [02-task-loop.svg](../evals/fixtures/human-eval/02-task-loop.svg)，有 2026-09-04 本地渲染记录 | 历史整体 Qualitative Accept，不覆盖当前版本 |
+| Coral | 5.10:1 | [11-timeline.svg](../evals/fixtures/human-eval/11-timeline.svg)，有 2026-09-04 本地渲染记录 | 历史整体 Qualitative Accept，不覆盖当前版本 |
+| White Report | 4.56:1 | 本目录仅配色与 [报告规则](data-report-style.md)，尚无固定构图 fixture | 无当前体验证据 |
+| Riptide Cobalt | 5.05:1 | [09-comparison.svg](../evals/fixtures/human-eval/09-comparison.svg)，有 2026-09-04 本地渲染记录 | 历史整体 Qualitative Accept，不覆盖当前版本 |
+| Avocado Press | 6.17:1 | [14-focus-detail.svg](../evals/fixtures/human-eval/14-focus-detail.svg)，有 2026-09-04 本地渲染记录 | 历史整体 Qualitative Accept，不覆盖当前版本 |
+| Pin & Paper | 7.44:1 | 配色配对已检查，尚无固定构图 fixture | 无当前体验证据 |
+| Grove | 4.96:1 | [13-quadrant.svg](../evals/fixtures/human-eval/13-quadrant.svg)，有 2026-09-04 本地渲染记录 | 历史整体 Qualitative Accept，不覆盖当前版本 |
+
+历史本地证据见 [current-local-evidence.md](../evals/fixtures/human-eval/current-local-evidence.md)，历史人工结论及其边界见 [human-eval.md](../evals/human-eval.md)。不能把一轮整体认可写成逐家族或所有新图“验证过好看”；修改配色、构图或 parser 后按当前产物重验。
+
+普通小字对比度 ≥4.5:1；≥24px 或 ≥19px/700 的大字 ≥3:1。`data-bg` 声明实际背景；原生形状与 parser 边界保持不变。自定义配色与预置使用相同质量要求，不增加额外许可步骤。
+
+## Light Technical（中性浅色）
+
+近白底、深正文、轻边框，适合克制说明。蓝色是这套预置的强调色，可按文章改编；它不是技术图必须使用的颜色。
 
 | Token | Hex | 用法 |
 |---|---|---|
@@ -41,7 +55,7 @@
 | warning | `#D97706` / `#FFF7ED` | 中断 / 预警状态 |
 | failure | `#DC2626` / `#FEF2F2` | 失败 / 熔断状态 |
 
-默认剂量：大部分面积是 `canvas` / `surface`；分组用浅底；一张图最多一个主强调色，状态图才按状态语义启用浅绿 / 浅黄 / 浅红。
+示例剂量：大部分面积是 `canvas` / `surface`；分组用浅底。按阅读任务选择单强调色、协调角色色、状态色或数据系列色；固定角色映射比固定颜色数量更重要。
 普通文字用 `ink`，不要让中亮度色块承载小字号正文。边框颜色、位置、编号和连线必须在去色后仍能说明结构。
 
 ## Riso Brut（编辑型解释图）
@@ -56,7 +70,7 @@
 | pink | `#F06CA8` | 第二强调，少用 |
 | yellow | `#F5C518` | 编号、点 |
 
-硬阴影：同形状副本偏移 **+10px**，无 blur。卡片 `stroke-width="4"`，连线 `3`，圆角默认 **0**。焦点块用饱和填充 + 奶油/白字，且 **比邻居大**。
+参考表现：同形状副本偏移约 **+10px** 的实心硬阴影、约 4px 墨边和方角，可增强编辑感。可减少线宽或阴影来适应文章；大色块用何种文字色按实际对比度决定，橙色上的小字用 ink。阅读层级也可以靠位置、留白和主线建立。
 
 ## Coral
 
@@ -68,8 +82,8 @@ cream `#F5F0E8` · coral `#E85D5D` · ink `#1A1A1A` · white `#FFFFFF`。白卡�
 |---|---|---|
 | canvas | `#FFFFFF` | 画布 |
 | ink | `#171717` | 标题、正文、橙色条内的小字号标签 |
-| muted | `#777773` | 副标题、辅助说明；白底对比度 4.50:1 |
-| orange | `#F36B2B` | 候选系列、重点条形和标题记号；不自动表示更优 |
+| muted | `#767672` | 副标题、辅助说明；白底对比度约 4.56:1，按未舍入值通过 4.5 门槛 |
+| orange | `#F36B2B` | 示例中的候选系列、条形和标题记号；可用品牌色替换，不自动表示更优 |
 | orange-text | `#B5471D` | 白底上的小字号橙色标签；对比度 5.41:1 |
 | orange-soft | `#FFF0E8` | 主结论卡片的浅色底 |
 | baseline | `#D9D9D9` | 基线系列 |
@@ -80,21 +94,22 @@ cream `#F5F0E8` · coral `#E85D5D` · ink `#1A1A1A` · white `#FFFFFF`。白卡�
 
 ## Riptide Cobalt
 
-cream `#FDF0E0` · cobalt `#375DFE` · ink `#1A2240` · paper `#FFFFFF`。严格双色。对比表里「该行更优」用钴色块。
+cream `#FDF0E0` · cobalt `#375DFE` · ink `#1A2240` · paper `#FFFFFF`。可采用克制的双色关系。中性对比保持两边等权；来源明确给出结论时，才用强调色突出相应结果。
 
 ## Avocado Press
 
-white `#FFFFFF` · blue `#0055A4` · lime `#DCF4A2`。白页双色；字在白底上用蓝，不要用 lime 当小字。
+white `#FFFFFF` · blue `#0055A4` · lime `#DCF4A2`。可用白页双色；蓝色文字配白底或浅 lime，lime 不适合直接作白底小字。
 
 ## Pin & Paper
 
-white `#FFFFFF` · cobalt `#2A3C99` · yellow `#F1E84E`。白卡片必须有 2–3px 蓝边，否则白贴白。
+white `#FFFFFF` · cobalt `#2A3C99` · yellow `#F1E84E`。白卡片用蓝边、留白或浅底区分层级；黄底小字用深蓝。
 
 ## Grove
 
-parchment `#E8E4D6` · forest `#192B1B` · terracotta `#B0443E`。最克制，适合正式评审；浅字对 terracotta ≥4.5:1。
+parchment `#E8E4D6` · forest `#192B1B` · terracotta `#B0443E`。温暖克制，可用于正式评审或反思型文章。浅字 `#F4F1E6` 对 terracotta 约 4.96:1；其它浅字组合另算。
 
-## 和浅色分组色板的关系
+## 组合、改编与新配色
 
-[visual-system.md](visual-system.md) 的蓝/紫/橙/绿浅底，只留给 **分层条带、编号层级** 这种「每一层一种职责色」的图。
-循环、对比、枢纽、时间线不要再用那套均等胶囊，否则会画成 draw.io。
+每个家族提供气质与可用搭配，不绑定构图原型。可以调整强调色、引入协调的角色色，或从文章重新设计；改编后在工作契约记录 `palette_source: adapted` / `custom`，逐项检查实际文字 / 背景配对。
+
+角色分区的可运行例子见 [semantic-columns.md](semantic-columns.md)；这套方法也可用于泳道、分层和其它多角色说明。颜色与状态、数据系列共存时，区分其视觉通道，不用同一色在同图表达互相冲突的含义。

@@ -24,14 +24,14 @@ metadata:
 | 当前 parser 支持什么 | 已安装的 `lark-whiteboard` + 本 skill 的固定版本 parser-contract 测试 |
 | 文档解释图的论点、构图、密度、色板和复核 | 本 skill |
 
-本 skill 只能收窄视觉自由度，不能放宽底座的权限与覆盖门禁。发生冲突时，安全和写入规则永远由底座决定。
+本 skill 规定事实、可读性、语义一致性和可编辑性的质量要求；配色与构图由 agent 结合文章自主选择。它不能放宽底座的权限与覆盖门禁。
 
 ## 它不是什么
 
 - 不是 `lark-whiteboard` 的替代品，不复制其 CLI、scene 骨架和身份分流表。
 - 不是 `feishu-html-diagram`：不需要动画、Tab、D3 时，不要用 HTML5 冒充画板。
 - 不是社区 35 套 `design.md` 文件仓库。只保留少量可解释的主题家族，见 [palettes.md](references/palettes.md) 和 [主题路由](references/theme-routing.md)。
-- 不是只会画浅色胶囊流程图。按关系选原型：分叉、对比列、枢纽、时间线、泳道、四象限、焦点+细节；技术架构默认白页浅色系统，编辑型概念图才使用奶油底 + 墨边 + 单焦点，见 [composition.md](references/composition.md)。
+- 按关系选原型：分叉、对比列、枢纽、时间线、泳道、四象限、焦点+细节。原型提供结构参考，不绑定色板、唯一大卡或页脚，见 [composition.md](references/composition.md)。
 - `<whiteboard type="mermaid">` 交给飞书服务端转成画板，本 skill 不渲染 Mermaid。
 
 ## 适用 / 不适用
@@ -48,7 +48,7 @@ metadata:
 
 ## 和官方 SVG 路线的关键分歧
 
-官方 `routes/svg.md` 会劝 agent「打破矩形牢笼」。插画/海报可以那样做。文档精排图则以**可编辑原生形状、8px 节奏、一个由尺寸和留白建立的焦点、条件成立才放页脚结论条**为骨架；技术架构用浅色分组，编辑型概念图才使用饱和色块和硬阴影。装饰 `path` 的可编辑性取决于 parser，结构件默认不用；带 marker 的曲线路径可成为原生 connector。目标是这种气质时，**以本 skill 的视觉和语法为准**，写入仍走 `lark-whiteboard`。社区实践吸收范围见 [community-practice.md](references/community-practice.md)；历史 Human eval 与当前候选状态见 [evals/human-eval.md](evals/human-eval.md)。
+官方 `routes/svg.md` 会劝 agent「打破矩形牢笼」。文档解释图则优先保证**可编辑原生形状、稳定间距、清楚的阅读层级与关系**。阅读重心可以是单卡、相邻区域、主线或等权比较；辅助区域按内容选择结论、边界、步骤、来源，或省略。饱和色与硬阴影是否合适，由文章气质和可读性决定。装饰 `path` 的可编辑性取决于 parser，结构件默认不用；带 marker 的曲线路径可成为原生 connector。写入仍走 `lark-whiteboard`。社区实践吸收范围见 [community-practice.md](references/community-practice.md)；历史 Human eval 与当前候选状态见 [evals/human-eval.md](evals/human-eval.md)。
 
 ## 介质选择（命中即停）
 
@@ -59,29 +59,19 @@ metadata:
 | 用户已给出 Mermaid/PlantUML，或图是思维导图 / 时序 / 类图 / 饼图 / 甘特 | 把源码放进 `<whiteboard type="mermaid">`（或 PlantUML），飞书自动转画板；不要重画成 SVG 架构 |
 | 判断多、回路多、需要原生菱形，卡片对齐要求一般 | DSL `dagre` + `diamond`，按官方 DSL 路径 |
 | 分层条带、多列运行图、编号层级、页脚结论、层间 API 标注；以及分叉 / 定性对比 / 枢纽 / 时间线 / 泳道 / 四象限 / 焦点+细节 | **UTF-8 SVG，只用可识别原生形状** |
-| 来源明确、指标精简且需节点可编辑的静态模型评测 / 基准对比 | **UTF-8 SVG + [白页橙灰报告风格](references/data-report-style.md)**；按指标选择配对条形图或主图 + 结论卡片 |
+| 来源明确、指标精简且需节点可编辑的静态模型评测 / 基准对比 | **UTF-8 SVG + [定量报告规则](references/data-report-style.md)**；配色按品牌与文章选择，按指标选版式 |
 | 需要动画、Tab、动态筛选或交互式数据探索 | `feishu-html-diagram` |
 | 真实界面或照片 | 图片 |
 
 精美技术文档图**默认走 SVG**。理由见 [介质边界](references/medium.md)。
 
-## 主题路由（先选气质，再画图）
+## 视觉选择（质量底线 + 自主设计 + 参考色板）
 
-不要因为“这是技术图”就自动使用 Riso Brut，也不要因为“这是架构图”就把每层都染成不同鲜艳颜色。
-先写 [主题路由](references/theme-routing.md) 中的 `article_tone`、`diagram_purpose`、`formality`、`theme` 和 `accent_budget`，必要时用 `scripts/theme_router.py` 复核，
-再选择构图。选择优先级是：品牌 / 用户明确指定 → 已有画板视觉身份 → 图的语义 → 文章主题 → `light-technical` 默认。
+先遵守用户 / 品牌要求，改版保留已有视觉身份；再结合文章气质、读者、图的用途与信息密度自主决定配色和层级。可以直接用预置、改编预置，也可以设计新配色；主题名不是允许列表。线索不足时才以 Light Technical 为起点。
 
-默认策略：
+按 [选择方法](references/theme-routing.md) 记录简短的视觉理由与颜色角色；[色板目录](references/palettes.md) 提供 8 个可选家族、搭配和验证状态。单强调色、角色分区色、状态色、数据系列色都可正常选择；颜色数量取决于表达任务，不固定为一个。可用 `scripts/theme_router.py --theme <选定名称>` 记录选择；脚本未给选择时只提供建议，不审批准入。
 
-| 请求 | 默认主题 |
-|---|---|
-| 技术架构、服务边界、系统拓扑 | `light-technical` / architecture |
-| Agent 流程、任务编排、工具回路 | `light-technical` / process |
-| 恢复、故障、状态机 | `light-technical` / reliability |
-| 性能、质量、成本、模型基准 | `white-report` |
-| 创意、品牌、概念型解释 | `coral` / `riso-brut`，只有明确需要编辑感时才用 |
-
-一张图只用一个主主题；`light-technical` 内的成功 / 中断 / 失败是语义状态色，不是额外的主色板。
+不论是否使用预置，均需通过同一套事实、对比度、文字适配、原生转换和目视检查。预置的局部通过证据不自动覆盖改色后的图，也不代表已获飞书体验认可。
 
 ## 创作 Workflow
 
@@ -96,8 +86,8 @@ metadata:
 ### 0. 底座
 
 1. 读取 `lark-shared`（认证）和 `lark-whiteboard`（创作/编辑 workflow）。
-2. 在文档里落画板块、拿 `board_token`：按 `lark-doc` 的画板工作流。
-3. 再回到下面 1–4 做精排。缺登录时仍可完成本地 SVG/PNG，不要假装已写入飞书。
+2. 先做下面 1–4 的设计和本地审查；本地准备不需要 `board_token`，用户要求暂不写飞书时到本地产物为止。
+3. 已授权写入且本地审查通过后，再按 `lark-doc` 的画板工作流创建画板块、拿 `board_token`；改版复用已有 token。缺登录时仍可完成本地 SVG/PNG，不要假装已写入飞书。
 
 ```bash
 bash /resolved/skill-dir/scripts/preflight.sh
@@ -114,25 +104,26 @@ bash /resolved/skill-dir/scripts/preflight.sh
 3. 学习闭环（上门禁 + 下三列对比）
 4. 多列运行架构（请求向右 / 事件向左）
 5. 编号层级（恢复粒度）
-6. 对比列（谁在这一行更优）
+6. 对比列（选项、差异或权衡；可中性比较）
 7. 枢纽（一个核心带 N 个方面）
 8. 时间线（高潮在哪一段）
 9. 泳道（多角色握手）
 10. 四象限（两个维度、四个去处）
 11. 焦点+细节（一块大卡 + 右侧支持）
-12. 定量评测（同尺度指标配对条形图、时间 / 成本双面板，或指标主图 + 结论卡片；细则见 [白页橙灰报告风格](references/data-report-style.md)）
+12. 定量评测（同尺度指标配对条形图、时间 / 成本双面板，或指标主图 + 结论卡片；细则见 [定量报告规则](references/data-report-style.md)）
+13. 语义分区价值链（来源 → 两层分析 → 行动；来源明确给出回流、直达和落地顺序时，见 [semantic-columns.md](references/semantic-columns.md)）
 
-没有合适的就用「标题 + 分区卡片 + 少量语义连线 + 必要时的页脚结论条」现编，不要硬套成均等胶囊流程图。
+没有合适的就按实体与关系自定结构。等权对比可以等大，主线可以承担阅读重心；辅助区域只保留读者需要的新信息。
 
-### 2. 按文档精排上色，并先定焦点
+### 2. 选择配色与阅读层级
 
-按 [主题路由](references/theme-routing.md) 选择主题，再读取 [视觉系统](references/visual-system.md) 与 [构图](references/composition.md)；不必加载所有色板。定量报告读取 [白页橙灰报告风格](references/data-report-style.md) 与对应色板。技术架构、流程和分层默认使用 **Light Technical**；`Riso Brut` 只在文章明确需要编辑型 / 概念型视觉时使用；定性权衡可用 **Riptide Cobalt**，时间线可用 **Coral**，四象限可用 **Grove**，焦点+细节可用 **Avocado Press**。不要浅灰外框套均等胶囊，也不要让颜色替代结构。
+按 [选择方法](references/theme-routing.md) 判断气质与颜色角色，再读取 [视觉系统](references/visual-system.md) 和相关 [构图](references/composition.md)。预置可从 [色板目录](references/palettes.md) 选一两套比较，不必加载完整模板库；新配色也按实际前景 / 背景组合检查。定量报告另外读取 [数据规则](references/data-report-style.md)，系列颜色可适配品牌。确定读者先看哪里、如何比较、最后带走什么，不要求每图有一张最大卡或固定页脚。
 
 ### 3. 写 SVG（精排默认路径）
 
 硬约束和实测映射见 [介质约束](references/constraints.md)。最小骨架：
 
-下面的骨架示范技术文档的 **Light Technical** 默认主题。需要编辑型概念图时，再把画布和焦点换成 [palettes.md](references/palettes.md) 中明确选择的主题；定量报告使用 [White Report](references/data-report-style.md) 的布局和色板。
+下面只示范 **Light Technical + 单卡重心** 的一种组合。可按文章选择其它预置或自定义配色，也可采用区域、主线或等权比较的层级；代码中的颜色和卡片尺寸不是全局规则。
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520">
@@ -145,7 +136,7 @@ bash /resolved/skill-dir/scripts/preflight.sh
   <rect x="0" y="0" width="1600" height="520" fill="#F8FAFC"/>
   <text x="80" y="120" font-size="40" font-weight="700" fill="#1F2937">图表标题：一句话论点</text>
   <text x="80" y="160" font-size="18" fill="#475569">副标题：读者带着什么问题看这张图</text>
-  <!-- 技术架构默认：白页、浅色分组、一个蓝色焦点；只用 rect / circle / ellipse / line / polyline / text -->
+  <!-- 示例组合：近白页、蓝色主卡；其它视觉选择遵循同样的原生形状约束 -->
   <rect x="80" y="224" width="360" height="140" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
   <text x="104" y="272" font-size="22" font-weight="700" fill="#1F2937">安静步骤</text>
   <text x="104" y="308" font-size="16" fill="#475569">保留结构，降低视觉权重</text>
@@ -160,7 +151,7 @@ bash /resolved/skill-dir/scripts/preflight.sh
 </svg>
 ```
 
-文件必须 UTF-8。禁止 `font-family`。有向边标 `data-role="edge"` 并用 `marker-end`；无向辐射线、坐标轴和分隔线分别标 `spoke`、`axis`、`divider`。文字落在非白色块上时写 `data-bg="#背景色"`，让 lint 校验对比度。若中文已被写坏，停止并从未损坏源重新生成，不要对乱码做原地“转码修复”。
+文件必须 UTF-8。禁止 `font-family`。有向边标 `data-role="edge"` 并用 `marker-end`；无向关系线（含辐射）、坐标轴和分隔线分别标 `spoke`、`axis`、`divider`。文字落在非白色块上时写 `data-bg="#背景色"`，让 lint 校验对比度。若中文已被写坏，停止并从未损坏源重新生成，不要对乱码做原地“转码修复”。
 
 ### 4. 本地审查，然后交给底座写入
 
