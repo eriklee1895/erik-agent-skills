@@ -39,7 +39,7 @@
 
 | Skill | 用途 | 安装 |
 | --- | --- | --- |
-| [deepseek-web-search](../skills/deepseek-web-search/) | 通过 DeepSeek Search/Fetch API 搜索网页、抓取正文，内置官方源排序/过滤、本地化版本过滤与实测抓取边界说明。 | `npx skills add eriklee1895/erik-agent-skills --skill deepseek-web-search` |
+| [deepseek-web-search](../skills/deepseek-web-search/) | 通过 DeepSeek Search/Fetch API 提供可脚本化、可复现的搜索与 URL 转 Markdown；适用于无内置联网搜索的宿主或检索管线，内置官方源排序/过滤、本地化与抓取边界说明。 | `npx skills add eriklee1895/erik-agent-skills --skill deepseek-web-search` |
 | [macos-disk-deep-scan](../skills/macos-disk-deep-scan/) | 仅显式调用的 macOS 开发者磁盘只读审计：限时扫描、进程/Git 复核及精确路径清理建议，不执行删除。 | `npx skills add eriklee1895/erik-agent-skills --skill macos-disk-deep-scan` |
 | [notion-cli](../skills/notion-cli/) | 通过对官方 `ntn` CLI 的安全封装操作 Notion。 | `npx skills add eriklee1895/erik-agent-skills --skill notion-cli` |
 | [volcengine-doc-fetcher](../skills/volcengine-doc-fetcher/) | 将火山引擎官方文档抓取为干净的 Markdown。 | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-doc-fetcher` |
