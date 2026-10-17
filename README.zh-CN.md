@@ -50,7 +50,7 @@ npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api
 - `assets/` 存放仓库级视觉资源。
 
 每个 skill 都是一个自包含目录，必须提供 `SKILL.md`，并可按需包含
-`scripts/`、`references/`、`guides/`、`assets/`、`evals/` 和 `agents/`。
+`scripts/`、`tests/`、`references/`、`guides/`、`assets/`、`evals/` 和 `agents/`。
 
 ## 相关项目
 

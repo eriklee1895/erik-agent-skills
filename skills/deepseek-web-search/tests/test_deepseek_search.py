@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#   "requests>=2.32",
+# ]
+# ///
 """Unit tests for deepseek_search.py (no network)."""
 
 import argparse
@@ -7,7 +13,8 @@ import json
 import unittest
 from pathlib import Path
 
-SPEC = importlib.util.spec_from_file_location("deepseek_search", Path(__file__).with_name("deepseek_search.py"))
+SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "deepseek_search.py"
+SPEC = importlib.util.spec_from_file_location("deepseek_search", SCRIPT)
 search = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(search)
 
