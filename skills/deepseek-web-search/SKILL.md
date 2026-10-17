@@ -1,15 +1,13 @@
 ---
 name: deepseek-web-search
 description: >
-  DeepSeek web search and URL-to-Markdown fetch, exposed as a scriptable CLI.
-  Use when the host has no built-in web search, or when a task needs explicit
-  domain, locale, or time filters, official-source ranking, JSON output, or
-  deterministic reruns — Chinese policy, news, and company research, English
-  developer and RAG docs, and retrieval pipelines. Triggers: DeepSeek 搜索,
-  搜索 API, 程序化搜索, 抓取网页, 读取链接; also 联网搜索 and 网页搜索 when the
-  host has no native web search. For ad-hoc questions in hosts with native web
-  search, prefer the native tool. Does not cover image search, vertical/authority
-  filters, site-wide crawling, or questions answerable from general knowledge.
+  Search the web or fetch a known URL as Markdown through DeepSeek's Search and
+  Fetch APIs. Use for current information, source discovery, and URL-to-Markdown
+  extraction; best for Chinese policy, news, and company research, and for
+  English developer, RAG, and agent docs that need official sources. Triggers:
+  联网搜索, 网页搜索, 抓取网页, 读取链接, DeepSeek 搜索. Does not cover image
+  search, vertical/authority filters, or site-wide crawling, and is not for
+  questions answerable from general knowledge.
 metadata:
   requires:
     bins: ["uv", "python3"]
@@ -23,21 +21,6 @@ Two public endpoints, one CLI:
 - `POST /v1/tools/fetch` — one URL to title + Markdown.
 
 Both cost **¥5 per 1,000 successful calls**; failures and empty result sets are not billed. QPS is **5 per account**.
-
-## When this skill is the right tool
-
-Use it when at least one condition holds:
-
-- The host has no built-in web search — some CLI agents, custom agents, and CI jobs.
-- Retrieval must be reproducible: pinned `--site`, `--lang`, `--after`, `--drop-localized`, `--dedupe-domain`, `--official-only`, or `--sort official`.
-- A pipeline needs the JSON envelope or the `quality` signals.
-- You need URL-to-Markdown extraction with cleanup and the documented 404 matrix.
-- You are building or evaluating RAG/agent retrieval rather than answering one chat question.
-
-For a one-off question in DSH, Claude Code, or Codex with native web search, use
-the host's tool: it is model-triggered, needs no skill load, and avoids an extra
-shell round trip. A skill cannot register a server-side tool; this one is a CLI
-contract.
 
 ## Prerequisites
 
@@ -73,8 +56,7 @@ Use `--json` for anything downstream; human output is for reading only.
 
 | Need | Use |
 | --- | --- |
-| One-off question in a host with native web search | That host's web search tool |
-| Scripted or reproducible source discovery | `search` |
+| Discover sources for a question | `search` |
 | Read a known page's text | `search --content` when the page came from search; `fetch` when you only have the URL |
 | Machine-readable pipeline | `search --json` / `fetch --json` |
 | Authoritative sources only | `--official-only` to filter; `--sort official` to lift without dropping; `--site` when the domain is known |
