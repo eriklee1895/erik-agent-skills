@@ -1,0 +1,104 @@
+{
+  "skill_name": "deepseek-web-search",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我查一下 2026 年新能源汽车购置税减免的最新政策，要政府网站的原文，并告诉我发布日期",
+      "expected_output": "Agent runs the DeepSeek search CLI, prefers a gov.cn/miit.gov.cn result, quotes the policy name and publication date, and cites the URL. It does not rely on portal reposts.",
+      "files": [],
+      "assertions": [
+        "uses_deepseek_search_cli",
+        "runs_uv_script",
+        "prefers_gov_domain",
+        "reports_publication_date",
+        "cites_source_url"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Find the official vLLM documentation for automatic prefix caching. I only want the canonical English docs, not translated copies or mirrors.",
+      "expected_output": "Agent adds --lang en --drop-localized and/or --site docs.vllm.ai, returns the docs.vllm.ai page, and avoids localized editions or mintlify.wiki clones.",
+      "files": [],
+      "assertions": [
+        "uses_lang_or_site_filter",
+        "uses_drop_localized_or_site",
+        "returns_official_docs_domain",
+        "avoids_mirror_domains"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Read this page and summarize the method: https://arxiv.org/abs/1706.03762",
+      "expected_output": "Agent calls fetch on the URL, summarizes the abstract, and does not quote code blocks or tables as if they were preserved. It may note that the extractor flattens formatting.",
+      "files": [],
+      "assertions": [
+        "uses_fetch_command",
+        "summarizes_abstract",
+        "does_not_invent_code_blocks",
+        "handles_flattened_formatting"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Read https://platform.openai.com/docs/guides/tools and tell me what the web search tool costs.",
+      "expected_output": "Agent attempts fetch, receives HTTP 404 (no extractable content), explains the limitation, and falls back to search --content or another extractor instead of fabricating page content.",
+      "files": [],
+      "assertions": [
+        "attempts_fetch",
+        "recognizes_404_limitation",
+        "falls_back_to_search_or_scraper",
+        "does_not_fabricate_content"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "DeepSeek 今天发布了什么？只要今天的消息",
+      "expected_output": "Agent searches with a recency constraint (after: or --after), checks result dates, and distinguishes today's release from older coverage.",
+      "files": [],
+      "assertions": [
+        "uses_recency_filter",
+        "checks_result_dates",
+        "separates_today_from_older_news",
+        "cites_sources"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Search for pgvector HNSW tuning advice and give me a table of source, title, and URL that I can process with a script.",
+      "expected_output": "Agent runs search with --json, parses the api_response.results array, and builds a table from title/url fields without scraping the human-readable output.",
+      "files": [],
+      "assertions": [
+        "uses_json_flag",
+        "parses_api_response_results",
+        "extracts_title_and_url",
+        "produces_structured_table"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "帮我找 OpenAI GPT-6 的官方发布说明，不要二手媒体的转述",
+      "expected_output": "Agent runs search, notices quality.warning (or the stderr warning) that no official host is present, and retries with --site openai.com or --official-only followed by --site. It returns help.openai.com or openai.com, not Yahoo/Digit/RRI.",
+      "files": [],
+      "assertions": [
+        "uses_deepseek_search_cli",
+        "checks_quality_warning",
+        "uses_site_filter",
+        "returns_official_openai_domain",
+        "rejects_portal_reposts"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "北京公积金贷款额度现在是多少？要政府原文",
+      "expected_output": "Agent uses --official-only or --site gjj.beijing.gov.cn, quotes the government page, and ignores the raw-IP and portal results.",
+      "files": [],
+      "assertions": [
+        "uses_official_only_or_site",
+        "avoids_raw_ip_host",
+        "prefers_gov_domain",
+        "quotes_policy_numbers",
+        "cites_source_url"
+      ]
+    }
+  ]
+}

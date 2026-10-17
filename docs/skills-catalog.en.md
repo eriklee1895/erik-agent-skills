@@ -44,6 +44,7 @@ discovered, linked, and installed consistently.
 
 | Skill | Purpose | Install |
 | --- | --- | --- |
+| [deepseek-web-search](../skills/deepseek-web-search/) | Search and fetch pages through DeepSeek's Search/Fetch APIs, with measured guidance for official-source ranking, localization traps, and fetch coverage gaps. | `npx skills add eriklee1895/erik-agent-skills --skill deepseek-web-search` |
 | [macos-disk-deep-scan](../skills/macos-disk-deep-scan/) | Explicit-only, read-only macOS developer disk audit: bounded scans, process/Git checks, and exact-path cleanup advice without deletion. | `npx skills add eriklee1895/erik-agent-skills --skill macos-disk-deep-scan` |
 | [notion-cli](../skills/notion-cli/) | Operate Notion through a guarded helper around the official `ntn` CLI. | `npx skills add eriklee1895/erik-agent-skills --skill notion-cli` |
 | [volcengine-doc-fetcher](../skills/volcengine-doc-fetcher/) | Fetch official Volcano Engine documentation as clean Markdown. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-doc-fetcher` |
