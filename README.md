@@ -57,7 +57,7 @@ They can share a character reference image; neither skill requires the other.
 - `assets/` contains repository-level visual assets.
 
 Each skill is a self-contained directory with a required `SKILL.md` and optional
-`scripts/`, `references/`, `guides/`, `assets/`, `evals/`, and `agents/` directories.
+`scripts/`, `tests/`, `references/`, `guides/`, `assets/`, `evals/`, and `agents/` directories.
 
 ## Related project
 
