@@ -54,3 +54,9 @@ setup instructions for runtime tools and service credentials.
 - [Installation](docs/installation.en.md) — installation scope and options.
 - `skills/<name>/` — each skill's source, bundled tools, references, and examples.
 - `assets/` — repository visuals.
+
+## Related project
+
+Explore [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness),
+Erik's personal AI writing system for ideation, research, drafting, polishing,
+visuals, publishing, and continuous workflow improvement.

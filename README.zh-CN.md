@@ -50,3 +50,8 @@ npx skills add eriklee1895/erik-agent-skills --all
 - [安装指南](docs/installation.zh-CN.md)：安装范围和常用选项。
 - `skills/<name>/`：各 skill 的源文件、工具、参考资料和示例。
 - `assets/`：仓库视觉资源。
+
+## 相关项目
+
+欢迎访问 [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)：
+Erik 的个人 AI 写作系统，覆盖选题、研究、起草、润色、视觉制作、发布与工作流持续改进。
