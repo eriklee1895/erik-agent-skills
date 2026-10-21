@@ -9,7 +9,7 @@ reusable Agent Skills.
 
 - `skills/`: canonical skill source; each skill lives in its own directory.
 - `skills/README.md` and `skills/README.zh-CN.md`: the bilingual skill catalog.
-- `docs/`: installation guides and compatibility links for the former catalog paths.
+- `docs/`: bilingual installation guides.
 - `assets/`: repository-level visual assets.
 - Skill-specific `scripts/`, `tests/`, and `evals/` stay inside their skill directory.
 
@@ -21,8 +21,6 @@ reusable Agent Skills.
 - Keep README counts and status badges aligned with the current skill catalog.
 - Update both `skills/README.md` and `skills/README.zh-CN.md` whenever a skill
   is added, removed, or renamed; classify each by its primary user outcome.
-- Keep `docs/skills-catalog.en.md` and `docs/skills-catalog.zh-CN.md` as
-  compatibility links, not duplicate catalogs.
 - Do not copy secrets, account state, or machine-local runtime data into this repository.
 - Writing-workflow skills (ideation, polishing, readiness checks, WeChat/blog
   publishing, post-publication closeout) are coupled to the
