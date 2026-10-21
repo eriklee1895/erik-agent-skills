@@ -24,7 +24,7 @@ npx skills add eriklee1895/erik-agent-skills --all -g
 
 ## 单独安装某个 skill
 
-将 `--skill` 后的名称替换为[Skills 目录](skills-catalog.zh-CN.md)中的任意名称：
+将 `--skill` 后的名称替换为[Skills 目录](../skills/README.zh-CN.md)中的任意名称：
 
 ```bash
 npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen
@@ -44,7 +44,7 @@ npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen -g -a codex 
 npx skills add eriklee1895/erik-agent-skills --list
 ```
 
-[Skills 目录](skills-catalog.zh-CN.md)中也为每个 skill 提供了可以直接复制的单独安装命令。
+[Skills 列表](../skills/README.zh-CN.md)可直达各 skill 的使用说明；将对应名称用于 `--skill` 即可。
 
 ## 安装范围与常用选项
 
@@ -55,3 +55,8 @@ npx skills add eriklee1895/erik-agent-skills --list
 - 使用 `--copy`：复制文件，而不是使用 CLI 默认的链接方式。
 
 CLI 的行为和支持的 Agent ID 可能会变化；把命令接入自动化流程前，可以运行 `npx skills add --help` 查看当前版本说明。
+
+## 安装之后
+
+安装会添加 skill 的说明和配套文件。运行工具、服务凭据及所需的辅助 skills
+需要另行配置；第一次使用前，请阅读所选 skill 的前置条件和认证说明。

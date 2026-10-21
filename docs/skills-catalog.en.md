@@ -1,58 +1,6 @@
 # Skills catalog
 
-[English](skills-catalog.en.md) | [简体中文](skills-catalog.zh-CN.md) · [Back to README](../README.md)
+The complete catalog is now in [skills/README.md](../skills/README.md), so it is
+shown directly when you browse the `skills/` directory.
 
-This catalog groups skills by their primary outcome. The categories are for
-navigation only: skill directories remain flat under `skills/` so they can be
-discovered, linked, and installed consistently.
-
-> The end-to-end **writing workflow** skills (ideation, polishing, readiness
-> checks, WeChat rendering/publishing, blog publishing, and post-publication
-> closeout) are specific to Erik's
-> [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)
-> project and are intentionally not published here. This catalog's Writing
-> category contains only standalone, reusable skills for content expression,
-> document delivery, and source-material collection.
-
-## Writing
-
-| Skill | Purpose | Install |
-| --- | --- | --- |
-| [markdown-article-to-feishu-doc](../skills/markdown-article-to-feishu-doc/) | Convert local Markdown into a structured Feishu document with media and Mermaid support. | `npx skills add eriklee1895/erik-agent-skills --skill markdown-article-to-feishu-doc` |
-| [feishu-html-diagram](../skills/feishu-html-diagram/) | Create high-fidelity, animated, or interactive diagrams inside Feishu Docx using HTML5 blocks when Mermaid, whiteboards, tables, or images are too restrictive. | `npx skills add eriklee1895/erik-agent-skills --skill feishu-html-diagram` |
-| [feishu-whiteboard-diagram](../skills/feishu-whiteboard-diagram/) | Create, restyle, or review editable, document-quality architecture and process diagrams in Feishu Docx as native whiteboards (SVG / DSL / Mermaid), with fact-preserving editorial composition and evidence gates. | `npx skills add eriklee1895/erik-agent-skills --skill feishu-whiteboard-diagram` |
-| [wechat-article-fetcher](../skills/wechat-article-fetcher/) | Extract a WeChat article into structured Markdown and local assets for research or reuse. | `npx skills add eriklee1895/erik-agent-skills --skill wechat-article-fetcher` |
-
-## Media
-
-| Skill | Purpose | Install |
-| --- | --- | --- |
-| [article-illustration](../skills/article-illustration/) | Create article covers, inset illustrations, diagrams, infographics, and visual dividers. | `npx skills add eriklee1895/erik-agent-skills --skill article-illustration` |
-| [gpt-image-2](../skills/gpt-image-2/) | Generate, edit, and batch-create raster images with OpenAI's gpt-image-2 model. | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-2` |
-| [gpt-image-api](../skills/gpt-image-api/) | Generate, precisely edit, stream, and batch-create raster images with OpenAI GPT Image 2.5 Flare and Sunburst. | `npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api` |
-| [openrouter-image](../skills/openrouter-image/) | Generate and edit images through OpenRouter's unified image API with GPT Image 2.5 Sunburst/Flare and Nano Banana 2.1; the CLI validates each model's parameter dialect before the call. | `npx skills add eriklee1895/erik-agent-skills --skill openrouter-image` |
-| [seedream-image-gen](../skills/seedream-image-gen/) | Generate and edit images with Seedream, including typography, marker editing, outpainting, and batch workflows. | `npx skills add eriklee1895/erik-agent-skills --skill seedream-image-gen` |
-| [avatar-creator](../skills/avatar-creator/) | Create static avatar images, distinct-character families, same-character sets, and fixed Seedance GIF/MP4 animations. Uses available image tools; animation requires Ark credentials, uv, and ffmpeg with no other skill dependency. Does not build interactive 3D runtimes. | `npx skills add eriklee1895/erik-agent-skills --skill avatar-creator` |
-| [live-avatar-3d](../skills/live-avatar-3d/) | Turn a character image into a no-build interactive 3D browser avatar with orbit, gestures, and optional local microphone mouth motion. | `npx skills add eriklee1895/erik-agent-skills --skill live-avatar-3d` |
-| [seedance-video-gen](../skills/seedance-video-gen/) | Generate videos with Seedance from text, images, or multimodal references. | `npx skills add eriklee1895/erik-agent-skills --skill seedance-video-gen` |
-| [volcengine-bigmusic-bgm](../skills/volcengine-bigmusic-bgm/) | Generate instrumental background music for video and article media workflows. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-bigmusic-bgm` |
-| [volcengine-tts](../skills/volcengine-tts/) | Synthesize speech audio with Volcano Engine's text-to-speech models. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-tts` |
-| [volcengine-transcribe](../skills/volcengine-transcribe/) | Transcribe audio/video to text with Volcano Engine's speech recognition and generate SRT/VTT subtitles; speaker diarization and ffmpeg video extraction built in. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-transcribe` |
-| [seed-audio-gen](../skills/seed-audio-gen/) | Generate complete mixed audio scenes (voice + SFX + BGM) with the generative seed-audio-1.0 model; multi-reference voice cloning, sound effects, and directed dialogue in one call. | `npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen` |
-
-## General Utilities
-
-| Skill | Purpose | Install |
-| --- | --- | --- |
-| [deepseek-web-search](../skills/deepseek-web-search/) | Search and fetch pages through DeepSeek's Search/Fetch APIs, with measured guidance for official-source ranking, localization traps, and fetch coverage gaps. | `npx skills add eriklee1895/erik-agent-skills --skill deepseek-web-search` |
-| [macos-disk-deep-scan](../skills/macos-disk-deep-scan/) | Explicit-only, read-only macOS developer disk audit: bounded scans, process/Git checks, and exact-path cleanup advice without deletion. | `npx skills add eriklee1895/erik-agent-skills --skill macos-disk-deep-scan` |
-| [notion-cli](../skills/notion-cli/) | Operate Notion through a guarded helper around the official `ntn` CLI. | `npx skills add eriklee1895/erik-agent-skills --skill notion-cli` |
-| [volcengine-doc-fetcher](../skills/volcengine-doc-fetcher/) | Fetch official Volcano Engine documentation as clean Markdown. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-doc-fetcher` |
-| [volcengine-web-search](../skills/volcengine-web-search/) | Search the web and images through Volcano Engine's search API, with strong Chinese-language coverage. | `npx skills add eriklee1895/erik-agent-skills --skill volcengine-web-search` |
-
-## Classification rules
-
-- Classify each skill by its primary user outcome, not by its implementation technology.
-- Keep each skill in one primary category; link related skills instead of duplicating them.
-- Keep all skill directories as direct children of `skills/`.
-- Update both language versions of this catalog whenever skills are added, removed, or renamed.
+[简体中文](../skills/README.zh-CN.md) · [Repository home](../README.md)

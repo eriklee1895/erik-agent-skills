@@ -24,7 +24,7 @@ npx skills add eriklee1895/erik-agent-skills --all -g
 
 ## Install one skill
 
-Replace the value passed to `--skill` with any name from the [skills catalog](skills-catalog.en.md):
+Replace the value passed to `--skill` with any name from the [skills catalog](../skills/README.md):
 
 ```bash
 npx skills add eriklee1895/erik-agent-skills --skill seed-audio-gen
@@ -44,7 +44,7 @@ List the skills available in this repository without installing anything:
 npx skills add eriklee1895/erik-agent-skills --list
 ```
 
-The [skills catalog](skills-catalog.en.md) also includes a ready-to-copy install command for every skill.
+The [skills list](../skills/README.md) links directly to each skill’s instructions. Use its name with `--skill`.
 
 ## Scope and options
 
@@ -55,3 +55,9 @@ The [skills catalog](skills-catalog.en.md) also includes a ready-to-copy install
 - Use `--copy` if you want copied files instead of the CLI's default linking behavior.
 
 The CLI's behavior and supported agent IDs may evolve. Check `npx skills add --help` when integrating this into automation.
+
+## After installation
+
+Installing a skill adds its instructions and bundled files. Runtime tools, service
+credentials, and any supporting skills are configured separately; follow the
+selected skill's prerequisites and authentication sections before its first run.
