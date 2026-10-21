@@ -11,10 +11,10 @@ DSL 字段和官方 parser 清单以 `lark-whiteboard` 的 `elements/`、`routes
 | `rect`（`rx` 中等） | `composite_shape` / `round_rect` | 层容器、卡片、页脚条 |
 | `rect`（`rx` 很大，胶囊） | `round_rect2` | 流程步骤 |
 | `circle` / `ellipse` | `ellipse` | 编号签、起止点 |
-| `line` / 正交 `polyline` + `marker-end` | `connector`，`right_angled_polyline` 或 `straight`，箭头 `empty_triangle_arrow` | 默认连线 |
+| `line` / 正交 `polyline` + `marker-end` | `connector`，`right_angled_polyline` 或 `straight`，箭头字段非 `none`，具体样式取决于 marker | 默认连线 |
 | `stroke-dasharray` 的 polyline | `border_style: dash` | 回填、反馈 |
 | 三次 `path` 曲线 + `marker-end` | `connector` / `shape: curve` | 标 `data-role="edge"`；少量跨层曲线可以 |
-| `polygon` 菱形 | **`type: svg` 嵌入图** | 1–2 个判断节点可接受；多菱形改走 DSL `diamond` |
+| `polygon` 菱形 | **`type: svg` 嵌入图** | 需要原生判断节点时用 DSL `diamond`；允许局部降级时单独披露 |
 | 装饰 `path` 图标 | `type: svg` 嵌入图 | 不要当结构件 |
 | `opacity="0.4"` | OpenAPI 里 `fill_opacity: 40`；飞书端常按不透明绘制 | 浅色请用实心更浅 hex |
 | 两 stop `linearGradient`（默认 objectBoundingBox） | OpenAPI 保留 `fill_gradient` 和两个 stop | 当前可用，但技术文档精排仍优先纯色；复杂参数按官方边界 |
@@ -31,7 +31,7 @@ DSL 字段和官方 parser 清单以 `lark-whiteboard` 的 `elements/`、`routes
 - 箭头：`<defs>` 里一个 `marker`，线或折线写 `marker-end="url(#arrow)"`。禁止在线头再画三角形。
 - 有向边写 `data-role="edge"`；无向关系线（含辐射）、坐标轴、分隔线分别取 `data-role="spoke"`、`data-role="axis"`、`data-role="divider"`。来源只给出连接关系、未给调用方向时，可用 `spoke`，不补造箭头。lint 据此区分漏箭头与合法无向线，并核对 marker ID 是否存在。
 - 文字放在非白色块上时写 `data-bg="#实际背景色"`。lint 对普通文字要求至少 4.5:1；≥24px 或 ≥19px/700 的大字允许 3:1。背景发生变化时同步改 `data-bg`。
-- 变换只用 `translate` / `rotate` / `scale`；避免 `skewX` / `skewY` / `matrix(...)`。
+- parser 可识别部分 `translate` / `rotate` / `scale`，但当前 `fit_check.py` 不测量任何 transform，也不测量相对 path。默认展开成显式坐标与绝对 path；出现 `unmeasured-*` 不能当作检查通过。避免 `skewX` / `skewY` / `matrix(...)`。
 - 编号签压住层边框是有意重叠，`--check` 可能 warn；无意的卡片互压必须改。
 - 不要把用户的任务说明、风格名、文件路径写进画布。
 
@@ -54,7 +54,7 @@ DSL 字段和官方 parser 清单以 `lark-whiteboard` 的 `elements/`、`routes
 
 ## Parser contract 回归
 
-`tests/test_parser_contract.py` 固定调用 `@larksuite/whiteboard-cli@0.2.13`，验证 polygon、曲线 connector 和双 stop gradient 的实际 OpenAPI 类型。升级 parser 前先改 fixture 与期望、跑测试、查看 diff，再更新本页；不要只改版本号。
+本 skill 的可复现基线为 `@larksuite/whiteboard-cli@0.2.13`。`tests/test_parser_contract.py` 验证 polygon、曲线 connector 和双 stop gradient 的实际类型。评估新版本时先运行原有 fixture 并查看实际差异，再决定是否更新期望和说明；不要先把期望改到“通过”，也不要只改版本号。
 
 ## 渲染前 fit-check
 
@@ -64,13 +64,13 @@ DSL 字段和官方 parser 清单以 `lark-whiteboard` 的 `elements/`、`routes
 它会 **fail closed**，不会把“未测量”报告成通过。它不能代替 PNG 目视，也不能判断事实是否正确；`lint_svg.py`、
 `whiteboard-cli --check` 和真实飞书体验仍各自负责自己的证据层。
 
-默认目标是约 80px 外边距和 80px 以上才报告的大块空白。固定 fixture 可以记录有意 warning，但新增 warning 必须解释。
+默认目标是约 80px 外边距和 80px 以上才报告的大块空白，可用 `--margin` / `--deadband` 配合设计契约调整。固定 fixture 可以记录有意 warning，但新增 warning 必须解释。
 
 DSL 分层图默认「层标签在外 + 层内白色节点」。它画不出层间左右双侧的 API 标注，也很难做跨列页脚条——那些回到 SVG。
 
 ## Mermaid
 
-只用于时序、思维导图、类图、饼图、甘特，或用户已经给了源码。写入形态是 `<whiteboard type="mermaid">`，**飞书自动转画板**，不要在本 skill 里用 SVG 重排时序。流程图即使 Mermaid 能画，也缺少文档精排的分组色和结论条——那种图走 SVG。复杂 subgraph / 超长中文在飞书直传时经常 warning 2107。
+用户提供或指定 Mermaid 时保留其格式；时序、思维导图、类图、饼图、甘特也适合该路线。按底座将源码转成画板，不为统一样式重排其语义。未指定格式的说明型流程图可按排版需要选择 SVG。复杂 subgraph / 超长中文应检查转换诊断，不能把某次通过推广到所有语法。
 
 ## 不要用手写 OpenAPI raw
 

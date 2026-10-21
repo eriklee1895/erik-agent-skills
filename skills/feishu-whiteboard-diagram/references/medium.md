@@ -1,55 +1,34 @@
 # 介质边界
 
-先问「读者要带走什么」，再选载体。载体选错，配色和布局都会浪费。
+主入口的选择表用于快速分流，本页解释格式保留、混合需求与底座分工。先确定读者要理解的关系和需要的编辑能力，再选择工具。
 
-**怎么创建画板、用哪种 `+update --input_format`、覆盖还是追加：** 读 `lark-whiteboard` 与 `lark-doc` 的画板工作流。本页只做分流判断。
+## 各种介质提供什么
 
-## 对照
+| 路径 | 适合 | 编辑与布局边界 |
+|---|---|---|
+| SVG → 原生画板 | 架构、分层、关系与静态指标的精确排版 | 可识别的形状、文字与连线转为原生节点；其它元素可能降级，按 [constraints.md](constraints.md) 核对 |
+| DSL → 原生画板 | 自动分层、组织、Dagre 流程和原生菱形 | Flex / Dagre 便于布局；精确跨层标注和重叠布局需另评估 |
+| Mermaid / PlantUML → 画板 | 用户提供的源码，或适合该语法的时序、类图、思维导图等 | 保留源码语义；布局、导出源码条件和转换能力以底座为准 |
+| HTML5 块 | 动画、切换、筛选与交互探索 | 编辑对象是 HTML，不具有原生画板节点语义 |
+| 文档图片 | 真实界面、照片、现成图片 | 图片本身可替换，图内对象不可作为原生节点修改 |
+| 空白画板 | 工作坊拖拽、聚类、便签共创 | 交付可共同编辑的工作空间，按官方空白画板流程 |
 
-| 载体 | 读者得到什么 | 编辑性 | 布局控制 | 典型失败 |
-|---|---|---|---|---|
-| 飞书原生画板 | 文档里的矢量图，可点进改 | 节点、文字、连线可改 | SVG 精确 / DSL 自动 / Mermaid 受限 | 用插画 path 换「设计感」，变成嵌入图 |
-| Mermaid 画板 | 标准流程/时序，生成快 | 飞书按源码生成节点；复杂语法常 warning 2107 | 自动布局，难做编号签和页脚条 | subgraph、超长 label；把时序重画成 SVG 架构 |
-| DSL 画板 | 分层、组织、dagre 流程 | 节点可改 | Flex / Dagre 强，重叠与跨层标注弱 | `fill-container` 死锁、connector 放进 children |
-| HTML5 块 | 动画、Tab、D3 | 改的是 HTML | CSS/JS 上限最高 | 被当成「更漂亮的画板」 |
-| 图片 | 真实 UI、照片 | 不可编辑 | 像素级 | 把架构图做成截图 |
+用户提供 Mermaid 并要求保留格式时，即使题材也适合 SVG，仍保留源码。图的题材不覆盖明确的格式要求。指定语法确实不能表达所需关系时，保留现有源码并说明限制，由用户选择是否改用其它格式。
 
-## 和官方 lark-whiteboard 的分工
+## 混合需求
 
-| 问题 | 谁回答 |
-|---|---|
-| 如何 login、查 token、export、update、overwrite | `lark-whiteboard` + `lark-shared` |
-| 文档 XML 里如何插入 `<whiteboard>` | `lark-doc` 画板工作流 |
-| 写文档时要不要画板、和 HTML5/图片怎么选 | 本 skill |
-| 精排图用 SVG 还是 DSL、官方「少用矩形」听不听 | 本 skill：文档精排听本 skill |
-| scene 里的架构/鱼骨/飞轮骨架 | 官方 `scenes/`；与精排语法冲突时用本 skill 的 [grammars.md](grammars.md) |
+- 静态比较与动态探索同时需要时，可以分别提供原生画板和 HTML5；明确每一块的用途。
+- 架构说明需要真实界面例图时，原生结构图与截图分别承担解释和展示任务。
+- 多张图可以使用不同语法，保持文章视觉连续即可；见 [成套技术图](technical-article-figures.md)。
 
-## 和 feishu-html-diagram 的分工
+## 与底座的分工
 
-来源明确、指标精简、以静态比较为目的且需要同事改节点 → 原生画板；布局见 [data-report-style.md](data-report-style.md)。需要动态筛选、切换、演示或探索数据 → HTML5。两者都要就拆成两块，不要混。
+创建文档、插入画板块、读取和写入、身份与覆盖确认，均按已安装的 `lark-doc`、`lark-whiteboard`、`lark-shared`。本 skill 不复制其 CLI/API 字段，也不扩大写入授权。
 
-## Mermaid：写源码，飞书转画板
+底座的 scene 或 SVG 路线可提供创作建议；文档解释图仍以来源事实、清楚关系和原生结构为准。内容扩展必须有事实依据，装饰路径不能替代关键节点或有向边。配色和强调方式按 [主题选择](theme-routing.md) 与 [构图](composition.md) 决定，等权比较可以等大，技术文章也可以采用温暖配色。
 
-时序 / 思维导图 / 类图 / 饼图 / 甘特，或用户已经给了 Mermaid：
+## 源码与预览
 
-```xml
-<whiteboard type="mermaid">sequenceDiagram
-    ...
-</whiteboard>
-```
+Mermaid / PlantUML 使用底座提供的源码写入与校验方式；本 skill 不维护第二套转换器。保留用户给定的时序和语义，复杂子图或长标签出现诊断时先处理具体问题，不直接改成 SVG 架构图。
 
-飞书服务端把源码转成画板节点。本 skill **没有**第二套 Mermaid 渲染器，也不要把 `sequenceDiagram` 改画成分层条带。复杂 subgraph、超长中文可能 warning 2107，那时再降级，不要一上来用 SVG 重排。
-
-## 从社区收进来的判断（不复制其 skill）
-
-吸收的是 `beautiful-feishu-whiteboard` RULES 和 `feishu-whiteboard-pro` 的构图纪律，不是 35 套换肤模板、也不是他们的海报字号。
-
-- 精排默认 SVG + 原生形状，不要靠装饰 path。
-- 箭头用 `marker-end`，不要手画三角箭头。
-- `opacity` 不可靠，浅色用实心更浅 hex。
-- 焦点靠 **尺寸**，染色但一样大仍像草稿流程图。
-- 反均等卡片、反绕场虚线、反空列壳。细节见 [composition.md](composition.md)。
-- 主题要按阅读场景路由：技术文档默认 Light Technical，编辑型色板必须有明确理由。细节见 [theme-routing.md](theme-routing.md)。
-- 渲染前先做几何 fit-check，再做 `lint_svg.py`、`whiteboard-cli --check` 和 PNG 目视；机械缺陷与审美判断分开。
-- 本地 PNG 看构图；飞书导出常被垫成方画布，且文字颜色不一定准。
-- 官方 DSL 适合自动分层和原生菱形；层间双侧 API、编号签、跨列页脚仍用 SVG。
+已有画板导出的 SVG 是视觉快照，不能代替 raw 中的结构、分组和端点绑定证据。需要修改已有画板时，先走官方编辑 workflow；图像上看得见箭头，并不证明它是原生 connector。

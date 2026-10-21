@@ -127,6 +127,61 @@
         "Uses only supplied values and reproducible calculations",
         "Does not infer product quality or claim live Feishu validation"
       ]
+    },
+    {
+      "id": 12,
+      "prompt": "为清爽克制的技术文章准备阶段演进、两层协作、模块协同、实验结果四张画板。统一视觉，但按各图问题选布局。阶段只给探索、验证、推广三个名称，没有日期和完成状态。先给设计契约，不写飞书。",
+      "expected_output": "An article-wide visual contract with task-specific figure structures and explicit unknown facts.",
+      "files": [],
+      "expectations": [
+        "Shares visual components without forcing identical layouts",
+        "Separates shared role semantics from locally labeled data-series colors",
+        "Does not invent dates or completed milestones"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "画两张独立解释图：第一张只有 S→A、S→B、A→B、A→C、B→C 五条关系，S 是共同观测，A 是分类，B 是容量估计，C 是决策；第二张指标 X 影响进入和分析阶段，指标 Y 影响回答阶段。标清交换内容或关联含义，只做本地。",
+      "expected_output": "Two faithful local diagrams preserving shared inputs, cross-module influence and non-exclusive metric mappings.",
+      "files": [],
+      "expectations": [
+        "Retains all five topology edges and all three metric associations",
+        "Does not imply independent parallel execution or one-to-one mapping",
+        "Uses native direction markers and separates local evidence from live Feishu validation"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "做一张摘要指标加证据面板图。端 A 成功率 80%→84%、延迟 500→400ms；端 B 成功率 85%→90%、延迟 600→450ms。可以突出最大改善，但要保留端和指标口径，不推断总体收益。",
+      "expected_output": "Scoped KPI summaries traceable to metric panels with consistent scales and signs.",
+      "files": [],
+      "expectations": [
+        "Labels success-rate changes +4 pp and +5 pp, latency decreases 20% and 25%",
+        "Ties maximum improvements to their endpoint and metric rather than inventing an aggregate",
+        "Aligns bar zero points with ticks and keeps metric scales and signs coherent"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "只审查现有画板：已有证据说明一条箭头方向与正文相反；另一条连线是否随节点拖动未知，目前只有截图。不要修改，只交付结论。",
+      "expected_output": "A completed read-only review that reports the factual failure and unverified drag behavior.",
+      "files": [],
+      "expectations": [
+        "Can deliver a review containing fail and unknown without fixing the board",
+        "Does not infer native nodes or drag binding from a screenshot",
+        "Does not require rendering or a Feishu login merely to report the available evidence"
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "保留我提供的 Mermaid 源格式制作基准流程画板，图中保留给定的来源和完整模型版本；不要为适配报告风格换成 SVG。先说明验证和交付路线。",
+      "expected_output": "A Mermaid-preserving plan that retains reader-relevant provenance and distinguishes preview, conversion and client evidence.",
+      "files": [],
+      "expectations": [
+        "Preserves the user-specified format and supplied provenance/version",
+        "Uses the source-format workflow rather than SVG-specific lint",
+        "Does not claim native editability or client experience from source alone"
+      ]
     }
   ]
 }

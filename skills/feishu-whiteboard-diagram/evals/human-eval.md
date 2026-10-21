@@ -2,9 +2,9 @@
 
 用这份清单评 `feishu-whiteboard-diagram` 的**文档精排画板**，不是评官方 `lark-whiteboard` CLI 教程。本地 PNG 只能证明构图；飞书里能不能点开改节点，必须人在 Web / 桌面上看。
 
-## 当前候选（2026-09-04）
+## 候选与证据索引
 
-安全门禁、parser contract、连线 lint、文字对比度和事实复核已进入新候选。历史候选的最高证据层是 **`local-render-valid`**；新增的 `15-light-architecture.svg` 是本轮 Light Technical 主题候选，需按同一流程重新纳入飞书体验复核。详见 [`current-local-evidence.md`](fixtures/human-eval/current-local-evidence.md)。
+2026-09-04 的原始 fixture 验证保留在 [`current-local-evidence.md`](fixtures/human-eval/current-local-evidence.md)。后续主题、构图与独立应用样本的日期和范围见 [scenarios.md](scenarios.md)；各样本分别记录最高证据，不汇总成整个 skill 已获飞书体验认可。`15-light-architecture.svg` 与新样例的客户端体验需各自验收。
 
 在 Web / 桌面重新打开并逐图填写记分表之前，**不得沿用旧版的 `feishu-experience-valid`**。
 
@@ -44,16 +44,9 @@ bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh --yes
 
 脚本不自动追加 `--yes`，也不因普通失败改目标目录重试。
 
-## 证据层（先记层，再打分）
+## 先记证据，再打分
 
-| 层 | 含义 | 本包默认 |
-|---|---|---|
-| `lint-valid` | `lint_svg.py` 无 error | 写入前必做 |
-| `local-render-valid` | `--check` 无 error，并目视过 PNG | 写入前必做 |
-| `feishu-write-valid` | 已写入且 fetch 到目标章节、类型正确 | 需登录 |
-| `feishu-experience-valid` | 人在飞书 Web 和/或桌面打开过画板 | **Human eval** |
-
-没有登录时停在 `local-render-valid`，不要把 PNG 说成「已在飞书验证」。
+按 [写入与验证](../references/write-verify.md#证据与交付口径) 区分 lint、本地渲染、原生转换、飞书写入、客户端体验与拖动实测。逐图填写实际表面、文档宽度与未测项；仅导出 preview 或打开页面不等于已确认可编辑。拖动跟随另行测试，不由原生节点类型推断。
 
 ## 维度（1–5）
 
@@ -63,7 +56,7 @@ bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh --yes
 |---|---|---|---|
 | 理解速度 | 看不出这张图在回答什么 | 能看出主论点和关系，但要停一下 | 扫一眼就知道分层 / 循环 / 恢复粒度 |
 | 专业观感 | 阅读路径不明、无意义绕线、列壳大半是空 | 能放进技术文档，有小毛边 | 层级符合任务；配色协调；单卡、区域、主线或等权比较均清楚；辅助区域有用或合理省略 |
-| 语法是否对 | 用错骨架（时序画成架构，闭环没有「否」） | 骨架对，个别标注弱 | 与 [grammars.md](../references/grammars.md) 的关系一致，且没有第二种主语法 |
+| 语法是否对 | 用错骨架（时序画成架构，闭环没有「否」） | 骨架对，个别标注弱 | 与来源关系一致，主阅读任务清楚；[grammars.md](../references/grammars.md) 提供可选骨架 |
 | 可编辑性 | 飞书里是图片 / HTML / 整块嵌入 SVG | 主结构是原生节点，个别菱形嵌入可接受 | 卡片、条带、连线能点开改；装饰 path 没有当骨架 |
 | 默认宽度可读 | 文档默认宽度下核心被裁或要放大 | 核心可读，边角略挤 | 默认文档宽度下标题、卡片、页脚都清楚 |
 | 和正文的咬合 | 图和前后文字脱节或互相矛盾 | 有一句「这张图回答什么」 | 图推进该节论点，配色气质与文章一致；结论、步骤、来源等辅助信息按需呈现 |
@@ -74,9 +67,11 @@ bash skills/feishu-whiteboard-diagram/evals/create_human_eval_doc.sh --yes
 - 把 HTML 动画或截图当成「画板已验证」。
 - 工作坊场景只给一张锁死的精排图、没有空白共创板。
 - 用户给了 sequenceDiagram，却被重画成架构分层。
-- 虚线回填画成实线正向边，或「下一轮」接到结束态。
+- 反馈方向、线型含义或状态流转与来源契约冲突。
 
-## 图清单
+## 历史 fixture 图清单
+
+以下描述这些固定样例的设计意图，不是所有新图都要遵守的焦点、颜色或布局规则。
 
 | ID | 文件 | 介质 | 你要确认的事 |
 |---|---|---|---|

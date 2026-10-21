@@ -125,3 +125,63 @@ Fixtures and scorecard: [`human-eval.md`](human-eval.md), [`fixtures/human-eval/
 | Brand report | Custom white / slate / brand teal; latency and cost on separate axes | No findings | 0 errors / 0 warnings | 9 shapes, 30 text, 12 connectors; no embedded SVG |
 
 The warm-article sample initially had a top-margin warning and passed after a local spacing revision. Report arithmetic was checked: latency −120ms / 25%, cost −0.06 / 20%. A parent review inspected all three PNGs. These runs support local rendering and native conversion for these individual artifacts; they do not prove repeated model reliability, default Feishu document-width readability, live editability, drag binding, or human acceptance. Review also removed a stale winner-oriented comparison heading and clarified that an undirected relationship can use the existing `spoke` lint category.
+
+## 13. Article-wide visual continuity
+
+**Prompt.** “为清爽克制的技术文章准备阶段演进、两层协作、模块协同、实验结果四张画板。统一视觉，但按各图问题选布局。阶段只给探索、验证、推广三个名称；没有日期和完成状态。先给设计契约，不写飞书。”
+
+**Pass.** Shares typography, neutral surfaces, spacing and component treatment while selecting different relation structures. Separates shared role semantics from locally labeled data-series colors. Does not invent dates or completion status, or force every board into the same card grid.
+
+**Fail.** Treats a coherent article as four identical layouts, assigns meaning to color without a label, or fills missing milestone facts to complete the design.
+
+## 14. Shared inputs and non-exclusive mappings
+
+**Prompt.** “画两张独立解释图：第一张只有 S→A、S→B、A→B、A→C、B→C 五条关系，S 是共同观测，A 是分类，B 是容量估计，C 是决策；第二张指标 X 影响进入和分析阶段，指标 Y 影响回答阶段。标清交换内容或关联含义，只做本地。”
+
+**Pass.** Preserves all five edges in the first diagram and all three associations in the second. A shared-input / two-module / decision composition is one valid option; other faithful layouts also pass. Does not imply independent parallel execution or exclusive one-to-one mapping. Uses native direction markers and reports actual validation evidence.
+
+**Fail.** Reduces the first graph to S→A→B→C, adds a feedback loop, or removes X’s second association to align columns.
+
+## 15. Scoped KPI summaries
+
+**Prompt.** “做一张摘要指标加证据面板图。端 A 成功率 80%→84%、延迟 500→400ms；端 B 成功率 85%→90%、延迟 600→450ms。可以突出最大改善，但要保留端和指标口径，不推断总体收益。”
+
+**Pass.** Labels success-rate changes +4 pp / +5 pp and latency decreases 20% / 25%; any maximum is tied to the corresponding endpoint and metric. Keeps independent metric scales, consistent zero points, signs and series labels. No invented aggregate.
+
+**Fail.** Writes a subset maximum as a universal improvement, confuses pp with relative percent, or uses positive bar lengths with reversed negative ticks without explaining the axis.
+
+### 2026-10-21 study and validation scope
+
+- Read-only study inspected seven board previews and raw exports from a user-supplied technical article. The exports contained 617 nodes: 311 text, 210 shapes, 70 connectors, 15 images and 11 groups. 165 text nodes used sizes below 14. Of 140 connector endpoints, 45 had `attached_object` and 95 had `position`. These are anonymized observations, not a mandatory style or proof of client behavior. Original content and identifiers remain outside this skill.
+- A fresh baseline agent, before the added guidance, correctly designed a four-figure article, the five-edge topology, a non-exclusive mapping and metric comparisons. It found no demonstrated factual failure; it identified missing explicit guidance for article-wide continuity and the specialized layouts. This update adds reusable reference recipes, not a claimed correction of a failed behavior test. The baseline produced a design note only.
+- The original synthetic fixture [`shared-input-decision.svg`](fixtures/shared-input-decision.svg) passed fit-check and lint; parser 0.2.13 reported 0 errors / 0 warnings. Both the full PNG and a roughly 900px-wide local rendering were visually inspected. OpenAPI conversion produced 37 native nodes: 9 shapes, 21 text nodes and 7 connectors (5 directed edges, 2 undirected dividers), with no `image` / `svg` fallback. All five expected endpoint pairs were checked. Evidence is local; no Feishu write or client drag validation was performed.
+- A fresh after-change agent applied the updated skill to a renamed five-edge topology without reading the fixture. It independently chose a shared-input / two-module / decision layout, used a simpler single-accent palette, and omitted unnecessary interface tables. After fixing an initial title-margin warning, its SVG / PNG passed fit, lint and parser checks (0 errors / 0 warnings); OpenAPI contained 24 native nodes (5 shapes, 14 text, 5 directed connectors). Parent review inspected the PNG and endpoint pairs. All ten connector endpoints used `position`, so native conversion does not establish drag binding. This single sample supports local applicability, not measured reliability or Feishu experience. The existing 53 automated tests also passed using the installed 0.2.13 parser.
+- The exact prompts above remain regression scenarios until individually executed. The dated samples describe their own scope rather than marking the entire scenario suite passed.
+
+
+## 16. Read-only failure and unknown evidence
+
+**Prompt.** “只审查现有画板：已有证据说明一条箭头方向与正文相反；另一条连线是否随节点拖动未知，目前只有截图。不要修改，只交付结论。”
+
+**Pass.** Completes the review with a factual failure and a separate unknown drag behavior, citing the available evidence and recommending a specific next check. Does not require a repaired board, renderer or remote login before delivering the review.
+
+**Fail.** Refuses to report until all findings pass, edits the board, or treats a screenshot / raw binding field as a successful drag test.
+
+## 17. Supplied format and reader-relevant provenance
+
+**Prompt.** “保留我提供的 Mermaid 源格式制作基准流程画板，图中保留给定的来源和完整模型版本；不要为适配报告风格换成 SVG。先说明验证和交付路线。”
+
+**Pass.** Preserves format and provenance, uses the applicable source-format workflow, and separates local preview, actual conversion, remote write and client evidence. Missing source details remain unknown.
+
+**Fail.** Switches to SVG because the topic is a benchmark, removes model/source labels as production metadata, or runs SVG-only lint on Mermaid.
+
+### 2026-10-21 overall skill review
+
+A fresh read-only baseline found decision-changing inconsistencies in the old medium guidance, raw-versus-drag evidence, review completion criteria, source-format validation and floating-versus-fixed parser versions. The main flow still supported correct decisions; the baseline did not demonstrate an actual bad diagram. The revision consolidates these rules, keeps design and read-only review independent of rendering / remote access, and retains historical fixtures and evidence.
+
+The entrypoint decreased from 178 to 86 lines at this revision. Reference links and anchors were checked; the existing 53 tests passed with parser 0.2.13. Preflight uses the same pinned version and delegates setup / auth advice to the official base skill. The smoke check used the already installed parser without changing registry configuration. No live document was created or modified for this review.
+
+
+A fresh forward pass correctly handled warm neutral comparison, read-only fail/unknown findings, and preservation of supplied Mermaid plus provenance. Its independent comparison SVG used equal-weight panels and a custom warm palette; after correcting a title-margin warning and equalizing repeated node sizes, fit/lint/parser passed (0 errors / 0 warnings). Conversion produced 22 native nodes: 10 shapes, 11 text nodes and one undirected connector. Parent review inspected the PNG and the absence of arrowheads; drag binding was not established.
+
+The forward reviewer noted that Mermaid local validation was less explicit than SVG and that the base skill uses a version range. The verification reference now states the pinned local version and gives format-specific Mermaid check/conversion/preview commands. Those commands were exercised on the existing sequence fixture: 0 errors / 0 warnings, 4 native life_line nodes and 6 connectors; PNG inspected. This is one local sequence sample, not all-syntax or remote acceptance. The final lint diagnostic wording change also passed its 15 focused tests.

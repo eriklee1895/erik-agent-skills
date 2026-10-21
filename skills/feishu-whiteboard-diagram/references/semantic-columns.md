@@ -94,7 +94,7 @@ secondary_band: 来源明确给出的落地步骤；没有这些事实就不画
           marker-end="url(#arrow-cyan)"/>
 ```
 
-原生 connector 与绑定 connector 是两层证据。`--to openapi` 里有正确端点箭头，只能证明方向被保留；节点拖动后端点跟随，需要另查 raw 绑定字段或在客户端实际拖动验证。
+原生 connector、结构绑定与拖动行为是三层证据。`--to openapi` 中正确的端点箭头说明方向被保留；raw 的 `attached_object` 说明记录了绑定关系；节点拖动后端点是否跟随，仍需客户端实测。坐标端点不能作为绑定证明。
 
 ## 可运行样例与证据
 

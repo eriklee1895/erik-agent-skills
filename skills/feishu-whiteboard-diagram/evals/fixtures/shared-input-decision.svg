@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1040" width="1440" height="1040">
+  <!-- Original synthetic example. Edges: S→A, S→B, A→B, A→C, B→C. -->
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L10 4 L0 8 z" fill="#64748B"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1440" height="1040" fill="#F8FAFC"/>
+  <text x="80" y="114" font-size="34" font-weight="700" fill="#0F172A" data-bg="#F8FAFC">共享观测，两路分析共同形成决策</text>
+  <text x="80" y="154" font-size="22" fill="#475569" data-bg="#F8FAFC">任务调度示意：分类信号参与容量估计，两路结果分别进入决策</text>
+
+  <rect id="stage-s" x="80" y="208" width="1280" height="168" rx="16" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  <rect x="104" y="220" width="1232" height="8" rx="4" fill="#2563EB"/>
+  <text x="112" y="268" font-size="26" font-weight="700" fill="#1D4ED8">共享观测 S</text>
+  <text x="112" y="310" font-size="22" fill="#334155">采集任务负载，形成同一份观测摘要</text>
+  <text x="112" y="348" font-size="20" fill="#475569">输出：观测摘要，同时提供给 A 和 B</text>
+
+  <line data-role="edge" x1="360" y1="376" x2="360" y2="464" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+  <line data-role="edge" x1="1080" y1="376" x2="1080" y2="464" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="382" y="424" font-size="20" fill="#475569" data-bg="#F8FAFC">观测摘要</text>
+  <text x="1102" y="424" font-size="20" fill="#475569" data-bg="#F8FAFC">观测摘要</text>
+
+  <rect id="stage-a" x="80" y="464" width="560" height="240" rx="16" fill="#FFFFFF" stroke="#99D5CC" stroke-width="2"/>
+  <rect x="104" y="476" width="512" height="8" rx="4" fill="#0F766E"/>
+  <text x="112" y="526" font-size="26" font-weight="700" fill="#0F766E">分类分析 A</text>
+  <text x="112" y="568" font-size="22" fill="#334155">根据共享观测区分任务类型</text>
+  <text x="112" y="608" font-size="20" fill="#475569">分类信号提供给容量估计</text>
+  <line data-role="divider" x1="112" y1="636" x2="608" y2="636" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="112" y="672" font-size="20" fill="#0F766E">输出：分类信号 / 分类结果</text>
+
+  <rect id="stage-b" x="800" y="464" width="560" height="240" rx="16" fill="#FFFFFF" stroke="#B6CDF3" stroke-width="2"/>
+  <rect x="824" y="476" width="512" height="8" rx="4" fill="#2563EB"/>
+  <text x="832" y="526" font-size="26" font-weight="700" fill="#1D4ED8">容量估计 B</text>
+  <text x="832" y="568" font-size="22" fill="#334155">结合观测摘要与分类信号</text>
+  <text x="832" y="608" font-size="20" fill="#475569">估计任务可用的处理容量</text>
+  <line data-role="divider" x1="832" y1="636" x2="1328" y2="636" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="832" y="672" font-size="20" fill="#1D4ED8">输出：容量估计</text>
+
+  <text x="720" y="554" font-size="20" text-anchor="middle" fill="#475569" data-bg="#F8FAFC">分类信号</text>
+  <line data-role="edge" x1="640" y1="584" x2="800" y2="584" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+  <line data-role="edge" x1="360" y1="704" x2="360" y2="800" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+  <line data-role="edge" x1="1080" y1="704" x2="1080" y2="800" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="382" y="758" font-size="20" fill="#475569" data-bg="#F8FAFC">分类结果</text>
+  <text x="1102" y="758" font-size="20" fill="#475569" data-bg="#F8FAFC">容量估计</text>
+
+  <rect id="stage-c" x="80" y="800" width="1280" height="160" rx="16" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  <rect x="104" y="812" width="1232" height="8" rx="4" fill="#B45309"/>
+  <text x="112" y="860" font-size="26" font-weight="700" fill="#92400E">调度决策 C</text>
+  <text x="112" y="902" font-size="22" fill="#334155">输入：分类结果 + 容量估计</text>
+  <text x="112" y="936" font-size="20" fill="#475569">合并两路结果，输出任务调度参数</text>
+</svg>

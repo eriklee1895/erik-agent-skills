@@ -20,12 +20,12 @@ if ! command -v npx >/dev/null 2>&1; then
 fi
 
 if ! command -v python3 >/dev/null 2>&1; then
-  fail "python3 not found. It is required by scripts/lint_svg.py."
+  fail "python3 not found. It is required by fit_check.py and lint_svg.py."
 fi
 ok "python3 $(python3 --version 2>&1)"
 
-if ! WB_VER="$(npx -y @larksuite/whiteboard-cli@^0.2.13 -v 2>/dev/null)"; then
-  fail "Cannot run @larksuite/whiteboard-cli@^0.2.13 via npx."
+if ! WB_VER="$(npx -y @larksuite/whiteboard-cli@0.2.13 -v 2>/dev/null)"; then
+  fail "Cannot run @larksuite/whiteboard-cli@0.2.13 via npx."
 fi
 ok "whiteboard-cli ${WB_VER}"
 
@@ -37,9 +37,8 @@ if command -v lark-cli >/dev/null 2>&1; then
   fi
 else
   warn "lark-cli not on PATH. Local SVG/DSL preview still works; Feishu write needs:"
-  echo "         npm install -g @larksuite/cli" >&2
-  echo "         lark-cli config init --new && lark-cli auth login" >&2
-  echo "         plus lark-doc / lark-whiteboard / lark-shared skills" >&2
+  echo "         follow the installed lark-shared setup/auth guidance" >&2
+  echo "         and lark-doc / lark-whiteboard workflows" >&2
 fi
 
 echo "NOTE: preflight does not log in to Feishu."

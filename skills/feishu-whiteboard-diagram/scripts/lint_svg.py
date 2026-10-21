@@ -253,7 +253,7 @@ def validate_svg(path: Path) -> ValidationResult:
                 _finding(
                     "warning",
                     "flatten-to-svg-node",
-                    f"{label} becomes an embedded SVG node, not a native shape; OK for one diamond, not for structure",
+                    f"{label} becomes an embedded SVG node; use DSL diamond if native shape editing is required",
                 )
             )
         elif tag == "path" and not marker_attributes and role not in DIRECTED_ROLES:
