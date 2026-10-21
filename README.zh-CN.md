@@ -2,55 +2,54 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.jpg)
+![Erik Lee Agent Skills](assets/erik-agent-skills-cover-wide.jpg)
 
 <p align="center">
-  <a href="docs/skills-catalog.zh-CN.md"><img alt="21 个精选 Skills" src="https://img.shields.io/badge/COLLECTION-21_SKILLS-0B1F3A?style=for-the-badge"></a>
-  <a href="docs/skills-catalog.zh-CN.md"><img alt="3 个 Skills 分类" src="https://img.shields.io/badge/CATEGORIES-3-6750A4?style=for-the-badge"></a>
-  <a href="https://developers.openai.com/codex/skills"><img alt="Codex Ready" src="https://img.shields.io/badge/CODEX-READY-0F9D88?style=for-the-badge&logo=openai&logoColor=white"></a>
+  <a href="skills/README.zh-CN.md"><img alt="21 个 skills" src="https://img.shields.io/badge/COLLECTION-21_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="skills/README.zh-CN.md"><img alt="3 个分类" src="https://img.shields.io/badge/CATEGORIES-3-6750A4?style=for-the-badge"></a>
   <a href="README.md"><img alt="中英文文档" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
-  <a href="https://github.com/eriklee1895"><img alt="由 Erik Lee 维护" src="https://img.shields.io/badge/CURATED_BY-ERIK_LEE-E85D75?style=for-the-badge&logo=github&logoColor=white"></a>
 </p>
 
-Erik Lee 的个人 Agent Skills 仓库，收录可跨项目复用的写作、发布、媒体创作与工具型工作流。
+一组实用的 Agent Skills，用于图片、视频和音频创作，文档与图表制作，以及搜索和资料提取。
 
-## 安装
+每个 skill 围绕一类任务组织说明和所需资源。按需安装，即可交给你的 Agent 使用。
 
-使用 Skills CLI 安装完整集合，或选择单个 skill。完整说明见[安装指南](docs/installation.zh-CN.md)，其中包括项目级、全局和指定 Agent 的安装方式。
+## 按任务选择
+
+| 我想要…… | 从这里开始 |
+| --- | --- |
+| 生成或编辑图片 | [GPT Image](skills/gpt-image-api/SKILL.md) · [OpenRouter](skills/openrouter-image/SKILL.md) · [Seedream](skills/seedream-image-gen/SKILL.md) |
+| 制作文章封面和插图 | [Article Illustration](skills/article-illustration/SKILL.md) |
+| 根据文字或参考素材生成视频 | [Seedance](skills/seedance-video-gen/SKILL.md) |
+| 生成语音、音乐或完整音频场景 | [TTS 配音](skills/volcengine-tts/SKILL.md) · [BGM 配乐](skills/volcengine-bigmusic-bgm/SKILL.md) · [Seed Audio 场景音](skills/seed-audio-gen/SKILL.md) |
+| 把 Markdown 转为飞书文档，或为文档配图 | [Markdown 转飞书](skills/markdown-article-to-feishu-doc/SKILL.md) · [原生画板](skills/feishu-whiteboard-diagram/SKILL.md) · [交互图表](skills/feishu-html-diagram/SKILL.md) |
+| 联网搜索或收集文章素材 | [DeepSeek 搜索](skills/deepseek-web-search/SKILL.md) · [豆包搜索](skills/volcengine-web-search/SKILL.md) · [微信文章提取](skills/wechat-article-fetcher/SKILL.md) |
+
+[浏览全部 21 个 skills →](skills/README.zh-CN.md)，还包括头像、语音转写、Notion、官方文档抓取和 macOS 磁盘审计。
+
+## 快速开始
+
+安装单个 skill：
 
 ```bash
-# 安装全部 skills
-npx skills add eriklee1895/erik-agent-skills --all
-
-# 单独安装一个 skill
 npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api
 ```
 
-## Skills
+也可以安装完整集合：
 
-仓库目前收录 21 个可跨项目独立使用的 skills，分为三类。端到端写作工作流 skills
-（选题构思、润色、微信/博客发布、任务收尾）与 [writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)
-项目环境强耦合，有意保留在该项目内，不收录于本仓库。
+```bash
+npx skills add eriklee1895/erik-agent-skills --all
+```
 
-| 分类 | 数量 | 能力范围 |
-| --- | ---: | --- |
-| 写作 | 4 | 飞书文档/图表与微信文章抓取 |
-| 媒体 | 12 | 图片、视频、语音、音乐与头像单图、套图、循环动画及交互式 3D 制作 |
-| 通用工具 | 5 | 可复用 CLI、文档抓取、联网搜索与开发者磁盘审计 |
+项目级、全局和指定 Agent 的安装选项见[安装指南](docs/installation.zh-CN.md)。
+安装后，按所选 skill 的说明配置运行工具和服务凭据。
 
-完整分类、skill 清单、用途说明及单独安装命令见[中文 Skills 目录](docs/skills-catalog.zh-CN.md)。
+## 浏览仓库
 
-头像相关能力分为两个独立 skill：`avatar-creator` 制作单图、套图及循环 GIF/MP4
-素材；`live-avatar-3d` 制作 Three.js 交互式角色。两者可使用同一张角色参考图，互不依赖。
-
-## 仓库结构
-
-- `skills/` 是唯一发布源，每个一级子目录对应一个 skill。
-- `docs/` 存放双语 Skills 目录和仓库级文档。
-- `assets/` 存放仓库级视觉资源。
-
-每个 skill 都是一个自包含目录，必须提供 `SKILL.md`，并可按需包含
-`scripts/`、`tests/`、`references/`、`guides/`、`assets/`、`evals/` 和 `agents/`。
+- [Skills](skills/README.zh-CN.md)：完整清单和各 skill 的使用说明。
+- [安装指南](docs/installation.zh-CN.md)：安装范围和常用选项。
+- `skills/<name>/`：各 skill 的源文件、工具、参考资料和示例。
+- `assets/`：仓库视觉资源。
 
 ## 相关项目
 

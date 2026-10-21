@@ -2,62 +2,58 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-![Erik Lee Agent Skills README banner](assets/erik-agent-skills-cover-wide.jpg)
+![Erik Lee Agent Skills](assets/erik-agent-skills-cover-wide.jpg)
 
 <p align="center">
-  <a href="docs/skills-catalog.en.md"><img alt="21 curated skills" src="https://img.shields.io/badge/COLLECTION-21_SKILLS-0B1F3A?style=for-the-badge"></a>
-  <a href="docs/skills-catalog.en.md"><img alt="3 skill categories" src="https://img.shields.io/badge/CATEGORIES-3-6750A4?style=for-the-badge"></a>
-  <a href="https://developers.openai.com/codex/skills"><img alt="Codex ready" src="https://img.shields.io/badge/CODEX-READY-0F9D88?style=for-the-badge&logo=openai&logoColor=white"></a>
+  <a href="skills/README.md"><img alt="21 skills" src="https://img.shields.io/badge/COLLECTION-21_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="skills/README.md"><img alt="3 categories" src="https://img.shields.io/badge/CATEGORIES-3-6750A4?style=for-the-badge"></a>
   <a href="README.zh-CN.md"><img alt="English and Chinese documentation" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
-  <a href="https://github.com/eriklee1895"><img alt="Curated by Erik Lee" src="https://img.shields.io/badge/CURATED_BY-ERIK_LEE-E85D75?style=for-the-badge&logo=github&logoColor=white"></a>
 </p>
 
-Erik Lee's curated library of reusable Agent Skills for writing, publishing,
-media creation, and tool-driven workflows.
+Practical Agent Skills for creating images, video and audio, working with
+documents and diagrams, and finding and extracting information.
 
-## Install
+Each skill provides focused task instructions and supporting resources. Install
+the skills you need and use them with your agent.
 
-Install the complete collection or choose individual skills with the Skills
-CLI. See the [full installation guide](docs/installation.en.md) for project-
-level, global, and agent-specific options.
+## Find a skill for your task
+
+| I want to… | Start here |
+| --- | --- |
+| Generate or edit images | [GPT Image](skills/gpt-image-api/SKILL.md) · [OpenRouter](skills/openrouter-image/SKILL.md) · [Seedream](skills/seedream-image-gen/SKILL.md) |
+| Create article covers and illustrations | [Article Illustration](skills/article-illustration/SKILL.md) |
+| Generate video from text or references | [Seedance](skills/seedance-video-gen/SKILL.md) |
+| Create speech, music, or a mixed audio scene | [TTS](skills/volcengine-tts/SKILL.md) · [BGM](skills/volcengine-bigmusic-bgm/SKILL.md) · [Seed Audio](skills/seed-audio-gen/SKILL.md) |
+| Turn Markdown into a Feishu document or add diagrams | [Markdown to Feishu](skills/markdown-article-to-feishu-doc/SKILL.md) · [Native whiteboards](skills/feishu-whiteboard-diagram/SKILL.md) · [Interactive diagrams](skills/feishu-html-diagram/SKILL.md) |
+| Search the web or collect article sources | [DeepSeek Search](skills/deepseek-web-search/SKILL.md) · [Doubao Search](skills/volcengine-web-search/SKILL.md) · [WeChat article extraction](skills/wechat-article-fetcher/SKILL.md) |
+
+[Browse all 21 skills →](skills/README.md), including avatars, transcription,
+Notion, documentation retrieval, and macOS disk audits.
+
+## Quick start
+
+Install one skill:
 
 ```bash
-# Install all skills
-npx skills add eriklee1895/erik-agent-skills --all
-
-# Install one skill
 npx skills add eriklee1895/erik-agent-skills --skill gpt-image-api
 ```
 
-## Skills
+Or install the complete collection:
 
-The repository currently includes 21 standalone, cross-project skills across
-three areas. The end-to-end writing workflow skills (ideation, polishing,
-WeChat/blog publishing, closeout) stay project-specific to
-[writing-agent-harness](https://github.com/eriklee1895/writing-agent-harness)
-and are intentionally not published here.
+```bash
+npx skills add eriklee1895/erik-agent-skills --all
+```
 
-| Area | Skills | Focus |
-| --- | ---: | --- |
-| Writing | 4 | Feishu documents/diagrams and WeChat article collection |
-| Media | 12 | Image, video, speech, music, and avatar images, sets, loops, and interactive 3D |
-| General Utilities | 5 | Reusable CLIs, documentation retrieval, web search, and developer disk audits |
+The [installation guide](docs/installation.en.md) covers project-level, global,
+and agent-specific options. After installation, follow the selected skill's
+setup instructions for runtime tools and service credentials.
 
-Browse the [English skills catalog](docs/skills-catalog.en.md) for the complete
-categorized list, descriptions, and per-skill install commands.
+## Explore the repository
 
-For avatars, `avatar-creator` produces images, image sets, and looping GIF/MP4
-assets. `live-avatar-3d` independently builds interactive Three.js characters.
-They can share a character reference image; neither skill requires the other.
-
-## Repository layout
-
-- `skills/` is the canonical publishing source. Each direct child is one skill.
-- `docs/` contains the bilingual catalog and repository-level documentation.
-- `assets/` contains repository-level visual assets.
-
-Each skill is a self-contained directory with a required `SKILL.md` and optional
-`scripts/`, `tests/`, `references/`, `guides/`, `assets/`, `evals/`, and `agents/` directories.
+- [Skills](skills/README.md) — the complete list and each skill's instructions.
+- [Installation](docs/installation.en.md) — installation scope and options.
+- `skills/<name>/` — each skill's source, bundled tools, references, and examples.
+- `assets/` — repository visuals.
 
 ## Related project
 

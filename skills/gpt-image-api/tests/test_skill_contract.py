@@ -327,15 +327,15 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("visual-abstract-executive-summary", names)
         self.assertGreaterEqual(len(names), 19)
 
-    def test_catalogs_publish_new_name_and_remove_old_skill_name(self):
+    def test_catalogs_link_both_gpt_image_skills(self):
         for relative in (
-            "docs/skills-catalog.en.md",
-            "docs/skills-catalog.zh-CN.md",
+            "skills/README.md",
+            "skills/README.zh-CN.md",
         ):
             text = (REPO_ROOT / relative).read_text(encoding="utf-8")
             with self.subTest(relative=relative):
-                self.assertIn("gpt-image-api", text)
-                self.assertIn("--skill gpt-image-2`", text)
+                for name in ("gpt-image-api", "gpt-image-2"):
+                    self.assertIn(f"[{name}](./{name}/SKILL.md)", text)
 
     def test_previous_gpt_image_skill_remains_published(self):
         legacy = REPO_ROOT / "skills" / "gpt-image-2"
