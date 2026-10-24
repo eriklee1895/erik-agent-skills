@@ -17,7 +17,7 @@ Marker 编辑是 Seedream 5.0 Pro 最具差异化的能力——不用画 mask�
 | Marker 残留 | N/A | 模型自动擦除（全部 critique 里 NO_MARKER_LEFTOVER 都是 10/10） |
 | 上手成本 | 需要 PS/Figma/专业涂抹工具 | 命令行 `--marker-rect X%,Y%,W%,H%` + 一句话 prompt |
 
-Pro's marker editing reliably handles: headline/subtitle/label text swaps, product material/color changes, adding icons/decorative dots, removing icons/objects and restoring the background, simultaneous multi-region multi-color edits, and combined outpaint+marker canvas-extension edits. **Marker editing is validated on Pro; Lite is untested for this workflow.**
+Pro's marker editing reliably handles: headline/subtitle/label text swaps, product material/color changes, adding icons/decorative dots, removing icons/objects and restoring the background, simultaneous multi-region multi-color edits, and combined outpaint+marker canvas-extension edits. **These detailed marker observations are historical Pro evidence. Both Pro and Flash officially support interaction; the current Flash benchmark verifies native coordinate editing, not every historical marker recipe.**
 
 ---
 

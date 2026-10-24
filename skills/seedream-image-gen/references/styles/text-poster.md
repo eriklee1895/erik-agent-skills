@@ -1,7 +1,7 @@
 # 文字海报 / Banner / 封面（Text Poster）
 
 > Pro-exclusive 风格 preset。Seedream 5.0 Pro 的中文/英文文字渲染是 headline 能力，这个 preset 覆盖科技博客封面、杂志封面、宽幅 banner/封面（16:9 —— blog hero、公众号头图、YouTube 缩略图、PPT 首页、视频封面等）、信息图、电商 banner、徽章 logo 六大高频场景。
-> Lite 不推荐使用此 preset（文字质量明显下降）。
+> 本 preset 的详细效果来自历史 Pro 样本。Flash 可先试短标题/标签，密集排版需单独校对，参见 [当前 benchmark](../../evals/flash-benchmark.md)。
 
 ## 结构 Guardrails（所有文字海报通用）
 
@@ -130,7 +130,7 @@ uv run scripts/seedream_image_gen.py generate --square \
 如果出图文字不对，按顺序排查：
 
 1. **文字是否在 prompt 里用引号完整写出？**（没引号 = 模型自己填字）
-2. **是否用了 2K？**（1K 文字糊；Lite 错字多）
+2. **是否用了 2K？**（低分辨率可能影响小字；逐字核对实际结果）
 3. **是否显式指定了字体族 + 字重？**（没说 = 随机字体）
 4. **是否说了位置和对齐？**（没说 = 文字到处飘）
 5. **单条文字长度是否 ≤12 字？**（太长会错字/糊）

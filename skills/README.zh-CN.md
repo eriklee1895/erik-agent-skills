@@ -22,7 +22,7 @@
 | [gpt-image-2](./gpt-image-2/SKILL.md) | 使用 OpenAI gpt-image-2 模型生成、编辑和批量制作位图。 |
 | [gpt-image-api](./gpt-image-api/SKILL.md) | 使用 OpenAI GPT Image 2.5 Flare 与 Sunburst 生成、精细编辑、流式生成和批量制作位图。 |
 | [openrouter-image](./openrouter-image/SKILL.md) | 通过 OpenRouter 统一图像 API 使用 GPT Image 2.5 Sunburst/Flare 与 Nano Banana 2.1 生成和编辑图片；CLI 会在调用前校验各模型的参数方言。 |
-| [seedream-image-gen](./seedream-image-gen/SKILL.md) | 使用 Seedream 生成和编辑图片，支持文字设计、标记编辑、扩图与批量工作流。 |
+| [seedream-image-gen](./seedream-image-gen/SKILL.md) | 使用 Seedream 5.0 Pro/Flash 生图和编辑，支持文字设计、坐标编辑、透明图层编辑、原生图层拆分与批量工作流。 |
 | [avatar-creator](./avatar-creator/SKILL.md) | 制作静态头像、不同角色家族、同角色套图及固定 Seedance GIF/MP4 动画。图片使用可用图像工具；动图需 Ark 凭据、uv 和 ffmpeg，不依赖其他 skill。不负责交互式 3D 程序。 |
 | [live-avatar-3d](./live-avatar-3d/SKILL.md) | 将角色图制作成无需构建步骤的交互式 3D 网页头像，支持环视、动作和可选的本地麦克风嘴型。 |
 | [seedance-video-gen](./seedance-video-gen/SKILL.md) | 使用 Seedance 根据文本、图片或多模态参考生成视频。 |

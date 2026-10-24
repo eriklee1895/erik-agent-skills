@@ -6,8 +6,8 @@
 #   "pillow>=10.0.0",
 # ]
 # ///
-"""Generate, edit, outpaint, and batch-generate images with Seedream 5.0 Pro (default) / 5.0 Lite
-via the Volcengine Ark API.
+"""Generate, edit, outpaint, and batch-generate images with Seedream 5.0 Pro (default) / 5.0 Flash
+via the Volcengine Ark API (one shared Pro/Flash endpoint).
 
 Subcommands:
   generate         Create a new image from a text prompt (default: Pro / 2K / URL download).
@@ -35,6 +35,7 @@ import asyncio
 import base64
 import datetime as dt
 import getpass
+from io import BytesIO
 import json
 import math
 import os
@@ -43,7 +44,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, NamedTuple, Optional
 
 import httpx
 from PIL import Image, ImageDraw, ImageOps
@@ -55,64 +56,39 @@ from PIL import Image, ImageDraw, ImageOps
 # ---------------------------------------------------------------------------
 
 MODEL_PRO = "doubao-seedream-5-0-pro-260628"
-MODEL_LITE = "doubao-seedream-5-0-260128"
+MODEL_FLASH = "doubao-seedream-5-0-flash-260915"
 MODEL_PRO_ALIASES = {"pro", "seedream-pro", "5-pro", "seedream-5-pro", "doubao-seedream-5-0-pro"}
-MODEL_LITE_ALIASES = {"lite", "seedream-lite", "5-lite", "seedream-5-lite", "doubao-seedream-5-0",
-                     "doubao-seedream-5-0-lite"}
-
-# Capability shape:
-#   aliases            set of shorthand names accepted on --model
-#   label              human-readable label for list-models
-#   size_strings       set of allowed preset sizes (e.g. "2K")
-#   pixel_min/max      inclusive total-pixel bounds for WxH sizes
-#   aspect_max         max long:short ratio (16 = both landscape and portrait up to 16:1)
-#   default_size       default --size when user doesn't pass one
-#   max_refs           max reference images in the `image` field
-#   supports_web_search  does the model accept tools:[{type:web_search}]?
-#   supports_sequential does it accept sequential_image_generation?
-#   supports_negative_prompt does it accept negative_prompt? (undocumented but accepted by Pro)
-#   optimize_modes     allowed values for optimize_prompt_options.mode
-#   price_per_image    rough ¥/image for the default size bucket; printed by list-models
-#   notes              human notes (limitations)
-
+MODEL_FLASH_ALIASES = {"flash", "seedream-flash", "5-flash", "seedream-5-flash", "doubao-seedream-5-0-flash"}
+RETIRED_MODELS = {
+    "lite", "seedream-lite", "5-lite", "seedream-5-lite", "doubao-seedream-5-0",
+    "doubao-seedream-5-0-lite", "doubao-seedream-5-0-260128", "doubao-seedream-5-0-lite-260128",
+}
+_COMMON_CAPS: dict[str, Any] = {
+    "size_strings": {"1K", "1.5K", "2K"},
+    "pixel_min": 921_600,
+    "pixel_max": 4_624_220,
+    "aspect_max": 16,
+    "default_size": "2K",
+    "max_refs": 10,
+}
 MODELS: dict[str, dict[str, Any]] = {
     MODEL_PRO: {
+        **_COMMON_CAPS,
         "aliases": MODEL_PRO_ALIASES,
         "label": "Seedream 5.0 Pro (2026-06-28 build)",
-        "size_strings": {"1K", "2K"},
-        "pixel_min": 921_600,          # official method-1 floor = 1280×720 = 0.92MP; 1024² OK
-        "pixel_max": 4_624_220,        # official method-1 ceiling = 2048²×1.1025 (not 2048²=4.19MP)
-        "aspect_max": 16,
-        "method1_default": "1024x1024",  # official method-1 default when --size omitted
-        "default_size": "2K",
-        "max_refs": 10,
-        "supports_web_search": False,
-        "supports_sequential": False,
-        "supports_negative_prompt": True,
-        "optimize_modes": {"standard"},
-        "price_per_image": "≤2.36MP ¥0.30 / >2.36MP ¥0.60 (extra input image ¥0.02)",
-        "notes": "Headline features: strong Chinese+English text rendering; marker-based region editing. "
-                 "No web_search, no sequential gen, no stream. Size preset stops at 2K (no 3K/4K).",
+        "supports_negative_prompt": True,  # Legacy, undocumented Pro behavior only.
+        "optimize_modes": {"standard", "fast"},
+        "price_per_image": "2026-10-24 list: generation <=2.61MP CNY0.30 / larger CNY0.60; layers CNY0.15/0.30",
+        "notes": "Default quality model; standard/fast, coordinate/marker edits, alpha-image editing and layer decomposition.",
     },
-    MODEL_LITE: {
-        "aliases": MODEL_LITE_ALIASES,
-        "label": "Seedream 5.0 Lite (2026-01-28 build)",
-        "size_strings": {"2K", "3K", "4K"},
-        "pixel_min": 3_686_400,        # official method-1 floor = 2560×1440 ≈ 3.69MP
-        "pixel_max": 16_777_216,       # official method-1 ceiling = 4096×4096 = 16MP
-        "aspect_max": 16,
-        "method1_default": "2048x2048",  # official method-1 default when --size omitted
-        "default_size": "2K",
-        "max_refs": 14,
-        "supports_web_search": True,
-        "supports_sequential": True,
-        "supports_negative_prompt": False,
+    MODEL_FLASH: {
+        **_COMMON_CAPS,
+        "aliases": MODEL_FLASH_ALIASES,
+        "label": "Seedream 5.0 Flash (2026-09-15 build)",
+        "supports_negative_prompt": False,  # No documented negative_prompt field; use the prompt.
         "optimize_modes": {"standard"},
-        "price_per_image": "¥0.22/张 (2K tier)",
-        "notes": "Fast sketch/iteration workhorse. Text rendering weaker than Pro (avoid text-heavy "
-                 "prompts). Supports web_search and sequential group generation. Native pixel floor is "
-                 "3.69MP; the CLI can downscale smaller explicit outputs. optimize_prompt fast is NOT "
-                 "supported on Lite (5.0 Pro/Lite/4.5 all reject 'fast'; only Seedream 4.0 accepts it).",
+        "price_per_image": "2026-10-24 list: CNY0.12/output image; input images free",
+        "notes": "Lower-latency/cost model; same generation/edit/layer API, standard mode only.",
     },
 }
 
@@ -145,6 +121,16 @@ MARKER_CLEANUP_EN = "The colored rectangles/circles/scribbles in the image are e
 # Outpaint auto-prompt suffix (Chinese-first, since Pro prefers Chinese prompts).
 OUTPAINT_FILL_ZH = "画布中央是原图片，请自然延伸填充四周的空白区域，使整张图变成一张完整的{aspect_word}图片，延续原有的风格、光照、色调与材质，不要让中心与新填充区域有可见接缝。"
 OUTPAINT_FILL_EN = "The center of this canvas is the original image. Naturally extend and fill the surrounding blank areas to make one complete {aspect_word} image, matching the original style, lighting, palette and materials. No visible seam between center and extended regions."
+
+
+class ImageOutput(NamedTuple):
+    content: bytes
+    size: Optional[str] = None
+    output_format: Optional[str] = None
+    z_index: Optional[int] = None
+    bounding_box: Optional[dict[str, Any]] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -215,6 +201,9 @@ def _resolve_model(model_arg: str) -> tuple[str, dict[str, Any]]:
     if not model_arg:
         return DEFAULT_MODEL, MODELS[DEFAULT_MODEL]
 
+    if model_arg.lower().strip() in RETIRED_MODELS:
+        _die("Seedream Lite is retired from this skill. Choose --model flash or --model pro explicitly; no automatic remapping.")
+
     # Exact id match
     if model_arg in MODELS:
         return model_arg, MODELS[model_arg]
@@ -276,6 +265,7 @@ _SIZE_STRING_PIXELS: dict[str, int] = {
     # Resolutions here are nominal buckets — the server picks the exact pixel
     # dimensions. We only need total pixels for client-side range validation.
     "1K": 1_048_576,   # ~1MP, 1024²
+    "1.5K": 2_359_296,
     "2K": 4_194_304,   # ~4MP, 2048²
     "3K": 9_437_184,   # ~9MP, 3072²
     "4K": 16_777_216,  # 16MP, 4096²
@@ -283,36 +273,21 @@ _SIZE_STRING_PIXELS: dict[str, int] = {
 
 
 def _apply_size_shortcuts(
-    size: Optional[str],
-    wechat_header: bool,
-    square: bool,
-    wide: bool,
-    portrait: bool,
-    landscape: bool,
-    phone: bool,
-    caps: dict[str, Any],
+    size: Optional[str], wechat_header: bool, square: bool, wide: bool,
+    portrait: bool, landscape: bool, phone: bool, caps: dict[str, Any],
 ) -> str:
-    """Translate convenience flags into size strings; last explicit wins.
-    Model-aware so --square and --wide produce valid sizes for both models.
-    """
-    # 9:16 phone/Stories (1152x2048 Pro, 1440x2560 Lite) — most common vertical UI size
+    """Both active models share the same explicit-size bounds and shortcuts."""
     if phone:
-        return "1152x2048" if "1K" in caps["size_strings"] else "1440x2560"
-    # Wide/header shortcuts (1792x1024, Pro only due to pixel floor on Lite)
+        return "1152x2048"
     if wechat_header or wide:
         return "1792x1024"
     if square:
-        # Pro allows 1024² (under its 4MP cap); Lite has 3.69MP floor → 2048²
-        return "1024x1024" if "1K" in caps["size_strings"] else "2048x2048"
+        return "1024x1024"
     if portrait:
-        # 3:4 vertical — model-aware pixel sizing
-        # Pro: 1536x2048 = 3.15MP (fits 0.9-4MP); Lite: 2048x2732 = 5.59MP (over 3.69MP floor)
-        return "1536x2048" if "1K" in caps["size_strings"] else "2048x2732"
+        return "1536x2048"
     if landscape:
-        # 16:9 horizontal — model-aware pixel sizing
-        # Pro: 2048x1152 = 2.36MP (fits 0.9-4MP); Lite: 2732x1536 = 4.20MP (over 3.69MP floor)
-        return "2048x1152" if "1K" in caps["size_strings"] else "2732x1536"
-    return size or caps.get("default_size", "2K")
+        return "2048x1152"
+    return size or caps["default_size"]
 
 
 def _validate_size(
@@ -342,13 +317,13 @@ def _validate_size(
     if size_upper in {"3K", "4K"} and size_upper not in caps["size_strings"]:
         _die(
             f"Size '{size_upper}' is not supported by model {model_id}. "
-            f"Pro tops out at 2K (~4.6MP method-1 pixel cap). Allowed presets: {sorted(caps['size_strings'])}."
+            f"Pro/Flash top out at 2K (~4.6MP method-1 pixel cap). Allowed presets: {sorted(caps['size_strings'])}."
         )
 
     m = re.fullmatch(r"(\d{3,5})x(\d{3,5})", size)
     if not m:
         _die(
-            f"Invalid size '{size}'. Use '1K'/'2K'/'3K'/'4K' (subject to model), or WIDTHxHEIGHT "
+            f"Invalid size '{size}'. Use '1K'/'1.5K'/'2K' (subject to model), or WIDTHxHEIGHT "
             f"(e.g. '1024x1024', '1792x1024', '2560x1440')."
         )
 
@@ -448,6 +423,20 @@ def _is_url(path: str) -> bool:
     return path.startswith(("http://", "https://"))
 
 
+def _validate_transparent_input(paths: list[str], output_format: str) -> None:
+    if len(paths) != 1:
+        _die("Transparent editing requires exactly one alpha-bearing reference image.")
+    if output_format != "png":
+        _die("Transparent editing requires PNG output, not JPEG.")
+    if not _is_url(paths[0]):
+        try:
+            with Image.open(Path(paths[0]).expanduser()) as image:
+                if "A" not in image.getbands() and "transparency" not in image.info:
+                    _die("Transparent editing requires an input image with an alpha channel.")
+        except OSError as error:
+            _die(f"Cannot read transparent reference: {error.__class__.__name__}")
+
+
 def _encode_local_image(path: Path) -> str:
     """Base64-encode a local image file as data URL."""
     if not path.is_file():
@@ -514,13 +503,15 @@ def _parse_color(spec: str) -> tuple[int, int, int]:
 
 
 def _apply_markers(src_path: Path, rects: list[tuple[float, float, float, float, bool]],
-                   colors: list[tuple[int, int, int]], fill_alpha: int, stroke_width: int) -> bytes:
+                   colors: list[tuple[int, int, int]], fill_alpha: int, stroke_width: int,
+                   *, preserve_alpha: bool = False) -> bytes:
     """Draw semi-transparent rectangles on a copy of the source image and return
     the annotated image as PNG bytes.
 
     `colors` is parallel to `rects` so each region can be its own color (red/blue/green for
     multi-region prompts like "红框替换标题，蓝框改帽子"). When a single color is supplied
-    (legacy --marker-color without repeats), all rects use that color.
+    (legacy --marker-color without repeats), all rects use that color. Transparent edits
+    retain alpha, including visible marker overlays on otherwise empty pixels.
     """
     img = Image.open(src_path).convert("RGBA")
     # Honor EXIF orientation (phone photos may be stored rotated; transpose so
@@ -550,7 +541,9 @@ def _apply_markers(src_path: Path, rects: list[tuple[float, float, float, float,
         fill_rgba = (*color, fill_alpha)
         draw.rectangle(box, fill=fill_rgba, outline=color, width=stroke_width)
 
-    combined = Image.alpha_composite(img, overlay).convert("RGB")
+    combined = Image.alpha_composite(img, overlay)
+    if not preserve_alpha:
+        combined = combined.convert("RGB")
     buf = _BytesIO()
     combined.save(buf, format="PNG")
     return buf.getvalue()
@@ -669,70 +662,37 @@ def _append_suffix(prompt: str, suffix: str) -> str:
 
 
 def _build_request_body(
-    *,
-    model: str,
-    caps: dict[str, Any],
-    prompt: str,
-    size: str,
-    output_format: str,
-    watermark: bool,
-    web_search: bool,
-    reference_images: Optional[list[str]],
-    optimize_prompt: Optional[str],
-    sequential: bool,
-    max_images: int,
-    negative_prompt: Optional[str],
+    *, model: str, caps: dict[str, Any], prompt: str, size: str,
+    output_format: str, watermark: bool, reference_images: Optional[list[str]],
+    optimize_prompt: Optional[str], negative_prompt: Optional[str],
+    background: str = "opaque", layer_decomposition: bool = False,
 ) -> dict[str, Any]:
+    mode = optimize_prompt or "standard"
+    if mode not in caps["optimize_modes"]:
+        _die(f"Prompt mode {mode!r} is not supported by {model}; supported: {sorted(caps['optimize_modes'])}.")
+    if not layer_decomposition and not prompt:
+        _die("A prompt is required for generation/editing.")
     body: dict[str, Any] = {
-        "model": model,
-        "prompt": prompt,
-        "size": size,
-        "output_format": output_format,
-        "watermark": watermark,
+        "model": model, "size": size, "output_format": output_format,
+        "watermark": watermark, "optimize_prompt_options": {"mode": mode},
     }
-
-    # Optimize prompt mode — Pro only accepts "standard"; Lite accepts both.
-    opt_mode = optimize_prompt or ("standard" if "standard" in caps["optimize_modes"] else None)
-    if opt_mode and opt_mode in caps["optimize_modes"]:
-        body["optimize_prompt_options"] = {"mode": opt_mode}
-    elif optimize_prompt:
-        _warn(f"optimize_prompt mode '{optimize_prompt}' not supported on {model}; ignoring.")
-
-    # Web search: only on Lite (and only if user explicitly passes --web-search).
-    if web_search:
-        if caps["supports_web_search"]:
-            body["tools"] = [{"type": "web_search"}]
-        else:
-            _warn(f"Web search (tools:web_search) is not supported on {model}; ignoring --web-search.")
-
-    # Reference images
+    if prompt:
+        body["prompt"] = prompt
     if reference_images:
-        if len(reference_images) > caps["max_refs"]:
-            _die(
-                f"{model} accepts at most {caps['max_refs']} reference images "
-                f"(got {len(reference_images)})."
-            )
-        body["image"] = reference_images if len(reference_images) > 1 else reference_images[0]
-
-    # Sequential group generation (Lite only)
-    if sequential:
-        if caps["supports_sequential"]:
-            body["sequential_image_generation"] = "auto"
-            body["sequential_image_generation_options"] = {"max_images": max_images}
-        else:
-            _die(
-                f"--sequential (group/storyboard generation) is only supported on Seedream Lite. "
-                f"On Pro, use multiple --reference-image passes with natural-language scene "
-                f"descriptions, or run separate calls. Pass --model lite if you need sequential."
-            )
-
-    # Negative prompt (Pro only — undocumented but accepted)
+        limit = 1 if layer_decomposition else caps["max_refs"]
+        if len(reference_images) > limit:
+            _die(f"{model} accepts at most {limit} reference image(s) for this operation.")
+        body["image"] = reference_images[0] if len(reference_images) == 1 else reference_images
+    if layer_decomposition:
+        if not reference_images:
+            _die("Layer decomposition requires one reference image.")
+        body["layer_decomposition"] = True
+    else:
+        body["background"] = background
     if negative_prompt:
-        if caps["supports_negative_prompt"]:
-            body["negative_prompt"] = negative_prompt
-        else:
-            _warn(f"negative_prompt is not supported on {model}; ignoring.")
-
+        if not caps["supports_negative_prompt"]:
+            _die("negative_prompt is undocumented for Flash; put constraints in the prompt instead.")
+        body["negative_prompt"] = negative_prompt
     return body
 
 
@@ -776,6 +736,7 @@ def _write_metadata(
     optimize_prompt: Optional[str],
     base_url: str,
     dry_run: bool,
+    background: str = "opaque",
     negative_prompt: Optional[str] = None,
     marker_rects: Optional[list[str]] = None,
     outpaint_specs: Optional[list[str]] = None,
@@ -793,7 +754,8 @@ def _write_metadata(
         "size": size,
         "output_format": output_format,
         "watermark": watermark,
-        "web_search": web_search,
+        "web_search": False,
+        "background": background,
         "optimize_prompt": optimize_prompt,
         "reference_images_count": reference_count,
         # Don't persist data URLs — they're huge and can contain secrets-adjacent material
@@ -917,37 +879,32 @@ async def _download_image(client: httpx.AsyncClient, url: str, timeout: int) -> 
                     file=sys.stderr,
                 )
                 await asyncio.sleep(delay)
-    raise last_error  # type: ignore[misc]
+    raise _APIError(0, "DownloadFailed", "Generation succeeded but image download failed after retries; generation will not be replayed.") from last_error
 
 
 async def _generate_single(
-    client: httpx.AsyncClient,
-    body: dict[str, Any],
-    timeout: int,
-) -> tuple[list[bytes], Optional[str], Optional[dict], Optional[str], Optional[int]]:
-    """Returns (image_bytes_list, revised_prompt, usage, reported_size, elapsed_ms)."""
+    client: httpx.AsyncClient, body: dict[str, Any], timeout: int,
+) -> tuple[list[ImageOutput], Optional[str], Optional[dict], Optional[str], Optional[int]]:
     data = await _call_api(client, body, timeout)
-    elapsed_ms = data.get("_elapsed_ms")
-
-    images: list[bytes] = []
-    revised_prompt: Optional[str] = None
-    usage: Optional[dict] = data.get("usage")
-    reported_size: Optional[str] = None
-
-    results = data.get("data") or []
-    for item in results:
-        url = item.get("url")
-        if url:
-            img_bytes = await _download_image(client, url, timeout)
-            images.append(img_bytes)
+    images: list[ImageOutput] = []
+    revised_prompt = None
+    for item in data.get("data") or []:
+        if item.get("error"):
+            error = item["error"]
+            raise _APIError(200, error.get("code", "ImageError"), error.get("message", "Image generation failed."))
+        if item.get("url"):
+            content = await _download_image(client, item["url"], timeout)
         elif item.get("b64_json"):
-            images.append(base64.b64decode(item["b64_json"]))
-        if item.get("revised_prompt"):
-            revised_prompt = item["revised_prompt"]
-        if item.get("size"):
-            reported_size = item["size"]
-
-    return images, revised_prompt, usage, reported_size, elapsed_ms
+            content = base64.b64decode(item["b64_json"])
+        else:
+            raise _APIError(200, "MissingImage", "API result contains no downloadable image.")
+        images.append(ImageOutput(content, item.get("size"), item.get("output_format"),
+                                  item.get("z_index"), item.get("bounding_box"),
+                                  item.get("name"), item.get("description")))
+        revised_prompt = item.get("revised_prompt") or revised_prompt
+    if not images:
+        raise _APIError(200, "EmptyImages", "API returned no images; generation will not be replayed.")
+    return images, revised_prompt, data.get("usage"), images[0].size, data.get("_elapsed_ms")
 
 
 async def _generate_with_retry(
@@ -955,7 +912,7 @@ async def _generate_with_retry(
     base_url: str,
     body: dict[str, Any],
     timeout: int,
-) -> tuple[list[bytes], Optional[str], Optional[dict], Optional[str], Optional[int]]:
+) -> tuple[list[ImageOutput], Optional[str], Optional[dict], Optional[str], Optional[int]]:
     last_error: Optional[_APIError] = None
 
     headers = {
@@ -967,15 +924,8 @@ async def _generate_with_retry(
         try:
             async with httpx.AsyncClient(base_url=base_url, headers=headers) as client:
                 return await _generate_single(client, body, timeout)
-        except httpx.TimeoutException as e:
-            last_error = _APIError(0, "Timeout", str(e))
-            if attempt < MAX_RETRIES:
-                delay = RETRY_BACKOFF[min(attempt, len(RETRY_BACKOFF) - 1)]
-                print(
-                    f"Timeout, retrying in {delay:.0f}s (attempt {attempt+1}/{MAX_RETRIES})...",
-                    file=sys.stderr,
-                )
-                await asyncio.sleep(delay)
+        except (httpx.TimeoutException, httpx.TransportError) as e:
+            raise _APIError(0, "OutcomeUnknown", "Generation submission outcome is unknown after a transport failure; not automatically replaying the paid request.") from e
         except _APIError as e:
             last_error = e
             if _is_retryable(e.status_code) and attempt < MAX_RETRIES:
@@ -1010,8 +960,7 @@ def _cmd_list_models(_args: argparse.Namespace) -> int:
         print(f"    Preset sizes: {', '.join(sorted(caps['size_strings']))}")
         print(f"    Pixel range:  {caps['pixel_min']:,} – {caps['pixel_max']:,}")
         print(f"    Max refs:     {caps['max_refs']}")
-        print(f"    web_search:   {'yes' if caps['supports_web_search'] else 'no'}")
-        print(f"    sequential:   {'yes' if caps['supports_sequential'] else 'no'}")
+        print("    Modes:        single image, alpha editing, layer decomposition")
         print(f"    neg prompt:   {'yes (beta/undocumented)' if caps['supports_negative_prompt'] else 'no'}")
         print(f"    Opt modes:    {', '.join(sorted(caps['optimize_modes']))}")
         print(f"    Price:        {caps['price_per_image']}")
@@ -1019,7 +968,7 @@ def _cmd_list_models(_args: argparse.Namespace) -> int:
         print()
     print("Default model: " + DEFAULT_MODEL)
     print()
-    print("Use --model <id> (or pro/lite alias) to override. Any other model id is passed through")
+    print("Use --model <id> (or pro/flash alias) to override. Any other model id is passed through")
     print("verbatim with Pro-capability defaults (useful for fresh dated Pro builds).")
     return 0
 
@@ -1029,53 +978,49 @@ def _cmd_list_models(_args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 
-def _add_common_gen_args(p: argparse.ArgumentParser, *, include_lite_only: bool) -> None:
+def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) -> None:
     """Args shared by generate, edit, and batch (latter uses a subset)."""
     p.add_argument("--model", default=DEFAULT_MODEL,
-                   help=f"Model id or alias (pro|lite). Default: {DEFAULT_MODEL}.")
+                   help=f"Model id or alias (pro|flash). Default: {DEFAULT_MODEL}.")
     p.add_argument("--size", default=None,
-                   help="Image size preset (1K/2K/3K/4K subject to model) or WIDTHxHEIGHT "
-                        "(e.g. 1792x1024). Default follows model (Pro: 2K, Lite: 2K).")
+                   help="Image size preset (1K/1.5K/2K) or WIDTHxHEIGHT "
+                        "(e.g. 1792x1024). Default: 2K on both models.")
     p.add_argument("--output-format", default=DEFAULT_OUTPUT_FORMAT, choices=list(ALLOWED_OUTPUT_FORMATS),
                    help=f"Output image format (default: {DEFAULT_OUTPUT_FORMAT}).")
     p.add_argument("--wechat-header", action="store_true",
-                   help="Shorthand for --size 1792x1024 (16:9 wide cover, Pro only). "
+                   help="Shorthand for --size 1792x1024 (16:9 wide cover). "
                         "Alias: --wide.")
     p.add_argument("--wide", action="store_true",
-                   help="Shorthand for --size 1792x1024 (16:9 wide cover/banner, Pro only). "
+                   help="Shorthand for --size 1792x1024 (16:9 wide cover/banner). "
                         "Alias of --wechat-header.")
     p.add_argument("--square", action="store_true",
-                   help="Shorthand for square output (Pro: 1024x1024, Lite: 2048x2048).")
+                   help="Shorthand for square output (1024x1024).")
     p.add_argument("--portrait", action="store_true",
-                   help="Shorthand for 3:4 vertical output (Pro: 1536x2048, Lite: 2048x2732).")
+                   help="Shorthand for 3:4 vertical output (1536x2048).")
     p.add_argument("--landscape", action="store_true",
-                   help="Shorthand for 16:9 horizontal output (Pro: 2048x1152, Lite: 2732x1536).")
+                   help="Shorthand for 16:9 horizontal output (2048x1152).")
     p.add_argument("--phone", "--stories", "--wechat", action="store_true",
                    help="Shorthand for 9:16 phone/Stories/WeChat-UI vertical output "
-                        "(Pro: 1152x2048, Lite: 1440x2560). Aliases: --stories, --wechat.")
-    p.add_argument("--web-search", action="store_true", default=False,
-                   help="Enable web search (Lite only; Pro ignores this with a warning). "
-                        "Default OFF.")
-    p.add_argument("--no-web-search", action="store_false", dest="web_search",
-                   help="Explicitly disable web search (default).")
+                        "(1152x2048). Aliases: --stories, --wechat.")
+    p.add_argument("--background", choices=["opaque", "transparent"], default="opaque",
+                   help="Transparent requires exactly one alpha-bearing input and PNG output.")
     p.add_argument("--watermark", action="store_true",
                    help="Include Seedream watermark (default: off).")
-    p.add_argument("--optimize-prompt", choices=["standard"], default=None,
-                   help="Prompt optimization mode. Pro/Lite both accept 'standard' only "
-                        "(Seedream 4.0 'fast' mode is not supported on 5.x).")
+    p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None,
+                   help="Prompt optimization: Pro standard/fast; Flash standard only.")
     p.add_argument("--negative-prompt", default=None,
                    help=f"Negative prompt. On Pro defaults to a gentle quality guard "
                         f"({PRO_DEFAULT_NEGATIVE!r}); pass --negative-prompt '' to disable. "
-                        f"Not supported on Lite.")
+                        f"Flash uses prompt constraints instead.")
     p.add_argument("--no-negative-prompt", action="store_true",
                    help="Disable the default quality negative prompt (Pro only). "
                         "Does not clear guards turned on by --no-people / --no-text / --cover.")
     p.add_argument("--no-people", action="store_true",
                    help="Opt-in guard: 'NO people, figures, statues' (Pro: negative_prompt; "
-                        "Lite: appended to the prompt). Off by default.")
+                        "Flash: appended to the prompt). Off by default.")
     p.add_argument("--no-text", action="store_true",
                    help="Opt-in guard: 'no text, letters, logo, watermark' (Pro: negative_prompt; "
-                        "Lite: appended to the prompt). Off by default.")
+                        "Flash: appended to the prompt). Off by default.")
     p.add_argument("--cover", action="store_true",
                    help="Cover/banner preset: --no-people + --no-text + auto-upscale "
                         "(overrides --no-auto-upscale).")
@@ -1089,13 +1034,10 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_lite_only: bool)
                    help="Print the request body and exit without calling the API.")
     p.add_argument("--force", action="store_true",
                    help="Overwrite existing output files.")
-    if include_lite_only:
+    if include_variants:
         p.add_argument("--n", type=int, default=1,
                        help=f"Number of independent images to generate (1-{DEFAULT_MAX_N}, default: 1).")
-        p.add_argument("--sequential", action="store_true",
-                       help="Enable sequential storyboard/group generation (Lite only).")
-        p.add_argument("--max-images", type=int, default=4,
-                       help="Max images for sequential generation (1-15, default: 4).")
+
 
 
 def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) -> dict[str, Any]:
@@ -1125,19 +1067,26 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         size = f"{api_w}x{api_h}"
         downscale_to = wh
 
+    background = getattr(args, "background", "opaque")
+    if background == "transparent":
+        refs_for_alpha = list(getattr(args, "reference_image", []) or [])
+        _validate_transparent_input(refs_for_alpha, args.output_format)
+        if getattr(args, "outpaint", None):
+            _die("Transparent editing cannot use the opaque outpaint canvas; edit an alpha layer directly.")
+
     # Prompt
     prompt = _read_prompt(getattr(args, "prompt", None), getattr(args, "prompt_file", None)) \
         if require_prompt else ""
     if len(prompt) > MAX_PROMPT_CHARS:
-        _warn(f"Prompt length {len(prompt)} exceeds recommended {MAX_PROMPT_CHARS} chars.")
+        _warn("Very long prompt: the official guide recommends concise prompts (about 300 Chinese characters or 600 English words).")
 
-    # Negative prompt (quality default) + people/text content guards
+    # Retain legacy Pro negatives; Flash has no documented negative field.
     if getattr(args, "no_negative_prompt", False):
         negative_prompt = ""
     elif getattr(args, "negative_prompt", None) is not None:
         negative_prompt = args.negative_prompt
     else:
-        # default on Pro, none on Lite
+        # default on Pro, none on Flash
         negative_prompt = PRO_DEFAULT_NEGATIVE if caps["supports_negative_prompt"] else None
     # Normalize empty string to None (so it doesn't get sent)
     if negative_prompt == "":
@@ -1155,7 +1104,7 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
                 f"{negative_prompt}, {guard_str}" if negative_prompt else guard_str
             )
         else:
-            # Lite ignores negative_prompt; append a short clause to the prompt instead.
+            # Use documented prompt conditioning for Flash.
             prompt = _append_suffix(prompt, guard_str)
 
     # Reference images (used by both generate (optional) and edit (required))
@@ -1190,17 +1139,6 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
     if marker_specs:
         if not ref_paths:
             _die("--marker-rect requires at least one --reference-image to annotate.")
-        # Marker editing is validated/tuned on Pro. Lite accepts image+prompt with visual
-        # markers too (it's just image+text), but text rendering is weaker and we haven't
-        # validated the rectangle-protocol thresholds (8%/70% bounds, color-box recognition,
-        # cleanup reliability) on Lite. Warn once rather than blocking; the user can still try.
-        if not caps.get("label", "").lower().startswith("seedream 5.0 pro"):
-            _warn(
-                "Marker editing (--marker-rect) is validated and tuned on Pro only. "
-                "On Lite the colored-rectangle protocol is untested: text-in-box results "
-                "are likely worse, cleanup may leave artifacts, and the 8%/70% size thresholds "
-                "may not apply. Pro is recommended for marker edits."
-            )
         # Markers always annotate the first reference; additional refs are passed as-is.
         src_primary = ref_paths[0]
         if outpaint_canvas_png is not None:
@@ -1227,7 +1165,10 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         colors = [_parse_color(c) for c in raw_colors]
         fill_alpha = int(getattr(args, "marker_alpha", 80))
         stroke_width = int(getattr(args, "marker_stroke", 3))
-        annotated_png = _apply_markers(src_for_markers, rects, colors, fill_alpha, stroke_width)
+        annotated_png = _apply_markers(
+            src_for_markers, rects, colors, fill_alpha, stroke_width,
+            preserve_alpha=background == "transparent",
+        )
         # Clean up outpaint+marker temp file if we created one
         if outpaint_canvas_png is None and src_for_markers != Path(src_primary).expanduser().resolve():
             try:
@@ -1273,15 +1214,6 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
     if n < 1 or n > DEFAULT_MAX_N:
         _die(f"--n must be 1-{DEFAULT_MAX_N} (got {n}).")
 
-    # Sequential (Lite only)
-    sequential = getattr(args, "sequential", False)
-    max_images = getattr(args, "max_images", 4)
-    if sequential and (max_images < 1 or max_images > 15):
-        _die(f"--max-images must be 1-15 (got {max_images}).")
-
-    # Web-search: if flag is on but model doesn't support it, _build_request_body warns
-    web_search = bool(getattr(args, "web_search", False))
-
     output_format = args.output_format
     if output_format == "jpg":
         output_format = "jpeg"
@@ -1294,7 +1226,8 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         "requested_size": requested_size,
         "output_format": output_format,
         "watermark": bool(args.watermark),
-        "web_search": web_search,
+        "web_search": False,
+        "background": background,
         "optimize_prompt": args.optimize_prompt,
         "negative_prompt": negative_prompt,
         "downscale_to": downscale_to,
@@ -1305,8 +1238,6 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         "outpaint_specs": outpaint_specs,
         "annotated_path": str(annotated_path) if annotated_path else None,
         "n": n,
-        "sequential": sequential,
-        "max_images": max_images,
         "timeout": int(args.timeout),
         "dry_run": bool(args.dry_run),
         "force": bool(args.force),
@@ -1323,11 +1254,11 @@ def _add_generate_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--prompt", "-p", help="Text description for the image.")
     p.add_argument("--prompt-file", help="Read prompt from a UTF-8 file.")
     p.add_argument("--reference-image", action="append", default=[],
-                   help="Reference image path or URL (repeatable; max 10 on Pro, 14 on Lite).")
+                   help="Reference image path or URL (repeatable; max 10 on Pro/Flash).")
     p.add_argument("--out", help="Output file path (default: <out-dir>/<ts>-<slug>.<ext>).")
     p.add_argument("--out-dir", default=DEFAULT_OUTPUT_DIR,
                    help=f"Output directory (default: {DEFAULT_OUTPUT_DIR}).")
-    _add_common_gen_args(p, include_lite_only=True)
+    _add_common_gen_args(p, include_variants=True)
     p.set_defaults(func=_cmd_generate)
 
 
@@ -1335,10 +1266,9 @@ def _cmd_generate(args: argparse.Namespace) -> int:
     r = _resolve_common(args, require_prompt=True)
     body = _build_request_body(
         model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
-        output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
+        output_format=r["output_format"], watermark=r["watermark"],
         reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-        sequential=r["sequential"], max_images=r["max_images"],
-        negative_prompt=r["negative_prompt"],
+        negative_prompt=r["negative_prompt"], background=r["background"],
     )
 
     out = getattr(args, "out", None)
@@ -1358,6 +1288,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
             base_url=DEFAULT_BASE_URL, dry_run=True, negative_prompt=r["negative_prompt"],
             marker_rects=r["marker_specs"],
             outpaint_specs=r["outpaint_specs"],
+            background=r["background"],
         )
         return 0
 
@@ -1383,7 +1314,8 @@ async def _generate_one(
         _die(f"API error {e.status_code}: {e.code} — {e.message}")
     elapsed_ms = int((time.monotonic() - t0) * 1000)
 
-    for idx, img_bytes in enumerate(images):
+    for idx, asset in enumerate(images):
+        img_bytes = asset.content
         image_path = _make_output_path(r["prompt"], out, out_dir, r["output_format"], idx)
         if image_path.exists() and not r["force"]:
             _die(f"Output already exists: {image_path} (use --force to overwrite)")
@@ -1406,6 +1338,7 @@ async def _generate_one(
             marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
             reported_size=reported_size, elapsed_ms=elapsed_ms,
             revised_prompt=revised_prompt, usage=usage,
+            background=r["background"],
         )
 
     return 0
@@ -1420,7 +1353,7 @@ async def _generate_concurrent(
 ) -> int:
     api_key, base_url = _get_api_settings()
 
-    async def _run_one(i: int) -> tuple[int, list[bytes], Optional[str], Optional[dict], Optional[str], Optional[int], Optional[str]]:
+    async def _run_one(i: int) -> tuple[int, list[ImageOutput], Optional[str], Optional[dict], Optional[str], Optional[int], Optional[str]]:
         t0 = time.monotonic()
         try:
             images, revised_prompt, usage, reported_size, _call_ms = await _generate_with_retry(
@@ -1439,7 +1372,8 @@ async def _generate_concurrent(
             print(f"Error (variant {i+1}/{r['n']}): {error}", file=sys.stderr)
             errors += 1
             continue
-        for j, img_bytes in enumerate(images):
+        for j, asset in enumerate(images):
+            img_bytes = asset.content
             image_path = _make_output_path(
                 r["prompt"], out, out_dir, r["output_format"], i * len(images) + j,
             )
@@ -1464,6 +1398,7 @@ async def _generate_concurrent(
                 marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
                 reported_size=reported_size, elapsed_ms=elapsed_ms,
                 revised_prompt=revised_prompt, usage=usage,
+                background=r["background"],
             )
 
     if errors == r["n"]:
@@ -1509,18 +1444,17 @@ def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--out", help="Output file path.")
     p.add_argument("--out-dir", default=DEFAULT_OUTPUT_DIR,
                    help=f"Output directory (default: {DEFAULT_OUTPUT_DIR}).")
-    _add_common_gen_args(p, include_lite_only=False)
-    p.set_defaults(func=_cmd_edit, n=1, sequential=False, max_images=4)
+    _add_common_gen_args(p, include_variants=False)
+    p.set_defaults(func=_cmd_edit, n=1)
 
 
 def _cmd_edit(args: argparse.Namespace) -> int:
     r = _resolve_common(args, require_prompt=True)
     body = _build_request_body(
         model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
-        output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
+        output_format=r["output_format"], watermark=r["watermark"],
         reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-        sequential=False, max_images=4,
-        negative_prompt=r["negative_prompt"],
+        negative_prompt=r["negative_prompt"], background=r["background"],
     )
 
     out = getattr(args, "out", None)
@@ -1537,6 +1471,7 @@ def _cmd_edit(args: argparse.Namespace) -> int:
             base_url=DEFAULT_BASE_URL, dry_run=True, negative_prompt=r["negative_prompt"],
             marker_rects=r["marker_specs"],
             outpaint_specs=r["outpaint_specs"],
+            background=r["background"],
         )
         return 0
 
@@ -1556,7 +1491,7 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
                    help=f"Output directory (default: {DEFAULT_OUTPUT_DIR}/batch).")
     p.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY,
                    help=f"Max concurrent requests (default: {DEFAULT_CONCURRENCY}).")
-    # Batch uses a subset of common args (no --n/--sequential/--out per-job)
+    # Batch uses a subset of common args (no --n/--out per-job)
     p.add_argument("--model", default=DEFAULT_MODEL, help=f"Default model (default: {DEFAULT_MODEL}).")
     p.add_argument("--size", default=None, help="Default image size.")
     p.add_argument("--output-format", default=DEFAULT_OUTPUT_FORMAT, choices=list(ALLOWED_OUTPUT_FORMATS),
@@ -1568,11 +1503,11 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--landscape", action="store_true", help="Default to 16:9 horizontal output.")
     p.add_argument("--phone", "--stories", "--wechat", action="store_true",
                    help="Default to 9:16 phone/Stories/WeChat-UI output.")
-    p.add_argument("--web-search", action="store_true", default=False, help="Default web-search on (Lite only).")
-    p.add_argument("--no-web-search", action="store_false", dest="web_search", help="Default web-search off.")
+    p.add_argument("--background", choices=["opaque", "transparent"], default="opaque",
+                   help="Transparent requires exactly one alpha-bearing input and PNG output.")
     p.add_argument("--watermark", action="store_true", help="Default watermark on.")
-    p.add_argument("--optimize-prompt", choices=["standard"], default=None,
-                   help="Default prompt optimization mode ('standard' only on 5.x; 'fast' is 4.0-only).")
+    p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None,
+                   help="Pro standard/fast; Flash standard only.")
     p.add_argument("--negative-prompt", default=None, help="Default negative prompt.")
     p.add_argument("--no-negative-prompt", action="store_true", help="Default quality negative-prompt off.")
     p.add_argument("--no-people", action="store_true", help="Default no-people guard on (opt-in).")
@@ -1638,11 +1573,11 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         ns.square = bool(job.get("square", args.square))
         ns.portrait = bool(job.get("portrait", args.portrait))
         ns.landscape = bool(job.get("landscape", args.landscape))
-        ns.web_search = bool(job.get("web_search", args.web_search))
         ns.watermark = bool(job.get("watermark", args.watermark))
         ns.optimize_prompt = job.get("optimize_prompt", args.optimize_prompt)
         ns.negative_prompt = job.get("negative_prompt", args.negative_prompt)
-        ns.no_negative_prompt = bool(job.get("no_negative_prompt", False))
+        ns.no_negative_prompt = bool(job.get("no_negative_prompt", args.no_negative_prompt))
+        ns.background = job.get("background", args.background)
         ns.no_people = bool(job.get("no_people", args.no_people))
         ns.no_text = bool(job.get("no_text", args.no_text))
         ns.cover = bool(job.get("cover", args.cover))
@@ -1659,8 +1594,6 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         ns.prompt_file = None
         ns.out_dir = args.out_dir
         ns.n = 1
-        ns.sequential = False
-        ns.max_images = 4
         ns.timeout = int(job.get("timeout", args.timeout))
         ns.dry_run = bool(args.dry_run)
         ns.force = bool(args.force)
@@ -1671,10 +1604,9 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         r = _resolve_common(ns, require_prompt=True)
         body = _build_request_body(
             model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
-            output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
+            output_format=r["output_format"], watermark=r["watermark"],
             reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-            sequential=False, max_images=4,
-            negative_prompt=r["negative_prompt"],
+                negative_prompt=r["negative_prompt"], background=r["background"],
         )
         bodies.append((job["prompt"], body, r))
 
@@ -1704,7 +1636,8 @@ async def _run_batch(
                     api_key, base_url, body, r["timeout"],
                 )
                 elapsed_ms = int((time.monotonic() - t0) * 1000)
-                for j, img_bytes in enumerate(images):
+                for j, asset in enumerate(images):
+                    img_bytes = asset.content
                     stem = _slugify(prompt, max_len=30)
                     ext = "jpg" if r["output_format"] == "jpeg" else r["output_format"]
                     image_path = out_dir / f"job-{index+1:03d}-{stem}-{j+1}.{ext}"
@@ -1729,6 +1662,7 @@ async def _run_batch(
                         marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
                         reported_size=reported_size, elapsed_ms=elapsed_ms,
                         revised_prompt=revised_prompt, usage=usage,
+                        background=r["background"],
                     )
                 return True
             except _APIError as e:
@@ -1742,6 +1676,117 @@ async def _run_batch(
     failures = len(results) - successes
     print(f"\nBatch complete: {successes} success, {failures} failed", file=sys.stderr)
     return 0 if failures == 0 else 1
+
+
+# ---------------------------------------------------------------------------
+# Layer decomposition (same Images API, structured multi-image response)
+# ---------------------------------------------------------------------------
+
+
+def _add_decompose_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("decompose", help="Split one image into a base and transparent PNG layers.")
+    p.add_argument("--model", default=DEFAULT_MODEL)
+    p.add_argument("--reference-image", action="append", required=True,
+                   help="Exactly one PNG/JPEG source; at least 512x512 total pixels.")
+    p.add_argument("--prompt", "-p", help="Optional objects/regions to extract; omitted means automatic selection.")
+    p.add_argument("--prompt-file")
+    p.add_argument("--size", choices=["auto", "1K", "1.5K", "2K"], default="auto")
+    p.add_argument("--output-format", choices=list(ALLOWED_OUTPUT_FORMATS), default="png",
+                   help="Base format only; foreground layers are always PNG.")
+    p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None)
+    p.add_argument("--out-dir", help="Output folder; defaults to a fresh timestamped layers folder.")
+    p.add_argument("--watermark", action="store_true")
+    p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--force", action="store_true")
+    p.set_defaults(func=_cmd_decompose)
+
+
+def _cmd_decompose(args: argparse.Namespace) -> int:
+    model, caps = _resolve_model(args.model)
+    paths = args.reference_image
+    if len(paths) != 1:
+        _die("Layer decomposition requires exactly one reference image.")
+    source = paths[0]
+    if not _is_url(source):
+        path = Path(source).expanduser().resolve()
+        if not path.is_file() or path.stat().st_size > MAX_REFERENCE_BYTES:
+            _die("Layer source must be a local image no larger than 30MB.")
+        try:
+            with Image.open(path) as image:
+                w, h = image.size
+                if image.format not in {"PNG", "JPEG"}:
+                    _die("Layer decomposition accepts PNG/JPEG input only.")
+                if not (262_144 <= w * h <= 36_000_000) or max(w, h) / min(w, h) > 16:
+                    _die("Layer source must contain 262144–36000000 pixels with aspect ratio at most 16:1.")
+        except OSError as error:
+            _die(f"Cannot read layer source: {error.__class__.__name__}")
+    prompt = _read_prompt(args.prompt, args.prompt_file) if args.prompt or args.prompt_file else ""
+    output_format = "jpeg" if args.output_format == "jpg" else args.output_format
+    body = _build_request_body(
+        model=model, caps=caps, prompt=prompt, size=args.size, output_format=output_format,
+        watermark=args.watermark, reference_images=_resolve_reference_images(paths),
+        optimize_prompt=args.optimize_prompt, negative_prompt=None, layer_decomposition=True,
+    )
+    if args.dry_run:
+        print(json.dumps(body, ensure_ascii=False, indent=2))
+        return 0
+    label = "image" if _is_url(source) else _slugify(Path(source).stem)
+    out_dir = Path(args.out_dir or f"{DEFAULT_OUTPUT_DIR}/layers/{_now_slug()}-{label}").expanduser().resolve()
+    existing = list(out_dir.glob("base.*")) + list(out_dir.glob("layer-*.png")) + list(out_dir.glob("layers.json"))
+    if existing and not args.force:
+        _die("Layer outputs already exist; use a fresh --out-dir or --force.")
+    return asyncio.run(_decompose(args, body, out_dir))
+
+
+async def _decompose(args: argparse.Namespace, body: dict[str, Any], out_dir: Path) -> int:
+    api_key, base_url = _get_api_settings()
+    try:
+        images, _revised_prompt, usage, _size, api_ms = await _generate_with_retry(
+            api_key, base_url, body, args.timeout,
+        )
+    except _APIError as error:
+        _die(f"Layer decomposition failed: {error.code} — {error.message}")
+    indices = [image.z_index for image in images]
+    if any(type(index) is not int for index in indices) or indices.count(0) != 1 or len(set(indices)) != len(indices):
+        _die("Layer response is missing unique z_index values and one base; do not replay generation automatically.")
+    if any(index < 0 or index > 16 for index in indices):
+        _die("Layer response exceeds the documented index range; do not replay generation automatically.")
+    planned = []
+    for asset in sorted(images, key=lambda image: image.z_index):
+        with Image.open(BytesIO(asset.content)) as decoded:
+            width, height = decoded.size
+            fmt = {"PNG": "png", "JPEG": "jpeg"}.get(decoded.format)
+            if fmt is None or (asset.z_index > 0 and fmt != "png"):
+                _die("Layer response has an unexpected encoding; generation will not be replayed.")
+        ext = "jpg" if fmt == "jpeg" else fmt
+        filename = f"base.{ext}" if asset.z_index == 0 else f"layer-{asset.z_index:03d}.png"
+        path = out_dir / filename
+        if path.exists() and not args.force:
+            _die(f"Layer output already exists: {path}")
+        record = {
+            "file": filename, "z_index": asset.z_index, "output_format": fmt,
+            "size": f"{width}x{height}", "reported_size": asset.size,
+        }
+        for field in ("bounding_box", "name", "description"):
+            value = getattr(asset, field)
+            if value is not None:
+                record[field] = value
+        planned.append((path, asset.content, record))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for path, content, _record in planned:
+        path.write_bytes(content)
+        print(f"Layer: {path}")
+    manifest = {
+        "model": body["model"], "prompt": body.get("prompt"), "size": body["size"],
+        "layer_decomposition": True, "created_at": _now_iso(), "api_elapsed_ms": api_ms,
+        "usage": {key: usage[key] for key in ("generated_images", "input_images", "output_tokens", "total_tokens")
+                  if usage and key in usage},
+        "layers": [record for _path, _content, record in planned],
+    }
+    (out_dir / "layers.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Manifest: {out_dir / 'layers.json'}")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -1762,6 +1807,7 @@ def main() -> int:
     _add_generate_parser(subparsers)
     _add_edit_parser(subparsers)
     _add_batch_parser(subparsers)
+    _add_decompose_parser(subparsers)
 
     # list-models is simple enough to not need a full common-arg parser
     p_list = subparsers.add_parser("list-models", help="Print known model ids, capabilities, and pricing.")
