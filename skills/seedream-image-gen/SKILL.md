@@ -39,7 +39,7 @@ This skill targets only the 5.0 family; it does not support Seedream 4.x / 3.x /
 ### Generate a new image (default: Pro / 2K / PNG / url-based download)
 
 ```bash
-uv run scripts/seedream_image_gen.py generate \
+uv run scripts/seedream_image_gen.py generate --allow-text \
   --prompt "A minimalist movie poster for a sci-fi film about deep-sea AI, dark teal background, large white sans-serif title 'ABYSS PROTOCOL' at the top centered, one-line orange tagline below, one glowing jellyfish silhouette bottom-left, cinematic"
 ```
 
@@ -118,7 +118,7 @@ Print the full capability matrix (max refs, optimize modes, etc.):
 
 Size and aspect ratio can also be described in natural language inside the prompt (e.g. "竖版 3:4 海报", "手机壁纸 9:16", "16:9 横版", "方形头像") — the model will pick a reasonable size near its default (2K). Prefer the explicit `--size` / shortcut flags when you need deterministic dimensions (platform uploads, print specs, matching an existing layout); use in-prompt sizing when you are describing a feel and the exact pixel count does not matter.
 
-Valid custom-WxH bounds: **Pro** 0.9 MP – 4.6 MP (default 1024×1024) with aspect ratio ∈ [1/16, 16]; **Lite** 3.7 MP – 16 MP (default 2048×2048; see [lite-quickref.md](references/lite-quickref.md) for the full floor/ceiling table — note Lite categorically cannot do 1K/1024²/1792×1024). The bound is on total pixels (W×H), not per-side. The client rejects out-of-range sizes before spending an API call. For common platform/destination sizes (e-commerce mains, social posts, stories, video covers, wallpapers), see the [Common Use-Case Size Reference](references/api-reference.md#common-use-case-size-reference常见场景尺寸指引) in the API reference.
+Valid custom-WxH bounds: **Pro** 0.9 MP – 4.6 MP (default 1024×1024) with aspect ratio ∈ [1/16, 16]; **Lite** 3.7 MP – 16 MP (default 2048×2048; see [lite-quickref.md](references/lite-quickref.md) for the full floor/ceiling table — note Lite categorically cannot do 1K/1024²/1792×1024). The bound is on total pixels (W×H), not per-side. Sizes **above** the cap are rejected client-side. Sizes **below** the floor (e.g. a 1500×600 Notion cover under Pro's 921,600 px / ~0.92 MP minimum) are **auto-upscaled** to the smallest same-aspect valid size (dims rounded to multiples of 8), then LANCZOS-downscaled to the exact requested size — pass `--no-auto-upscale` to reject instead. For common platform/destination sizes (e-commerce mains, social posts, stories, video covers, wallpapers), see the [Common Use-Case Size Reference](references/api-reference.md#common-use-case-size-reference常见场景尺寸指引) in the API reference.
 
 ## Text rendering (Pro)
 
@@ -239,14 +239,14 @@ Every row below is empirically rated. "✅ Production" = reliable with the docum
 ### 1. Sci-fi movie poster (3:4)
 
 ```bash
-uv run scripts/seedream_image_gen.py generate --portrait \
+uv run scripts/seedream_image_gen.py generate --portrait --allow-text \
   --prompt "Minimalist sci-fi movie poster, 3:4 vertical, deep navy-to-black gradient background, one glowing bioluminescent jellyfish floating bottom-left, large white bold sans-serif title 'ABYSS PROTOCOL' centered at top taking 1/6 of the image height, one-line smaller orange sans-serif tagline 'The deep remembers' below the title, tiny white credit block at bottom, cinematic teal-orange palette, clean editorial print quality"
 ```
 
 ### 2. Wide banner / cover header (Pro-only shortcut)
 
 ```bash
-uv run scripts/seedream_image_gen.py generate --wide \
+uv run scripts/seedream_image_gen.py generate --wide --allow-text \
   --prompt "Wide 16:9 banner, left 60% white-to-light-gray gradient, large bold black sans-serif title 'Claude 5 深度解析' left-aligned taking 1/4 of the image height on the left side, one-line smaller gray subtitle 'Agentic Coding 的下一个十年' below it, right 40% deep-blue abstract particle/light-beam decoration, sharp clean editorial feel"
 ```
 
@@ -256,14 +256,14 @@ uv run scripts/seedream_image_gen.py generate --wide \
 
 ```bash
 uv run scripts/seedream_image_gen.py generate \
-  --size 1792x1024 \
+  --size 1792x1024 --allow-text \
   --prompt "Horizontal tech infographic poster, white background, top-center large deep-blue bold sans-serif Chinese title 'AI 编程三阶段', smaller English subtitle 'Three Eras of AI Coding' directly below, middle section has three horizontally arranged blue rounded-rectangle cards, each card has a centered white short label '补全' '对话' '自主' respectively, thin gray arrows connecting the cards, flat vector style"
 ```
 
 ### 4. Circular badge logo
 
 ```bash
-uv run scripts/seedream_image_gen.py generate --square \
+uv run scripts/seedream_image_gen.py generate --square --allow-text \
   --prompt "Circular badge logo, dark-navy fill + double-thin gold outer ring, white bold serif English letters arched along the top of the circle 'SEEDREAM PRO', center has two red seal-script Chinese characters '豆包', gold laurel-wreath decoration, pure white background, flat vector style"
 ```
 
@@ -271,7 +271,7 @@ uv run scripts/seedream_image_gen.py generate --square \
 
 ```bash
 uv run scripts/seedream_image_gen.py generate \
-  --size 1792x1024 --no-negative-prompt \
+  --size 1792x1024 --allow-text --no-negative-prompt \
   --prompt "E-commerce mid-year sale banner 16:9, warm-red gradient background with golden particle light effects, centered large gold bold-Song Chinese title '年中大促' taking 1/3 of the image height, smaller white sans-serif subtitle '全场 5 折起' below it, gold ribbons / gift boxes / gold coins as decoration, festive atmosphere"
 ```
 
@@ -280,7 +280,7 @@ uv run scripts/seedream_image_gen.py generate \
 ```bash
 uv run scripts/seedream_image_gen.py edit \
   --reference-image my-poster.png \
-  --marker-rect "5%,6%,90%,25%" \
+  --marker-rect "5%,6%,90%,25%" --allow-text \
   --prompt "Replace the title in the red box with 'GPT-Image 2 全面解析', keeping the bold sans-serif font, point size, and center alignment; the subtitle and blue graphic below remain unchanged; pixels outside the box stay exactly as-is"
 ```
 
@@ -351,10 +351,14 @@ generate
   --web-search                Enable web search (Lite only)
   --negative-prompt <text>    Negative prompt (Pro ships with a gentle quality-guard
                                default: "模糊, 低质量, 水印, 变形, 多余肢体"; pass an empty
-                               string to disable it)
-  --no-negative-prompt        Disable the default negative prompt (useful for
-                               non-human scenes like product/landscape where
-                               "extra limbs" is irrelevant)
+                               string to disable the quality default)
+  --no-negative-prompt        Disable the default quality negative prompt (does not
+                               clear people/text guards — use --allow-* for those)
+  --allow-people              Disable the default "NO people, figures, statues" guard
+  --allow-text                Disable the default "no text, letters, logo, watermark"
+                               guard (required for Chinese/English text posters)
+  --no-auto-upscale           Reject WxH sizes below the model pixel floor instead of
+                               auto-upscaling then downscaling (default: auto-upscale)
   --optimize-prompt standard  Prompt optimization (standard only on 5.x; "fast" is
                                4.0-only and not supported)
   --n <1-4>                   Generate n independent images (default 1)
@@ -401,7 +405,7 @@ generate-batch
   --force                     Overwrite existing files
 ```
 
-JSONL job-object supported fields: `prompt`, `out` (alias `name`), `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
+JSONL job-object supported fields: `prompt`, `out` (alias `name`), `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `allow_people`, `allow_text`, `no_auto_upscale`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
 
 ### list-models
 
@@ -444,7 +448,7 @@ For visual-generation tasks that don't fit an existing preset, write the prompt 
 - **429/5xx auto-retry**: up to 8 attempts with exponential backoff (2/4/8/16/30/30/30/30s); honors the HTTP `retry-after` header.
 - **400/401/403 do not retry**: parameter error, key error, or permission error (e.g. model not enabled for the account) — fail immediately with the error.
 - Passing web_search/sequential/stream/fast-mode on Pro is filtered by the client (wastes no API call).
-- Passing 1K / 1024² / 1792×1024 on Lite is rejected client-side (below the pixel floor).
+- Passing 1K / 1024² / 1792×1024 on Lite is below the pixel floor — auto-upscaled then downscaled unless `--no-auto-upscale` (which rejects). Same for any Pro WxH under 921,600 px.
 
 ## Authentication
 
