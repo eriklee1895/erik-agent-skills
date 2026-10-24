@@ -63,7 +63,7 @@ uv run scripts/seedream_image_gen.py generate-batch \
   --input jobs.jsonl --concurrency 3
 ```
 
-Each line of the JSONL is either a bare prompt string or a JSON object like `{"prompt": "...", "out": "cover", "size": "2K", ...}`. Name outputs per job with `"out"` (relative to `--out-dir`, extension added if missing) or pass `--names cover,hero,thumb` (one per job, in order). `.json` (array) and `.csv` (header row with `prompt`, optional `out` and override columns) batch files work too. Jobs without a name keep the old `job-NNN-<slug>-1.png` naming. Duplicate names and already-existing outputs (without `--force`) are rejected before any API call.
+Each line of the JSONL is either a bare prompt string or a JSON object like `{"prompt": "...", "size": "2K", ...}`.
 
 ## When to use
 
@@ -118,7 +118,7 @@ Print the full capability matrix (max refs, optimize modes, etc.):
 
 Size and aspect ratio can also be described in natural language inside the prompt (e.g. "竖版 3:4 海报", "手机壁纸 9:16", "16:9 横版", "方形头像") — the model will pick a reasonable size near its default (2K). Prefer the explicit `--size` / shortcut flags when you need deterministic dimensions (platform uploads, print specs, matching an existing layout); use in-prompt sizing when you are describing a feel and the exact pixel count does not matter.
 
-Valid custom-WxH bounds: **Pro** 0.9 MP – 4.6 MP (default 1024×1024) with aspect ratio ∈ [1/16, 16]; **Lite** 3.7 MP – 16 MP (default 2048×2048; see [lite-quickref.md](references/lite-quickref.md) for the full floor/ceiling table — note Lite categorically cannot do 1K/1024²/1792×1024). The bound is on total pixels (W×H), not per-side. Sizes **above** the cap are rejected client-side. Sizes **below** the floor (e.g. a 1500×600 Notion cover under Pro's 921,600 px / ~0.92 MP minimum) are **auto-upscaled** to the smallest same-aspect valid size (dims rounded to multiples of 8), then LANCZOS-downscaled to the exact requested size — pass `--no-auto-upscale` to reject instead. For common platform/destination sizes (e-commerce mains, social posts, stories, video covers, wallpapers), see the [Common Use-Case Size Reference](references/api-reference.md#common-use-case-size-reference常见场景尺寸指引) in the API reference.
+Valid custom-WxH bounds: **Pro** 0.9 MP – 4.6 MP with aspect ratio ∈ [1/16, 16]; **Lite** 3.7 MP – 16 MP. Explicit `WxH` sizes below the model's floor are generated at an 8-aligned larger size with approximately the same aspect ratio, then LANCZOS-downscaled to the exact requested dimensions (for example, Pro `1500x600` → `1520x608` → `1500x600`). Pass `--no-auto-upscale` to reject below-floor sizes instead. Sizes above the cap or outside the aspect range are rejected. Preset support is unchanged: Pro accepts `1K`/`2K`, Lite accepts `2K`/`3K`/`4K`; Lite `--size 1K` is rejected, while explicit `--size 1024x1024` can use auto-upscale. See [lite-quickref.md](references/lite-quickref.md) and the [Common Use-Case Size Reference](references/api-reference.md#common-use-case-size-reference常见场景尺寸指引).
 
 ## Text rendering (Pro)
 
@@ -234,7 +234,7 @@ Every row below is empirically rated. "✅ Production" = reliable with the docum
 
 ## Examples
 
-> All examples default to Pro / 2K / PNG, downloaded from the server's returned URL. `--dry-run` prints the request body to stdout and the would-be output paths to stderr without calling the API; it writes nothing into the output folder (marker-annotated previews from `edit --dry-run` go to a temp dir).
+> All examples default to Pro / 2K / PNG, downloaded from the server's returned URL. `--dry-run` prints the request body without calling the API, so you can sanity-check before spending money.
 
 ### 1. Sci-fi movie poster (3:4)
 
@@ -398,18 +398,18 @@ Note: `edit` does not have `--n` / `--sequential` (edits target a single image; 
 
 ```
 generate-batch
-  --input <file>              .jsonl (each line a bare prompt or {"prompt": ..., "out": ...}),
-                               .json array of the same, or .csv with a header row
-  --names <a,b,c>             Output names, one per job in order (a job's "out" wins)
-  --concurrency <n>           Max concurrent requests (default 3, capped at 8; ~65-75 s per Pro call)
+  --input <jsonl>             JSONL file; each line is a bare prompt string or a
+                               {"prompt": ...} JSON object
+  --concurrency <n>           Max concurrent requests (default 3)
   --out-dir <dir>             Output directory (default output/seedream-image-gen/batch/)
   --model/size/...            Default parameters (overridable per-job)
-  --no-people/--no-text/--cover  Batch-wide guard/preset defaults (per-job fields override)
-  --dry-run                   Print all bodies + planned paths; writes nothing
+  --no-people/--no-text/--cover  Batch-wide opt-in defaults (overridable per-job)
+  --no-auto-upscale           Reject below-floor WxH sizes instead of auto-upscaling
+  --dry-run                   Print all bodies and exit
   --force                     Overwrite existing files
 ```
 
-JSONL job-object supported fields: `prompt`, `out` (alias `name`), `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `no_people`, `no_text`, `cover`, `no_auto_upscale`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
+JSONL job-object supported fields: `prompt`, `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `no_people`, `no_text`, `cover`, `no_auto_upscale`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
 
 ### list-models
 
@@ -452,7 +452,7 @@ For visual-generation tasks that don't fit an existing preset, write the prompt 
 - **429/5xx auto-retry**: up to 8 attempts with exponential backoff (2/4/8/16/30/30/30/30s); honors the HTTP `retry-after` header.
 - **400/401/403 do not retry**: parameter error, key error, or permission error (e.g. model not enabled for the account) — fail immediately with the error.
 - Passing web_search/sequential/stream/fast-mode on Pro is filtered by the client (wastes no API call).
-- Passing 1K / 1024² / 1792×1024 on Lite is below the pixel floor — auto-upscaled then downscaled unless `--no-auto-upscale` (which rejects). Same for any Pro WxH under 921,600 px.
+- Lite `--size 1K` is unsupported and rejected. Explicit `1024x1024` / `1792x1024` sizes auto-upscale then downscale, or are rejected with `--no-auto-upscale`. Pro explicit sizes below 921,600 px follow the same rule.
 
 ## Authentication
 

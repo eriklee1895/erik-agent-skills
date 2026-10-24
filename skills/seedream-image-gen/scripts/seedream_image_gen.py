@@ -33,7 +33,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import base64
-import csv
 import datetime as dt
 import getpass
 import json
@@ -93,8 +92,7 @@ MODELS: dict[str, dict[str, Any]] = {
         "optimize_modes": {"standard"},
         "price_per_image": "≤2.36MP ¥0.30 / >2.36MP ¥0.60 (extra input image ¥0.02)",
         "notes": "Headline features: strong Chinese+English text rendering; marker-based region editing. "
-                 "No web_search, no sequential gen, no stream. Size preset stops at 2K (no 3K/4K). "
-                 "RPM ≈ 500.",
+                 "No web_search, no sequential gen, no stream. Size preset stops at 2K (no 3K/4K).",
     },
     MODEL_LITE: {
         "aliases": MODEL_LITE_ALIASES,
@@ -124,9 +122,6 @@ DEFAULT_OUTPUT_DIR = "output/seedream-image-gen"
 DEFAULT_OUTPUT_FORMAT = "png"
 DEFAULT_TIMEOUT = 300
 DEFAULT_CONCURRENCY = 3
-# One Pro call takes ~65-75 s and RPM is ~500, so the API is not the bottleneck; this cap
-# just keeps a typo (--concurrency 100) from opening a pile of sockets / long downloads.
-MAX_CONCURRENCY = 8
 DEFAULT_MAX_N = 4
 MAX_RETRIES = 8
 RETRY_BACKOFF = (2.0, 4.0, 8.0, 16.0, 30.0, 30.0, 30.0, 30.0)
@@ -138,9 +133,7 @@ ALLOWED_OUTPUT_FORMATS = ("png", "jpeg", "jpg")
 # --negative-prompt "" (disable) or --negative-prompt "..." (replace).
 PRO_DEFAULT_NEGATIVE = "模糊, 低质量, 水印, 变形, 多余肢体"
 
-# Opt-in content guards (--no-people / --no-text, or both via --cover). Kept
-# separate from PRO_DEFAULT_NEGATIVE so --no-negative-prompt only clears the
-# quality default, never an explicitly requested guard.
+# Opt-in content guards; clearing quality negatives leaves requested guards on.
 GUARD_NO_PEOPLE = "NO people, figures, statues"
 GUARD_NO_TEXT = "no text, letters, logo, watermark"
 
@@ -754,8 +747,6 @@ def _make_output_path(
     out_dir: str,
     output_format: str,
     index: int = 0,
-    *,
-    create_dir: bool = True,
 ) -> Path:
     ext = "jpg" if output_format == "jpeg" else output_format
     if out:
@@ -765,19 +756,11 @@ def _make_output_path(
         return p
 
     d = Path(out_dir).expanduser().resolve()
-    if create_dir:
-        d.mkdir(parents=True, exist_ok=True)
+    d.mkdir(parents=True, exist_ok=True)
     ts = _now_slug()
     slug = _slugify(prompt, max_len=40)
     stem = f"{ts}-{slug}" if index == 0 else f"{ts}-{slug}-{index + 1}"
     return d / f"{stem}.{ext}"
-
-
-def _print_dry_run_plan(image_paths: list[Path], label: str = "") -> None:
-    """Dry-run never touches the output folder: only report where files *would* go (stderr)."""
-    prefix = f"{label} " if label else ""
-    for path in image_paths:
-        print(f"{prefix}Dry run: would write {path} (+ {path.with_suffix('.json').name})", file=sys.stderr)
 
 
 def _write_metadata(
@@ -1244,13 +1227,9 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
             except OSError:
                 pass
 
-        # Save annotated image next to output for inspection (dry-run: temp dir, keep the
-        # output folder untouched)
-        if getattr(args, "dry_run", False):
-            out_dir = Path(tempfile.mkdtemp(prefix="seedream-dryrun-"))
-        else:
-            out_dir = Path(getattr(args, "out_dir", DEFAULT_OUTPUT_DIR)).expanduser().resolve()
-            out_dir.mkdir(parents=True, exist_ok=True)
+        # Save annotated image next to output for inspection
+        out_dir = Path(getattr(args, "out_dir", DEFAULT_OUTPUT_DIR)).expanduser().resolve()
+        out_dir.mkdir(parents=True, exist_ok=True)
         annotated_path = out_dir / f"{_now_slug()}-annotated.png"
         annotated_path.write_bytes(annotated_png)
         _info(f"Marker-annotated image saved for inspection: {annotated_path}")
@@ -1359,11 +1338,17 @@ def _cmd_generate(args: argparse.Namespace) -> int:
     _info(f"Output dir: {out_dir_resolved}")
 
     if r["dry_run"]:
-        # stdout = request body only; nothing is written to the output folder.
         print(json.dumps(body, ensure_ascii=False, indent=2))
-        _print_dry_run_plan(
-            [_make_output_path(r["prompt"], out, out_dir, r["output_format"], i, create_dir=False)
-             for i in range(max(1, r["n"]))]
+        # Best-effort dry-run metadata path
+        image_path = _make_output_path(r["prompt"], out, out_dir, r["output_format"])
+        _write_metadata(
+            image_path, prompt=r["prompt"], model=r["model_id"], size=r["size"],
+            output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
+            reference_count=len(r.get("reference_image_paths", []) or []) or (1 if r["reference_images"] else 0),
+            optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
+            base_url=DEFAULT_BASE_URL, dry_run=True, negative_prompt=r["negative_prompt"],
+            marker_rects=r["marker_specs"],
+            outpaint_specs=r["outpaint_specs"],
         )
         return 0
 
@@ -1533,9 +1518,17 @@ def _cmd_edit(args: argparse.Namespace) -> int:
     out_dir = getattr(args, "out_dir", DEFAULT_OUTPUT_DIR)
 
     if r["dry_run"]:
-        # stdout = request body only; nothing is written to the output folder.
         print(json.dumps(body, ensure_ascii=False, indent=2))
-        _print_dry_run_plan([_make_output_path(r["prompt"], out, out_dir, r["output_format"], create_dir=False)])
+        image_path = _make_output_path(r["prompt"], out, out_dir, r["output_format"])
+        _write_metadata(
+            image_path, prompt=r["prompt"], model=r["model_id"], size=r["size"],
+            output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
+            reference_count=r["reference_count"],
+            optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
+            base_url=DEFAULT_BASE_URL, dry_run=True, negative_prompt=r["negative_prompt"],
+            marker_rects=r["marker_specs"],
+            outpaint_specs=r["outpaint_specs"],
+        )
         return 0
 
     return asyncio.run(_generate_one(args, body, r, out, out_dir))
@@ -1547,20 +1540,13 @@ def _cmd_edit(args: argparse.Namespace) -> int:
 
 
 def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("generate-batch", help="Run many generation jobs from a JSONL/JSON/CSV file.")
-    p.add_argument("--input", required=True,
-                   help="Batch file. .jsonl (default): each line is a bare prompt string or a JSON object "
-                        "(prompt + per-job overrides, e.g. \"out\"). .json: an array of the same. "
-                        ".csv: header row with a 'prompt' column plus optional 'out' and override columns.")
+    p = subparsers.add_parser("generate-batch", help="Run many generation jobs from a JSONL file.")
+    p.add_argument("--input", required=True, help="Path to JSONL file. Each line: bare string (prompt) "
+                                                  "or JSON object (prompt + per-job overrides).")
     p.add_argument("--out-dir", default=f"{DEFAULT_OUTPUT_DIR}/batch",
-                   help=f"Output directory (default: {DEFAULT_OUTPUT_DIR}/batch). Relative per-job 'out' "
-                        "paths resolve against it.")
-    p.add_argument("--names", default=None,
-                   help="Comma-separated output names, one per job in order (e.g. 'cover,hero,thumb'). "
-                        "A job's own 'out' field wins. Extension is added when missing.")
+                   help=f"Output directory (default: {DEFAULT_OUTPUT_DIR}/batch).")
     p.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY,
-                   help=f"Max concurrent requests (default: {DEFAULT_CONCURRENCY}, max {MAX_CONCURRENCY}; "
-                        "each Pro call takes ~65-75 s).")
+                   help=f"Max concurrent requests (default: {DEFAULT_CONCURRENCY}).")
     # Batch uses a subset of common args (no --n/--sequential/--out per-job)
     p.add_argument("--model", default=DEFAULT_MODEL, help=f"Default model (default: {DEFAULT_MODEL}).")
     p.add_argument("--size", default=None, help="Default image size.")
@@ -1592,86 +1578,11 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=_cmd_batch)
 
 
-_BATCH_BOOL_KEYS = {
-    "wechat_header", "wide", "square", "portrait", "landscape", "phone", "web_search", "watermark",
-    "no_negative_prompt", "no_marker_cleanup_prompt",
-    "no_people", "no_text", "cover", "no_auto_upscale",
-}
-_BATCH_LIST_KEYS = {"reference_image", "marker_rects", "marker_color", "outpaint"}
-
-
-def _coerce_csv_row(row: dict[str, Any]) -> dict[str, Any]:
-    """CSV cells are strings: drop blanks, parse booleans, split list cells on '|'."""
-    job: dict[str, Any] = {}
-    for key, value in row.items():
-        if key is None or value is None:
-            continue
-        key = key.strip()
-        value = value.strip()
-        if not key or value == "":
-            continue
-        if key in _BATCH_BOOL_KEYS:
-            job[key] = value.lower() in {"1", "true", "yes", "y", "on"}
-        elif key in _BATCH_LIST_KEYS:
-            job[key] = [v.strip() for v in value.split("|") if v.strip()]
-        else:
-            job[key] = value
-    return job
-
-
-def _normalize_batch_item(data: Any, where: str) -> dict[str, Any] | None:
-    if isinstance(data, str):
-        data = data.strip()
-        return {"prompt": data} if data else None
-    if isinstance(data, dict):
-        if not data.get("prompt"):
-            _warn(f"{where}: missing 'prompt' key, skipping.")
-            return None
-        return data
-    _warn(f"{where}: unexpected type {type(data).__name__}, skipping.")
-    return None
-
-
-def _parse_batch_input(path: str) -> list[dict[str, Any]]:
-    """Load batch jobs from .jsonl (default), .json (array) or .csv (header row)."""
+def _parse_jsonl(path: str) -> list[dict[str, Any]]:
     p = Path(path)
     if not p.is_file():
-        _die(f"Batch file not found: {p}")
+        _die(f"JSONL file not found: {p}")
 
-    suffix = p.suffix.lower()
-    jobs: list[dict[str, Any]] = []
-    if suffix == ".json":
-        try:
-            data = json.loads(p.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as e:
-            _die(f"Invalid JSON in {p}: {e}")
-        if isinstance(data, dict) and isinstance(data.get("jobs"), list):
-            data = data["jobs"]
-        if not isinstance(data, list):
-            _die(f"{p}: expected a JSON array of prompts/job objects (or {{\"jobs\": [...]}}).")
-        for i, item in enumerate(data, 1):
-            job = _normalize_batch_item(item, f"Item {i}")
-            if job:
-                jobs.append(job)
-    elif suffix == ".csv":
-        with p.open(encoding="utf-8-sig", newline="") as fh:
-            reader = csv.DictReader(fh)
-            if not reader.fieldnames or "prompt" not in [f.strip() for f in reader.fieldnames]:
-                _die(f"{p}: CSV needs a header row with a 'prompt' column (optional: out, size, ...).")
-            for rowno, row in enumerate(reader, 2):
-                job = _normalize_batch_item(_coerce_csv_row(row), f"Row {rowno}")
-                if job:
-                    jobs.append(job)
-    else:
-        jobs = _parse_jsonl(p)
-
-    if not jobs:
-        _die(f"No valid jobs found in {path}.")
-    print(f"Parsed {len(jobs)} job(s) from {path}", file=sys.stderr)
-    return jobs
-
-
-def _parse_jsonl(p: Path) -> list[dict[str, Any]]:
     jobs: list[dict[str, Any]] = []
     for lineno, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
@@ -1682,76 +1593,26 @@ def _parse_jsonl(p: Path) -> list[dict[str, Any]]:
         except json.JSONDecodeError:
             data = line.strip('"').strip("'").strip()
 
-        job = _normalize_batch_item(data, f"Line {lineno}")
-        if job:
-            jobs.append(job)
+        if isinstance(data, str):
+            jobs.append({"prompt": data})
+        elif isinstance(data, dict):
+            if "prompt" not in data:
+                _warn(f"Line {lineno}: missing 'prompt' key, skipping.")
+                continue
+            jobs.append(data)
+        else:
+            _warn(f"Line {lineno}: unexpected type {type(data).__name__}, skipping.")
+
+    if not jobs:
+        _die(f"No valid jobs found in {path}.")
+    print(f"Parsed {len(jobs)} job(s) from {path}", file=sys.stderr)
     return jobs
 
 
-def _batch_output_paths(
-    jobs: list[dict[str, Any]],
-    args: argparse.Namespace,
-) -> list[Path | None]:
-    """Per-job explicit output path (job 'out'/'name' > --names), or None for the default
-    job-NNN-<slug>-1.<ext> naming. Dies on duplicates so two jobs never overwrite each other."""
-    names: list[str] = []
-    if args.names:
-        names = [n.strip() for n in args.names.split(",")]
-        if len(names) != len(jobs):
-            _die(f"--names has {len(names)} entries but the batch has {len(jobs)} job(s).")
-    out_dir = Path(args.out_dir).expanduser()
-    paths: list[Path | None] = []
-    for i, job in enumerate(jobs):
-        raw = job.get("out") or job.get("name") or (names[i] if names else "")
-        raw = str(raw).strip()
-        if not raw:
-            paths.append(None)
-            continue
-        fmt = job.get("output_format", args.output_format)
-        ext = "jpg" if fmt == "jpeg" else fmt
-        candidate = Path(raw).expanduser()
-        if not candidate.is_absolute():
-            candidate = out_dir / candidate
-        if candidate.suffix == "":
-            candidate = candidate.with_suffix(f".{ext}")
-        paths.append(candidate.resolve())
-
-    seen: dict[Path, int] = {}
-    for i, path in enumerate(paths):
-        if path is None:
-            continue
-        if path in seen:
-            _die(f"Jobs {seen[path] + 1} and {i + 1} both write to {path}; give each job a unique 'out'.")
-        seen[path] = i
-    return paths
-
-
-def _batch_image_path(
-    out_dir: Path, index: int, prompt: str, output_format: str, explicit: Path | None, j: int,
-) -> Path:
-    if explicit is not None:
-        # Extra images from one call (rare on Pro) get -2, -3 … suffixes.
-        return explicit if j == 0 else explicit.with_name(f"{explicit.stem}-{j + 1}{explicit.suffix}")
-    ext = "jpg" if output_format == "jpeg" else output_format
-    return out_dir / f"job-{index + 1:03d}-{_slugify(prompt, max_len=30)}-{j + 1}.{ext}"
-
-
 def _cmd_batch(args: argparse.Namespace) -> int:
-    jobs = _parse_batch_input(args.input)
-    if args.concurrency < 1:
-        _die("--concurrency must be >= 1.")
-    if args.concurrency > MAX_CONCURRENCY:
-        _warn(f"--concurrency {args.concurrency} capped at {MAX_CONCURRENCY}.")
-        args.concurrency = MAX_CONCURRENCY
-    out_paths = _batch_output_paths(jobs, args)
-    if not args.dry_run:
-        # API key used by async workers — load eagerly so we fail fast on missing key
-        _get_api_settings()
-        # Fail before spending ~70 s per call if a named output would be clobbered.
-        if not args.force:
-            existing = [str(p) for p in out_paths if p is not None and p.exists()]
-            if existing:
-                _die("Output already exists (use --force to overwrite): " + ", ".join(existing))
+    jobs = _parse_jsonl(args.input)
+    # API key used by async workers — load eagerly so we fail fast on missing key
+    _get_api_settings()
 
     bodies: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
     for i, job in enumerate(jobs):
@@ -1808,29 +1669,18 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         bodies.append((job["prompt"], body, r))
 
     if args.dry_run:
-        out_dir = Path(args.out_dir).expanduser().resolve()
-        for i, (prompt, body, r) in enumerate(bodies):
+        for i, (prompt, body, _r) in enumerate(bodies):
             print(f"\n--- Job {i+1} ---")
             print(json.dumps(body, ensure_ascii=False, indent=2))
-            _print_dry_run_plan(
-                [_batch_image_path(out_dir, i, prompt, r["output_format"], out_paths[i], 0)],
-                label=f"[{i + 1}/{len(bodies)}]",
-            )
         return 0
 
-    waves = -(-len(bodies) // args.concurrency)
-    _info(f"Running {len(bodies)} job(s), concurrency {args.concurrency} "
-          f"(~{waves} wave(s) x ~70 s on Pro).")
-    return asyncio.run(_run_batch(args, bodies, out_paths))
+    return asyncio.run(_run_batch(args, bodies))
 
 
 async def _run_batch(
     args: argparse.Namespace,
     bodies: list[tuple[str, dict[str, Any], dict[str, Any]]],
-    out_paths: list[Path | None] | None = None,
 ) -> int:
-    if out_paths is None:
-        out_paths = [None] * len(bodies)
     sem = asyncio.Semaphore(args.concurrency)
     api_key, base_url = _get_api_settings()
     out_dir = Path(args.out_dir).expanduser().resolve()
@@ -1845,16 +1695,15 @@ async def _run_batch(
                 )
                 elapsed_ms = int((time.monotonic() - t0) * 1000)
                 for j, img_bytes in enumerate(images):
-                    image_path = _batch_image_path(
-                        out_dir, index, prompt, r["output_format"], out_paths[index], j,
-                    )
+                    stem = _slugify(prompt, max_len=30)
+                    ext = "jpg" if r["output_format"] == "jpeg" else r["output_format"]
+                    image_path = out_dir / f"job-{index+1:03d}-{stem}-{j+1}.{ext}"
                     if image_path.exists() and not args.force:
                         _warn(f"Output exists, skipping: {image_path}")
                         continue
-                    image_path.parent.mkdir(parents=True, exist_ok=True)
                     img_bytes = _maybe_downscale(img_bytes, r.get("downscale_to"), r["output_format"])
                     image_path.write_bytes(img_bytes)
-                    print(f"[{index+1}/{len(bodies)}] Image: {image_path} ({elapsed_ms / 1000:.0f}s)")
+                    print(f"[{index+1}/{len(bodies)}] Image: {image_path}")
                     meta_size = (
                         f"{r['downscale_to'][0]}x{r['downscale_to'][1]}"
                         if r.get("downscale_to") else body["size"]
