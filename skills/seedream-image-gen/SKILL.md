@@ -109,7 +109,7 @@ Print the full capability matrix (max refs, optimize modes, etc.):
 |---|---|---|---|
 | (default) | 2K preset (model chooses pixels by your prompt's aspect ratio; Pro reference 1776×2368 for 3:4, 2816×1584 for 16:9, 2048² for 1:1) | per prompt | General workhorse; describe the aspect in your prompt or pass an explicit shortcut below for deterministic pixels |
 | `--square` | Pro: 1024×1024 / Lite: 2048×2048 | 1:1 | Social posts, product main images, logos |
-| `--wide` (alias `--wechat-header`) | 1792×1024 (Pro-only) | 16:9 | Banners, headers, hero images, YouTube/B站/博客/公众号 covers |
+| `--wide` (alias `--wechat-header`) | 1792×1024 (Lite generates larger, then downsizes locally) | 16:9 | Banners, headers, hero images, YouTube/B站/博客/公众号 covers |
 | `--portrait` | Pro: 1536×2048 / Lite: 2048×2732 | 3:4 | Posters, magazine covers, 小红书/Instagram stories |
 | `--landscape` | Pro: 2048×1152 / Lite: 2732×1536 | 16:9 | Dense infographics (6+ cards), wallpapers, presentation slides |
 | `--phone` (aliases `--stories`, `--wechat`) | Pro: 1152×2048 / Lite: 1440×2560 | 9:16 | Phone stories, WeChat UI mockups (聊天/朋友圈/转账/通话/红包), TikTok/抖音 covers |
@@ -118,7 +118,7 @@ Print the full capability matrix (max refs, optimize modes, etc.):
 
 Size and aspect ratio can also be described in natural language inside the prompt (e.g. "竖版 3:4 海报", "手机壁纸 9:16", "16:9 横版", "方形头像") — the model will pick a reasonable size near its default (2K). Prefer the explicit `--size` / shortcut flags when you need deterministic dimensions (platform uploads, print specs, matching an existing layout); use in-prompt sizing when you are describing a feel and the exact pixel count does not matter.
 
-Valid custom-WxH bounds: **Pro** 0.9 MP – 4.6 MP (default 1024×1024) with aspect ratio ∈ [1/16, 16]; **Lite** 3.7 MP – 16 MP (default 2048×2048; see [lite-quickref.md](references/lite-quickref.md) for the full floor/ceiling table — note Lite categorically cannot do 1K/1024²/1792×1024). The bound is on total pixels (W×H), not per-side. The client rejects out-of-range sizes before spending an API call. For common platform/destination sizes (e-commerce mains, social posts, stories, video covers, wallpapers), see the [Common Use-Case Size Reference](references/api-reference.md#common-use-case-size-reference常见场景尺寸指引) in the API reference.
+Valid custom-WxH bounds: **Pro** 0.9 MP – 4.6 MP with aspect ratio ∈ [1/16, 16]; **Lite** 3.7 MP – 16 MP. Explicit `WxH` sizes below the model's floor are generated at an 8-aligned larger size with approximately the same aspect ratio, then LANCZOS-downscaled to the exact requested dimensions (for example, Pro `1500x600` → `1520x608` → `1500x600`). Pass `--no-auto-upscale` to reject below-floor sizes instead. Sizes above the cap or outside the aspect range are rejected. Preset support is unchanged: Pro accepts `1K`/`2K`, Lite accepts `2K`/`3K`/`4K`; Lite `--size 1K` is rejected, while explicit `--size 1024x1024` can use auto-upscale. See [lite-quickref.md](references/lite-quickref.md) and the [Common Use-Case Size Reference](references/api-reference.md#common-use-case-size-reference常见场景尺寸指引).
 
 ## Text rendering (Pro)
 
@@ -351,10 +351,17 @@ generate
   --web-search                Enable web search (Lite only)
   --negative-prompt <text>    Negative prompt (Pro ships with a gentle quality-guard
                                default: "模糊, 低质量, 水印, 变形, 多余肢体"; pass an empty
-                               string to disable it)
-  --no-negative-prompt        Disable the default negative prompt (useful for
-                               non-human scenes like product/landscape where
-                               "extra limbs" is irrelevant)
+                               string to disable the quality default)
+  --no-negative-prompt        Disable the default quality negative prompt only
+                               (guards from --no-people/--no-text/--cover still apply)
+  --no-people                 Opt-in guard "NO people, figures, statues" (Pro:
+                               negative_prompt; Lite: appended to the prompt)
+  --no-text                   Opt-in guard "no text, letters, logo, watermark" (same)
+  --cover                     Cover/banner preset: --no-people + --no-text + auto-upscale
+                               (overrides --no-auto-upscale). Also accepted by edit,
+                               but edit applies no guards unless you pass these flags
+  --no-auto-upscale           Reject WxH sizes below the model pixel floor instead of
+                               auto-upscaling then downscaling (default: auto-upscale)
   --optimize-prompt standard  Prompt optimization (standard only on 5.x; "fast" is
                                4.0-only and not supported)
   --n <1-4>                   Generate n independent images (default 1)
@@ -396,11 +403,13 @@ generate-batch
   --concurrency <n>           Max concurrent requests (default 3)
   --out-dir <dir>             Output directory (default output/seedream-image-gen/batch/)
   --model/size/...            Default parameters (overridable per-job)
+  --no-people/--no-text/--cover  Batch-wide opt-in defaults (overridable per-job)
+  --no-auto-upscale           Reject below-floor WxH sizes instead of auto-upscaling
   --dry-run                   Print all bodies and exit
   --force                     Overwrite existing files
 ```
 
-JSONL job-object supported fields: `prompt`, `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
+JSONL job-object supported fields: `prompt`, `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `no_people`, `no_text`, `cover`, `no_auto_upscale`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
 
 ### list-models
 
@@ -443,7 +452,7 @@ For visual-generation tasks that don't fit an existing preset, write the prompt 
 - **429/5xx auto-retry**: up to 8 attempts with exponential backoff (2/4/8/16/30/30/30/30s); honors the HTTP `retry-after` header.
 - **400/401/403 do not retry**: parameter error, key error, or permission error (e.g. model not enabled for the account) — fail immediately with the error.
 - Passing web_search/sequential/stream/fast-mode on Pro is filtered by the client (wastes no API call).
-- Passing 1K / 1024² / 1792×1024 on Lite is rejected client-side (below the pixel floor).
+- Lite `--size 1K` is unsupported and rejected. Explicit `1024x1024` / `1792x1024` sizes auto-upscale then downscale, or are rejected with `--no-auto-upscale`. Pro explicit sizes below 921,600 px follow the same rule.
 
 ## Authentication
 

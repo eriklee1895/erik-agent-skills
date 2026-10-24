@@ -36,6 +36,7 @@ import base64
 import datetime as dt
 import getpass
 import json
+import math
 import os
 import re
 import sys
@@ -91,8 +92,7 @@ MODELS: dict[str, dict[str, Any]] = {
         "optimize_modes": {"standard"},
         "price_per_image": "≤2.36MP ¥0.30 / >2.36MP ¥0.60 (extra input image ¥0.02)",
         "notes": "Headline features: strong Chinese+English text rendering; marker-based region editing. "
-                 "No web_search, no sequential gen, no stream. Size preset stops at 2K (no 3K/4K). "
-                 "RPM ≈ 500.",
+                 "No web_search, no sequential gen, no stream. Size preset stops at 2K (no 3K/4K).",
     },
     MODEL_LITE: {
         "aliases": MODEL_LITE_ALIASES,
@@ -110,8 +110,8 @@ MODELS: dict[str, dict[str, Any]] = {
         "optimize_modes": {"standard"},
         "price_per_image": "¥0.22/张 (2K tier)",
         "notes": "Fast sketch/iteration workhorse. Text rendering weaker than Pro (avoid text-heavy "
-                 "prompts). Supports web_search and sequential group generation. Pixel floor blocks "
-                 "1024² / 1792×1024 WeChat headers (use Pro for those). optimize_prompt fast is NOT "
+                 "prompts). Supports web_search and sequential group generation. Native pixel floor is "
+                 "3.69MP; the CLI can downscale smaller explicit outputs. optimize_prompt fast is NOT "
                  "supported on Lite (5.0 Pro/Lite/4.5 all reject 'fast'; only Seedream 4.0 accepts it).",
     },
 }
@@ -132,6 +132,10 @@ ALLOWED_OUTPUT_FORMATS = ("png", "jpeg", "jpg")
 # Pro default negative prompt — gentle quality guard. User can override with
 # --negative-prompt "" (disable) or --negative-prompt "..." (replace).
 PRO_DEFAULT_NEGATIVE = "模糊, 低质量, 水印, 变形, 多余肢体"
+
+# Opt-in content guards; clearing quality negatives leaves requested guards on.
+GUARD_NO_PEOPLE = "NO people, figures, statues"
+GUARD_NO_TEXT = "no text, letters, logo, watermark"
 
 # Automatic marker-cleanup suffix appended after the user's edit prompt (unless
 # --no-marker-cleanup-prompt is passed). Selected by prompt language heuristic.
@@ -311,9 +315,19 @@ def _apply_size_shortcuts(
     return size or caps.get("default_size", "2K")
 
 
-def _validate_size(size: str, caps: dict[str, Any], model_id: str) -> tuple[int, int]:
+def _validate_size(
+    size: str,
+    caps: dict[str, Any],
+    model_id: str,
+    *,
+    enforce_min: bool = True,
+) -> tuple[int, int]:
     """Validate --size against model capabilities. Returns (width, height) for WxH sizes,
-    or (0, 0) for preset strings (the server resolves those)."""
+    or (0, 0) for preset strings (the server resolves those).
+
+    When enforce_min is False, sizes below pixel_min are returned so the caller can
+    auto-upscale; aspect and pixel_max are still enforced.
+    """
     size_upper = size.upper()
     if size_upper in caps["size_strings"]:
         return (0, 0)  # preset, server resolves
@@ -342,10 +356,11 @@ def _validate_size(size: str, caps: dict[str, Any], model_id: str) -> tuple[int,
     total = w * h
     aspect = max(w, h) / min(w, h)
 
-    if total < caps["pixel_min"]:
+    if total < caps["pixel_min"] and enforce_min:
         _die(
             f"Size {size}: {total:,} pixels is below the {caps['pixel_min']:,} pixel floor "
             f"for {model_id}. {caps.get('size_floor_hint', '')}"
+            f"Pass a larger size, or omit --no-auto-upscale to generate larger and downscale."
         )
     if total > caps["pixel_max"]:
         _die(
@@ -356,6 +371,72 @@ def _validate_size(size: str, caps: dict[str, Any], model_id: str) -> tuple[int,
         _die(f"Size {size}: aspect ratio {aspect:.1f}:1 exceeds maximum {caps['aspect_max']}:1.")
 
     return (w, h)
+
+
+def _smallest_valid_size(
+    w: int,
+    h: int,
+    pixel_min: int,
+    pixel_max: int,
+) -> tuple[int, int]:
+    """Smallest same-aspect WxH with total pixels >= pixel_min.
+
+    Rounds each side up to a multiple of 8 while preserving aspect as closely as
+    possible (e.g. 1500x600 → 1520x608). Falls back to a clean integer scale
+    (2x/3x/…) when the 8-aligned size would exceed pixel_max.
+    pixel_min is 921_600 for Pro (official 1280×720 / ~0.92MP floor) — see MODELS.
+    """
+    if w * h >= pixel_min:
+        return w, h
+
+    factor = math.sqrt(pixel_min / (w * h))
+    nw = math.ceil(w * factor / 8) * 8
+    nh = math.ceil(h * factor / 8) * 8
+    while nw * nh < pixel_min:
+        if (nw + 8) / w <= (nh + 8) / h:
+            nw += 8
+        else:
+            nh += 8
+    if pixel_min <= nw * nh <= pixel_max:
+        return nw, nh
+
+    for scale in range(2, 9):
+        iw, ih = w * scale, h * scale
+        if pixel_min <= iw * ih <= pixel_max:
+            return iw, ih
+
+    _die(
+        f"Cannot auto-upscale {w}x{h} to reach the {pixel_min:,} pixel floor "
+        f"without exceeding the {pixel_max:,} pixel cap. Pick a different size."
+    )
+    return w, h  # unreachable
+
+
+def _maybe_downscale(
+    img_bytes: bytes,
+    downscale_to: Optional[tuple[int, int]],
+    output_format: str,
+) -> bytes:
+    """LANCZOS-downscale API output to the exact user-requested size, if any."""
+    if not downscale_to:
+        return img_bytes
+    from io import BytesIO
+
+    tw, th = downscale_to
+    with Image.open(BytesIO(img_bytes)) as im:
+        im.load()
+        resized = im.resize((tw, th), Image.Resampling.LANCZOS)
+        buf = BytesIO()
+        fmt = "JPEG" if output_format == "jpeg" else "PNG"
+        if fmt == "JPEG":
+            if resized.mode in ("RGBA", "P", "LA"):
+                resized = resized.convert("RGB")
+            resized.save(buf, format=fmt, quality=95)
+        else:
+            if resized.mode == "P":
+                resized = resized.convert("RGBA")
+            resized.save(buf, format=fmt)
+        return buf.getvalue()
 
 
 # ---------------------------------------------------------------------------
@@ -980,7 +1061,21 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_lite_only: bool)
                         f"({PRO_DEFAULT_NEGATIVE!r}); pass --negative-prompt '' to disable. "
                         f"Not supported on Lite.")
     p.add_argument("--no-negative-prompt", action="store_true",
-                   help="Disable the default negative prompt (Pro only).")
+                   help="Disable the default quality negative prompt (Pro only). "
+                        "Does not clear guards turned on by --no-people / --no-text / --cover.")
+    p.add_argument("--no-people", action="store_true",
+                   help="Opt-in guard: 'NO people, figures, statues' (Pro: negative_prompt; "
+                        "Lite: appended to the prompt). Off by default.")
+    p.add_argument("--no-text", action="store_true",
+                   help="Opt-in guard: 'no text, letters, logo, watermark' (Pro: negative_prompt; "
+                        "Lite: appended to the prompt). Off by default.")
+    p.add_argument("--cover", action="store_true",
+                   help="Cover/banner preset: --no-people + --no-text + auto-upscale "
+                        "(overrides --no-auto-upscale).")
+    p.add_argument("--no-auto-upscale", action="store_true",
+                   help="Disable auto-upscale for WxH sizes below the model's pixel floor "
+                        "(Pro ~0.92MP / 921600). Default: generate at the smallest valid "
+                        "same-aspect size, then LANCZOS-downscale to the requested size.")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT,
                    help=f"Timeout in seconds (default: {DEFAULT_TIMEOUT}).")
     p.add_argument("--dry-run", action="store_true",
@@ -1007,7 +1102,21 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         args.size, args.wechat_header, args.square, args.wide, args.portrait, args.landscape,
         getattr(args, "phone", False), caps,
     )
-    _validate_size(size, caps, model_id)
+    requested_size = size
+    cover = bool(getattr(args, "cover", False))
+    auto_upscale = cover or not bool(getattr(args, "no_auto_upscale", False))
+    wh = _validate_size(size, caps, model_id, enforce_min=not auto_upscale)
+    downscale_to: Optional[tuple[int, int]] = None
+    if wh != (0, 0) and wh[0] * wh[1] < caps["pixel_min"]:
+        # Below model floor (Pro pixel_min=921_600 ≈ 0.92MP). Generate larger, then downscale.
+        api_w, api_h = _smallest_valid_size(wh[0], wh[1], caps["pixel_min"], caps["pixel_max"])
+        _info(
+            f"Size {wh[0]}x{wh[1]} ({wh[0]*wh[1]:,} px) is below the "
+            f"{caps['pixel_min']:,} px floor; generating at {api_w}x{api_h} then "
+            f"downscaling to {wh[0]}x{wh[1]}."
+        )
+        size = f"{api_w}x{api_h}"
+        downscale_to = wh
 
     # Prompt
     prompt = _read_prompt(getattr(args, "prompt", None), getattr(args, "prompt_file", None)) \
@@ -1015,7 +1124,7 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
     if len(prompt) > MAX_PROMPT_CHARS:
         _warn(f"Prompt length {len(prompt)} exceeds recommended {MAX_PROMPT_CHARS} chars.")
 
-    # Negative prompt
+    # Negative prompt (quality default) + people/text content guards
     if getattr(args, "no_negative_prompt", False):
         negative_prompt = ""
     elif getattr(args, "negative_prompt", None) is not None:
@@ -1026,6 +1135,21 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
     # Normalize empty string to None (so it doesn't get sent)
     if negative_prompt == "":
         negative_prompt = None
+
+    guards: list[str] = []
+    if cover or getattr(args, "no_people", False):
+        guards.append(GUARD_NO_PEOPLE)
+    if cover or getattr(args, "no_text", False):
+        guards.append(GUARD_NO_TEXT)
+    if guards:
+        guard_str = ", ".join(guards)
+        if caps["supports_negative_prompt"]:
+            negative_prompt = (
+                f"{negative_prompt}, {guard_str}" if negative_prompt else guard_str
+            )
+        else:
+            # Lite ignores negative_prompt; append a short clause to the prompt instead.
+            prompt = _append_suffix(prompt, guard_str)
 
     # Reference images (used by both generate (optional) and edit (required))
     ref_paths = list(getattr(args, "reference_image", []) or [])
@@ -1160,11 +1284,13 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         "caps": caps,
         "prompt": prompt,
         "size": size,
+        "requested_size": requested_size,
         "output_format": output_format,
         "watermark": bool(args.watermark),
         "web_search": web_search,
         "optimize_prompt": args.optimize_prompt,
         "negative_prompt": negative_prompt,
+        "downscale_to": downscale_to,
         "reference_images": refs,
         "reference_image_paths": list(getattr(args, "reference_image", []) or []),
         "reference_count": len(ref_paths),
@@ -1218,7 +1344,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         # Best-effort dry-run metadata path
         image_path = _make_output_path(r["prompt"], out, out_dir, r["output_format"])
         _write_metadata(
-            image_path, prompt=r["prompt"], model=r["model_id"], size=r["size"],
+            image_path, prompt=r["prompt"], model=r["model_id"], size=r["requested_size"],
             output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
             reference_count=len(r.get("reference_image_paths", []) or []) or (1 if r["reference_images"] else 0),
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
@@ -1255,12 +1381,17 @@ async def _generate_one(
         if image_path.exists() and not r["force"]:
             _die(f"Output already exists: {image_path} (use --force to overwrite)")
         image_path.parent.mkdir(parents=True, exist_ok=True)
+        img_bytes = _maybe_downscale(img_bytes, r.get("downscale_to"), r["output_format"])
         image_path.write_bytes(img_bytes)
         print(f"Image: {image_path}")
 
+        meta_size = (
+            f"{r['downscale_to'][0]}x{r['downscale_to'][1]}"
+            if r.get("downscale_to") else r["size"]
+        )
         _write_metadata(
             image_path,
-            prompt=r["prompt"], model=r["model_id"], size=r["size"],
+            prompt=r["prompt"], model=r["model_id"], size=meta_size,
             output_format=r["output_format"], watermark=r["watermark"],
             web_search=r["web_search"], reference_count=r["reference_count"],
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"), base_url=base_url, dry_run=False,
@@ -1309,11 +1440,16 @@ async def _generate_concurrent(
                 _warn(f"Output exists, skipping: {image_path}")
                 continue
             image_path.parent.mkdir(parents=True, exist_ok=True)
+            img_bytes = _maybe_downscale(img_bytes, r.get("downscale_to"), r["output_format"])
             image_path.write_bytes(img_bytes)
             print(f"Image: {image_path}")
+            meta_size = (
+                f"{r['downscale_to'][0]}x{r['downscale_to'][1]}"
+                if r.get("downscale_to") else r["size"]
+            )
             _write_metadata(
                 image_path,
-                prompt=r["prompt"], model=r["model_id"], size=r["size"],
+                prompt=r["prompt"], model=r["model_id"], size=meta_size,
                 output_format=r["output_format"], watermark=r["watermark"],
                 web_search=r["web_search"], reference_count=r["reference_count"],
                 optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"), base_url=base_url, dry_run=False,
@@ -1387,7 +1523,7 @@ def _cmd_edit(args: argparse.Namespace) -> int:
         print(json.dumps(body, ensure_ascii=False, indent=2))
         image_path = _make_output_path(r["prompt"], out, out_dir, r["output_format"])
         _write_metadata(
-            image_path, prompt=r["prompt"], model=r["model_id"], size=r["size"],
+            image_path, prompt=r["prompt"], model=r["model_id"], size=r["requested_size"],
             output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
             reference_count=r["reference_count"],
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
@@ -1431,7 +1567,13 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--optimize-prompt", choices=["standard"], default=None,
                    help="Default prompt optimization mode ('standard' only on 5.x; 'fast' is 4.0-only).")
     p.add_argument("--negative-prompt", default=None, help="Default negative prompt.")
-    p.add_argument("--no-negative-prompt", action="store_true", help="Default negative-prompt off.")
+    p.add_argument("--no-negative-prompt", action="store_true", help="Default quality negative-prompt off.")
+    p.add_argument("--no-people", action="store_true", help="Default no-people guard on (opt-in).")
+    p.add_argument("--no-text", action="store_true", help="Default no-text guard on (opt-in).")
+    p.add_argument("--cover", action="store_true",
+                   help="Default cover preset on: both guards + auto-upscale.")
+    p.add_argument("--no-auto-upscale", action="store_true",
+                   help="Disable auto-upscale for sizes below the model pixel floor.")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help=f"Timeout (default: {DEFAULT_TIMEOUT}).")
     p.add_argument("--dry-run", action="store_true", help="Print bodies and exit.")
     p.add_argument("--force", action="store_true", help="Overwrite existing outputs.")
@@ -1493,6 +1635,10 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         ns.optimize_prompt = job.get("optimize_prompt", args.optimize_prompt)
         ns.negative_prompt = job.get("negative_prompt", args.negative_prompt)
         ns.no_negative_prompt = bool(job.get("no_negative_prompt", False))
+        ns.no_people = bool(job.get("no_people", args.no_people))
+        ns.no_text = bool(job.get("no_text", args.no_text))
+        ns.cover = bool(job.get("cover", args.cover))
+        ns.no_auto_upscale = bool(job.get("no_auto_upscale", getattr(args, "no_auto_upscale", False)))
         ns.reference_image = list(job.get("reference_image", []) or [])
         ns.marker_rect = list(job.get("marker_rects", []) or [])
         mc = job.get("marker_color", ["#ff0000"])
@@ -1557,11 +1703,16 @@ async def _run_batch(
                     if image_path.exists() and not args.force:
                         _warn(f"Output exists, skipping: {image_path}")
                         continue
+                    img_bytes = _maybe_downscale(img_bytes, r.get("downscale_to"), r["output_format"])
                     image_path.write_bytes(img_bytes)
                     print(f"[{index+1}/{len(bodies)}] Image: {image_path}")
+                    meta_size = (
+                        f"{r['downscale_to'][0]}x{r['downscale_to'][1]}"
+                        if r.get("downscale_to") else body["size"]
+                    )
                     _write_metadata(
                         image_path,
-                        prompt=prompt, model=body["model"], size=body["size"],
+                        prompt=prompt, model=body["model"], size=meta_size,
                         output_format=r["output_format"], watermark=body.get("watermark", False),
                         web_search="tools" in body, reference_count=r["reference_count"],
                         optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
