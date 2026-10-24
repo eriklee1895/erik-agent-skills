@@ -53,3 +53,11 @@ Quality inspection: exact Chinese text, requested composition, edit target selec
 - Layer output format, cropped dimensions, z-index and both bbox forms survive download/save; returned signed URLs do not.
 - Existing fifteen regressions are preserved or migrated meaningfully. New contracts, dry-runs, real sample outputs and skill validation pass.
 - Benchmark evidence and guidance distinguish official capabilities, observed behavior and untested claims.
+
+## Execution record — 2026-10-24
+
+All six steps are complete. The bounded benchmark made sixteen intentional requests and produced twenty images, with no failed/unknown requests or generation replays. All outputs were visually inspected; saved crop geometry, formats, alpha statistics, hashes and price estimates were also checked. Results and limitations are in [the benchmark report](flash-benchmark.md).
+
+The implementation passes thirty offline regression tests, Ruff F/E9 checks and the skill validator. Independent review identified two issues before publication: marker preprocessing discarded the alpha channel for transparent edits, and reachable references still recommended obsolete sequential/web-search features. A regression reproduced the alpha failure for both models before the fix; transparent marker requests now retain alpha in the actual encoded reference. Narrative, marker, size and concurrency guidance has been aligned with the supported Pro/Flash contract. These changes required no additional paid requests.
+
+The branch is ready for a pull request. Integration into the default branch requires the user's later merge instruction.

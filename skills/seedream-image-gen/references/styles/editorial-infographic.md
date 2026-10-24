@@ -23,7 +23,7 @@
 | 竖版 3:4（小红书 / IG / 抖音科普图文） | `--portrait` | 1536×2048 | **≤ 5 张**（text garble 约 2× 于横版） |
 | 极简版（PPT 单 KPI 卡） | `--wide` | 1792×1024 | 3 张 |
 
-输出 `png`（lossless，图表/文字锐利度必需）；`watermark=false`；web-search 关（会拉风格不一致的参考图打架）。best-of-N 建议 **生成 2-4 张**挑文字最干净的；同 prompt 不同次生成间文字准确度有波动。
+输出 `png`（lossless，保留图表/文字细节）；`watermark=false`。best-of-N 可用 `--n 2` 到 `--n 4` 分别请求候选，挑文字最干净的；同 prompt 不同次生成间文字准确度有波动。当前 Pro / Flash 不提供 web-search 参数。
 
 ### 2. 底层 Hero 照片（不写照片就变 3D 渲染，这是最致命的翻车点）
 

@@ -442,7 +442,7 @@ Vogue-style magazine cover, right 2/3 is a close-up portrait of a young East-Asi
 | 改图用 marker，不要重建 | edit + `--marker-rect` 比重头 t2i 成本低、一致性好 |
 | 同一人多场景列特征清单 | 不要只说"保持这个人"，要列眼镜/发型/衣服 |
 | 出活前用 `--dry-run` | 检查 body 里 size/model/refs/neg 都是对的，避免白烧钱 |
-| 批量并发要克制 | `--concurrency 3` 已经很快（RPM 500 理论上限，实际 5–10 并发稳） |
+| 批量并发按任务调整 | `--concurrency` 控制本地并发，依据延迟和当前平台配额调整；遇到明确的 429 按退避重试，不写死 IPM 配额或并发上限 |
 | 错字/畸形重试一次 | 同 prompt 跑两次选好的；第二次可微调"字迹清晰锐利，逐字准确"加强 |
 
 ## 常见反模式（高频翻车，用这些关键词防御）

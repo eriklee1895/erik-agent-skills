@@ -117,6 +117,27 @@ class FlashContractTests(unittest.TestCase):
         self.assertNotEqual(code, 0)
         self.assertEqual(self.requests, [])
 
+    def test_transparent_marker_edit_preserves_alpha_in_submitted_reference(self):
+        for model in ("pro", "flash"):
+            with self.subTest(model=model):
+                code, stdout, error = self.invoke(
+                    "edit", "--model", model, "--reference-image", str(self.alpha),
+                    "--background", "transparent", "--marker-rect", "10%,10%,20%,20%",
+                    "--prompt", "recolor the marked area", "--dry-run",
+                )
+                self.assertEqual(code, 0, error)
+                body = json.loads(stdout)
+                self.assertEqual(body["background"], "transparent")
+                reference = body["image"]
+                if isinstance(reference, list):
+                    reference = reference[0]
+                with Image.open(io.BytesIO(base64.b64decode(reference.split(",", 1)[1]))) as image:
+                    self.assertIn("A", image.getbands())
+                    self.assertEqual(image.getchannel("A").getextrema(), (0, 255))
+                    # Markers over empty pixels must stay visible to locate the edit.
+                    self.assertGreater(image.getpixel((150, 150))[3], 0)
+        self.assertEqual(self.requests, [])
+
     def test_decompose_saves_native_formats_crops_and_position_metadata(self):
         base = picture((1024, 1024), "RGB", "JPEG")
         layer = picture((256, 320))

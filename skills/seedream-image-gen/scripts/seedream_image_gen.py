@@ -503,13 +503,15 @@ def _parse_color(spec: str) -> tuple[int, int, int]:
 
 
 def _apply_markers(src_path: Path, rects: list[tuple[float, float, float, float, bool]],
-                   colors: list[tuple[int, int, int]], fill_alpha: int, stroke_width: int) -> bytes:
+                   colors: list[tuple[int, int, int]], fill_alpha: int, stroke_width: int,
+                   *, preserve_alpha: bool = False) -> bytes:
     """Draw semi-transparent rectangles on a copy of the source image and return
     the annotated image as PNG bytes.
 
     `colors` is parallel to `rects` so each region can be its own color (red/blue/green for
     multi-region prompts like "红框替换标题，蓝框改帽子"). When a single color is supplied
-    (legacy --marker-color without repeats), all rects use that color.
+    (legacy --marker-color without repeats), all rects use that color. Transparent edits
+    retain alpha, including visible marker overlays on otherwise empty pixels.
     """
     img = Image.open(src_path).convert("RGBA")
     # Honor EXIF orientation (phone photos may be stored rotated; transpose so
@@ -539,7 +541,9 @@ def _apply_markers(src_path: Path, rects: list[tuple[float, float, float, float,
         fill_rgba = (*color, fill_alpha)
         draw.rectangle(box, fill=fill_rgba, outline=color, width=stroke_width)
 
-    combined = Image.alpha_composite(img, overlay).convert("RGB")
+    combined = Image.alpha_composite(img, overlay)
+    if not preserve_alpha:
+        combined = combined.convert("RGB")
     buf = _BytesIO()
     combined.save(buf, format="PNG")
     return buf.getvalue()
@@ -1161,7 +1165,10 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         colors = [_parse_color(c) for c in raw_colors]
         fill_alpha = int(getattr(args, "marker_alpha", 80))
         stroke_width = int(getattr(args, "marker_stroke", 3))
-        annotated_png = _apply_markers(src_for_markers, rects, colors, fill_alpha, stroke_width)
+        annotated_png = _apply_markers(
+            src_for_markers, rects, colors, fill_alpha, stroke_width,
+            preserve_alpha=background == "transparent",
+        )
         # Clean up outpaint+marker temp file if we created one
         if outpaint_canvas_png is None and src_for_markers != Path(src_primary).expanduser().resolve():
             try:
