@@ -109,7 +109,7 @@ Print the full capability matrix (max refs, optimize modes, etc.):
 |---|---|---|---|
 | (default) | 2K preset (model chooses pixels by your prompt's aspect ratio; Pro reference 1776×2368 for 3:4, 2816×1584 for 16:9, 2048² for 1:1) | per prompt | General workhorse; describe the aspect in your prompt or pass an explicit shortcut below for deterministic pixels |
 | `--square` | Pro: 1024×1024 / Lite: 2048×2048 | 1:1 | Social posts, product main images, logos |
-| `--wide` (alias `--wechat-header`) | 1792×1024 (Pro-only) | 16:9 | Banners, headers, hero images, YouTube/B站/博客/公众号 covers |
+| `--wide` (alias `--wechat-header`) | 1792×1024 (Lite generates larger, then downsizes locally) | 16:9 | Banners, headers, hero images, YouTube/B站/博客/公众号 covers |
 | `--portrait` | Pro: 1536×2048 / Lite: 2048×2732 | 3:4 | Posters, magazine covers, 小红书/Instagram stories |
 | `--landscape` | Pro: 2048×1152 / Lite: 2732×1536 | 16:9 | Dense infographics (6+ cards), wallpapers, presentation slides |
 | `--phone` (aliases `--stories`, `--wechat`) | Pro: 1152×2048 / Lite: 1440×2560 | 9:16 | Phone stories, WeChat UI mockups (聊天/朋友圈/转账/通话/红包), TikTok/抖音 covers |

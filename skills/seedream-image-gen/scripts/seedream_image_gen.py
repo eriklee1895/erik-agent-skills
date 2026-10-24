@@ -110,8 +110,8 @@ MODELS: dict[str, dict[str, Any]] = {
         "optimize_modes": {"standard"},
         "price_per_image": "¥0.22/张 (2K tier)",
         "notes": "Fast sketch/iteration workhorse. Text rendering weaker than Pro (avoid text-heavy "
-                 "prompts). Supports web_search and sequential group generation. Pixel floor blocks "
-                 "1024² / 1792×1024 WeChat headers (use Pro for those). optimize_prompt fast is NOT "
+                 "prompts). Supports web_search and sequential group generation. Native pixel floor is "
+                 "3.69MP; the CLI can downscale smaller explicit outputs. optimize_prompt fast is NOT "
                  "supported on Lite (5.0 Pro/Lite/4.5 all reject 'fast'; only Seedream 4.0 accepts it).",
     },
 }
@@ -1102,6 +1102,7 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         args.size, args.wechat_header, args.square, args.wide, args.portrait, args.landscape,
         getattr(args, "phone", False), caps,
     )
+    requested_size = size
     cover = bool(getattr(args, "cover", False))
     auto_upscale = cover or not bool(getattr(args, "no_auto_upscale", False))
     wh = _validate_size(size, caps, model_id, enforce_min=not auto_upscale)
@@ -1283,6 +1284,7 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         "caps": caps,
         "prompt": prompt,
         "size": size,
+        "requested_size": requested_size,
         "output_format": output_format,
         "watermark": bool(args.watermark),
         "web_search": web_search,
@@ -1342,7 +1344,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         # Best-effort dry-run metadata path
         image_path = _make_output_path(r["prompt"], out, out_dir, r["output_format"])
         _write_metadata(
-            image_path, prompt=r["prompt"], model=r["model_id"], size=r["size"],
+            image_path, prompt=r["prompt"], model=r["model_id"], size=r["requested_size"],
             output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
             reference_count=len(r.get("reference_image_paths", []) or []) or (1 if r["reference_images"] else 0),
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
@@ -1521,7 +1523,7 @@ def _cmd_edit(args: argparse.Namespace) -> int:
         print(json.dumps(body, ensure_ascii=False, indent=2))
         image_path = _make_output_path(r["prompt"], out, out_dir, r["output_format"])
         _write_metadata(
-            image_path, prompt=r["prompt"], model=r["model_id"], size=r["size"],
+            image_path, prompt=r["prompt"], model=r["model_id"], size=r["requested_size"],
             output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
             reference_count=r["reference_count"],
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),

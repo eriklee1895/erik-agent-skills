@@ -43,9 +43,7 @@ Content-Type: application/json
 ### 关键差异要点
 
 1. **Pro 不支持 3K/4K**——method-1 上限约 4.6MP（总像素 4,624,220，如 2048×2048 或 16:9 的 2816×1584）。想要更高分辨率请用 Lite 或出图后用超分模型。
-2. **Lite 有 3.69MP 像素下限**（2560×1440 起步），**不允许 1K/1024²/1792×1024**。因此：
-   - 宽幅 16:9 banner/cover（1792×1024≈1.84MP，例如微信公众号头图、博客 hero、YouTube 封面、视频封面、PPT cover）是 **Pro 专属**，Lite 跑不了。
-   - 方形 1024×1024 图标、社交头像也是 Pro 专属。
+2. **Lite API 原生生成有 3.69MP 像素下限**（2560×1440 起步），`1K` 预设不支持。CLI 对显式 `1024x1024`、`1792x1024` 等小尺寸会先生成合法大图，再本地缩小到目标尺寸；`--no-auto-upscale` 可恢复低于下限时报错。Pro 可直接生成这些尺寸，Lite 则需要本地缩小。
 3. **Pro rejects `tools:[{type:"web_search"}]`, `sequential_image_generation`, and `stream: true`** — these parameters return 400 on Pro. The CLI's `_build_request_body` filters them per-model capability; only Lite sends `tools`.
 4. **`optimize_prompt_options.mode` accepts `"standard"` on both 5.0 Pro and 5.0 Lite (and 4.5)** — `"fast"` is Seedream 4.0 only; the CLI warns and ignores unsupported values rather than sending them to the API.
 5. **`negative_prompt` works on Pro** (not yet in official docs); the CLI sends a gentle quality guard by default: `模糊, 低质量, 水印, 变形, 多余肢体`. Disable with `--no-negative-prompt` or override with `--negative-prompt "..."`. Lite accepts the field but produces negligible effect, so the CLI omits it.
@@ -186,12 +184,12 @@ CLI 提供以下 aspect-ratio shortcut，按模型自动解析为合法精确像
 
 | Flag | Pro 分辨率 | Lite 分辨率 | 比例 | 典型用途 |
 |---|---|---|---|---|
-| `--wide` | 1792×1024 | ❌ Pro-only | 16:9 | 宽幅 banner / cover / hero / YouTube / 视频封面 / PPT cover |
+| `--wide` | 1792×1024 | 1792×1024（先生成后缩小） | 16:9 | 宽幅 banner / cover / hero / YouTube / 视频封面 / PPT cover |
 | `--portrait` | 1536×2048 | 2048×2732 | 3:4 | 竖版海报、封面、社交竖图、stories |
 | `--landscape` | 2048×1152 | 2732×1536 | 16:9 | 横向 2K 壁纸、PPT slide、电影帧、横版插图 |
 | `--square` | 1024×1024 | 2048×2048 | 1:1 | 方图（Pro 走量快成本低；Lite 自动升到 2K 方图满足像素下限） |
 
-`--wechat-header` 是 `--wide` 的向后兼容别名（二者等价，都产出 1792×1024）。`--size WIDTHxHEIGHT` 可覆盖任意 shortcut，优先级最高。注意 1792×1024 低于 Lite 的 3.69MP 像素下限，所以 `--wide`/`--wechat-header` 只能在 Pro 上使用；CLI 在 Lite 下会显式报错而非静默降级。
+`--wechat-header` 是 `--wide` 的向后兼容别名（二者等价，都产出 1792×1024）。需要其他精确尺寸时，单独使用 `--size WIDTHxHEIGHT`，无需同时传 shortcut。Lite 的 `--wide`/`--wechat-header` 会先按合法大尺寸生成，再本地缩小到 1792×1024；加 `--no-auto-upscale` 则因低于 API 下限而报错。
 
 ### Common Use-Case Size Reference（常见场景尺寸指引）
 
@@ -199,30 +197,30 @@ CLI 提供以下 aspect-ratio shortcut，按模型自动解析为合法精确像
 
 | 场景 | 比例 | 推荐 shortcut | Pro 像素 | Lite 像素 | 备注 |
 |---|---|---|---|---|---|
-| 公众号头图 / 博客 hero / YouTube 封面 / B站/视频封面 / PPT 首页 | 16:9 | `--wide` | 1792×1024 | ❌ Pro-only | 最常用宽幅；公众号关键信息留左 60% 避免右侧裁切 |
+| 公众号头图 / 博客 hero / YouTube 封面 / B站/视频封面 / PPT 首页 | 16:9 | `--wide` | 1792×1024 | 1792×1024（先生成后缩小） | 最常用宽幅；公众号关键信息留左 60% 避免右侧裁切 |
 | 电商主图（淘宝/京东/Amazon/Shopify/抖音小店） | 1:1 | `--square`（走量）/ `--size 2K`（首图细节） | 1024×1024 / ~2048² | 2048×2048 | SKU 铺量用 --square 快；首图建议 2K |
 | 电商详情页长图 | 3:4 | `--portrait` | 1536×2048 | 2048×2732 | 单张详情模块图，长图拼接由后期做 |
 | 小红书 / Instagram feed / 微博配图 | 3:4 或 1:1 | `--portrait` / `--square` | 1536×2048 / 1024×1024 | 2048×2732 / 2048×2048 | 小红书 2026 推荐 3:4，1:1 也可用；9:16 易被裁切 |
 | 小红书 / Instagram / TikTok / 视频号 Stories / Reels 竖版 | 9:16 | `--size 1088x1920`（Pro）/ `--size 1440x2560`（Lite，踩 Lite 像素下限） | 1088×1920≈2.09MP | 1440×2560≈3.69MP | ⚠️ 9:16 prompt 里必须显式加"无UI界面、无手机边框、无状态栏、无App按钮、纯画面内容"，否则"手机/9:16/stories"词会让模型脑补假手机UI；Stories 文字避开顶部 15%/底部 20%（UI 遮挡区） |
 | 小红书封面竖图 | 3:4 | `--portrait` | 1536×2048 | 2048×2732 | 小红书笔记封面比 feed 图大，文字集中在上半部分 |
 | 抖音/TikTok 视频封面 | 9:16 或 1:1 | `--size 1088x1920`（9:16）/ `--square`（1:1） | 同上 | 同上 | 视频封面文字居中，不要贴边 |
-| 微博/推特/X 头图 cover | 3:1 | `--size 1500x500` | 1500×500 = 0.75MP ❌（低于 Pro 0.9MP 下限） | ❌ | 这种细长条 Pro 也跑不了；建议出 3:1 或 16:9 后 PS 裁切，或出 2048×1152 landscape 后手动裁 |
+| 微博/推特/X 头图 cover | 3:1 | `--size 1500x500` | 1500×500（先生成后缩小） | 1500×500（先生成后缩小） | 低于两种模型的原生 API 下限，默认自动放大生成再缩小；`--no-auto-upscale` 会拒绝 |
 | 公众号正文插图（非封面） | 16:9 或 2.35:1 | `--landscape` | 2048×1152 | 2732×1536 | 正文中插图宽比 2.35:1 电影感也可（`--size 1792x768`≈1.37MP，Pro 可用） |
 | Desktop wallpaper（PC/Mac） | 16:9 或 21:9 | `--landscape` 或 `--size 2560x1440` | 2048×1152 / 2560×1440 | 2732×1536 / 2560×1440 | 21:9 超宽屏：Pro `--size 2560x1080`≈2.76MP；Lite `--size 3440x1440`≈4.95MP |
 | Mobile wallpaper（手机壁纸） | 9:19.5 左右 | `--size 1088x2340`（Pro）/ `--size 1440x3120`（Lite） | 1088×2340≈2.55MP | 1440×3120≈4.49MP | 各机型有差异，9:16–9:20 区间平台自动适配；避开顶部刘海/底部 dock 区 |
 | 海报 / 杂志封面 / A4 印刷 | 3:4 或 2:3 | `--portrait` 或 `--size 1440x2160` | 1536×2048 / 1440×2160≈3.11MP | 2048×2732 | 印刷建议出图后超分到 300dpi，AI 直出像素不够印 A4 以上 |
 | App icon / 头像 / 方形 logo | 1:1 | `--square` | 1024×1024 | 2048×2048 | 1024 是移动端标准尺寸；Pro 1024×1024 够 |
 | PPT slide 背景（16:9） | 16:9 | `--landscape` | 2048×1152 | 2732×1536 | 投到 4K 投影用 Lite 2732×1536 或 3K preset |
-| 电商大促 banner（首页轮播） | 宽幅 2:1 至 4:1 | `--size 1792x768`（Pro，≈2.35:1）或 `--size 1920x800`（Pro≈2.4:1） | 1792×768≈1.37MP / 1920×800≈1.54MP | ❌（均低于 Lite 下限） | 大促轮播多是 750×390/990×430 类尺寸，AI 直出后前端等比缩放即可 |
+| 电商大促 banner（首页轮播） | 宽幅 2:1 至 4:1 | `--size 1792x768`（≈2.35:1）或 `--size 1920x800`（≈2.4:1） | 1792×768≈1.37MP / 1920×800≈1.54MP | 相同目标尺寸（先生成后缩小） | 大促轮播多是 750×390/990×430 类尺寸，AI 直出后前端等比缩放即可 |
 | 圆形徽章 / Logo / 头像框 | 1:1 | `--square` | 1024×1024 | 2048×2048 | 出方图后后期裁圆；模型对圆形字在方 canvas 上响应最准 |
 | 外卖/本地生活商家图（美团/饿了么/大众点评） | 1:1 或 3:4 | `--square` / `--portrait` | 1024×1024 / 1536×2048 | 2048×2048 / 2048×2732 | 菜品图 1:1 走量快 |
 
 **一般规律**：
 - **1:1 方图** 是最通用的 social + e-commerce 尺寸，Pro 1024×1024（`--square`）成本最低、走量最快。
 - **3:4 竖版** 是小红书/Instagram/magazine cover 的通用比例，Pro 1536×2048（`--portrait`）覆盖大多数竖版需求。
-- **16:9 横版** 有两个档位：`--wide`=1792×1024（banner/hero，Pro-only，短边 1024）和 `--landscape`=2048×1152（壁纸/slide/电影帧，Pro/Lite 都能跑，短边 1152+）。选 `--wide` 还是 `--landscape` 看你要不要 1080p 级短边。
+- **16:9 横版** 有两个档位：`--wide`=1792×1024（banner/hero，Lite 会先生成后缩小）和 `--landscape`（Pro 2048×1152、Lite 2732×1536，壁纸/slide/电影帧）。选 `--wide` 还是 `--landscape` 看你需要的最终像素。
 - **9:16 stories** 必须显式 `--size WxH`（没有 shortcut，因为 9:16 在 Pro 下踩到 <1024 短边的特殊情况）。
-- **Lite 不能跑 1792×1024、1024×1024、1088×1920 这类 <3.69MP 的尺寸**——凡是 Lite 列里打 ❌ 的都只能用 Pro 或 `--size 2K`/`3K` 让 server 选更大尺寸再后期裁切。
+- **Lite 的 API 原生下限与 CLI 最终输出尺寸不同**：`1792x1024`、`1024x1024`、`1088x1920` 等显式尺寸可通过默认自动放大生成再缩小得到；`--no-auto-upscale` 会拒绝低于下限的请求，`--size 1K` 预设始终不支持。
 - 当你只知道"感觉像手机壁纸"而不锁像素时，直接在 prompt 里写"手机壁纸 9:16" 不传 size flag，server 会在 2K 预设里挑接近比例的尺寸；需要精确比例一定用 `--size WxH` 或 shortcut flag。
 
 ### 参考图格式要求
@@ -314,7 +312,7 @@ The API has no `outpaint` parameter; true pixel-level outpaint is implemented vi
 | Pro additional input images (from the 2nd) | ¥0.02/image |
 | Seedream 5.0 Lite | ¥0.22/image (2K tier) |
 
-RPM ≈ 500; the CLI defaults to concurrency 3 with 8-attempt exponential backoff (2/4/8/16/30/30/30/30s) and honors the `retry-after` header, so normal usage stays under the 429 throttle.
+Rate limits depend on the account and platform configuration. The CLI relies on 429 responses and its existing retry/backoff behavior, including the numeric `retry-after` header when available. Batch concurrency is configurable with `--concurrency`; no fixed IPM quota is encoded in the scheduler.
 
 ## Error Codes
 

@@ -17,14 +17,14 @@ If none of these four apply, stay on Pro.
 
 ## Pixel range & size shortcuts
 
-Lite pixel range: **3.7 MP – 16 MP**, aspect ratio ≤16:1. This is a **floor**, not just a ceiling — Lite categorically cannot produce `1K` / `1024²` / `1792×1024` (all below 3.69 MP). If a task needs one of those exact small sizes, Pro is not just preferred, it's the only option.
+Lite's native API pixel range is **3.7 MP – 16 MP**, aspect ratio ≤16:1. The CLI accepts smaller explicit targets such as `1024x1024` and `1792x1024`: it generates above the floor, then downsizes locally to the exact target. `--no-auto-upscale` restores rejection of below-floor sizes. The Lite `1K` preset remains unsupported; use an explicit `WxH` for a small final image.
 
 | Flag | Lite resolution | Pro resolution (for comparison) |
 |---|---|---|
 | `--square` | 2048×2048 | 1024×1024 |
 | `--portrait` | 2048×2732 | 1536×2048 |
 | `--landscape` | 2732×1536 | 2048×1152 |
-| `--wide` / `--wechat-header` | **not available** (1792×1024 is below Lite's floor) | 1792×1024 |
+| `--wide` / `--wechat-header` | 1792×1024 (generated larger, then downsized locally) | 1792×1024 |
 | `--size 2K/3K/4K` | all supported | 1K/2K only |
 
 ## Lite-only CLI flags

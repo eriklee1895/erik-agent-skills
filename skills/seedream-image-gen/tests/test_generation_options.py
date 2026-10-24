@@ -161,6 +161,22 @@ class GenerationOptionTests(unittest.TestCase):
         self.assertTrue(output.with_suffix(".json").is_file())
         self.assertTrue(json.loads(output.with_suffix(".json").read_text())["dry_run"])
 
+    def test_dry_run_metadata_records_requested_size_while_payload_uses_api_size(self):
+        for command in ("generate", "edit"):
+            for model, requested, api_size in (("pro", "1500x600", "1520x608"), ("lite", "1024x1024", "1920x1920")):
+                with self.subTest(command=command, model=model):
+                    output = self.root / f"{command}-{model}-preview.png"
+                    arguments = [command, "--prompt", "test", "--model", model, "--size", requested,
+                                 "--dry-run", "--out", str(output)]
+                    if command == "edit":
+                        arguments += ["--reference-image", str(self.reference)]
+                    status, stdout, error = self.invoke(*arguments)
+                    self.assertEqual(status, 0, error)
+                    self.assertEqual(json.loads(stdout)["size"], api_size)
+                    metadata = json.loads(output.with_suffix(".json").read_text())
+                    self.assertEqual(metadata["size"], requested)
+                    self.assertFalse(output.exists())
+
 
 if __name__ == "__main__":
     unittest.main()
