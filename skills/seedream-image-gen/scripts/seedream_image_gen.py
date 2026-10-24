@@ -737,7 +737,14 @@ def _write_metadata(
         meta["usage"] = usage
 
     meta_path = image_path.with_suffix(".json")
-    meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+    try:
+        with meta_path.open("x" if dry_run else "w", encoding="utf-8") as handle:
+            json.dump(meta, handle, ensure_ascii=False, indent=2)
+    except FileExistsError:
+        if not dry_run:
+            raise
+        _info(f"Dry-run metadata skipped; existing file preserved: {meta_path}")
+        return
     print(f"Metadata: {meta_path}", file=sys.stderr)
 
 
@@ -1471,8 +1478,9 @@ def _parse_jsonl(path: str) -> list[dict[str, Any]]:
 
 def _cmd_batch(args: argparse.Namespace) -> int:
     jobs = _parse_jsonl(args.input)
-    # API key used by async workers — load eagerly so we fail fast on missing key
-    _get_api_settings()
+    if not args.dry_run:
+        # Real workers need a key; previews do not call the API.
+        _get_api_settings()
 
     bodies: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
     for i, job in enumerate(jobs):

@@ -234,7 +234,7 @@ Every row below is empirically rated. "✅ Production" = reliable with the docum
 
 ## Examples
 
-> All examples default to Pro / 2K / PNG, downloaded from the server's returned URL. `--dry-run` prints the request body without calling the API, so you can sanity-check before spending money.
+> All examples default to Pro / 2K / PNG, downloaded from the server's returned URL. `--dry-run` prints the request body without calling the API or requiring an API key. `generate` and `edit` also save new metadata with `dry_run: true`; existing metadata is preserved, including with `--force`. Batch dry-runs print request bodies without saving result metadata.
 
 ### 1. Sci-fi movie poster (3:4)
 
