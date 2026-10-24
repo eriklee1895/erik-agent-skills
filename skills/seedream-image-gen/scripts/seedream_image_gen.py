@@ -138,9 +138,9 @@ ALLOWED_OUTPUT_FORMATS = ("png", "jpeg", "jpg")
 # --negative-prompt "" (disable) or --negative-prompt "..." (replace).
 PRO_DEFAULT_NEGATIVE = "模糊, 低质量, 水印, 变形, 多余肢体"
 
-# Opt-in-by-default content guards (disable with --allow-people / --allow-text).
-# Kept separate from PRO_DEFAULT_NEGATIVE so --no-negative-prompt only clears the
-# quality default; these still apply unless explicitly allowed.
+# Opt-in content guards (--no-people / --no-text, or both via --cover). Kept
+# separate from PRO_DEFAULT_NEGATIVE so --no-negative-prompt only clears the
+# quality default, never an explicitly requested guard.
 GUARD_NO_PEOPLE = "NO people, figures, statues"
 GUARD_NO_TEXT = "no text, letters, logo, watermark"
 
@@ -1079,13 +1079,16 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_lite_only: bool)
                         f"Not supported on Lite.")
     p.add_argument("--no-negative-prompt", action="store_true",
                    help="Disable the default quality negative prompt (Pro only). "
-                        "Does not clear the people/text guards; use --allow-people / "
-                        "--allow-text for those.")
-    p.add_argument("--allow-people", action="store_true",
-                   help="Disable the default 'NO people, figures, statues' guard.")
-    p.add_argument("--allow-text", action="store_true",
-                   help="Disable the default 'no text, letters, logo, watermark' guard "
-                        "(needed for Chinese/English text posters).")
+                        "Does not clear guards turned on by --no-people / --no-text / --cover.")
+    p.add_argument("--no-people", action="store_true",
+                   help="Opt-in guard: 'NO people, figures, statues' (Pro: negative_prompt; "
+                        "Lite: appended to the prompt). Off by default.")
+    p.add_argument("--no-text", action="store_true",
+                   help="Opt-in guard: 'no text, letters, logo, watermark' (Pro: negative_prompt; "
+                        "Lite: appended to the prompt). Off by default.")
+    p.add_argument("--cover", action="store_true",
+                   help="Cover/banner preset: --no-people + --no-text + auto-upscale "
+                        "(overrides --no-auto-upscale).")
     p.add_argument("--no-auto-upscale", action="store_true",
                    help="Disable auto-upscale for WxH sizes below the model's pixel floor "
                         "(Pro ~0.92MP / 921600). Default: generate at the smallest valid "
@@ -1116,7 +1119,8 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         args.size, args.wechat_header, args.square, args.wide, args.portrait, args.landscape,
         getattr(args, "phone", False), caps,
     )
-    auto_upscale = not bool(getattr(args, "no_auto_upscale", False))
+    cover = bool(getattr(args, "cover", False))
+    auto_upscale = cover or not bool(getattr(args, "no_auto_upscale", False))
     wh = _validate_size(size, caps, model_id, enforce_min=not auto_upscale)
     downscale_to: Optional[tuple[int, int]] = None
     if wh != (0, 0) and wh[0] * wh[1] < caps["pixel_min"]:
@@ -1149,9 +1153,9 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         negative_prompt = None
 
     guards: list[str] = []
-    if not getattr(args, "allow_people", False):
+    if cover or getattr(args, "no_people", False):
         guards.append(GUARD_NO_PEOPLE)
-    if not getattr(args, "allow_text", False):
+    if cover or getattr(args, "no_text", False):
         guards.append(GUARD_NO_TEXT)
     if guards:
         guard_str = ", ".join(guards)
@@ -1576,8 +1580,10 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
                    help="Default prompt optimization mode ('standard' only on 5.x; 'fast' is 4.0-only).")
     p.add_argument("--negative-prompt", default=None, help="Default negative prompt.")
     p.add_argument("--no-negative-prompt", action="store_true", help="Default quality negative-prompt off.")
-    p.add_argument("--allow-people", action="store_true", help="Disable default no-people guard.")
-    p.add_argument("--allow-text", action="store_true", help="Disable default no-text guard.")
+    p.add_argument("--no-people", action="store_true", help="Default no-people guard on (opt-in).")
+    p.add_argument("--no-text", action="store_true", help="Default no-text guard on (opt-in).")
+    p.add_argument("--cover", action="store_true",
+                   help="Default cover preset on: both guards + auto-upscale.")
     p.add_argument("--no-auto-upscale", action="store_true",
                    help="Disable auto-upscale for sizes below the model pixel floor.")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help=f"Timeout (default: {DEFAULT_TIMEOUT}).")
@@ -1589,6 +1595,7 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
 _BATCH_BOOL_KEYS = {
     "wechat_header", "wide", "square", "portrait", "landscape", "phone", "web_search", "watermark",
     "no_negative_prompt", "no_marker_cleanup_prompt",
+    "no_people", "no_text", "cover", "no_auto_upscale",
 }
 _BATCH_LIST_KEYS = {"reference_image", "marker_rects", "marker_color", "outpaint"}
 
@@ -1765,8 +1772,9 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         ns.optimize_prompt = job.get("optimize_prompt", args.optimize_prompt)
         ns.negative_prompt = job.get("negative_prompt", args.negative_prompt)
         ns.no_negative_prompt = bool(job.get("no_negative_prompt", False))
-        ns.allow_people = bool(job.get("allow_people", getattr(args, "allow_people", False)))
-        ns.allow_text = bool(job.get("allow_text", getattr(args, "allow_text", False)))
+        ns.no_people = bool(job.get("no_people", args.no_people))
+        ns.no_text = bool(job.get("no_text", args.no_text))
+        ns.cover = bool(job.get("cover", args.cover))
         ns.no_auto_upscale = bool(job.get("no_auto_upscale", getattr(args, "no_auto_upscale", False)))
         ns.reference_image = list(job.get("reference_image", []) or [])
         ns.marker_rect = list(job.get("marker_rects", []) or [])

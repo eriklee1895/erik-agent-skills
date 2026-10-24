@@ -39,7 +39,7 @@ This skill targets only the 5.0 family; it does not support Seedream 4.x / 3.x /
 ### Generate a new image (default: Pro / 2K / PNG / url-based download)
 
 ```bash
-uv run scripts/seedream_image_gen.py generate --allow-text \
+uv run scripts/seedream_image_gen.py generate \
   --prompt "A minimalist movie poster for a sci-fi film about deep-sea AI, dark teal background, large white sans-serif title 'ABYSS PROTOCOL' at the top centered, one-line orange tagline below, one glowing jellyfish silhouette bottom-left, cinematic"
 ```
 
@@ -239,14 +239,14 @@ Every row below is empirically rated. "✅ Production" = reliable with the docum
 ### 1. Sci-fi movie poster (3:4)
 
 ```bash
-uv run scripts/seedream_image_gen.py generate --portrait --allow-text \
+uv run scripts/seedream_image_gen.py generate --portrait \
   --prompt "Minimalist sci-fi movie poster, 3:4 vertical, deep navy-to-black gradient background, one glowing bioluminescent jellyfish floating bottom-left, large white bold sans-serif title 'ABYSS PROTOCOL' centered at top taking 1/6 of the image height, one-line smaller orange sans-serif tagline 'The deep remembers' below the title, tiny white credit block at bottom, cinematic teal-orange palette, clean editorial print quality"
 ```
 
 ### 2. Wide banner / cover header (Pro-only shortcut)
 
 ```bash
-uv run scripts/seedream_image_gen.py generate --wide --allow-text \
+uv run scripts/seedream_image_gen.py generate --wide \
   --prompt "Wide 16:9 banner, left 60% white-to-light-gray gradient, large bold black sans-serif title 'Claude 5 深度解析' left-aligned taking 1/4 of the image height on the left side, one-line smaller gray subtitle 'Agentic Coding 的下一个十年' below it, right 40% deep-blue abstract particle/light-beam decoration, sharp clean editorial feel"
 ```
 
@@ -256,14 +256,14 @@ uv run scripts/seedream_image_gen.py generate --wide --allow-text \
 
 ```bash
 uv run scripts/seedream_image_gen.py generate \
-  --size 1792x1024 --allow-text \
+  --size 1792x1024 \
   --prompt "Horizontal tech infographic poster, white background, top-center large deep-blue bold sans-serif Chinese title 'AI 编程三阶段', smaller English subtitle 'Three Eras of AI Coding' directly below, middle section has three horizontally arranged blue rounded-rectangle cards, each card has a centered white short label '补全' '对话' '自主' respectively, thin gray arrows connecting the cards, flat vector style"
 ```
 
 ### 4. Circular badge logo
 
 ```bash
-uv run scripts/seedream_image_gen.py generate --square --allow-text \
+uv run scripts/seedream_image_gen.py generate --square \
   --prompt "Circular badge logo, dark-navy fill + double-thin gold outer ring, white bold serif English letters arched along the top of the circle 'SEEDREAM PRO', center has two red seal-script Chinese characters '豆包', gold laurel-wreath decoration, pure white background, flat vector style"
 ```
 
@@ -271,7 +271,7 @@ uv run scripts/seedream_image_gen.py generate --square --allow-text \
 
 ```bash
 uv run scripts/seedream_image_gen.py generate \
-  --size 1792x1024 --allow-text --no-negative-prompt \
+  --size 1792x1024 --no-negative-prompt \
   --prompt "E-commerce mid-year sale banner 16:9, warm-red gradient background with golden particle light effects, centered large gold bold-Song Chinese title '年中大促' taking 1/3 of the image height, smaller white sans-serif subtitle '全场 5 折起' below it, gold ribbons / gift boxes / gold coins as decoration, festive atmosphere"
 ```
 
@@ -280,7 +280,7 @@ uv run scripts/seedream_image_gen.py generate \
 ```bash
 uv run scripts/seedream_image_gen.py edit \
   --reference-image my-poster.png \
-  --marker-rect "5%,6%,90%,25%" --allow-text \
+  --marker-rect "5%,6%,90%,25%" \
   --prompt "Replace the title in the red box with 'GPT-Image 2 全面解析', keeping the bold sans-serif font, point size, and center alignment; the subtitle and blue graphic below remain unchanged; pixels outside the box stay exactly as-is"
 ```
 
@@ -352,11 +352,14 @@ generate
   --negative-prompt <text>    Negative prompt (Pro ships with a gentle quality-guard
                                default: "模糊, 低质量, 水印, 变形, 多余肢体"; pass an empty
                                string to disable the quality default)
-  --no-negative-prompt        Disable the default quality negative prompt (does not
-                               clear people/text guards — use --allow-* for those)
-  --allow-people              Disable the default "NO people, figures, statues" guard
-  --allow-text                Disable the default "no text, letters, logo, watermark"
-                               guard (required for Chinese/English text posters)
+  --no-negative-prompt        Disable the default quality negative prompt only
+                               (guards from --no-people/--no-text/--cover still apply)
+  --no-people                 Opt-in guard "NO people, figures, statues" (Pro:
+                               negative_prompt; Lite: appended to the prompt)
+  --no-text                   Opt-in guard "no text, letters, logo, watermark" (same)
+  --cover                     Cover/banner preset: --no-people + --no-text + auto-upscale
+                               (overrides --no-auto-upscale). Also accepted by edit,
+                               but edit applies no guards unless you pass these flags
   --no-auto-upscale           Reject WxH sizes below the model pixel floor instead of
                                auto-upscaling then downscaling (default: auto-upscale)
   --optimize-prompt standard  Prompt optimization (standard only on 5.x; "fast" is
@@ -401,11 +404,12 @@ generate-batch
   --concurrency <n>           Max concurrent requests (default 3, capped at 8; ~65-75 s per Pro call)
   --out-dir <dir>             Output directory (default output/seedream-image-gen/batch/)
   --model/size/...            Default parameters (overridable per-job)
+  --no-people/--no-text/--cover  Batch-wide guard/preset defaults (per-job fields override)
   --dry-run                   Print all bodies + planned paths; writes nothing
   --force                     Overwrite existing files
 ```
 
-JSONL job-object supported fields: `prompt`, `out` (alias `name`), `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `allow_people`, `allow_text`, `no_auto_upscale`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
+JSONL job-object supported fields: `prompt`, `out` (alias `name`), `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `no_people`, `no_text`, `cover`, `no_auto_upscale`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
 
 ### list-models
 
