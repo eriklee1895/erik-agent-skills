@@ -63,7 +63,7 @@ uv run scripts/seedream_image_gen.py generate-batch \
   --input jobs.jsonl --concurrency 3
 ```
 
-Each line of the JSONL is either a bare prompt string or a JSON object like `{"prompt": "...", "size": "2K", ...}`.
+Each line of the JSONL is either a bare prompt string or a JSON object like `{"prompt": "...", "out": "cover", "size": "2K", ...}`. Name outputs per job with `"out"` (relative to `--out-dir`, extension added if missing) or pass `--names cover,hero,thumb` (one per job, in order). `.json` (array) and `.csv` (header row with `prompt`, optional `out` and override columns) batch files work too. Jobs without a name keep the old `job-NNN-<slug>-1.png` naming. Duplicate names and already-existing outputs (without `--force`) are rejected before any API call.
 
 ## When to use
 
@@ -234,7 +234,7 @@ Every row below is empirically rated. "✅ Production" = reliable with the docum
 
 ## Examples
 
-> All examples default to Pro / 2K / PNG, downloaded from the server's returned URL. `--dry-run` prints the request body without calling the API, so you can sanity-check before spending money.
+> All examples default to Pro / 2K / PNG, downloaded from the server's returned URL. `--dry-run` prints the request body to stdout and the would-be output paths to stderr without calling the API; it writes nothing into the output folder (marker-annotated previews from `edit --dry-run` go to a temp dir).
 
 ### 1. Sci-fi movie poster (3:4)
 
@@ -391,16 +391,17 @@ Note: `edit` does not have `--n` / `--sequential` (edits target a single image; 
 
 ```
 generate-batch
-  --input <jsonl>             JSONL file; each line is a bare prompt string or a
-                               {"prompt": ...} JSON object
-  --concurrency <n>           Max concurrent requests (default 3)
+  --input <file>              .jsonl (each line a bare prompt or {"prompt": ..., "out": ...}),
+                               .json array of the same, or .csv with a header row
+  --names <a,b,c>             Output names, one per job in order (a job's "out" wins)
+  --concurrency <n>           Max concurrent requests (default 3, capped at 8; ~65-75 s per Pro call)
   --out-dir <dir>             Output directory (default output/seedream-image-gen/batch/)
   --model/size/...            Default parameters (overridable per-job)
-  --dry-run                   Print all bodies and exit
+  --dry-run                   Print all bodies + planned paths; writes nothing
   --force                     Overwrite existing files
 ```
 
-JSONL job-object supported fields: `prompt`, `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
+JSONL job-object supported fields: `prompt`, `out` (alias `name`), `model`, `size`, `output_format`, `wide`, `wechat_header`, `square`, `portrait`, `landscape`, `watermark`, `web_search`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `reference_image` (list), `marker_rects` (list), `marker_color`, `marker_alpha`, `marker_stroke`, `no_marker_cleanup_prompt`, `outpaint` (list), `timeout`.
 
 ### list-models
 
