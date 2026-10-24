@@ -1,0 +1,32 @@
+> Retained from the pre-Flash skill for provenance. These are historical Pro observations and subjective scores, not a newly rerun benchmark, a capability guarantee, or evidence about Flash. The old claim that layer decomposition was unavailable is superseded by the 2026-10-24 official API check; see [transparent-layers.md](transparent-layers.md).
+
+# Historical Pro observations
+
+Every row below is empirically rated. "✅ Production" = reliable with the documented recipe; "⚠️ Best-effort" = works but has a known failure mode; "❌ Not available" = the public Ark API does not expose this.
+
+| Capability | Verdict | Score | Notes |
+|---|---|---|---|
+| 风格迁移 (style transfer) | ✅ Production | 9.5/10 top styles | Commitment-language formula is the lever. [style-transfer.md](styles/style-transfer.md) |
+| 文字渲染 (text rendering) | ✅ Production | 9-10/10 structured, 2/10 per-cell-unique | 30-cell rule for tables/grids. [text-deep.md](text-deep.md) |
+| 多参考图融合 (multi-ref fusion) | ✅ Production | 8.5-9/10 (2-3 refs) | Sweet spot 2-3 refs; role-assignment required. [prompt-engineering.md 公式6](prompt-engineering.md) |
+| 复杂信息可视化 (infographic) | ✅ Production | 51-53/60 | Cross-subject transferable recipe. Pie ≤6 slices / horizontal bar / donut charts render coherent proportions when exact numbers/percentages are supplied; flat vector card grids (no photo layer) achieve zero text errors at 1792x1024; vertical numbered-step timelines work at 1024x1792; use 2048x1152 when you have 6+ floating stat cards. [editorial-infographic.md](styles/editorial-infographic.md) |
+| **数据图表（饼图/柱状图/环形图）** | ✅ Production | 8-9/10 | Basic data charts work when you supply exact numbers per slice/bar — pie slice proportions are mathematically accurate, percentages label correctly, colors match spec. [editorial-infographic.md](styles/editorial-infographic.md) |
+| **产品曲面/浮雕文字** | ✅ Production | 9/10 | Text on curved surfaces (shoe canvas arc text, bottle labels) and embossed/impressed text inside semi-translucent materials (gel toothpaste, soap) renders cleanly inside tight marker edits when the text is single-quoted and a font descriptor is supplied. |
+| **微信/iOS App UI 伪造（玩笑/梗内容）** | ✅ Production (jokes) | 8.5-9/10 | Text-to-image at --phone (1152x2048 Pro) with element-by-element script and `#95EC69` green-bubble hex produces convincing chat/group-chat/朋友圈/转账/支付/语音/红包 UI. Tiny monochrome tab-bar icons can slip into pseudo-characters; NOT pixel-accurate enough for product specs. [wechat-ui.md](styles/wechat-ui.md) |
+| **角色一致性（单张参考 → 多场景）** | ✅ Production (stylized IP) | 9/10 stylized, ⚠️ 7/10 photoreal | Stylized 3D/illustration IPs hold identity across wardrobe/lighting/pose/ scene changes when the prompt opens with a physical-feature recap. Single front/three-quarter 1:1 reference is sufficient; no IP-Adapter/LoRA needed. Photoreal human likeness is weaker. [character-ip.md](styles/character-ip.md) |
+| 圈选/点选局部修改 (marker color/material/makeup/feature) | ✅ Production | 9-9.5/10 | Hex ±1 shade drift; single-feature precision confirmed (heterochromia test). [marker-editing.md Recipe 9](marker-editing.md) |
+| 草图渲染 (sketch-to-render) | ✅ Production | 9-9.5/10 | Confirmed across photoreal + flat-illustration targets. [marker-editing.md](marker-editing.md) |
+| 多图融合抠像 (multi-image extraction compositing) | ✅ Production | 8.5-9/10 (2 people) | Unified lighting genuinely works. [marker-editing.md Recipe 12](marker-editing.md) |
+| 区域重绘/擦除修复 (inpaint/erase) | ✅ Production (replaceable object) / ❌ (compositional anchor object) | 9-9.5/10 vs 0/10 | Object salience determines success: replaceable/interchangeable objects (one car in a row of similar cars) erase reliably at 9-9.5/10, even in busy daytime matte scenes. Compositional anchor objects (a bicycle leaning on a lamppost, hero objects, primary light sources) resist at 0/10 with an identically well-formed marker+prompt. Night+reflective+neon scenes remain a separate, harder failure mode (1-4/10). [marker-editing.md Recipe 10](marker-editing.md) |
+| 坐标精准定位 + 数学演算续写 | ⚠️ Best-effort | 9.5/10 for style-continuation | Model renders your given answer in matching handwriting; **it does not solve math itself** — supply the correct derivation. [marker-editing.md Recipe 11](marker-editing.md) |
+| 物理光影全真模拟 | ✅ Production | 9/10 | Wheels produce natural motion blur when described with an anti-detail "flying-saucer disc" recipe (no spokes/rim/tread visible, uniform radial blur disc); bare "motion blur on wheels" fails. [photorealism.md](styles/photorealism.md) |
+| 人像肌理天花板 | ✅ Production | 9.5/10 raw skin | Aggressive texture enumeration (pores/vellus/redness/blemishes/oil) + concrete reference analogy ("dermatology reference photo, not a cosmetics ad") + stacked negations produces raw dermatology-grade skin on hard cases (young E-Asian woman + young man). Recipe in [photorealism.md](styles/photorealism.md). |
+| 10 人以上大合照不畸形 | ✅ Production | 9/10 at 10 people | Explicit per-person enumeration (ethnicity+age+hair+clothing spelled out for every person) breaks the face-cloning cliff. Generic "10 diverse people" prompts still fail at 4.5/10. [photorealism.md](styles/photorealism.md). |
+| 双风格自由切换 (photo ↔ CGI) | ✅ Production | 9-9.5/10 | Pure prompt-keyword toggle, no mode switch needed. [photorealism.md](styles/photorealism.md) |
+| 原生多语种生成 (10+ languages) | ✅ Production (Latin/CJK/Korean) / ⚠️ (Thai/Arabic) | 9-10/10 vs 5-8.7/10 | Thai tonal diacritics are the softest layer. [multilingual.md](multilingual.md) |
+| 多语言同屏排版 | ✅ Production | 9-9.5/10 | 3-4 scripts per-panel layout; same-line mixing risks diacritic bleed. [multilingual.md](multilingual.md) |
+| 文字鬼画符根治 (garbled text elimination) | ✅ Mostly solved | varies by density | Structured/repeated labels 9-10/10; per-cell-unique content collapses past 30 cells. [text-deep.md](text-deep.md) |
+| 结构纠错 (anatomy/architecture/mechanical perspective) | ✅ Production | 8.5-9.5/10 dedicated tests | Dynamic dance pose (5-finger accuracy, correct joint bends) 9.5/10; two-point architectural perspective (converging grid lines, no warping) 9/10; watch-gear mechanical mesh (correct tooth interlock, plausible ratios) 8.5/10. Hands under complex multi-object interaction (chopsticks, group ≥4) remain the softest sub-case. Absolute quality on these three dedicated single-image tests is high. |
+| 超高分辨率 | ✅ Production | verified | Pro max ~4.6MP (总像素 4,624,220). The active Pro/Flash models now share this limit. See [Size Shortcuts](../SKILL.md#size-and-format) and [api-reference.md](api-reference.md). |
+
+

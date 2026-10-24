@@ -9,7 +9,7 @@ Seedream 5.0 Pro 在 3D 渲染风插画上表现非常强，特别是以下子�
 - **3D chrome / liquid metal / neon**（液态金属/霓虹/镀铬立体字）：logo、海报大字、3D text effects
 - **Low-poly / paper craft / origami**（低多边形/纸艺/折纸）：风格化插画、editorial 插图
 
-Lite 也能跑 3D 风格（出概念快），但玻璃折射/金属反射细节明显弱于 Pro，正式交付用 Pro 2K。
+以下材质和光照经验来自历史 Pro 样本。Flash 可用于试稿，但本轮没有逐项验证玻璃折射、金属反射等 3D 细节，不沿用旧模型的相对质量结论。
 
 ## 结构 Guardrails（所有 3D 风格通用）
 

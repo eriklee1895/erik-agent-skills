@@ -43,7 +43,7 @@ class GenerationOptionTests(unittest.TestCase):
         self.calls.append(body.copy())
         buffer = io.BytesIO()
         Image.new("RGBA", (1520, 608), (20, 100, 100, 200)).save(buffer, format="PNG")
-        return [buffer.getvalue()], None, {}, "1520x608", 1
+        return [seedream.ImageOutput(buffer.getvalue(), "1520x608", "png")], None, {}, "1520x608", 1
 
     def invoke(self, *arguments):
         stdout, stderr = io.StringIO(), io.StringIO()
@@ -110,8 +110,8 @@ class GenerationOptionTests(unittest.TestCase):
                 self.assertEqual(body["negative_prompt"], expected)
         self.assertNotIn("negative_prompt", self.payload("--no-negative-prompt"))
 
-    def test_lite_guards_are_appended_to_prompt(self):
-        body = self.payload("--model", "lite", "--no-text")
+    def test_flash_guards_are_appended_to_prompt(self):
+        body = self.payload("--model", "flash", "--no-text")
         self.assertIn("no text, letters, logo, watermark", body["prompt"])
         self.assertNotIn("negative_prompt", body)
 
@@ -144,7 +144,7 @@ class GenerationOptionTests(unittest.TestCase):
             peak = max(peak, active)
             await asyncio.sleep(0)
             active -= 1
-            return [self.reference.read_bytes()], None, {}, "100x100", 1
+            return [seedream.ImageOutput(self.reference.read_bytes(), "100x100", "png")], None, {}, "100x100", 1
 
         jobs = self.jobs("concurrent", [{"prompt": f"scene {index}"} for index in range(12)])
         with patch.object(seedream, "_generate_with_retry", side_effect=generate):
@@ -163,7 +163,7 @@ class GenerationOptionTests(unittest.TestCase):
 
     def test_dry_run_metadata_records_requested_size_while_payload_uses_api_size(self):
         for command in ("generate", "edit"):
-            for model, requested, api_size in (("pro", "1500x600", "1520x608"), ("lite", "1024x1024", "1920x1920")):
+            for model, requested, api_size in (("pro", "1500x600", "1520x608"), ("flash", "1500x600", "1520x608")):
                 with self.subTest(command=command, model=model):
                     output = self.root / f"{command}-{model}-preview.png"
                     arguments = [command, "--prompt", "test", "--model", model, "--size", requested,
