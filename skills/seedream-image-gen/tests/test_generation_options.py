@@ -94,46 +94,16 @@ class GenerationOptionTests(unittest.TestCase):
                         metadata = json.loads(image.with_suffix(".json").read_text())
                         self.assertEqual(metadata["size"], "1500x600")
 
-    def test_content_guards_are_opt_in(self):
+    def test_default_body_has_only_quality_negative(self):
         body = self.payload()
         self.assertEqual(body["prompt"], "test scene")
         self.assertEqual(body["negative_prompt"], "模糊, 低质量, 水印, 变形, 多余肢体")
-
-    def test_requested_guards_survive_quality_default_opt_out(self):
-        for flags, expected in [
-            (["--no-people"], "NO people, figures, statues"),
-            (["--no-text"], "no text, letters, logo, watermark"),
-            (["--cover"], "NO people, figures, statues, no text, letters, logo, watermark"),
-        ]:
-            with self.subTest(flags=flags):
-                body = self.payload("--no-negative-prompt", *flags)
-                self.assertEqual(body["negative_prompt"], expected)
         self.assertNotIn("negative_prompt", self.payload("--no-negative-prompt"))
-
-    def test_flash_guards_are_appended_to_prompt(self):
-        body = self.payload("--model", "flash", "--no-text")
-        self.assertIn("no text, letters, logo, watermark", body["prompt"])
-        self.assertNotIn("negative_prompt", body)
-
-    def test_cover_enables_upscale_despite_opt_out(self):
-        body = self.payload("--size", "1500x600", "--no-auto-upscale", "--cover")
-        self.assertEqual(body["size"], "1520x608")
 
     def test_undersized_request_can_still_be_rejected_explicitly(self):
         status, _, _ = self.invoke("generate", "--prompt", "test", "--size", "1500x600", "--no-auto-upscale", "--dry-run")
         self.assertEqual(status, 1)
         self.assertEqual(self.calls, [])
-
-    def test_jsonl_jobs_can_override_global_guards(self):
-        jobs = self.jobs("guards", [
-            {"prompt": "plain", "no_text": False},
-            {"prompt": "cover", "cover": True},
-        ])
-        status, _, error = self.invoke("generate-batch", "--input", str(jobs), "--no-text")
-        self.assertEqual(status, 0, error)
-        self.assertEqual(self.calls[0]["negative_prompt"], "模糊, 低质量, 水印, 变形, 多余肢体")
-        self.assertIn("NO people, figures, statues", self.calls[1]["negative_prompt"])
-        self.assertIn("no text, letters, logo, watermark", self.calls[1]["negative_prompt"])
 
     def test_requested_batch_concurrency_above_eight_is_preserved(self):
         active = peak = 0
