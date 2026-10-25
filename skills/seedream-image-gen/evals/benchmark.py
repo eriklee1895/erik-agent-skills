@@ -28,7 +28,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "seedream_image_gen.py"
-SUITE_COUNTS = {"smoke": 16, "comprehensive": 80, "prompt-ab": 24, "marker-ab": 8}
+SUITE_COUNTS = {"smoke": 16, "comprehensive": 80, "prompt-ab": 24, "marker-ab": 8, "banner-ab": 8}
 
 
 def write_json(path, value):
@@ -112,7 +112,7 @@ def prepare(root, suite="smoke"):
     if comprehensive:
         comprehensive.make_fixtures(fixtures)
         cases = {"comprehensive": comprehensive.cases, "prompt-ab": comprehensive.prompt_cases,
-                 "marker-ab": comprehensive.marker_cases}[suite]()
+                 "marker-ab": comprehensive.marker_cases, "banner-ab": comprehensive.banner_cases}[suite]()
     manifest = {"study": f"seedream-pro-flash-{suite}-20261025" if comprehensive else "seedream-pro-flash-20261024",
                 "max_requests": count, "cases": cases,
                 "fixtures": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in fixtures.glob("*.png")}}

@@ -14,6 +14,8 @@ Twenty-four additional intentional requests compare three recipe hypotheses, eac
 
 After the main marker case showed pink fill remaining in two outputs, register eight further requests comparing marker alpha 80 versus 0. Hold the prompt, input, rectangle, stroke, size and optimization mode fixed, with two samples per model/variant. This tests an observed workflow failure; the original failed-quality images remain in the record.
 
+After the four main banners intruded into the requested sixty-percent empty area and one introduced a hard white panel, register eight further requests comparing the original recipe with an explicit continuous-scene/no-panel/full-product-in-right35% recipe. Keep size and format fixed, with two samples per model/variant. This compares complete recipes and does not prove an individual phrase is responsible. Total planned calls for this round: 120, comprising 80 main and 40 controlled follow-ups. No further expansion is needed to publish useful guidance from these observations.
+
 ## Task 1: Freeze the suite and extend the runner
 
 Create an immutable eighteen-case suite with explicit criteria and repeat indices. Reuse the existing single-submission worker and safe journals. Add marker/format argument support and exclude annotated reference previews from generated-output counts. Preserve the original sixteen-case suite. Add failing offline contracts first, then implement and run the entire Seedream test suite.

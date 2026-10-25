@@ -149,3 +149,21 @@ def marker_cases():
                                "hypothesis": "Hold prompt/box/stroke/size/reference fixed and compare alpha80 fill with alpha0 outline after observed pink-marker residue in the main study."})
     random.Random(2026102502).shuffle(result)
     return result
+
+
+def banner_cases():
+    base = next(case for case in definitions() if case["case"] == "small-banner")
+    variants = {
+        "baseline": base["prompt"],
+        "continuous": "一张横向连续的真实产品摄影封面。同一暖米色墙面和桌面自然延续贯穿整个画面，左侧至少60%是干净的同场景留白。将一只哑光青绿色鹅颈咖啡壶整体缩小，把壶嘴、壶身、把手和阴影全部放在画面最右侧35%以内，完整不裁切。柔和自然窗光。不要白色遮挡板、拼贴、分栏、分割线或局部照片窗口，不加人物、文字、品牌或其他道具。",
+    }
+    result = []
+    for variant, prompt in variants.items():
+        for model in ("pro", "flash"):
+            for repeat in (1, 2):
+                result.append({**base, "case": "ab-banner-space", "id": f"ab-banner-space-{variant}-{model}-r{repeat}",
+                               "prompt": prompt, "model": model, "mode": "standard",
+                               "configuration": f"{model}-standard", "repeat": repeat, "variant": variant,
+                               "hypothesis": "After all four main banners encroached on requested 60% empty area and one added a white panel, test explicit continuous-scene/no-panel/full-product-in-right35% directions. This is a recipe-bundle comparison, not an isolated token effect."})
+    random.Random(2026102503).shuffle(result)
+    return result
