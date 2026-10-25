@@ -1,20 +1,20 @@
 # 文字海报 / Banner / 封面（Text Poster）
 
-> Pro-exclusive 风格 preset。Seedream 5.0 Pro 的中文/英文文字渲染是 headline 能力，这个 preset 覆盖科技博客封面、杂志封面、宽幅 banner/封面（16:9 —— blog hero、公众号头图、YouTube 缩略图、PPT 首页、视频封面等）、信息图、电商 banner、徽章 logo 六大高频场景。
-> 本 preset 的详细效果来自历史 Pro 样本。Flash 可先试短标题/标签，密集排版需单独校对，参见 [当前 benchmark](../../evals/flash-benchmark.md)。
+> Pro 默认的文字海报 preset，覆盖科技博客封面、杂志封面、宽幅 banner、信息图、电商 banner、徽章 logo。未指定模型时始终使用 Pro。
+> 详细字效来自历史 Pro 样本；本轮 Pro/Flash 的短标题、双语卡片和标题替换见 [120 次请求报告](../../evals/comprehensive-benchmark.md)。Flash 需用户明确选择。正确出字仍可能伴随字重、布局或对比度偏差，需分别验收。
 
 ## 结构 Guardrails（所有文字海报通用）
 
 1. **文字内容必须逐字准确**——prompt 里用引号/书名号把文字内容写全，不要写"一个关于 XX 的标题"。
 2. **先定版式再写字**——先讲背景色/材质/版式分区，再写文字内容，最后说字体字重字号颜色位置对齐。
 3. **字数控制**：主标题 ≤12 字 / 英文 ≤4 词最稳；副标题 ≤20 字/英文 ≤8 词；信息图标签每个 ≤4 字。
-4. **字体族用通用描述**——不要指定具体字体名（"思源宋体""Helvetica Neue" Pro 不认识），用族名：
+4. **字体族优先用通用描述**——具体字体名不能保证精确复现；可用族名说明视觉意图：
    - 中文字：`粗黑无衬线` / `细无衬线` / `宋体` / `楷体` / `手写毛笔字` / `圆润卡通体` / `等宽代码字体`
    - 英文字：`bold sans-serif` / `thin sans-serif` / `serif (Bodoni-style)` / `script/italic` / `monospace` / `geometric sans`
-5. **字号用比例描述**——`主标题占画面高度 1/5`、`副标题字号是主标题的 1/3`、不要写"字号 72pt"（模型不理解 pt）。
+5. **字号优先用比例描述**——`主标题占画面高度 1/5`、`副标题字号是主标题的 1/3`；pt 数值是提示词描述，不保证最终图片符合排版软件中的精确字号。
 6. **位置用相对描述**——`顶部居中`、`左上 1/3 处`、`底部留白 20%`。
 7. **显式说对齐**——`居中对齐` / `左对齐留 10% 边距` / `右对齐`。
-8. **2K 起步**——1K 文字边缘糊，默认 `--size 2K`；16:9 宽幅封面用 `--wide`（1792×1024 Pro-only，公众号头图等场景通用）。
+8. **2K 起步并校对**——细字默认 `--size 2K`。严格 16:9 用 `--landscape`（2048×1152），`--wide` 是便捷宽幅 1792×1024；两个模型都支持这些尺寸。
 9. **一次只放一个主标题**——多个标题层级（主+副+tag）可以，但不要两个同等重要的大标题抢视觉。
 
 ## Inspiration Defaults（可被具体 brief 覆盖）
@@ -45,10 +45,10 @@ uv run scripts/seedream_image_gen.py generate \
 - 关键词：纸张质感 + 居中大标题 + 单图标点缀
 - 适合：技术长文封面、专栏/博客头图
 
-### Recipe 2：宽幅 16:9 封面 / Banner（--wide，Pro 专属）
+### Recipe 2：宽幅 16:9 封面 / Banner
 
 ```bash
-uv run scripts/seedream_image_gen.py generate --wide \
+uv run scripts/seedream_image_gen.py generate --landscape \
   --prompt "16:9 宽幅技术博客封面 banner，左 60% 区域为纯白/浅灰渐变背景，
 左侧粗黑色无衬线主标题「Claude 5 深度解析」左对齐、字号占高度 1/4，
 其下一行较小灰色副标题「Agentic Coding 的下一个十年」，
@@ -57,7 +57,8 @@ uv run scripts/seedream_image_gen.py generate --wide \
 整体干净锐利有编辑感，2K"
 ```
 
-- 关键：用 `--wide` 自动 1792×1024（Pro only，推荐）；`--wechat-header` 是同尺寸别名，兼容老调用。
+- 关键：`--landscape` 为 2048×1152，严格 16:9。`--wide` / `--wechat-header` 是 1792×1024 的便捷宽幅，两个模型均可用。
+- 需要留出文字安全区时，明确整张连续场景及产品完整轮廓所在区域，并检查壶嘴、把手、阴影是否侵入留白；配方与限制见 [本轮封面实测](../benchmark-prompt-recipes.md#4-wide-covers-describe-one-continuous-scene-and-the-whole-footprint)。
 - 版式：文字集中在左/中，避免右侧——多数平台预览（公众号列表裁切右侧、YouTube/社交分享缩略图右侧易被遮挡/裁切）都会裁掉右边缘，关键信息靠左/居中更安全。
 - 把「Claude 5 深度解析」/「Agentic Coding 的下一个十年」替换成你自己的主/副标题即可，保持"主标题 ≤12 字、副标题 ≤20 字一行"的字数上限。
 

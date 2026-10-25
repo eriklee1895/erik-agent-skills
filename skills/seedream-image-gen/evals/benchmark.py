@@ -6,8 +6,9 @@
 """Prepare or execute the bounded Pro/Flash study; never replay an existing case.
 
 Run from a directory containing the usual .env, or export ARK_API_KEY.
-Preparation is free. --execute permits the selected manifest cases (16 smoke or
-80 comprehensive). Additional intentional studies use a new directory.
+Preparation is free. --execute permits the selected manifest cases: 16 smoke,
+80 comprehensive, 24 prompt A/B, or 8 marker/banner A/B. Each intentional study
+uses a new directory; these counts are protocols, not provider rate limits.
 Outputs, journals and generated pictures belong outside the skill repository.
 """
 

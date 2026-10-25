@@ -4,7 +4,7 @@ ID: `doubao-seedream-5-0-flash-260915`; aliases include `flash`, `seedream-flash
 
 Flash uses the same endpoint, ten-reference limit, native size range, editing protocol, transparent-image option and layer-decomposition mode as Pro. Its optimization mode is **standard only**; Pro also offers fast. Neither active model offers the former model's web search, sequential storyboards or streaming.
 
-Choose Flash for latency/cost-sensitive iterations, UGC, interactions and independent batches. The official 2026-10-24 list price is CNY0.12 per output, including each decomposed layer. Use Pro's established recipes for demanding final art; do not assume old Lite limitations apply to Flash, or that a few successful Flash samples establish universal quality parity.
+Always default to Pro. Flash is an option only when the user explicitly selects it or authorizes a faster/lower-cost replacement; a draft, UGC or batch alone does not authorize switching. The official price, rechecked 2026-10-25, is CNY0.12 per output including each decomposed layer. See the [120-request study](../evals/comprehensive-benchmark.md) for task-specific timing and prompt observations; they do not override the user's model preference or establish universal quality parity.
 
 Both accept 1K, 1.5K, 2K and valid explicit pixels. Use 1.5K for an economical intermediate tier, 2K for fine text/detail, and exact WxH when a downstream layout requires pixels. A short Chinese headline is not automatically a reason to reject Flash; inspect the actual [benchmark examples and limitations](../evals/flash-benchmark.md).
 

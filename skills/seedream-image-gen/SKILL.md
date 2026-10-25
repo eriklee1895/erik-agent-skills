@@ -11,14 +11,14 @@ description: >
 
 # Seedream 5.0 Pro / Flash
 
-One Python CLI and one Ark Images API for both models. Pro remains the default.
+One Python CLI and one Ark Images API for both models. **Always use Pro when the user has not specified a model.** Switch to Flash only when the user explicitly chooses it or authorizes replacing Pro with a faster/lower-cost model. A draft, UGC, batch or style request by itself does not change this default.
 
 ## Choose a model and operation
 
 | Model | ID / alias | Routing |
 |---|---|---|
 | Pro | `doubao-seedream-5-0-pro-260628` / `pro` | Default for demanding final artwork and the established Pro recipes. `standard` or `fast` prompt optimization. |
-| Flash | `doubao-seedream-5-0-flash-260915` / `flash` | Lower-cost, latency-sensitive drafts, UGC and batches. `standard` optimization only. See [Flash guidance](references/flash-quickref.md). |
+| Flash | `doubao-seedream-5-0-flash-260915` / `flash` | Explicit opt-in for lower-cost/latency-sensitive work. `standard` optimization only. See [Flash guidance](references/flash-quickref.md). |
 
 Both support text, one reference or up to ten references, coordinate/marker interaction, alpha-image editing and native layer decomposition. Ordinary requests return one image. `--n` makes independent requests; neither model has the retired model's sequential/storyboard API, web search or streaming.
 
@@ -66,7 +66,7 @@ Start with **subject/action/environment**, then the purpose, composition, lighti
 
 For edits, identify the target, state the change, and name what must remain. For multiple references, assign each role explicitly: shape from image 1, palette from image 2, layout from image 3. The supplied reference order defines 图1/图2/图3.
 
-Pro's detailed recipes remain useful, but historical ratings are **Pro-only observations**, not Flash guarantees. See [prompt engineering](references/prompt-engineering.md), [historical Pro observations](references/pro-observations.md), and [the current benchmark](evals/flash-benchmark.md).
+Pro's detailed recipes remain useful, but historical ratings are **Pro-only observations**, not Flash guarantees. Start with [measured prompt recipes](references/benchmark-prompt-recipes.md): concise edits, exact text, optional marker outlines, continuous cover scenes and semantic infographic layouts. See [prompt engineering](references/prompt-engineering.md), [historical Pro observations](references/pro-observations.md), and the [120-request benchmark](evals/comprehensive-benchmark.md).
 
 ## Local editing: coordinates or visible markers
 
@@ -152,5 +152,6 @@ Normal outputs have a sibling JSON metadata file with model, prompt, target/API 
 - [Flash selection and migration](references/flash-quickref.md)
 - [Transparency, layer manifest and reconstruction](references/transparent-layers.md)
 - [Measured Pro/Flash benchmark](evals/flash-benchmark.md)
+- [Comprehensive benchmark and controlled prompt comparisons](evals/comprehensive-benchmark.md)
 - [Historical Pro observations](references/pro-observations.md)
 - [Style presets](references/styles/): text posters/effects, Chinese aesthetics, photography, editorial infographics, character IP, hand-drawn editorials and visual narratives. Presets with only Pro evidence say so; do not automatically transfer their scores to Flash.

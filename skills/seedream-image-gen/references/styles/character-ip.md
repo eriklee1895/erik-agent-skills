@@ -2,6 +2,8 @@
 
 > Works on `doubao-seedream-5-0-pro-260628`; a single 1:1 character sheet reliably holds a stylized IP across kitchen/debug/standup/beach scenes with accessories, lighting, and clothing changing as prompted.
 
+> Historical Pro recipe; Pro remains the default. The [2026-10-25 study](../../evals/comprehensive-benchmark.md) retained five robot identity cues in all four Pro/Flash samples, while two missed the watering action or plant pot. Inspect identity, pose, action and props separately. These single-scene samples do not establish long-series or real-person identity fidelity.
+
 ---
 
 ## 1. TL;DR

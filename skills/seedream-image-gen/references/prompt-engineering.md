@@ -2,6 +2,8 @@
 
 > 本指南保留 **Seedream 5.0 Pro** 的历史提示词经验。Flash 使用同一生成/编辑接口；旧模型的质量结论不迁移到 Flash。当前短中文文字、坐标编辑与多参考图样本见 [Pro/Flash benchmark](../evals/flash-benchmark.md)。
 
+> **2026-10-25 回灌：** 未指定模型始终使用 Pro。先读 [本轮实测配方](benchmark-prompt-recipes.md) 和 [120 次请求报告](../evals/comprehensive-benchmark.md)：简单编辑可简洁，坐标用于明确范围；中文/英文操作句都可保留精确中文 payload；字重、标记残留、留白和动作应分别验收。下文历史字体/相机/风格经验不是通用 API 限制。
+
 ## 本文导航
 
 先按任务定位到对应「公式」，再按需查配置与避坑段落：
@@ -50,7 +52,7 @@
 3. **文字/按钮/标签等 UI 元素逐字写**——草图里写的占位（"标题""按钮"）不会自动渲染成真实文字。
 4. For "sketch → tech-style" AI-conference-poster tasks, the layout is roughly preserved, but visual punch (gradients, light beams, grids, chip textures) comes out under-specified unless the prompt piles on concrete light/material/reference-genre details.
 
-## 公式 2：文字渲染（Pro 专属 headline 能力）⭐
+## 公式 2：文字渲染（Pro 历史 headline 配方）⭐
 
 历史 Pro 样本覆盖中文大字、英文字母、中英混排和环形 logo 字；这些经验有助于写清文字要求，但最终图片仍需逐字校对。
 
@@ -132,7 +134,7 @@ Latency is nearly identical at 1K and 2K (both ~95s mean), but at 2K:
 
 所以除非明确要省成本（¥0.30 vs ¥0.60）或要做快草图，否则全部用 2K。
 
-## 公式 3：Marker 区域编辑（Pro 专属）⭐⭐
+## 公式 3：Marker 区域编辑（Pro 历史配方）⭐⭐
 
 Marker 编辑是 Pro 最大的效率提升——**不需要 mask/bbox API**，在参考图上画个彩色矩形，prompt 用自然语言描述框内要做的改动即可。本 skill 的 `edit` 子命令通过 `--marker-rect X,Y,W,H` 自动完成画框、发图、追加擦除指令三步。
 
@@ -392,7 +394,7 @@ Seedream 是**中文原生模型**——这点和以英文语料为主训练的�
 | 场景 | 推荐 prompt 语言 | 为什么 |
 |---|---|---|
 | 中式审美/中国场景（节气/水墨/国潮/中式建筑/中式美食/传统节日） | **全中文** | 文化概念、菜品名、书法/器物术语中文 token 化最细；写"红烧狮子头""徽派马头墙""瘦金体"比任何英文翻译都准 |
-| 中文文字出现在图里（海报/封面/banner 标题） | **全中文**（文字内容用「」引号逐字包起来） | 中文字形、字重、字号、位置描述中文最自然；英文 prompt 写中文字常出现笔画错误/同音字替换 |
+| 中文文字出现在图里（海报/封面/banner 标题） | 用最清楚的操作语言，文字内容逐字引用 | 本轮中英文操作句均正确替换中文标题；字体、字重、位置需另行检查，不能靠切换语言保证 |
 | 纯英文排版/英文 logo/拉丁语系品牌/欧美风格视觉 | **全英文** | 英文字母间距、Title Case/ALL CAPS、Bodoni/Futura/Helvetica 等拉丁字体名英文描述更准；英文 prompt 出英文字母一次成率高 |
 | 摄影/3D/灯光/材质/渲染**技术术语**（bokeh, rim light, key light, subsurface scattering, impasto, chiaroscuro, shallow depth of field, volumetric fog, specular highlight, cinematic lighting） | **英文术语原文嵌入** | 这类术语中文翻译不统一（"轮廓光/边缘光/rim light"混用），直接用英文词模型理解最准；嵌套在中文或英文叙事里都可以 |
 | 中英混排海报（中文主标题+英文副标题/英文字 tag/slogan） | **中文叙事为主，嵌入英文短语**（保持英文原文大小写） | 自然写法，模型吃这种最顺——"白色粗无衬线主标题『AI 时代』，下方小号英文副标题 'The Age of Agents'" |
@@ -403,7 +405,7 @@ Seedream 是**中文原生模型**——这点和以英文语料为主训练的�
 ### 常见误区
 
 - ❌ **"English prompts are more professional" — does not hold for Seedream.** This is muscle memory from English-native model eras. Seedream's Chinese training corpus covers Chinese scenes, Chinese text, and cultural terms far more deeply than English. Writing English prompts for Chinese subjects tends to produce "Oriental-style" pan-Asian (Japan-inflected) mixes.
-- ❌ **全英文 prompt + 中文文字内容**——容易错字、笔画糊。中文文字必须中文描述字体、字号、位置。
+- **不要把操作语言当作文字保证。** 本轮中文和英文指令都完成了“星野”替换；保留准确的中文 payload，并分别检查字形、字重和位置。
 - ❌ **硬翻英文技术术语成中文**——"散景""景深""体积光"这类中文译法模型也能认，但英文原词（bokeh/depth of field/volumetric lighting）更稳，尤其当你想精确控制光效时。
 - ✅ **黄金组合：中文叙事主语 + 英文技术术语 + 需要出现的文字逐字「」包裹。** 这是中国设计师日常说话的方式，也是 Seedream 最强的 prompt 形态。
 
@@ -633,7 +635,7 @@ Seedream 支持和早期英文模型类似的括号加权语法，但只在需�
 2. **第二稿**：在第一稿基础上加具体材质、构图、色彩、小元素
 3. **第三稿**：加精确文字、品牌、标签、装饰细节
 
-**不要一开始就写 300 字的 mega-prompt**——主体错了后面全白搭。概念稿可先用 Flash（`--model flash --size 1.5K`），需要更细致的定稿时再比较 Pro 2K；依据当前图片效果决定，不自动切换模型。
+先把主体、动作和布局说清楚，再补必要约束。未指定模型时，概念稿和定稿都用 Pro；用户明确选择 Flash 或授权用更快/低成本模型替换 Pro 时，才用 `--model flash`。本轮简洁/详细信息图配方都成功生成了文字与卡片，不要求每次堆满相机名和 CSS 数值。
 
 ## 经典 Prompt 改写示例
 
