@@ -130,13 +130,13 @@ For recomposition, use the **returned base's** coordinate system: resize each cr
 uv run scripts/seedream_image_gen.py generate-batch --input jobs.jsonl --concurrency 3
 ```
 
-Each JSONL line is a prompt string or an object. Per-job fields include `prompt`, `model`, `size`, `output_format`, `background`, size shortcuts, `watermark`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `no_people`, `no_text`, `cover`, `no_auto_upscale`, `reference_image` (list), marker options, outpaint options and `timeout`. Batch jobs generate one image each; decomposition is its own command.
+Each JSONL line is a prompt string or an object. Per-job fields include `prompt`, `model`, `size`, `output_format`, `background`, size shortcuts, `watermark`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `no_auto_upscale`, `reference_image` (list), marker options, outpaint options and `timeout`. Batch jobs generate one image each; decomposition is its own command.
 
 `--concurrency` remains optional and user-controlled; no cap of eight or fixed IPM scheduler is added. `--n 1..4` creates independent variants in `generate`.
 
-`--no-people` and `--no-text` are opt-in prompt guards. `--cover` enables both plus auto-upscale, overriding `--no-auto-upscale`. All are off by default, including edits. They guide content and do not guarantee exclusions.
+To exclude people or text, write it directly into the prompt; describing the desired content concretely (e.g. "blank unprinted pages") works better than a generic negative.
 
-Pro retains its legacy, **undocumented** `negative_prompt` quality default for compatibility. `--no-negative-prompt` removes that default while retaining explicitly requested guards. Flash omits the undocumented field and puts explicit guards in the prompt. For portable requests, write the desired constraints directly in natural language; do not infer undocumented-field effectiveness from a 200 response.
+Pro retains its legacy, **undocumented** `negative_prompt` quality default for compatibility. `--no-negative-prompt` removes that default. Flash omits the undocumented field. For portable requests, write the desired constraints directly in natural language; do not infer undocumented-field effectiveness from a 200 response.
 
 Other common options: `--reference-image` (repeatable), `--out`, `--out-dir`, `--watermark`, `--timeout`, `--force`, `--prompt-file`. Outpainting remains available through `edit --outpaint left:400` and the [existing protocol](references/api-reference.md#outpainting).
 
