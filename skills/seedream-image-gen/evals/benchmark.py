@@ -47,11 +47,14 @@ def prepare(root, suite="smoke"):
         comprehensive = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(comprehensive)
     count = SUITE_COUNTS[suite]
+    study_id = f"seedream-pro-flash-{suite}-20261025" if comprehensive else "seedream-pro-flash-20261024"
     root.mkdir(parents=True, exist_ok=True)
     fixtures = root / "fixtures"
     existing = root / "cases.json"
     if existing.exists():
         saved = json.loads(existing.read_text())
+        if saved.get("study") != study_id:
+            raise SystemExit("Existing study belongs to a different suite; preserve it and use a new directory.")
         cases = saved.get("cases", [])
         identifiers = [case.get("id", "") for case in cases]
         if len(cases) != count or len(set(identifiers)) != count or any(
@@ -114,7 +117,7 @@ def prepare(root, suite="smoke"):
         comprehensive.make_fixtures(fixtures)
         cases = {"comprehensive": comprehensive.cases, "prompt-ab": comprehensive.prompt_cases,
                  "marker-ab": comprehensive.marker_cases, "banner-ab": comprehensive.banner_cases}[suite]()
-    manifest = {"study": f"seedream-pro-flash-{suite}-20261025" if comprehensive else "seedream-pro-flash-20261024",
+    manifest = {"study": study_id,
                 "max_requests": count, "cases": cases,
                 "fixtures": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in fixtures.glob("*.png")}}
     write_json(existing, manifest)

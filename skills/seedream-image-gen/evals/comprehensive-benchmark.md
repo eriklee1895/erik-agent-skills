@@ -11,6 +11,7 @@ Pro remains the default for every unspecified model request. A faster result or 
 - Six local workers, fixed shuffled order, with an initial four-request smoke slice. No provider seed, fixed-IPM scheduler or automatic model fallback. Every case has a durable pre-send journal and at most one generation submission.
 - Four explicit case-specific criteria, scored 0=missed, 1=partial, 2=met. A strict pass means all four are met. Visual-quality notes are descriptive. Contact sheets hide model labels during review; the same agent designed and judged the study, so this is not independent human blind evaluation. Subjective camera-angle/font-weight/placement judgments are not a universal quality score.
 - Every output was inspected. Local macOS Vision OCR provided an auxiliary transcription for the eighty main and twenty-four initial A/B requests; visual reading determined text judgments. The published result does not treat OCR as a quality judge.
+- A final independent agent audit verified the saved evidence and corrected one two-leaf sample's full-pass grade to a partial pass. The final counts below include that correction; this remains agent evaluation, not independent human scoring.
 - Two samples per case/configuration measure only these examples. They do not establish a population ranking, latency SLA, hard pixel mask or reliable failure probability. The main samples use 1.5K/2K and two explicit delivery sizes; 1K quality, real-photo identity consistency and long story sequences were not tested.
 
 ## Main study
@@ -24,7 +25,7 @@ The table gives API median seconds and strict rubric passes out of two samples. 
 | Product photography | 36.24; 2/2 | 15.11; 2/2 | 27.50; 2/2 |
 | Portrait, two hands and one cup | 38.86; 2/2 | 14.92; 2/2 | — |
 | Editorial book-page ocean | 39.58; 2/2 | 11.92; 1/2 | — |
-| Hand-drawn technology | 44.47; 0/2 | 11.62; 2/2 | — |
+| Hand-drawn technology | 44.47; 0/2 | 11.62; 1/2 | — |
 | Chinese ink wash | 48.89; 2/2 | 12.55; 2/2 | — |
 | Isometric 3D icon | 49.90; 2/2 | 10.00; 0/2 | — |
 | Coordinate recoloring | 25.02; 2/2 | 10.02; 2/2 | 21.75; 2/2 |
@@ -38,7 +39,7 @@ The table gives API median seconds and strict rubric passes out of two samples. 
 | 1500×600 banner with 60% clear area | 18.91; 0/2 | 9.23; 0/2 | — |
 | Portrait infographic | 43.74; 2/2 | 11.77; 2/2 | — |
 
-Across the eighteen-task standard sets, API medians were **41.655s Pro** and **11.7465s Flash**. Strict passes were 29/36 and 27/36. These aggregates combine different tasks and subjective requirements; a two-picture difference is not evidence of general model superiority.
+Across the eighteen-task standard sets, API medians were **41.655s Pro** and **11.7465s Flash**. Strict passes were 29/36 and 26/36. These aggregates combine different tasks and subjective requirements; this small difference in coarse agent-reviewed counts is not evidence of general model superiority.
 
 For the **same four tasks** available in every mode, with eight requests per configuration, medians were **36.238s Pro standard, 24.7335s Pro fast and 12.3575s Flash**. Pro-fast's 8/8 rubric passes apply only to these tasks. Its eight-task-sample median must not be compared directly with the full eighteen-task sets.
 
@@ -46,7 +47,7 @@ For the **same four tasks** available in every mode, with eight requests per con
 
 - Flash kept large pink marker fill in both main marker samples. Pro cleaned the markers in both. The subsequent controlled fill/outline test below did not reproduce this failure in its new filled controls.
 - All title replacements spelled 星野 correctly and removed NOVA. Both Pro replacements used lighter lettering than requested, causing partial font-weight grades rather than a text-spelling failure.
-- Both Flash 3D icons were nearly frontal instead of clearly isometric. Both Pro hand-drawn samples partially missed the paper-feeding/one-leaf action; one also added glowing eyes. These are different instruction misses, not proof that either model cannot draw the style.
+- Both Flash 3D icons were nearly frontal instead of clearly isometric. Both Pro hand-drawn samples partially missed the paper-feeding/one-leaf action; one also added glowing eyes. One Flash hand-drawn sample clearly fed paper but drew a two-leaf seedling instead of the requested one leaf. These are different instruction misses, not proof that either model cannot draw the style.
 - All robot variants kept the five distinguishing identity cues, while one failed to depict a convincing watering action and another put the plant in the ground instead of a pot. Identity and action fidelity need separate checks.
 - One book-page illustration added visible pseudo-print despite a no-text instruction. All four main banners allowed the product into the requested sixty-percent clear area; one added a hard white panel at the left.
 

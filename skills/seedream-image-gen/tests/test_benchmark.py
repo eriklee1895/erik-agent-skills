@@ -18,6 +18,16 @@ SPEC.loader.exec_module(benchmark)
 
 
 class BenchmarkEvidenceTests(unittest.TestCase):
+    def test_existing_same_count_study_cannot_be_used_as_a_different_suite(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            marker = benchmark.prepare(root, suite="marker-ab")
+            saved = (root / "cases.json").read_bytes()
+            with self.assertRaises(SystemExit):
+                benchmark.prepare(root, suite="banner-ab")
+            self.assertEqual((root / "cases.json").read_bytes(), saved)
+            self.assertEqual(benchmark.prepare(root, suite="marker-ab"), marker)
+
     def test_marker_ab_changes_only_opacity_for_each_model(self):
         with tempfile.TemporaryDirectory() as temporary:
             cases = benchmark.prepare(Path(temporary), suite="marker-ab")["cases"]
