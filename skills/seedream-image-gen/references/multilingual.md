@@ -64,7 +64,6 @@ uv run scripts/seedream_image_gen.py generate \
 ```bash
 uv run scripts/seedream_image_gen.py generate \
   --portrait \
-  --negative-prompt "行书, 草书, 楷书, modern calligraphy, sans-serif brush" \
   --prompt "极简中式美学海报，3:4竖版，米白宣纸背景 #f5efe0，正中竖排四个中文大字
   「宁静致远」，瘦金体 calligraphy (Song Huizong 秾芳诗帖 style: knife-thin
   horizontals, sharp angular terminals, slender wiry strokes, NO thick soft
@@ -75,7 +74,7 @@ uv run scripts/seedream_image_gen.py generate \
   纯白无其他元素，无水印无英文，2K 高清印刷质感"
 ```
 
-**关键**：瘦金体要 (a) 显式给出宋徽宗 + 秾芳诗帖锚点，(b) 列出 knife-thin/sharp/slender 的特征签名，(c) 加 negative prompt 防行书漂移。
+**关键**：给出宋徽宗 + 秾芳诗帖锚点，并描述 knife-thin/sharp/slender 的笔画特征；检查输出是否符合要求的书体。
 
 ### Recipe 3：本地化人物 + 建筑 + 服装（L15-L17 模板）
 
@@ -127,7 +126,7 @@ uv run scripts/seedream_image_gen.py generate \
 ## Anti-patterns
 
 1. **严格书法体丢风格**——瘦金体/Diwani/Song Huizong 这种高特异性风格词会漂到通用变体
-   - **修复**：加作者锚点（Song Huizong）+ 风格签名描述（knife-thin/sharp/slender）+ negative prompt 排除行书
+   - **修复**：加作者锚点（Song Huizong）+ 风格签名描述（knife-thin/sharp/slender），并检查书体是否符合要求
 2. **本地化 landmark 漂移**——Dubai→Abu Dhabi、Tokyo→generic
    - **修复**：具体 landmark 描述（Sheikh Zayed Grand Mosque、Shibuya 109 cylinder + 109 logo、X-pattern scramble）
 3. **Bavarian Tracht 通用化**——无 Hirschhorn 鹿角扣、无 Lederhosen

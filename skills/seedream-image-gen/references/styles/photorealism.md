@@ -112,7 +112,7 @@ photorealistic corporate editorial photography, 2K, 16:9
 4. **10 人以上排布用两排（站/坐）分层**——避免所有人脸在同一水平线上挤压变形
 5. **手部策略延续**：手放两侧自然下垂、坐姿手放腿上，避免复杂手势——这条仍然有效，10 人测试里没有一处手部畸形
 
-**核心杠杆是逐人枚举，不是 negative prompt**。保留的 negative prompt（extra hands, fused fingers 等）是辅助防御。
+在 prompt 中逐人描述外观与位置，出图后分别检查身份差异、人数和手部结构。
 
 ### 群体照策略
 
@@ -120,35 +120,6 @@ photorealistic corporate editorial photography, 2K, 16:9
 - **10 人以上（12-20人）**：未测试，枚举 prompt 会变长（token 限制 ≤300 字中文/600 词英文），需精简到"种族+年龄+1个视觉锚点"三元组
 - **20+ 大群像**：远景通用脸即可，不需要逐人枚举
 - **动作/围餐场景**：手部遮挡策略依然适用，可与逐人枚举组合使用
-
-### 群体照 negative prompt 叠加
-
-```
-多只手, 手放口袋里的模糊变形, 手指融合, 拿筷子的手畸形
-```
-
-### 群体照 diversity 语言小心
-
-> `10 diverse business people (5 men 5 women, mixed ages/ethnicities)` 触发 `OutputImageSensitiveContentDetected`。**"ethnicities" 词会触发安全检查**，改成 `ten coworkers, mixed men and women of various ages` 通过。**逐人枚举版本的 prompt（写具体种族如 "Black man" / "South Asian woman"）未触发安全检查**——触发点是抽象词 "ethnicities" 本身，不是具体种族描述。
-
-## Realism 推荐的 Negative Prompt（替换默认）
-
-针对 portrait / product / photo 工作：
-
-```
-模糊, 低质量, 水印, 变形, 多余肢体, 六指, 融合手指, 塑料皮肤, 过度磨皮, 美颜滤镜,
-蜡像感, AI绘画感, 橡胶皮肤, 头发结块, 假文字, 伪日文, 伪韩文, 乱码, logo, 品牌名,
-死鱼眼, 不对称眼睛, 畸变牙齿, 过饱和, 卡通, 动漫, 插画, 3D渲染, C4D质感
-```
-
-英文版：
-```
-blurry, low quality, watermark, deformed, extra limbs, six fingers, fused fingers, plastic skin, over-smoothed, beauty filter, wax figure, AI painting, rubber skin, clumped hair, fake text, pseudo-Japanese, pseudo-Korean, garbled text, logo, brand names, dead fish eyes, asymmetric eyes, distorted teeth, oversaturated, cartoon, anime, illustration, 3D render, C4D aesthetic
-```
-
-CGI cinematic 工作去掉 anti-3D 词（`3D渲染, C4D质感`），加 `photograph, film grain, documentary` 到负 prompt。
-
-群体照（≥4 人）额外加：`extra hands, blobby hands-in-pockets, fused fingers, deformed chopstick grip`。
 
 ## Marketing Claim 诚实对照
 

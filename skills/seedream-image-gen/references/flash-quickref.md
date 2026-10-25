@@ -10,6 +10,4 @@ Both accept 1K, 1.5K, 2K and valid explicit pixels. Use 1.5K for an economical i
 
 Transparent output requires editing one existing alpha image with PNG output. To isolate an object in an opaque picture, [decompose it](transparent-layers.md) first. The layer mode returns a base plus up to sixteen PNG foregrounds with position metadata, not a PSD file.
 
-For portable content controls, write constraints naturally in the prompt. Flash does not receive the undocumented Pro negative_prompt default.
-
-The old 3K/4K presets and fourteen-reference behavior do not transfer from Lite. Nor do its old timing/text-quality observations. See the [current API source check](api-reference.md) and [migration/benchmark protocol](../evals/flash-migration-plan.md).
+See the [API contract](api-reference.md) for supported fields and sizes, and the [Pro/Flash benchmark](../evals/comprehensive-benchmark.md) for measured examples.

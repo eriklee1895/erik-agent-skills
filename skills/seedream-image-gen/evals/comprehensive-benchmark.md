@@ -7,7 +7,7 @@ Pro remains the default for every unspecified model request. A faster result or 
 ## Method and interpretation
 
 - Dated model IDs: Pro `doubao-seedream-5-0-pro-260628`, Flash `doubao-seedream-5-0-flash-260915`; official Beijing Images API.
-- Fixed synthetic references, prompts, size, PNG output, no watermark and no undocumented quality-negative default within each comparison. Pro's existing runtime negative default is unchanged; this controlled study does not establish its effectiveness.
+- Fixed synthetic references, prompts, size, PNG output and no watermark within each comparison. The runner disabled the undocumented Pro quality-negative default that existed at the time; these measurements do not establish its effectiveness. The current CLI no longer sends that field.
 - Six local workers, fixed shuffled order, with an initial four-request smoke slice. No provider seed, fixed-IPM scheduler or automatic model fallback. Every case has a durable pre-send journal and at most one generation submission.
 - Four explicit case-specific criteria, scored 0=missed, 1=partial, 2=met. A strict pass means all four are met. Visual-quality notes are descriptive. Contact sheets hide model labels during review; the same agent designed and judged the study, so this is not independent human blind evaluation. Subjective camera-angle/font-weight/placement judgments are not a universal quality score.
 - Every output was inspected. Local macOS Vision OCR provided an auxiliary transcription for the eighty main and twenty-four initial A/B requests; visual reading determined text judgments. The published result does not treat OCR as a quality judge.

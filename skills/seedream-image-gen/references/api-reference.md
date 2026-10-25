@@ -21,8 +21,6 @@ Checked **2026-10-24** against the official [API](https://www.volcengine.com/doc
 
 Ordinary generation returns one image per request. Neither supported model accepts sequential/storyboard generation, web search or streaming. CLI variants and batches issue separate requests. Do not send invented `n`, `num_images`, `seed`, `mask`, `bbox`, `layers` or ControlNet fields. Coordinate tags belong in `prompt`.
 
-`negative_prompt` is not in the current official schema. Legacy Pro support/default is retained for compatibility and is labeled undocumented. Flash uses natural-language prompt constraints. Parameter acceptance alone does not prove conditioning effectiveness.
-
 ## Sizes
 
 Both native generation models allow **921,600–4,624,220 pixels**, aspect ratio **1/16..16**. Constraints concern W×H, not a fixed bound on each side. Native 512×512 is below the floor; the CLI can generate larger and downsize to that destination. `--no-auto-upscale` restores rejection.

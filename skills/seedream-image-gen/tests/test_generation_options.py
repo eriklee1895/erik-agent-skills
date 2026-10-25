@@ -94,10 +94,12 @@ class GenerationOptionTests(unittest.TestCase):
                         metadata = json.loads(image.with_suffix(".json").read_text())
                         self.assertEqual(metadata["size"], "1500x600")
 
-    def test_default_prompt_and_quality_negative(self):
-        body = self.payload()
-        self.assertEqual(body["prompt"], "test scene")
-        self.assertEqual(body["negative_prompt"], "模糊, 低质量, 水印, 变形, 多余肢体")
+    def test_default_prompt_has_no_undocumented_negative(self):
+        for model in ("pro", "flash"):
+            with self.subTest(model=model):
+                body = self.payload("--model", model)
+                self.assertEqual(body["prompt"], "test scene")
+                self.assertNotIn("negative_prompt", body)
 
     def test_undersized_request_can_still_be_rejected_explicitly(self):
         status, _, _ = self.invoke("generate", "--prompt", "test", "--size", "1500x600", "--no-auto-upscale", "--dry-run")

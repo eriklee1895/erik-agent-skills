@@ -147,8 +147,6 @@ def case_arguments(root, case, folder):
                  "--size", case["size"], "--optimize-prompt", case["mode"],
                  "--output-format", case.get("output_format", "png"),
                  "--out-dir", str(folder / "outputs"), "--timeout", "300"]
-    if case["command"] != "decompose":
-        arguments += ["--no-negative-prompt"]
     if case.get("background"):
         arguments += ["--background", case["background"]]
     for option in ("marker_rect", "marker_color"):

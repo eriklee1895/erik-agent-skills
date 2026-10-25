@@ -20,9 +20,9 @@ One Python CLI and one Ark Images API for both models. **Always use Pro when the
 | Pro | `doubao-seedream-5-0-pro-260628` / `pro` | Default for demanding final artwork and the established Pro recipes. `standard` or `fast` prompt optimization. |
 | Flash | `doubao-seedream-5-0-flash-260915` / `flash` | Explicit opt-in for lower-cost/latency-sensitive work. `standard` optimization only. See [Flash guidance](references/flash-quickref.md). |
 
-Both support text, one reference or up to ten references, coordinate/marker interaction, alpha-image editing and native layer decomposition. Ordinary requests return one image. `--n` makes independent requests; neither model has the retired model's sequential/storyboard API, web search or streaming.
+Both support text, one reference or up to ten references, coordinate/marker interaction, alpha-image editing and native layer decomposition. Ordinary requests return one image. Neither model supports sequential/storyboard generation, web search or streaming.
 
-Lite aliases and its old IDs are retired and fail before an API call. They are never silently mapped to a paid replacement. This skill does not support Seedream 4.x/3.x/2.x. The common endpoint is `POST https://ark.cn-beijing.volces.com/api/v3/images/generations`.
+Only Pro and Flash are supported. Retired Lite aliases and IDs fail before an API call rather than selecting a paid replacement.
 
 ## Quick workflow
 
@@ -36,13 +36,9 @@ uv run scripts/seedream_image_gen.py generate \
 # Flash, exact small destination size: generate at a valid size, then downscale
 uv run scripts/seedream_image_gen.py generate --model flash --size 1500x600 \
   --prompt '青绿色陶瓷咖啡壶位于画面右侧，暖米色桌面，柔和窗光，左侧大面积干净留白，不要文字、品牌或人物。'
-
-# Explicit Pro fast mode; actual latency varies by task
-uv run scripts/seedream_image_gen.py generate --model pro --optimize-prompt fast \
-  --size 1.5K --prompt '横版产品概念图，一只青绿色咖啡壶，干净米色背景，自然光。'
 ```
 
-`--dry-run` previews request bodies without credentials or API calls. Generate/edit retain new metadata with `dry_run: true`; existing metadata is preserved even with `--force`. Batch previews do not save result metadata. Do not describe dry-run as universally writing no files: marker previews and new metadata can be saved.
+`--dry-run` previews requests without credentials or API calls. It may save marker previews and new `dry_run: true` metadata; existing metadata is preserved even with `--force`. Batch previews do not save result metadata.
 
 ## Size and format
 
@@ -58,7 +54,7 @@ Both models accept `1K`, `1.5K`, `2K`, or explicit `WIDTHxHEIGHT`. Their native 
 
 Below-floor explicit targets are generated larger, with an approximately matching aspect ratio, then LANCZOS-downscaled locally. For example, `1500x600` → API `1520x608` → final `1500x600`; metadata records the requested target. `--no-auto-upscale` restores rejection. Above-cap or invalid-aspect requests are rejected. There is no 3K/4K preset on either supported model.
 
-Use **2K for demanding typography** and inspect the actual text. **1.5K** is a useful lower-cost preset: the official pricing guide places it in the same tier as 1K. Do not promise exact preset pixels for an arbitrary prompt. Output is PNG by default, or JPEG with `--output-format jpeg` (`jpg` is an alias).
+Use **2K for demanding typography** and inspect the actual text. **1.5K** shares the 1K pricing tier. Presets do not promise exact pixels for an arbitrary prompt. Output is PNG by default, or JPEG with `--output-format jpeg` (`jpg` is an alias).
 
 ## Write the prompt
 
@@ -66,7 +62,9 @@ Start with **subject/action/environment**, then the purpose, composition, lighti
 
 For edits, identify the target, state the change, and name what must remain. For multiple references, assign each role explicitly: shape from image 1, palette from image 2, layout from image 3. The supplied reference order defines 图1/图2/图3.
 
-Pro's detailed recipes remain useful, but historical ratings are **Pro-only observations**, not Flash guarantees. Start with [measured prompt recipes](references/benchmark-prompt-recipes.md): concise edits, exact text, optional marker outlines, continuous cover scenes and semantic infographic layouts. See [prompt engineering](references/prompt-engineering.md), [historical Pro observations](references/pro-observations.md), and the [120-request benchmark](evals/comprehensive-benchmark.md).
+Write content constraints directly in the prompt, such as “blank unprinted pages” or “keep the title; remove the label on the cup.” Inspect the result for unwanted text or objects.
+
+Start with [measured prompt recipes](references/benchmark-prompt-recipes.md) for edits, typography, cover layouts and infographics. See [prompt engineering](references/prompt-engineering.md) for more examples; historical Pro ratings do not establish Flash quality.
 
 ## Local editing: coordinates or visible markers
 
@@ -92,7 +90,7 @@ uv run scripts/seedream_image_gen.py edit --reference-image poster.png \
   --prompt '把红框内标题改成“新绿计划”，保持字体、对齐和其他内容，移除彩色标记。'
 ```
 
-`--marker-rect` uses **x,y,width,height**, in pixels or percentages, and draws a temporary annotated copy. Repeat rectangles/colors for multiple targets. The historical 8%/70% marker-size observations belong to the old Pro experiments and are not bounds on the native coordinate API. See [marker edits](references/marker-editing.md) and the [visual protocol guide](references/marker-edit-protocol.md).
+`--marker-rect` uses **x,y,width,height**, in pixels or percentages, and draws a temporary annotated copy. Repeat rectangles/colors for multiple targets. See [marker edits](references/marker-editing.md) and the [visual protocol guide](references/marker-edit-protocol.md).
 
 ## Transparent images
 
@@ -111,32 +109,23 @@ To isolate an object from an opaque picture, use decomposition first, then edit 
 ```bash
 uv run scripts/seedream_image_gen.py decompose --model flash \
   --reference-image poster.png --size auto --out-dir output/layers
-
-# Optional prompt selects elements; it is not a hard output-count cap
-uv run scripts/seedream_image_gen.py decompose --model pro \
-  --reference-image poster.png --size 1.5K --out-dir output/selected-layers \
-  --prompt '将杯子和顶部标题分别拆为独立图层，其余内容保留在底图。'
 ```
 
-This sends `layer_decomposition: true` through the **same endpoint**. Input must be one PNG/JPEG, 262,144–36,000,000 pixels and ≤30MB. The prompt is optional. Layer size accepts only `auto`, `1K`, `1.5K`, `2K`, not explicit pixels.
+Input must be one PNG/JPEG, 262,144–36,000,000 pixels and ≤30MB. An optional `--prompt` selects elements without guaranteeing a layer count. Layer size accepts only `auto`, `1K`, `1.5K`, `2K`, not explicit pixels.
 
 Results contain **one base plus up to sixteen foreground layers**. `--output-format` controls the base; foreground layers are always PNG. The CLI downloads all assets immediately and saves `base.png`/`base.jpg`, `layer-001.png` … and `layers.json`. It preserves each cropped image's native dimensions, `z_index`, `bounding_box`, name and description. It does not resize every crop to the canvas size or store expiring signed URLs.
 
-For recomposition, use the **returned base's** coordinate system: resize each crop to `(right-left, bottom-top)` from `bounding_box.absolute`, place it at `(left, top)`, then stack by ascending `z_index`. Returned `bounding_box.normalized` uses **0–1000**, unlike edit prompt tags' 0–999. See [the layer manifest and reconstruction recipe](references/transparent-layers.md).
+Recompose using the returned base's coordinate system and each layer's bounding box. See [the layer manifest and reconstruction recipe](references/transparent-layers.md) for placement and coordinate conventions.
 
-## Batch and content options
+## Batch and common options
 
 ```bash
 uv run scripts/seedream_image_gen.py generate-batch --input jobs.jsonl --concurrency 3
 ```
 
-Each JSONL line is a prompt string or an object. Per-job fields include `prompt`, `model`, `size`, `output_format`, `background`, size shortcuts, `watermark`, `optimize_prompt`, `negative_prompt`, `no_negative_prompt`, `no_auto_upscale`, `reference_image` (list), marker options, outpaint options and `timeout`. Batch jobs generate one image each; decomposition is its own command.
+Each JSONL line is a prompt string or an object. Per-job fields include `prompt`, `model`, `size`, `output_format`, `background`, size shortcuts, `watermark`, `optimize_prompt`, `no_auto_upscale`, `reference_image` (list), marker options, outpaint options and `timeout`. Batch jobs generate one image each; decomposition is its own command.
 
-`--concurrency` remains optional and user-controlled; no cap of eight or fixed IPM scheduler is added. `--n 1..4` creates independent variants in `generate`.
-
-To exclude people or text, write it directly into the prompt; describing the desired content concretely (e.g. "blank unprinted pages") works better than a generic negative.
-
-Pro retains its legacy, **undocumented** `negative_prompt` quality default for compatibility. `--no-negative-prompt` removes that default. Flash omits the undocumented field. For portable requests, write the desired constraints directly in natural language; do not infer undocumented-field effectiveness from a 200 response.
+`--concurrency` sets parallel batch requests. `--n 1..4` creates independent variants in `generate`.
 
 Other common options: `--reference-image` (repeatable), `--out`, `--out-dir`, `--watermark`, `--timeout`, `--force`, `--prompt-file`. Outpainting remains available through `edit --outpaint left:400` and the [existing protocol](references/api-reference.md#outpainting).
 
