@@ -1,0 +1,1164 @@
+{
+  "schema_version": 1,
+  "measured_date": "2026-10-24",
+  "provider": "official Beijing Ark Images API",
+  "generation_requests": 16,
+  "successful_requests": 16,
+  "output_images": 20,
+  "list_price_estimate_cny": 4.75,
+  "pricing_source": "https://www.volcengine.com/docs/ark/model-pricing",
+  "account_bill_verified": false,
+  "protocol": {
+    "concurrency": 2,
+    "repetitions_per_core_case_configuration": 1,
+    "core_tasks_per_configuration": 4,
+    "no_unknown_paid_replays": true,
+    "pro_quality_negative_default_disabled_for_comparison": true
+  },
+  "fixture_sha256": {
+    "palette.png": "c78a76a6a4096bd3e03bed5bcddfd80a49e3972a2a6458f560ddf6e2f5a98bb2",
+    "objects.png": "f054044d5bfd8484db1d3ffb34d52f6b4b3d73fde58136fe8abcf74c16c2e241",
+    "alpha-cup.png": "9de583a55107382aea9d879533481a04a3a5c1e372a1bd30eee3c85e6f0a7371"
+  },
+  "core_latency_summary": {
+    "pro-standard": {
+      "n": 4,
+      "median_api_ms": 46674.5,
+      "median_end_to_end_ms": 47136.0
+    },
+    "pro-fast": {
+      "n": 4,
+      "median_api_ms": 25687.0,
+      "median_end_to_end_ms": 26217.0
+    },
+    "flash-standard": {
+      "n": 4,
+      "median_api_ms": 10016.5,
+      "median_end_to_end_ms": 10537.5
+    }
+  },
+  "cases": [
+    {
+      "id": "text-flash-standard",
+      "case": "text",
+      "command": "generate",
+      "prompt": "横版16:9科技海报，奶油白背景配青绿色几何图形。顶部大号黑色无衬线标题准确写“新绿计划”，副标题“更少等待，更多创作”。下方三个等宽卡片分别写“文生图”“精准编辑”“透明图层”。留白充足，文字清晰，不增加其他文字或水印。",
+      "size": "2K",
+      "references": [],
+      "configuration": "flash-standard",
+      "model": "flash",
+      "mode": "standard"
+    },
+    {
+      "id": "text-pro-standard",
+      "case": "text",
+      "command": "generate",
+      "prompt": "横版16:9科技海报，奶油白背景配青绿色几何图形。顶部大号黑色无衬线标题准确写“新绿计划”，副标题“更少等待，更多创作”。下方三个等宽卡片分别写“文生图”“精准编辑”“透明图层”。留白充足，文字清晰，不增加其他文字或水印。",
+      "size": "2K",
+      "references": [],
+      "configuration": "pro-standard",
+      "model": "pro",
+      "mode": "standard"
+    },
+    {
+      "id": "small-banner-pro-standard",
+      "case": "small-banner",
+      "command": "generate",
+      "prompt": "横向产品宣传图，一只青绿色陶瓷手冲咖啡壶位于画面右侧，柔和的窗边自然光，暖米色桌面，左侧60%为干净留白，真实产品摄影。不要人物、文字、品牌、标志或水印。",
+      "size": "1500x600",
+      "references": [],
+      "configuration": "pro-standard",
+      "model": "pro",
+      "mode": "standard"
+    },
+    {
+      "id": "multi-reference-pro-fast",
+      "case": "multi-reference",
+      "command": "generate",
+      "prompt": "参考图1中左侧杯子的外形和把手，使用图2中央的青绿色作为杯子颜色、图2周围的暖米色作为背景。只画一个杯子，居中放置，保持扁平矢量风格，不画花瓶，不加文字或水印。",
+      "size": "1.5K",
+      "references": [
+        "objects.png",
+        "palette.png"
+      ],
+      "configuration": "pro-fast",
+      "model": "pro",
+      "mode": "fast"
+    },
+    {
+      "id": "coordinate-edit-pro-standard",
+      "case": "coordinate-edit",
+      "command": "edit",
+      "prompt": "把图1 <bbox>100 350 550 780</bbox> 中左侧红色杯子改为深蓝色，保持杯子形状、把手、右侧花瓶、顶部NOVA文字和背景不变，保持原来的扁平矢量画风。",
+      "size": "1.5K",
+      "references": [
+        "objects.png"
+      ],
+      "configuration": "pro-standard",
+      "model": "pro",
+      "mode": "standard"
+    },
+    {
+      "id": "small-banner-flash-standard",
+      "case": "small-banner",
+      "command": "generate",
+      "prompt": "横向产品宣传图，一只青绿色陶瓷手冲咖啡壶位于画面右侧，柔和的窗边自然光，暖米色桌面，左侧60%为干净留白，真实产品摄影。不要人物、文字、品牌、标志或水印。",
+      "size": "1500x600",
+      "references": [],
+      "configuration": "flash-standard",
+      "model": "flash",
+      "mode": "standard"
+    },
+    {
+      "id": "coordinate-edit-pro-fast",
+      "case": "coordinate-edit",
+      "command": "edit",
+      "prompt": "把图1 <bbox>100 350 550 780</bbox> 中左侧红色杯子改为深蓝色，保持杯子形状、把手、右侧花瓶、顶部NOVA文字和背景不变，保持原来的扁平矢量画风。",
+      "size": "1.5K",
+      "references": [
+        "objects.png"
+      ],
+      "configuration": "pro-fast",
+      "model": "pro",
+      "mode": "fast"
+    },
+    {
+      "id": "coordinate-edit-flash-standard",
+      "case": "coordinate-edit",
+      "command": "edit",
+      "prompt": "把图1 <bbox>100 350 550 780</bbox> 中左侧红色杯子改为深蓝色，保持杯子形状、把手、右侧花瓶、顶部NOVA文字和背景不变，保持原来的扁平矢量画风。",
+      "size": "1.5K",
+      "references": [
+        "objects.png"
+      ],
+      "configuration": "flash-standard",
+      "model": "flash",
+      "mode": "standard"
+    },
+    {
+      "id": "multi-reference-flash-standard",
+      "case": "multi-reference",
+      "command": "generate",
+      "prompt": "参考图1中左侧杯子的外形和把手，使用图2中央的青绿色作为杯子颜色、图2周围的暖米色作为背景。只画一个杯子，居中放置，保持扁平矢量风格，不画花瓶，不加文字或水印。",
+      "size": "1.5K",
+      "references": [
+        "objects.png",
+        "palette.png"
+      ],
+      "configuration": "flash-standard",
+      "model": "flash",
+      "mode": "standard"
+    },
+    {
+      "id": "small-banner-pro-fast",
+      "case": "small-banner",
+      "command": "generate",
+      "prompt": "横向产品宣传图，一只青绿色陶瓷手冲咖啡壶位于画面右侧，柔和的窗边自然光，暖米色桌面，左侧60%为干净留白，真实产品摄影。不要人物、文字、品牌、标志或水印。",
+      "size": "1500x600",
+      "references": [],
+      "configuration": "pro-fast",
+      "model": "pro",
+      "mode": "fast"
+    },
+    {
+      "id": "text-pro-fast",
+      "case": "text",
+      "command": "generate",
+      "prompt": "横版16:9科技海报，奶油白背景配青绿色几何图形。顶部大号黑色无衬线标题准确写“新绿计划”，副标题“更少等待，更多创作”。下方三个等宽卡片分别写“文生图”“精准编辑”“透明图层”。留白充足，文字清晰，不增加其他文字或水印。",
+      "size": "2K",
+      "references": [],
+      "configuration": "pro-fast",
+      "model": "pro",
+      "mode": "fast"
+    },
+    {
+      "id": "multi-reference-pro-standard",
+      "case": "multi-reference",
+      "command": "generate",
+      "prompt": "参考图1中左侧杯子的外形和把手，使用图2中央的青绿色作为杯子颜色、图2周围的暖米色作为背景。只画一个杯子，居中放置，保持扁平矢量风格，不画花瓶，不加文字或水印。",
+      "size": "1.5K",
+      "references": [
+        "objects.png",
+        "palette.png"
+      ],
+      "configuration": "pro-standard",
+      "model": "pro",
+      "mode": "standard"
+    },
+    {
+      "id": "alpha-edit-pro",
+      "case": "alpha-edit",
+      "command": "edit",
+      "model": "pro",
+      "mode": "standard",
+      "configuration": "pro-standard",
+      "size": "1.5K",
+      "references": [
+        "alpha-cup.png"
+      ],
+      "background": "transparent",
+      "prompt": "把杯子改成橙黄色，保持杯子的外形和把手不变，保持透明背景，不增加其他物体、文字或水印。"
+    },
+    {
+      "id": "decompose-pro",
+      "case": "decompose",
+      "command": "decompose",
+      "model": "pro",
+      "mode": "standard",
+      "configuration": "pro-standard",
+      "size": "1.5K",
+      "references": [
+        "objects.png"
+      ],
+      "prompt": "只拆出图1 <bbox>100 350 550 780</bbox> 中的红色杯子和 <bbox>80 60 500 220</bbox> 中的NOVA标题文字，分别成为两个独立的透明图层；其余内容保留在底图。"
+    },
+    {
+      "id": "alpha-edit-flash",
+      "case": "alpha-edit",
+      "command": "edit",
+      "model": "flash",
+      "mode": "standard",
+      "configuration": "flash-standard",
+      "size": "1.5K",
+      "references": [
+        "alpha-cup.png"
+      ],
+      "background": "transparent",
+      "prompt": "把杯子改成橙黄色，保持杯子的外形和把手不变，保持透明背景，不增加其他物体、文字或水印。"
+    },
+    {
+      "id": "decompose-flash",
+      "case": "decompose",
+      "command": "decompose",
+      "model": "flash",
+      "mode": "standard",
+      "configuration": "flash-standard",
+      "size": "1.5K",
+      "references": [
+        "objects.png"
+      ],
+      "prompt": "只拆出图1 <bbox>100 350 550 780</bbox> 中的红色杯子和 <bbox>80 60 500 220</bbox> 中的NOVA标题文字，分别成为两个独立的透明图层；其余内容保留在底图。"
+    }
+  ],
+  "results": [
+    {
+      "id": "alpha-edit-flash",
+      "case": "alpha-edit",
+      "configuration": "flash-standard",
+      "model": "flash",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-flash-260915",
+        "prompt": "把杯子改成橙黄色，保持杯子的外形和把手不变，保持透明背景，不增加其他物体、文字或水印。",
+        "size": "1.5K",
+        "output_format": "png",
+        "background": "transparent",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 1,
+      "api_ms": 13149,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 1,
+        "output_tokens": 9216,
+        "total_tokens": 9216
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 13501,
+      "outputs": [
+        {
+          "file": "20261024-223934-把杯子改成橙黄色-保持杯子的外形和把手不变-保持透明背景-不增加其他物体-文字或.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGBA",
+          "bytes": 3010985,
+          "sha256": "fd896713e927691cbc5d99f47ddd0f570daabc8098b7e77e104a21d6c0ddbcd9",
+          "alpha_extrema": [
+            0,
+            255
+          ],
+          "fully_transparent_fraction": 0.6846449110243056,
+          "nonopaque_fraction": 0.98731443617079
+        }
+      ],
+      "manual_review": {
+        "orange_recolor_and_alpha_retained": true
+      }
+    },
+    {
+      "id": "alpha-edit-pro",
+      "case": "alpha-edit",
+      "configuration": "pro-standard",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "把杯子改成橙黄色，保持杯子的外形和把手不变，保持透明背景，不增加其他物体、文字或水印。",
+        "size": "1.5K",
+        "output_format": "png",
+        "background": "transparent",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 1,
+      "api_ms": 61479,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 1,
+        "output_tokens": 9216,
+        "total_tokens": 9216
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 61791,
+      "outputs": [
+        {
+          "file": "20261024-223921-把杯子改成橙黄色-保持杯子的外形和把手不变-保持透明背景-不增加其他物体-文字或.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGBA",
+          "bytes": 2183780,
+          "sha256": "bd6248f6ec2546c5344e570d6bfce3aa1560ff19812f5eb0903918c27db045f7",
+          "alpha_extrema": [
+            0,
+            255
+          ],
+          "fully_transparent_fraction": 0.6847233242458768,
+          "nonopaque_fraction": 0.9875072903103299
+        }
+      ],
+      "manual_review": {
+        "orange_recolor_and_alpha_retained": true
+      }
+    },
+    {
+      "id": "coordinate-edit-flash-standard",
+      "case": "coordinate-edit",
+      "configuration": "flash-standard",
+      "model": "flash",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-flash-260915",
+        "prompt": "把图1 <bbox>100 350 550 780</bbox> 中左侧红色杯子改为深蓝色，保持杯子形状、把手、右侧花瓶、顶部NOVA文字和背景不变，保持原来的扁平矢量画风。",
+        "size": "1.5K",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 1,
+      "api_ms": 8649,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 1,
+        "output_tokens": 9216,
+        "total_tokens": 9216
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 8964,
+      "outputs": [
+        {
+          "file": "20261024-223654-把图1-bbox-100-350-550-780-bbox-中左侧红色杯子改为深.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1179499,
+          "sha256": "4bdc807e7c2c19d022d6f80a55ca078d3ce54f0152c46c578f2599ea9f3f060f"
+        }
+      ],
+      "outside_bbox_mae": 2.614,
+      "manual_review": {
+        "selected_cup_recolored": true,
+        "title_and_right_object_retained": true
+      }
+    },
+    {
+      "id": "coordinate-edit-pro-fast",
+      "case": "coordinate-edit",
+      "configuration": "pro-fast",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "把图1 <bbox>100 350 550 780</bbox> 中左侧红色杯子改为深蓝色，保持杯子形状、把手、右侧花瓶、顶部NOVA文字和背景不变，保持原来的扁平矢量画风。",
+        "size": "1.5K",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "fast"
+        }
+      },
+      "reference_count": 1,
+      "api_ms": 26613,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 1,
+        "output_tokens": 9216,
+        "total_tokens": 9216
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 27078,
+      "outputs": [
+        {
+          "file": "20261024-223657-把图1-bbox-100-350-550-780-bbox-中左侧红色杯子改为深.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1775044,
+          "sha256": "dc7ac26469bc6ffd09dbe99c65316c07908e6af82d2a16786ba5474666fdd97d"
+        }
+      ],
+      "outside_bbox_mae": 3.779,
+      "manual_review": {
+        "selected_cup_recolored": true,
+        "title_and_right_object_retained": true
+      }
+    },
+    {
+      "id": "coordinate-edit-pro-standard",
+      "case": "coordinate-edit",
+      "configuration": "pro-standard",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "把图1 <bbox>100 350 550 780</bbox> 中左侧红色杯子改为深蓝色，保持杯子形状、把手、右侧花瓶、顶部NOVA文字和背景不变，保持原来的扁平矢量画风。",
+        "size": "1.5K",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 1,
+      "api_ms": 25999,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 1,
+        "output_tokens": 9216,
+        "total_tokens": 9216
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 26320,
+      "outputs": [
+        {
+          "file": "20261024-223645-把图1-bbox-100-350-550-780-bbox-中左侧红色杯子改为深.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1663977,
+          "sha256": "38a14715457bcb0a2ab9dc55e3725df646c266723cd8d6c8f2706ef3afe64a75"
+        }
+      ],
+      "outside_bbox_mae": 3.115,
+      "manual_review": {
+        "selected_cup_recolored": true,
+        "title_and_right_object_retained": true
+      }
+    },
+    {
+      "id": "decompose-flash",
+      "case": "decompose",
+      "configuration": "flash-standard",
+      "model": "flash",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-flash-260915",
+        "prompt": "只拆出图1 <bbox>100 350 550 780</bbox> 中的红色杯子和 <bbox>80 60 500 220</bbox> 中的NOVA标题文字，分别成为两个独立的透明图层；其余内容保留在底图。",
+        "size": "1.5K",
+        "output_format": "png",
+        "layer_decomposition": true,
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 1,
+      "api_ms": 21888,
+      "usage": {
+        "generated_images": 3,
+        "input_images": 1,
+        "output_tokens": 27336,
+        "total_tokens": 27336
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 22753,
+      "outputs": [
+        {
+          "file": "base.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1046874,
+          "sha256": "aab0c2a1b242a4c666923201caa4e723dff4000b1d535afb11cb45f352e20beb"
+        },
+        {
+          "file": "layer-001.png",
+          "size": [
+            1165,
+            998
+          ],
+          "format": "PNG",
+          "mode": "RGBA",
+          "bytes": 1417442,
+          "sha256": "ac32f63c96012e733321f0a6392d0c2179e35dd66df75e2d3a85082767fd3748",
+          "alpha_extrema": [
+            0,
+            255
+          ],
+          "fully_transparent_fraction": 0.21143058649487817,
+          "nonopaque_fraction": 0.9841494147092468
+        },
+        {
+          "file": "layer-002.png",
+          "size": [
+            1308,
+            368
+          ],
+          "format": "PNG",
+          "mode": "RGBA",
+          "bytes": 760357,
+          "sha256": "79602d24647a16917b00fd114f34f1587dc2d471dbfaad0c3bdd7d39a4c8df89",
+          "alpha_extrema": [
+            0,
+            255
+          ],
+          "fully_transparent_fraction": 0.6523795871559633,
+          "nonopaque_fraction": 0.9344730587687807
+        }
+      ],
+      "layer_manifest": "cases/decompose-flash/outputs/layers.json",
+      "recomposition": {
+        "file": "cases/decompose-flash/recomposed.png",
+        "mae_vs_resized_reference": 4.403,
+        "layers": [
+          {
+            "z_index": 0,
+            "size": "1536x1536",
+            "bounding_box": null,
+            "name": null
+          },
+          {
+            "z_index": 1,
+            "size": "1165x998",
+            "bounding_box": {
+              "absolute": [
+                194,
+                600,
+                828,
+                1142
+              ],
+              "normalized": [
+                126,
+                391,
+                538,
+                743
+              ]
+            },
+            "name": "红色杯子"
+          },
+          {
+            "z_index": 2,
+            "size": "1308x368",
+            "bounding_box": {
+              "absolute": [
+                165,
+                158,
+                557,
+                268
+              ],
+              "normalized": [
+                107,
+                103,
+                362,
+                174
+              ]
+            },
+            "name": "NOVA标题文字"
+          }
+        ]
+      },
+      "manual_review": {
+        "selected_cup_and_title_extracted": true,
+        "base_retains_other_object": true,
+        "recomposition_visually_checked": true
+      }
+    },
+    {
+      "id": "decompose-pro",
+      "case": "decompose",
+      "configuration": "pro-standard",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "只拆出图1 <bbox>100 350 550 780</bbox> 中的红色杯子和 <bbox>80 60 500 220</bbox> 中的NOVA标题文字，分别成为两个独立的透明图层；其余内容保留在底图。",
+        "size": "1.5K",
+        "output_format": "png",
+        "layer_decomposition": true,
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 1,
+      "api_ms": 48460,
+      "usage": {
+        "generated_images": 3,
+        "input_images": 1,
+        "output_tokens": 28589,
+        "total_tokens": 28589
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 49111,
+      "outputs": [
+        {
+          "file": "base.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1055330,
+          "sha256": "80a0d85ef8062986b08156b0056e672b623aea4136947d83113258d73ca1d6b8"
+        },
+        {
+          "file": "layer-001.png",
+          "size": [
+            1208,
+            1036
+          ],
+          "format": "PNG",
+          "mode": "RGBA",
+          "bytes": 1509421,
+          "sha256": "5aaba2204de3096653935dab86389996c1f109b2159c241fedd5fa095867f125",
+          "alpha_extrema": [
+            0,
+            255
+          ],
+          "fully_transparent_fraction": 0.21175432764836738,
+          "nonopaque_fraction": 0.9852295827047483
+        },
+        {
+          "file": "layer-002.png",
+          "size": [
+            1358,
+            383
+          ],
+          "format": "PNG",
+          "mode": "RGBA",
+          "bytes": 795553,
+          "sha256": "8ec24f6a24fed8e0e63ef40bc97935b192355d410fce51cc64c9f9c1142fe8e4",
+          "alpha_extrema": [
+            0,
+            255
+          ],
+          "fully_transparent_fraction": 0.6506515879211096,
+          "nonopaque_fraction": 0.9440545726513803
+        }
+      ],
+      "layer_manifest": "cases/decompose-pro/outputs/layers.json",
+      "recomposition": {
+        "file": "cases/decompose-pro/recomposed.png",
+        "mae_vs_resized_reference": 3.589,
+        "layers": [
+          {
+            "z_index": 0,
+            "size": "1536x1536",
+            "bounding_box": null,
+            "name": null
+          },
+          {
+            "z_index": 1,
+            "size": "1208x1036",
+            "bounding_box": {
+              "absolute": [
+                194,
+                599,
+                827,
+                1142
+              ],
+              "normalized": [
+                126,
+                390,
+                538,
+                743
+              ]
+            },
+            "name": "红色杯子"
+          },
+          {
+            "z_index": 2,
+            "size": "1358x383",
+            "bounding_box": {
+              "absolute": [
+                164,
+                157,
+                557,
+                268
+              ],
+              "normalized": [
+                107,
+                102,
+                362,
+                174
+              ]
+            },
+            "name": "NOVA标题文字"
+          }
+        ]
+      },
+      "manual_review": {
+        "selected_cup_and_title_extracted": true,
+        "base_retains_other_object": true,
+        "recomposition_visually_checked": true
+      }
+    },
+    {
+      "id": "multi-reference-flash-standard",
+      "case": "multi-reference",
+      "configuration": "flash-standard",
+      "model": "flash",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-flash-260915",
+        "prompt": "参考图1中左侧杯子的外形和把手，使用图2中央的青绿色作为杯子颜色、图2周围的暖米色作为背景。只画一个杯子，居中放置，保持扁平矢量风格，不画花瓶，不加文字或水印。",
+        "size": "1.5K",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 2,
+      "api_ms": 11276,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 2,
+        "output_tokens": 9216,
+        "total_tokens": 9216
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 11520,
+      "outputs": [
+        {
+          "file": "20261024-223706-参考图1中左侧杯子的外形和把手-使用图2中央的青绿色作为杯子颜色-图2周围的暖米.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1217246,
+          "sha256": "a7608d4b4edf9af02c37c39f826837028e0f6577173034e04be77cd00c832a41"
+        }
+      ],
+      "manual_review": {
+        "one_cup_shape_and_palette_followed": true
+      }
+    },
+    {
+      "id": "multi-reference-pro-fast",
+      "case": "multi-reference",
+      "configuration": "pro-fast",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "参考图1中左侧杯子的外形和把手，使用图2中央的青绿色作为杯子颜色、图2周围的暖米色作为背景。只画一个杯子，居中放置，保持扁平矢量风格，不画花瓶，不加文字或水印。",
+        "size": "1.5K",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "fast"
+        }
+      },
+      "reference_count": 2,
+      "api_ms": 24761,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 2,
+        "output_tokens": 9216,
+        "total_tokens": 9216
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 25356,
+      "outputs": [
+        {
+          "file": "20261024-223618-参考图1中左侧杯子的外形和把手-使用图2中央的青绿色作为杯子颜色-图2周围的暖米.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1421866,
+          "sha256": "772fe4ecdd1e6a8625c7dbdcef13005df658808ed3b43f779f5158ee7131575e"
+        }
+      ],
+      "manual_review": {
+        "one_cup_shape_and_palette_followed": true
+      }
+    },
+    {
+      "id": "multi-reference-pro-standard",
+      "case": "multi-reference",
+      "configuration": "pro-standard",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "参考图1中左侧杯子的外形和把手，使用图2中央的青绿色作为杯子颜色、图2周围的暖米色作为背景。只画一个杯子，居中放置，保持扁平矢量风格，不画花瓶，不加文字或水印。",
+        "size": "1.5K",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 2,
+      "api_ms": 67350,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 2,
+        "output_tokens": 9216,
+        "total_tokens": 9216
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 67641,
+      "outputs": [
+        {
+          "file": "20261024-223819-参考图1中左侧杯子的外形和把手-使用图2中央的青绿色作为杯子颜色-图2周围的暖米.png",
+          "size": [
+            1536,
+            1536
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1330659,
+          "sha256": "6b122bec6288b236b018c78eb09b6dd6d94657ad2ec39dac9229a7da31461f31"
+        }
+      ],
+      "manual_review": {
+        "one_cup_shape_and_palette_followed": true
+      }
+    },
+    {
+      "id": "small-banner-flash-standard",
+      "case": "small-banner",
+      "configuration": "flash-standard",
+      "model": "flash",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-flash-260915",
+        "prompt": "横向产品宣传图，一只青绿色陶瓷手冲咖啡壶位于画面右侧，柔和的窗边自然光，暖米色桌面，左侧60%为干净留白，真实产品摄影。不要人物、文字、品牌、标志或水印。",
+        "size": "1520x608",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 0,
+      "api_ms": 8757,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 0,
+        "output_tokens": 3610,
+        "total_tokens": 3610
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 9555,
+      "outputs": [
+        {
+          "file": "20261024-223629-横向产品宣传图-一只青绿色陶瓷手冲咖啡壶位于画面右侧-柔和的窗边自然光-暖米色桌.png",
+          "size": [
+            1500,
+            600
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1075117,
+          "sha256": "87c91650cd67eea4dbeaf1162a93b5ed5d6927ce43e026c845d9820f6b053fca"
+        }
+      ],
+      "manual_review": {
+        "exact_final_size": true,
+        "no_visible_text_or_people": true
+      }
+    },
+    {
+      "id": "small-banner-pro-fast",
+      "case": "small-banner",
+      "configuration": "pro-fast",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "横向产品宣传图，一只青绿色陶瓷手冲咖啡壶位于画面右侧，柔和的窗边自然光，暖米色桌面，左侧60%为干净留白，真实产品摄影。不要人物、文字、品牌、标志或水印。",
+        "size": "1520x608",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "fast"
+        }
+      },
+      "reference_count": 0,
+      "api_ms": 13167,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 0,
+        "output_tokens": 3610,
+        "total_tokens": 3610
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 14103,
+      "outputs": [
+        {
+          "file": "20261024-223711-横向产品宣传图-一只青绿色陶瓷手冲咖啡壶位于画面右侧-柔和的窗边自然光-暖米色桌.png",
+          "size": [
+            1500,
+            600
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1328771,
+          "sha256": "ef5b602d6c298a9644f75b6bfb23fb288e0de23f453614cc51b3bf0a7f4af46b"
+        }
+      ],
+      "manual_review": {
+        "exact_final_size": true,
+        "no_visible_text_or_people": true,
+        "object_interpretation": "dripper/carafe variant rather than the other two gooseneck kettles"
+      }
+    },
+    {
+      "id": "small-banner-pro-standard",
+      "case": "small-banner",
+      "configuration": "pro-standard",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "横向产品宣传图，一只青绿色陶瓷手冲咖啡壶位于画面右侧，柔和的窗边自然光，暖米色桌面，左侧60%为干净留白，真实产品摄影。不要人物、文字、品牌、标志或水印。",
+        "size": "1520x608",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 0,
+      "api_ms": 25992,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 0,
+        "output_tokens": 3610,
+        "total_tokens": 3610
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 26631,
+      "outputs": [
+        {
+          "file": "20261024-223619-横向产品宣传图-一只青绿色陶瓷手冲咖啡壶位于画面右侧-柔和的窗边自然光-暖米色桌.png",
+          "size": [
+            1500,
+            600
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 1470594,
+          "sha256": "4dcba3900adf67d72e477f27b62bf5ceada01c1cc3e5d85393b44efe8cd0dff8"
+        }
+      ],
+      "manual_review": {
+        "exact_final_size": true,
+        "no_visible_text_or_people": true
+      }
+    },
+    {
+      "id": "text-flash-standard",
+      "case": "text",
+      "configuration": "flash-standard",
+      "model": "flash",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-flash-260915",
+        "prompt": "横版16:9科技海报，奶油白背景配青绿色几何图形。顶部大号黑色无衬线标题准确写“新绿计划”，副标题“更少等待，更多创作”。下方三个等宽卡片分别写“文生图”“精准编辑”“透明图层”。留白充足，文字清晰，不增加其他文字或水印。",
+        "size": "2K",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 0,
+      "api_ms": 16483,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 0,
+        "output_tokens": 17424,
+        "total_tokens": 17424
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 17971,
+      "outputs": [
+        {
+          "file": "20261024-223326-横版16-9科技海报-奶油白背景配青绿色几何图形-顶部大号黑色无衬线标题准确写-.png",
+          "size": [
+            2816,
+            1584
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 3540852,
+          "sha256": "3a34365eb2acd5b32e7630aac39d8075a83c354383d2741c88de82d55a21b707"
+        }
+      ],
+      "manual_review": {
+        "required_strings_correct": true,
+        "extra_label_repetition": false
+      }
+    },
+    {
+      "id": "text-pro-fast",
+      "case": "text",
+      "configuration": "pro-fast",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "横版16:9科技海报，奶油白背景配青绿色几何图形。顶部大号黑色无衬线标题准确写“新绿计划”，副标题“更少等待，更多创作”。下方三个等宽卡片分别写“文生图”“精准编辑”“透明图层”。留白充足，文字清晰，不增加其他文字或水印。",
+        "size": "2K",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "fast"
+        }
+      },
+      "reference_count": 0,
+      "api_ms": 125083,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 0,
+        "output_tokens": 17424,
+        "total_tokens": 17424
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 125997,
+      "outputs": [
+        {
+          "file": "20261024-223912-横版16-9科技海报-奶油白背景配青绿色几何图形-顶部大号黑色无衬线标题准确写-.png",
+          "size": [
+            2816,
+            1584
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 5074066,
+          "sha256": "dd237f06bcc3821bebe231149adc40c46a456f548e0fdd5e2bd3c663a6f21c39"
+        }
+      ],
+      "manual_review": {
+        "required_strings_correct": true,
+        "extra_label_repetition": true
+      }
+    },
+    {
+      "id": "text-pro-standard",
+      "case": "text",
+      "configuration": "pro-standard",
+      "model": "pro",
+      "status": "success",
+      "generation_attempts": 1,
+      "script_sha256": "3b60a041d262ed74dfe740e41a5e7d07023a4149138d0cc6816d92e89a75770d",
+      "request": {
+        "model": "doubao-seedream-5-0-pro-260628",
+        "prompt": "横版16:9科技海报，奶油白背景配青绿色几何图形。顶部大号黑色无衬线标题准确写“新绿计划”，副标题“更少等待，更多创作”。下方三个等宽卡片分别写“文生图”“精准编辑”“透明图层”。留白充足，文字清晰，不增加其他文字或水印。",
+        "size": "2K",
+        "output_format": "png",
+        "background": "opaque",
+        "optimize_prompt_options": {
+          "mode": "standard"
+        }
+      },
+      "reference_count": 0,
+      "api_ms": 78282,
+      "usage": {
+        "generated_images": 1,
+        "input_images": 0,
+        "output_tokens": 17424,
+        "total_tokens": 17424
+      },
+      "exit_code": 0,
+      "end_to_end_ms": 79204,
+      "outputs": [
+        {
+          "file": "20261024-223428-横版16-9科技海报-奶油白背景配青绿色几何图形-顶部大号黑色无衬线标题准确写-.png",
+          "size": [
+            2816,
+            1584
+          ],
+          "format": "PNG",
+          "mode": "RGB",
+          "bytes": 4775078,
+          "sha256": "805805295ad4e548fa066b6e64f69e463b25b8937a1a5f866a9c0000844ba0ac"
+        }
+      ],
+      "manual_review": {
+        "required_strings_correct": true,
+        "extra_label_repetition": false
+      }
+    }
+  ]
+}

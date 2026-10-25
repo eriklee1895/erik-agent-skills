@@ -1,3 +1,5 @@
+> 本文保留历史 Pro marker 实验。新的原生坐标协议和 Pro/Flash 图层能力以 [API 参考](api-reference.md) 为准；框外保持是生成效果，不是硬像素遮罩保证。
+
 # Marker Edit Protocol — Seedream 5.0 Pro via `seedream-image-gen`
 
 **Status:** `seedream-image-gen` skill 独有能力, 非官方 API 字段.
@@ -319,18 +321,15 @@ uv run scripts/seedream_image_gen.py edit \
 | 大块空白中的物体 | ⚠️ 4-6/10 | ⚠️ 6-7/10 |
 | 夜景 + 反光表面 + 霓虹场景中的物体 | ❌ 1-4/10 | ⚠️ 5-7/10 |
 
-详细讨论见 [marker-editing.md](../references/marker-editing.md).
+详细讨论见 [marker-editing.md](marker-editing.md).
 
 ---
 
-## 五、对比: Pro vs Lite
+## 五、Pro / Flash 的证据范围
 
-| 维度 | Pro | Lite |
-|---|---|---|
-| Marker edit 调优 | ✅ 已验证, 9-9.5/10 | ⚠️ **未在 Lite 上验证**, 文本渲染较弱、清理可能残留 |
-| 建议 | 默认 | 需要更高分辨率 (4K) 或更低价格时才换 Lite |
+Pro 和 Flash 官方均支持可见标记与 `<point>` / `<bbox>` 提示词坐标。本文的细分评分和 marker 尺寸经验来自历史 Pro 实验；本轮 Flash 只对原生坐标编辑、透明编辑与图层拆分做了小样本验证，不迁移旧模型的文字质量或 4K 结论。
 
-CLI 在 Lite 上使用 `--marker-rect` 会自动 warning. 任何严肃的 marker edit 都用 Pro.
+Pro 保持默认；Flash 用于时延/成本敏感的迭代。两者都支持 1K/1.5K/2K，最多十张参考图。选择依据见 [当前 benchmark](../evals/flash-benchmark.md)。
 
 ---
 
@@ -340,12 +339,12 @@ CLI 在 Lite 上使用 `--marker-rect` 会自动 warning. 任何严肃的 marker
 |---|---|---|
 | `mask` 参数 | ❌ 不存在 | ❌ 同样没有, 通过约定绕过 |
 | `bbox` 参数 | ❌ 不存在 | ❌ 同样没有 |
-| 区域编辑字段 | ❌ 不暴露 | ❌ 同样不暴露 |
+| 区域定位 | ✅ prompt 中的 `<point>` / `<bbox>` 标签，坐标 0–999 | ✅ 可直接写入 prompt；不是独立 JSON 字段 |
 | `image` 字段 | ✅ URL 或 base64 | ✅ 同上 |
-| `tools: [web_search]` | ✅ 存在 | ✅ 透传 |
+| `tools: [web_search]` | ❌ 当前 Pro / Flash 不支持 | ❌ 不提供该参数 |
 | `prompt` 自然语言描述 | ✅ 存在 | ✅ 存在 |
-| **画彩色矩形协议** | ❌ **官方文档完全没提** | ✅ **完整工程化** |
-| 多色多区域单次完成 | ❌ | ✅ |
+| **可见标记定位** | ✅ 官方编辑指南包含可见标记交互 | ✅ 本地画框、多色、预览与 cleanup 提示词 |
+| 多色多区域 | ✅ 通过输入标记和 prompt 表达，不是独立字段 | ✅ 可准备多色标记；效果需检查 |
 | 自动 cleanup prompt 追加 | ❌ | ✅ |
 | Annotated 视觉预览 (避免 API 试错) | ❌ | ✅ |
 | 12 份实测 recipe | ❌ | ✅ |
@@ -364,9 +363,9 @@ CLI 在 Lite 上使用 `--marker-rect` 会自动 warning. 任何严肃的 marker
 | `references/api-reference.md` | API 参数矩阵 + size + marker 协议 + error codes |
 | `references/marker-editing.md` | Marker 编辑完整 deep reference (399 行) |
 | `references/prompt-engineering.md` | 通用 prompt 公式 + 11 条 anti-pattern |
-| `references/lite-quickref.md` | Lite-only flag 清单 + pixel floor 表 |
+| `references/flash-quickref.md` | Flash 选择、共享 API 与迁移边界 |
 | `references/styles/text-poster.md` | 6 份 text-rendering recipes |
-| `guides/marker-edit-protocol.md` | 本文档 (协议动机 + threshold 表 + 4 组 demo 记录) |
+| `references/marker-edit-protocol.md` | 本文档 (协议动机 + threshold 表 + 4 组 demo 记录) |
 
 > 早期 smoke test 的三栏对比图和端到端测试报告不随 skill 分发。
 

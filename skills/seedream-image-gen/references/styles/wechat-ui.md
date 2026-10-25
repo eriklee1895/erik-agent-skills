@@ -16,7 +16,7 @@ uv run scripts/seedream_image_gen.py generate --phone \
 ```
 
 Key knobs:
-- **`--phone`** → Pro: 1152×2048, Lite: 1440×2560. This is the only size where iOS UI chrome renders crisply. Do NOT use `--portrait` (3:4 is squarish) or `--wide` (landscape).
+- **`--phone`** → 1152×2048 on both Pro and Flash. The detailed UI examples below are historical Pro observations; inspect Flash UI rendering separately. Do NOT use `--portrait` (3:4 is squarish) or `--wide` (landscape).
 - **optimize_prompt**: leave as default `"standard"`. The prompt rewriter helps fill in standard UI chrome you didn't enumerate.
 - **No reference image needed.** WeChat UI is in training data; just describe it.
 

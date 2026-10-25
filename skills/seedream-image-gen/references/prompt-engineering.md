@@ -1,6 +1,8 @@
 # Seedream 提示词工程指南（Pro 主用）
 
-> 本指南以 **Seedream 5.0 Pro** 为默认模型。Lite 的 prompt 写法基本兼容，但要注意 Lite 的文字渲染明显弱于 Pro——涉及大量文字/小字/中英混排时请用 Pro。
+> 本指南保留 **Seedream 5.0 Pro** 的历史提示词经验。Flash 使用同一生成/编辑接口；旧模型的质量结论不迁移到 Flash。当前短中文文字、坐标编辑与多参考图样本见 [Pro/Flash benchmark](../evals/flash-benchmark.md)。
+
+> **2026-10-25 回灌：** 未指定模型始终使用 Pro。先读 [本轮实测配方](benchmark-prompt-recipes.md) 和 [120 次请求报告](../evals/comprehensive-benchmark.md)：简单编辑可简洁，坐标用于明确范围；中文/英文操作句都可保留精确中文 payload；字重、标记残留、留白和动作应分别验收。下文历史字体/相机/风格经验不是通用 API 限制。
 
 ## 本文导航
 
@@ -50,9 +52,9 @@
 3. **文字/按钮/标签等 UI 元素逐字写**——草图里写的占位（"标题""按钮"）不会自动渲染成真实文字。
 4. For "sketch → tech-style" AI-conference-poster tasks, the layout is roughly preserved, but visual punch (gradients, light beams, grids, chip textures) comes out under-specified unless the prompt piles on concrete light/material/reference-genre details.
 
-## 公式 2：文字渲染（Pro 专属 headline 能力）⭐
+## 公式 2：文字渲染（Pro 历史 headline 配方）⭐
 
-这是 Pro 相比 Lite 提升最大的部分——中文大字、英文字母、中英混排、logo 环形字都能可靠出字。
+历史 Pro 样本覆盖中文大字、英文字母、中英混排和环形 logo 字；这些经验有助于写清文字要求，但最终图片仍需逐字校对。
 
 ```
 [背景/版式] + [文字内容（用引号/书名号包起来，逐字写准）] +
@@ -106,7 +108,7 @@ below in light gray, minimal blue geometric code-bracket icon in lower right, 2K
 
 ### 2.5 信息图中的文字标签（慎用）
 
-Pro 在技术架构图/流程图里的模块标签、坐标轴文字表现明显好于 Lite，但**小字（< 画面 1/30 高度）仍可能错字**。缓解办法：
+历史 Pro 技术架构图/流程图实验里，**小字（< 画面 1/30 高度）仍可能错字**。不要把历史相对评分当作 Flash 的质量结论。缓解办法：
 
 - 标签短语越短越好（2–4 字/词最稳）。
 - 显式说：`每个方框内有白色小标签文字，字迹清晰锐利，逐字准确`。
@@ -132,7 +134,7 @@ Latency is nearly identical at 1K and 2K (both ~95s mean), but at 2K:
 
 所以除非明确要省成本（¥0.30 vs ¥0.60）或要做快草图，否则全部用 2K。
 
-## 公式 3：Marker 区域编辑（Pro 专属）⭐⭐
+## 公式 3：Marker 区域编辑（Pro 历史配方）⭐⭐
 
 Marker 编辑是 Pro 最大的效率提升——**不需要 mask/bbox API**，在参考图上画个彩色矩形，prompt 用自然语言描述框内要做的改动即可。本 skill 的 `edit` 子命令通过 `--marker-rect X,Y,W,H` 自动完成画框、发图、追加擦除指令三步。
 
@@ -234,7 +236,7 @@ uv run scripts/seedream_image_gen.py edit \
 
 Mainstream style anchors ("梵高/莫奈/吉卜力/新海诚/漫威漫画/像素风/浮世绘/赛博朋克/水墨写意") elicit strong responses.
 
-## 公式 6：多参考图融合（Multi-Reference Fusion，Pro 最多 10 张，Lite 14 张）
+## 公式 6：多参考图融合（Multi-Reference Fusion，Pro / Flash 均最多 10 张）
 
 Pro accepts multiple `--reference-image` arguments (up to 10) for: locking a character's identity across angles, placing a product in different scenes, role-split composition of face + outfit + palette, foreground/background compositing. The sweet spot is 2-3 refs; above 4 refs outputs begin to average/muddle.
 
@@ -392,7 +394,7 @@ Seedream 是**中文原生模型**——这点和以英文语料为主训练的�
 | 场景 | 推荐 prompt 语言 | 为什么 |
 |---|---|---|
 | 中式审美/中国场景（节气/水墨/国潮/中式建筑/中式美食/传统节日） | **全中文** | 文化概念、菜品名、书法/器物术语中文 token 化最细；写"红烧狮子头""徽派马头墙""瘦金体"比任何英文翻译都准 |
-| 中文文字出现在图里（海报/封面/banner 标题） | **全中文**（文字内容用「」引号逐字包起来） | 中文字形、字重、字号、位置描述中文最自然；英文 prompt 写中文字常出现笔画错误/同音字替换 |
+| 中文文字出现在图里（海报/封面/banner 标题） | 用最清楚的操作语言，文字内容逐字引用 | 本轮中英文操作句均正确替换中文标题；字体、字重、位置需另行检查，不能靠切换语言保证 |
 | 纯英文排版/英文 logo/拉丁语系品牌/欧美风格视觉 | **全英文** | 英文字母间距、Title Case/ALL CAPS、Bodoni/Futura/Helvetica 等拉丁字体名英文描述更准；英文 prompt 出英文字母一次成率高 |
 | 摄影/3D/灯光/材质/渲染**技术术语**（bokeh, rim light, key light, subsurface scattering, impasto, chiaroscuro, shallow depth of field, volumetric fog, specular highlight, cinematic lighting） | **英文术语原文嵌入** | 这类术语中文翻译不统一（"轮廓光/边缘光/rim light"混用），直接用英文词模型理解最准；嵌套在中文或英文叙事里都可以 |
 | 中英混排海报（中文主标题+英文副标题/英文字 tag/slogan） | **中文叙事为主，嵌入英文短语**（保持英文原文大小写） | 自然写法，模型吃这种最顺——"白色粗无衬线主标题『AI 时代』，下方小号英文副标题 'The Age of Agents'" |
@@ -403,7 +405,7 @@ Seedream 是**中文原生模型**——这点和以英文语料为主训练的�
 ### 常见误区
 
 - ❌ **"English prompts are more professional" — does not hold for Seedream.** This is muscle memory from English-native model eras. Seedream's Chinese training corpus covers Chinese scenes, Chinese text, and cultural terms far more deeply than English. Writing English prompts for Chinese subjects tends to produce "Oriental-style" pan-Asian (Japan-inflected) mixes.
-- ❌ **全英文 prompt + 中文文字内容**——容易错字、笔画糊。中文文字必须中文描述字体、字号、位置。
+- **不要把操作语言当作文字保证。** 本轮中文和英文指令都完成了“星野”替换；保留准确的中文 payload，并分别检查字形、字重和位置。
 - ❌ **硬翻英文技术术语成中文**——"散景""景深""体积光"这类中文译法模型也能认，但英文原词（bokeh/depth of field/volumetric lighting）更稳，尤其当你想精确控制光效时。
 - ✅ **黄金组合：中文叙事主语 + 英文技术术语 + 需要出现的文字逐字「」包裹。** 这是中国设计师日常说话的方式，也是 Seedream 最强的 prompt 形态。
 
@@ -438,11 +440,11 @@ Vogue-style magazine cover, right 2/3 is a close-up portrait of a young East-Asi
 | 风格不要混太多 | 一个主导风格 + 最多一个辅助修饰；"赛博朋克+水墨+梵高"会糊 |
 | 具象名词 > 抽象形容词 | "白墙黑瓦徽派建筑" > "中国风古建筑" |
 | 文字必须引号括起来 | 写"标题写着『XXX』"，不要"标题关于 XXX" |
-| 涉及文字默认 2K Pro | 1K 文字边缘糊，Lite 错字率高 |
+| 细密文字优先 2K 并逐字检查 | 低分辨率可能影响小字；Flash 的短标签样本成功不代表密集排版已经验证 |
 | 改图用 marker，不要重建 | edit + `--marker-rect` 比重头 t2i 成本低、一致性好 |
 | 同一人多场景列特征清单 | 不要只说"保持这个人"，要列眼镜/发型/衣服 |
 | 出活前用 `--dry-run` | 检查 body 里 size/model/refs/neg 都是对的，避免白烧钱 |
-| 批量并发要克制 | `--concurrency 3` 已经很快（RPM 500 理论上限，实际 5–10 并发稳） |
+| 批量并发按任务调整 | `--concurrency` 控制本地并发，依据延迟和当前平台配额调整；遇到明确的 429 按退避重试，不写死 IPM 配额或并发上限 |
 | 错字/畸形重试一次 | 同 prompt 跑两次选好的；第二次可微调"字迹清晰锐利，逐字准确"加强 |
 
 ## 常见反模式（高频翻车，用这些关键词防御）
@@ -530,44 +532,11 @@ Prompt 中 `\n` 换行在部分 API 版本上解析不稳定，可能导致后�
 
 手和手指是所有图像模型的老毛病。只要画面里有手，末尾加 `手部自然、手指数量正确、无畸形手指`；能避免露手就避免（产品图用 ghost mannequin 或道具支撑、人物用背影/剪影/半身/揣兜姿态最稳）。复杂手部姿势靠参考图（`--reference-image` 传一张真实手的照片）比负向词有效。
 
-### 10. 真实地名（车站/地标/品牌）会触发 `InputTextContentDetected` 安全 block
+### 10. 将服务拒绝与图片质量区分
 
-Prompts that include real Chinese place names (e.g. "北京地铁 天安门 / 王府井 / 东单") trigger the Stage 1 input-side safety classifier, returning `InputTextContentDetected`. Rename and retry; the model will invent plausible-looking Chinese station names (金融城/望江门/湖滨东/...) with correct characters.
+历史实验记录过 `InputTextContentDetected` 和输出侧 classifier 拒绝。这些是某次请求的服务判定，不是“所有中文地名/编辑动词都会失败”的稳定模型规律。本轮 Pro/Flash 原生中文坐标编辑均成功。
 
-**防御**：写有真实城市/地标/品牌的场景时，先用泛化占位词（如"3-character Chinese station names"、"a famous European capital"、"a well-known luxury brand"），让模型自由生成占位；或用 **英文 transliteration**（"Tiananmen" / "Wangfujing"）绕过中文输入触发器。如果客户硬要真名，prompt 用 `"a major Beijing subway station on Line 1"` 这种描述性代替而不是直接 `天安门` 站。
-
-```bash
-# ❌ 触发 InputTextContentDetected
---prompt "Beijing subway line map, stations 天安门, 王府井, 东单, 建国门..."
-
-# ✅ 通过（模型自己发明站名）
---prompt "Metro transit line map excerpt, 16:9, 12 stations on two intersecting lines,
-transfer hub with double circle, each station labeled with 3-character Chinese
-station names + 8pt grey pinyin"
-
-# ✅ 英文 transliteration 也常通过
---prompt "Beijing subway map showing Tiananmen, Wangfujing, Dongdan stations..."
-```
-
-### 11. 中文 marker 编辑 prompt 触发 Stage 2 输出侧 classifier block
-
-全中文 prompt + `替换 / 删除 / 改为` 这种 destructive 中文动词会让 Stage 2 classifier block 输出 `Stage 2 classifier error - blocking based on stage 1 assessment`，与内容合规无关。
-
-**修复：用英文主导操作语义 + 中文 payload 内容**——英文写指令、中文作内容载体。
-
-```
-# ❌ 触发 Stage 2 classifier
-红框中的主标题「AGI 已来」替换为「智能崛起」四个字，
-保持完全相同的字体字号不变...
-
-# ✅ Passes reliably:
-Inside the marked red rectangular region, perform an in-place text replacement on
-the existing Chinese headline: replace the four Chinese characters with a different
-four-character Chinese headline. The new text is the characters 智能崛起.
-Keep the same black bold sans-serif typeface, the same point size, the same weight,
-the same center alignment, the same baseline. Outside the marked region nothing
-changes. Erase all colored edit marks.
-```
+遇到拒绝时记录错误码，检查请求是否符合服务要求；对疑似误判使用服务的反馈渠道。不要自动改名、转写或伪装同一内容反复提交，也不要把这类重试当成提示词优化结果。若请求发送后超时，先按结果未知处理，不自动重发付费生成。
 
 ## 已知翻车场景（不要在这些场景依赖 Seedream Pro）
 
@@ -584,8 +553,8 @@ changes. Erase all colored edit marks.
 | 法律合同/证件类排版 | 规范性强，错字不可接受 | InDesign/Word 导出 |
 | 像素级精确 UI 截图 | 控件间距/字号不可控 | 浏览器截图 |
 | 瓶身/包装曲面小字号标签 | 弯曲表面文字必错/乱码 | 后期 PS 贴标或 3D 渲染 |
-| 真实中文城市/地标/品牌名放 prompt | Stage 1 输入侧 `InputTextContentDetected` block | 用泛化占位描述或英文 transliteration |
-| 全中文 marker 编辑 prompt（含"替换/删除/改为"） | Stage 2 输出侧 classifier block | 英文操作语义 + 中文 payload |
+| 服务返回 InputTextContentDetected | 单次请求的服务拒绝，非普遍地名限制 | 检查请求与服务要求，记录/反馈疑似误判，不伪装同一请求自动重试 |
+| 历史输出侧 classifier 拒绝 | 不代表中文编辑指令普遍不可用 | 本轮中文坐标编辑已成功；按具体错误处理，不自动重发付费调用 |
 | 手机/9:16 画面里"美食/人物"内容 | 会自动脑补手机 UI 状态栏/按钮 | prompt 加"无 UI 元素、纯摄影画面"（见反模式 1） |
 | 英文竖排大标题（杂志侧边） | 按中文竖排逻辑渲染，字母重叠错位 | 显式描述"每词一行水平从上到下"（见反模式 2） |
 | 英文弧形字 >40 字符沿圆环排列 | 字母拥挤、末端字符挤压变形、字距塌缩 | 上/下弧总长 ≤35 字符；或分两段弧；末端字距显式说"均匀字距" |
@@ -666,7 +635,7 @@ Seedream 支持和早期英文模型类似的括号加权语法，但只在需�
 2. **第二稿**：在第一稿基础上加具体材质、构图、色彩、小元素
 3. **第三稿**：加精确文字、品牌、标签、装饰细节
 
-**不要一开始就写 300 字的 mega-prompt**——主体错了后面全白搭。前两稿可以用 Lite 快跑（`--model lite`），定稿再切 Pro 加文字。
+先把主体、动作和布局说清楚，再补必要约束。未指定模型时，概念稿和定稿都用 Pro；用户明确选择 Flash 或授权用更快/低成本模型替换 Pro 时，才用 `--model flash`。本轮简洁/详细信息图配方都成功生成了文字与卡片，不要求每次堆满相机名和 CSS 数值。
 
 ## 经典 Prompt 改写示例
 

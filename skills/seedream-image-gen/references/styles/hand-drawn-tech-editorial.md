@@ -1,5 +1,7 @@
 # 手绘科技随笔（hand-drawn-tech-editorial）
 
+> 本轮两种模型都呈现了手绘媒介，也都出现过额外叶片；部分 Pro 样本还遗漏了明确的纸条投放动作或增加发光眼睛。将媒介、动作、物体数量和发光排除分别检查，见 [120 次请求报告](../../evals/comprehensive-benchmark.md)。未指定模型时仍使用 Pro。
+
 温暖的手绘科技插画风格：彩色铅笔 / 蜡笔在米色或白色纸上的质感，线条 loose 有机，带轻微纸张纹理。常以书桌、工作台为场景，出现拟人化的电脑、机器人、终端窗口等科技角色，搭配咖啡杯、笔记本、盆栽、便利贴、小流程图涂鸦。整体像技术随笔里的插画：理性但不冷淡，有编辑感又带手作温度。
 
 适合 AI 工具对比、agent 工作流、技术随笔、编程伙伴、productivity 笔记等题材。Seedream 5.0 Pro 的中英文文本渲染能力强，便签、流程图标签、架构模块 callout 等短文字在 2K 下可直接出图——把要出现的标签文字逐字写进 prompt 并用中文引号 "" 包裹，指定小字号白色或黑色无衬线字体即可。
@@ -62,4 +64,4 @@ uv run scripts/seedream_image_gen.py generate \
 2. 明确写 `松散有机线条` 和 `轻微纸张纹理`，否则容易滑向 polished digital illustration。
 3. Seedream 5.0 Pro 在 2K 下可渲染架构模块标签、便签 callout 等短中英文：把标签文字逐字写进 prompt 并用中文引号 "" 包裹，指定"小字号白色/黑色无衬线字体"；长段正文/代码仍需后期处理（[text-effects.md](text-effects.md)）。
 4. 参考图传 `--reference-image` 时，说明仅用于风格参考（palette、line quality、spacing），不要复制其 literal 主体。
-5. 需要清晰的标签/流程图细节时优先用 `2K`（更稳）或 `4K`。
+5. 需要清晰的标签/流程图细节时用 `--size 2K`，并逐字检查标签；当前 Pro / Flash 没有 4K 尺寸预设。

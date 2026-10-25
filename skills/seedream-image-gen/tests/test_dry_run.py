@@ -104,7 +104,7 @@ class DryRunTests(unittest.TestCase):
         output = self.root / "cover.png"
         output.write_bytes(b"old image")
         output.with_suffix(".json").write_text('{"prompt":"old metadata"}')
-        response = ([self.reference.read_bytes()], None, {}, "100x100", 1)
+        response = ([seedream.ImageOutput(self.reference.read_bytes(), "100x100", "png")], None, {}, "100x100", 1)
         with patch.object(seedream, "_get_api_settings", return_value=("fixture", "https://offline.invalid")), \
                 patch.object(seedream, "_generate_with_retry", new=AsyncMock(return_value=response)):
             status, _, error = self.invoke(*self.command("generate", output, "--force"))

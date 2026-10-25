@@ -2,6 +2,8 @@
 
 > Works on `doubao-seedream-5-0-pro-260628`; a single 1:1 character sheet reliably holds a stylized IP across kitchen/debug/standup/beach scenes with accessories, lighting, and clothing changing as prompted.
 
+> Historical Pro recipe; Pro remains the default. The [2026-10-25 study](../../evals/comprehensive-benchmark.md) retained five robot identity cues in all four Pro/Flash samples, while two missed the watering action or plant pot. Inspect identity, pose, action and props separately. These single-scene samples do not establish long-series or real-person identity fidelity.
+
 ---
 
 ## 1. TL;DR
@@ -172,6 +174,6 @@ For photoreal human portraits rather than stylized 3D, expect weaker hold on fac
 
 - **Photoreal human likenesses (named people, real faces)** — weak on identity even with reference; use a dedicated IP-Adapter/face-swap workflow or a human-focused model.
 - **Brand mascots with precise geometric rules** (e.g. exact proportions defined in a brand book) — may need multiple rounds of inpainting/touch-up.
-- **5+ scene series with zero tolerance for drift** — generate in one call via Lite `--sequential` mode if you're using Lite, or hand-curate; Pro single-ref is ~90% identity hold per scene, so a 10-scene series will have some drift.
+- **5+ scene series with zero tolerance for drift** — use a consistent character reference for each independent Pro/Flash request and curate every scene. Neither supported model has sequential generation; historical Pro identity estimates do not guarantee a long Flash series.
 
 For article illustrations, social content, comic panels, marketing assets, and any application where "recognizable as the same character" is the bar rather than "pixel-identical", the single-ref + recap recipe works and is essentially free (¥0.60 per scene at 2K Pro).

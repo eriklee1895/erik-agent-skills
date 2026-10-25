@@ -23,7 +23,7 @@ with usage instructions, requirements, and supporting references.
 | [gpt-image-2](./gpt-image-2/SKILL.md) | Generate, edit, and batch-create raster images with OpenAI's gpt-image-2 model. |
 | [gpt-image-api](./gpt-image-api/SKILL.md) | Generate, precisely edit, stream, and batch-create raster images with OpenAI GPT Image 2.5 Flare and Sunburst. |
 | [openrouter-image](./openrouter-image/SKILL.md) | Generate and edit images through OpenRouter's unified image API with GPT Image 2.5 Sunburst/Flare and Nano Banana 2.1; the CLI validates each model's parameter dialect before the call. |
-| [seedream-image-gen](./seedream-image-gen/SKILL.md) | Generate and edit images with Seedream, including typography, marker editing, outpainting, and batch workflows. |
+| [seedream-image-gen](./seedream-image-gen/SKILL.md) | Generate and edit images with Seedream 5.0 Pro/Flash, including typography, coordinate edits, alpha-layer editing, native layer decomposition, and batches. |
 | [avatar-creator](./avatar-creator/SKILL.md) | Create static avatar images, distinct-character families, same-character sets, and fixed Seedance GIF/MP4 animations. Uses available image tools; animation requires Ark credentials, uv, and ffmpeg with no other skill dependency. Does not build interactive 3D runtimes. |
 | [live-avatar-3d](./live-avatar-3d/SKILL.md) | Turn a character image into a no-build interactive 3D browser avatar with orbit, gestures, and optional local microphone mouth motion. |
 | [seedance-video-gen](./seedance-video-gen/SKILL.md) | Generate videos with Seedance from text, images, or multimodal references. |
