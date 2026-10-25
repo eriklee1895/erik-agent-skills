@@ -6,7 +6,8 @@
 """Prepare or execute the bounded Pro/Flash study; never replay an existing case.
 
 Run from a directory containing the usual .env, or export ARK_API_KEY.
-Preparation is free. --execute explicitly permits up to the 16 manifest cases.
+Preparation is free. --execute permits the selected manifest cases (16 smoke or
+80 comprehensive). Additional intentional studies use a new directory.
 Outputs, journals and generated pictures belong outside the skill repository.
 """
 
@@ -35,7 +36,13 @@ def write_json(path, value):
     temporary.replace(path)
 
 
-def prepare(root):
+def prepare(root, suite="smoke"):
+    comprehensive = None
+    if suite == "comprehensive":
+        spec = importlib.util.spec_from_file_location("seedream_comprehensive_suite", Path(__file__).with_name("comprehensive_suite.py"))
+        comprehensive = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(comprehensive)
+    count = 80 if comprehensive else 16
     root.mkdir(parents=True, exist_ok=True)
     fixtures = root / "fixtures"
     existing = root / "cases.json"
@@ -43,11 +50,13 @@ def prepare(root):
         saved = json.loads(existing.read_text())
         cases = saved.get("cases", [])
         identifiers = [case.get("id", "") for case in cases]
-        if len(cases) != 16 or len(set(identifiers)) != 16 or any(
+        if len(cases) != count or len(set(identifiers)) != count or any(
             not name or Path(name).name != name or name in {".", ".."} for name in identifiers
         ):
             raise SystemExit("Invalid existing study manifest; use a new output directory.")
         expected_files = {"objects.png", "palette.png", "alpha-cup.png"}
+        if comprehensive:
+            expected_files |= comprehensive.EXTRA_FIXTURES
         if set(saved.get("fixtures", {})) != expected_files:
             raise SystemExit("Existing study has unexpected references; preserve it and use a new directory.")
         for name, expected_hash in saved["fixtures"].items():
@@ -97,7 +106,11 @@ def prepare(root):
                           mode="standard", configuration=f"{model}-standard", size="1.5K",
                           references=["objects.png"],
                           prompt="只拆出图1 <bbox>100 350 550 780</bbox> 中的红色杯子和 <bbox>80 60 500 220</bbox> 中的NOVA标题文字，分别成为两个独立的透明图层；其余内容保留在底图。"))
-    manifest = {"study": "seedream-pro-flash-20261024", "max_requests": 16, "cases": cases,
+    if comprehensive:
+        comprehensive.make_fixtures(fixtures)
+        cases = comprehensive.cases()
+    manifest = {"study": "seedream-pro-flash-comprehensive-20261025" if comprehensive else "seedream-pro-flash-20261024",
+                "max_requests": count, "cases": cases,
                 "fixtures": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in fixtures.glob("*.png")}}
     write_json(existing, manifest)
     return manifest
@@ -106,7 +119,7 @@ def prepare(root):
 def inspect_outputs(folder):
     outputs = []
     for path in sorted(folder.glob("*")):
-        if path.suffix.lower() not in {".png", ".jpg", ".jpeg"}:
+        if path.name.endswith("-annotated.png") or path.suffix.lower() not in {".png", ".jpg", ".jpeg"}:
             continue
         with Image.open(path) as image:
             record = dict(file=path.name, size=list(image.size), format=image.format, mode=image.mode,
@@ -121,6 +134,23 @@ def inspect_outputs(folder):
     return outputs
 
 
+def case_arguments(root, case, folder):
+    arguments = [str(SCRIPT), case["command"], "--model", case["model"], "--prompt", case["prompt"],
+                 "--size", case["size"], "--optimize-prompt", case["mode"],
+                 "--output-format", case.get("output_format", "png"),
+                 "--out-dir", str(folder / "outputs"), "--timeout", "300"]
+    if case["command"] != "decompose":
+        arguments += ["--no-negative-prompt"]
+    if case.get("background"):
+        arguments += ["--background", case["background"]]
+    for option in ("marker_rect", "marker_color"):
+        for value in case.get(option, []):
+            arguments += ["--" + option.replace("_", "-"), value]
+    for reference in case["references"]:
+        arguments += ["--reference-image", str(root / "fixtures" / reference)]
+    return arguments
+
+
 def worker(root, case):
     spec = importlib.util.spec_from_file_location("seedream_benchmark", SCRIPT)
     module = importlib.util.module_from_spec(spec)
@@ -133,6 +163,7 @@ def worker(root, case):
         raise SystemExit("Case already has a journal; never automatically replay it.")
     result = dict(id=case["id"], case=case["case"], configuration=case["configuration"],
                   model=case["model"], status="prepared", generation_attempts=0,
+                  repeat=case.get("repeat", 1),
                   script_sha256=hashlib.sha256(SCRIPT.read_bytes()).hexdigest())
     write_json(journal, result)
 
@@ -160,15 +191,7 @@ def worker(root, case):
             raise
 
     module._generate_with_retry = once
-    arguments = [str(SCRIPT), case["command"], "--model", case["model"], "--prompt", case["prompt"],
-                 "--size", case["size"], "--optimize-prompt", case["mode"], "--output-format", "png",
-                 "--out-dir", str(folder / "outputs"), "--timeout", "300"]
-    if case["command"] != "decompose":
-        arguments += ["--no-negative-prompt"]
-    if case.get("background"):
-        arguments += ["--background", case["background"]]
-    for reference in case["references"]:
-        arguments += ["--reference-image", str(root / "fixtures" / reference)]
+    arguments = case_arguments(root, case, folder)
     stdout, stderr = io.StringIO(), io.StringIO()
     started = time.monotonic()
     try:
@@ -224,7 +247,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--execute", action="store_true")
-    parser.add_argument("--limit", type=int, default=16)
+    parser.add_argument("--suite", choices=("smoke", "comprehensive"), default="smoke")
+    parser.add_argument("--limit", type=int)
     parser.add_argument("--concurrency", type=int, default=2)
     parser.add_argument("--worker", help=argparse.SUPPRESS)
     args = parser.parse_args()
@@ -233,11 +257,13 @@ def main():
         manifest = json.loads((root / "cases.json").read_text())
         worker(root, next(case for case in manifest["cases"] if case["id"] == args.worker))
         return
-    if not 1 <= args.limit <= 16 or args.concurrency < 1:
-        parser.error("Use a limit of 1–16 and positive concurrency.")
-    manifest = prepare(root)
+    count = 80 if args.suite == "comprehensive" else 16
+    limit = count if args.limit is None else args.limit
+    if not 1 <= limit <= count or args.concurrency < 1:
+        parser.error(f"Use a limit of 1–{count} and positive concurrency.")
+    manifest = prepare(root, args.suite)
     if args.execute:
-        asyncio.run(execute(root, manifest["cases"][:args.limit], args.concurrency))
+        asyncio.run(execute(root, manifest["cases"][:limit], args.concurrency))
     results = [json.loads(path.read_text()) for path in sorted((root / "cases").glob("*/result.json"))]
     write_json(root / "benchmark-results.json", {"study": manifest["study"], "results": results})
     print(f"Prepared {len(manifest['cases'])} cases; {len(results)} cases have journals. Existing cases are never resubmitted.")
