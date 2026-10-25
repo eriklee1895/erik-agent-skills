@@ -144,33 +144,14 @@ backdrop-blur 约 24px（必须能清晰透过卡片看到背后的场景）,
 - 所有出现的中文文字必须在 prompt 里**逐字写出**，不要让模型自己编。
 - 中文正文约束：单条文字 ≤6 字最稳（短标题/标签/单位），>8 字错字率陡增。
 
-### 8. AI 瑕疵规避（inline 禁止指令 + negative_prompt 双保险）
+### 8. 文字与内容检查
 
-**Prompt 末尾 inline 禁止指令（belt）**——这些是必须逐字加的：
-```
-禁止同字重复（"极极""钻钻"）、禁止近形字替换、禁止造字、禁止同音字替换；
-除了副标题那一行英文外其他位置一律只用中文,
-禁止英文缩写（把 GNSS/CNSS 等写成中文）,
-禁止 J/F/M/A 英文月份缩写、禁止纯数字月份如 "5j""19"、禁止拉丁字母坐标轴,
-不加脚注/来源/watermark/logo/作者栏/期号;
-无水印、无乱码、无错别字、2K 高清。
-```
-
-**CLI `--negative-prompt`（加了文字更干净）**：
-```
-CGI render, 3D render, sci-fi futuristic building, diamond-shaped building,
-cartoon, illustration, anime, game screenshot, watermark, logo,
-garbled text, gibberish Latin letters, misspelled characters, repeated characters,
-J/F/M/A/M/J English month labels, solid white opaque cards, paper texture,
-acrylic board, red roof, gold mirror reflection, overexposed white
-```
-
-Inline "禁止…" directives alone can produce clean results; adding a neg-prompt makes text even cleaner — **use both, belt and suspenders**.
+逐字给出标题、标签和数据，只写与当前任务有关的内容约束。出图后检查文字拼写、重复项、数据对应关系和标题对比度；增加禁令不能保证修复这些问题。
 
 ### 9. Img2img 说明（不推荐作为主 workflow）
 
 - Text-to-image + 强摄影关键词（Christopher Michel + Phase One + 禁止 CGI）可达到很高的照片真实感，**默认不需要 img2img**。
-- 如果坚持要用自己的 hero 照片做底，`--reference-image` 可用但参考强度设低（~0.3-0.4），且预期 ~30% 图表退化；照片本身可保留得很好，但建筑身份可能被覆盖、图表形状可能被破坏。Img2img 是 "one-editing-step" 工具，不是 "preserve everything, add overlays"。
+- 使用自己的 hero 照片时，可通过 `--reference-image` 提供参考，模型仍可能重绘建筑或图表。必须保留原照片和精确数据时，在原图上用排版工具叠加文字与图表。
 
 ## Inspiration Defaults
 
@@ -193,7 +174,6 @@ Inline "禁止…" directives alone can produce clean results; adding a neg-prom
 ```bash
 uv run scripts/seedream_image_gen.py generate \
   --wide \
-  --negative-prompt "CGI render, 3D render, sci-fi futuristic building, diamond-shaped building, cartoon, illustration, anime, game screenshot, watermark, logo, garbled text, gibberish Latin letters, misspelled characters, repeated characters, J/F/M/A/M/J English month labels, solid white opaque cards, paper texture, acrylic board, red roof, gold mirror reflection, overexposed white" \
   --prompt "科普信息图海报,16:9横版,「南极秦岭站」主题。
 
 [背景层] 全画幅高清航拍照片:南极罗斯海沿岸的中国秦岭站主楼45度透视,蓝灰色金属面板外墙、架空在3米高不锈钢立柱上、大面积斜角玻璃窗、屋顶有太阳能板,周围白雪覆盖冰原、右侧蓝色冰海海岸线、远处南极雪山、晴朗蓝天少云,Christopher Michel National Geographic Program photo 质感;明亮cold-but-bright polar daylight,shot on Phase One IQ4 150MP;主楼位于画面正中dead-center(纵向30-85%、横向20-80%),四周留空给浮层卡片。禁止CGI渲染感、禁止科幻未来感、禁止3D渲染、禁止卡通插画、禁止游戏截图、禁止红色屋顶、禁止金色镜面反光、禁止过度抛光。
@@ -220,7 +200,6 @@ uv run scripts/seedream_image_gen.py generate \
 ```bash
 uv run scripts/seedream_image_gen.py generate \
   --wide \
-  --negative-prompt "CGI render, 3D render, sci-fi futuristic, cartoon, illustration, anime, game screenshot, watermark, logo, garbled text, gibberish Latin letters, misspelled characters, repeated characters, J/F/M/A/M/J English month labels, solid white opaque cards, paper texture, acrylic board, gold mirror reflection, overexposed white" \
   --prompt "科普信息图海报,16:9横版,「中国高铁复兴号」主题。
 
 [背景层] 全画幅高清编辑照片:一列银白红配色中国复兴号CR400BF动车组行驶在高架铁路桥上,金色黄昏阳光从画面左侧打来(golden-hour warm light),车体流线型银白金属外壳带红色腰线、架空接触网在上方、远景是江南水乡绿色田野和远山、蓝天带少量橙黄色晚霞,Bloomberg data journalism hero photo质感,cinematic National Geographic railway photography;shot on Phase One IQ4 150MP;列车位于画面正中dead-center(纵向30-85%、横向15-75%),四周留空给浮层卡片。禁止CGI渲染感、禁止科幻未来感、禁止3D渲染、禁止卡通插画、禁止游戏截图、禁止过度抛光。
@@ -248,7 +227,6 @@ uv run scripts/seedream_image_gen.py generate \
 ```bash
 uv run scripts/seedream_image_gen.py generate \
   --portrait \
-  --negative-prompt "CGI render, 3D render, cartoon, anime, illustration, solid white opaque cards, paper texture, watermark, logo, garbled text, gibberish characters, misspelled characters" \
   --prompt "科普信息图海报,竖版3:4,「藏羚羊大迁徙」主题,小红书/Instagram科普配图风格。
 
 [背景层] 竖版3:4构图:画面上半部(纵向0-45%)是一张全画幅高清野生动物照片:青藏高原藏羚羊群在可可西里草原上奔跑,公羊有标志性长黑角、黄褐色厚皮毛,远处是昆仑雪山、蓝天白云、金色晨光(golden-hour warm light),National Geographic wildlife photography质感,Christopher Michel National Geographic Program photo风格,shot on Phase One IQ4 150MP,真实摄影非3D非CGI非卡通;羚羊群位于画面上半部中下部居中。画面下半部(纵向45-100%)是深蓝#0F2C4A到深青#0F4C5C的纯色渐变背景(非照片),不延伸雪山照片到下半部分。
@@ -283,7 +261,6 @@ uv run scripts/seedream_image_gen.py generate \
 uv run scripts/seedream_image_gen.py edit \
   --reference-image hero-photo.png \
   --wide \
-  --negative-prompt "CGI render, 3D render, sci-fi futuristic building, cartoon, illustration, solid white opaque cards, paper texture, acrylic board, garbled text, misspelled characters" \
   --prompt "在这张照片上叠加毛玻璃数据卡片,严格保留底层照片(建筑/车辆/设备/光线/背景)像素级不变、不重绘,只在边缘留白区域加浮层卡片:
 
 [6张毛玻璃数据卡片] 所有卡片浮于四边留白,完全不遮挡中央主体(画面中央40%宽×50%高矩形保护区禁止卡片侵入),卡片与主体轮廓留≥3%空白呼吸带。每张卡片:frosted white glass毛玻璃效果,rgba(255,255,255,0.45)白色填充,backdrop-blur 24px,1px rgba(255,255,255,0.4)浅白描边,16px圆角,柔和投影;卡片内文字深slate灰#1E293B,无衬线黑体,tabular numerals;禁止实心不透明卡片、禁止纸张质感。卡片位置与内容:

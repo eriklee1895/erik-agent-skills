@@ -39,7 +39,7 @@
 - **尺寸与比例**：2K 起步（1K 下材质纹理糊、文字边缘脏）
   - 方图 `1:1`（`--square`）：main product shots for any e-commerce platform, food-delivery images, social posts
   - `3:4` 竖版：Instagram/小红书/TikTok social posts, lookbook pages
-  - `16:9`（`--wide`，别名 `--wechat-header`，= 1792×1024，Pro 专属）：banners, website hero, video/social cover, storefront
+  - 宽幅（`--wide`，别名 `--wechat-header`，= 1792×1024）：banners, website hero, video/social cover, storefront
 
 > **硬约束：** 不出现水印、平台 logo/角标、乱码文字、UI 元素、二维码；不把产品渲染成"开盒/拆封状态"除非 brief 指定；玻璃/液体类严格避免"凭空漂浮的液滴"；瓶身/包装/曲面一律加"无品牌文字、无标签、无 logo"防御；白底图显式写 `纯白背景 #FFFFFF、背景色值准确统一、无暗角、无渐变`，防止模型渲成浅灰底。
 
@@ -61,7 +61,7 @@
 
 ## Recipes
 
-所有 recipe 默认使用 Pro 模型、2K 输出。`--square` / `--wide` 等 shortcut（`--wechat-header` 是 `--wide` 别名） 尺寸见具体 recipe。批量迭代同一产品建议首次生成后拿到满意 seed，后续 `--seed` 固定产品本体、只改环境变量以提升一致性。
+所有 recipe 默认使用 Pro 模型、2K 输出。`--square` / `--wide` 等 shortcut（`--wechat-header` 是 `--wide` 别名） 尺寸见具体 recipe。同一产品的变体可复用产品参考图，并逐张检查造型和颜色。
 
 ### Recipe 1：白底电商主图 — 陶瓷马克杯（45° 视角）
 
@@ -157,7 +157,7 @@ uv run scripts/seedream_image_gen.py generate \
   --prompt "中式茶席摄影 45° 略微俯视，一张古朴深色中式实木小方桌，桌上铺竹席茶盘，茶盘左侧一把宜兴紫砂西施壶（紫砂壶颗粒质感可见、壶嘴有袅袅白色茶汤水汽逆光升腾、水汽柔和不过浓），壶前方并列两只紫砂小茶杯（杯中盛有琥珀色茶汤、水面反光柔和），茶盘上散落一小撮深褐色干茶叶、几片茶叶散落在桌面上，茶盘右侧放一只竹制茶则，背景为虚化的浅米色中式窗格（窗格透入柔和逆光勾勒茶壶轮廓边缘光），整体暖木色调、大面积留白（右侧留 30% 呼吸空间）、构图克制、禅意安静氛围，茶器紫砂质感真实、无扭曲变形，东方美学商业摄影，画面锐利干净，2K，16:9 横版"
 ```
 
-- 推荐尺寸：`--wide`（1792×1024，Pro 专属，website/store banner 通用；`--wechat-header` 是同尺寸别名）或 `--size 1792x1024`。
+- 推荐尺寸：`--wide`（1792×1024，website/store banner 通用；`--wechat-header` 是同尺寸别名）或 `--size 1792x1024`。
 - 逆光水汽：`逆光勾勒轮廓 + 袅袅白色水汽` 是中式氛围关键，但水汽不要写太浓。
 - 材质质感词：紫砂/粗陶加 `颗粒质感可见`；釉面光滑类（青瓷、白瓷）加 `釉面光泽温润、反射柔和`；玻璃茶具加 `玻璃折射真实合理、不追求复杂内部反射`。
 
@@ -171,8 +171,7 @@ uv run scripts/seedream_image_gen.py generate \
   --prompt "电商 618 大促 banner 16:9 横版，深红到暖橙的渐变背景带金色光斑和飘散金箔粒子光效、背景不挡文字，画面右侧 40% 区域摆放一组堆叠的节日礼盒（红金配色、丝带蝴蝶结、部分礼盒打开露出金色内衬）和一瓶金色精华液瓶（产品居中在右侧区域、占主要位置），产品周围有柔和金色轮廓光勾勒边缘，画面左侧 60% 大面积留白，在留白区域中央叠加大号金色粗宋体中文大字「年中大促」（字号占画面高度 1/3、居中对齐、粗宋体字、金色带轻微红色描边、每个字都准确无误），大字下方一行白色小号粗无衬线副标题「全场 5 折起」，画面顶部和底部各有 8% 留白不裁切，节日氛围浓厚、视觉冲击力强、印刷质感锐利，2K"
 ```
 
-- 推荐尺寸：`--wide`（1792×1024，Pro 专属，website/store banner 通用；`--wechat-header` 是同尺寸别名）或 `--size 1792x1024`。
-- 大促类可以加 `--no-negative-prompt` 放开"多余肢体"类的默认负面限制（banner 通常不出现人物）。
+- 推荐尺寸：`--wide`（1792×1024，website/store banner；`--wechat-header` 是同尺寸别名）或 `--size 1792x1024`。
 - 标题文字务必**逐字用中文引号包裹**并指定字体族、字号占比、位置、颜色、对齐，参考 `text-poster.md` 的文字翻车清单。
 - 换主题只换三处：配色（双11 用红黑/蓝金；年货节用红金 + 中国结；周年庆用品牌 VI 色）、右侧产品、主标题文字。
 
@@ -198,7 +197,6 @@ uv run scripts/seedream_image_gen.py generate \
 uv run scripts/seedream_image_gen.py edit \
   --reference-image flat-lay-cream-tshirt.png \
   --size 1536x2048 --portrait \
-  --no-negative-prompt \
   --prompt "使用参考图中这件 heather cream 圆领棉质 T 恤的颜色、面料纹理、缝线、罗纹领口细节，
 将它渲染为穿在隐形 ghost mannequin 上的电商服装主图：
 上胸到下摆居中构图（画面顶部从锁骨位置开始，**无头无脸无脖子无下巴**），
@@ -217,18 +215,11 @@ POD 服装 mockup 商业摄影，3:4 竖版"
 
 ### Recipe 10：服装 editorial 带手模特（ref-guided 双手工作流）
 
-服饰/lookbook 带手模特是手畸形高发区。按稳定性排序，三种策略如下：
+服装/lookbook 图可按构图选择以下方法，出图后均需检查手部结构：
 
-1. **策略 1（最稳）：把手藏起来**——揣兜、背在身后、被道具/衣服/构图切掉。"双手插入牛仔裤前口袋，只露出拇指搭在袋口"——只有拇指可见、无 6 指畸形。
-2. **策略 3（推荐）：ref-guided 双手**——先单独生成干净的手+道具参考，再用 `--reference-image` 带入全身肖像；手姿态会有 drift 但无畸形。
-3. **策略 2：让手拿着道具**（咖啡杯、书、小包、手机、盆栽）——比空手好但仍有轻度融合/手指略粗的问题。加负 prompt 效果更好半档。
-
-**手专用 negative prompt（叠加在默认 negative 上，或用 `--negative-prompt` 覆盖）：**
-```
-extra fingers, fused fingers, missing fingers, deformed hands, too many fingers,
-mutated hands, poorly drawn hands, malformed limbs, ugly hands, bad anatomy,
-6 fingers, webbed fingers, broken nails, plastic-looking skin
-```
+1. 构图不要求展示手部时，让手放入口袋、背在身后，或被道具遮挡。
+2. 需要展示握持姿势时，先生成手与道具的参考图，再用 `--reference-image` 带入全身肖像，步骤见下文。
+3. 直接描述手持咖啡杯、书或小包等道具的姿势，检查手指数量、融合和接触关系。
 
 **Ref-guided 双手工作流（两步）：**
 
@@ -236,7 +227,6 @@ mutated hands, poorly drawn hands, malformed limbs, ugly hands, bad anatomy,
 ```bash
 uv run scripts/seedream_image_gen.py generate \
   --square --size 1024x1024 \
-  --no-negative-prompt \
   --prompt "Close-up photo of two natural relaxed Asian female hands holding a small
 white ceramic espresso coffee cup from both sides, simple neutral grey studio background,
 perfectly formed hands with 5 fingers each hand, natural nail beds, natural knuckles,
@@ -250,7 +240,6 @@ no watches, 1:1 square" \
 uv run scripts/seedream_image_gen.py edit \
   --reference-image hand-ref.png \
   --size 1536x2048 --portrait \
-  --no-negative-prompt \
   --prompt "参考图中的双手姿势（双手从两侧捧住小白咖啡杯，四指在杯前、拇指在杯后），
 一张时尚编辑照片：20-30 岁东亚年轻女性穿奶油色 ribbed turtleneck 毛衣，
 在明亮窗边白色 studio 背景里对镜头微笑，双手在胸前捧着同一小白咖啡杯（**每只手 5 根手指、完美解剖结构、自然指甲**），
@@ -259,61 +248,7 @@ uv run scripts/seedream_image_gen.py edit \
 照片级真实，3:4 竖版"
 ```
 
-第二步会发生 pose drift（模型会改成"四指在杯前、拇指藏后"的不同握法），但**不会引入 6 指/融合/断指**。比空手直接生成手显著更稳。
-
----
-
-## Ghost Mannequin / 隐形模特 / 手规避（服装/服饰类必读）
-
-服装和带手产品图是 AI 图像传统翻车重灾区。按稳定性排序，推荐三种策略：
-
-### 策略 1：藏手（最稳）
-
-把双手完全藏起来是零风险方案：
-- 双手插牛仔裤/外套口袋，只露拇指搭在袋口（仅拇指处可能有轻微皮肤-衣物融合）
-- 背手/手在身后构图外（中景/3/4 裁剪到前臂）
-- 手臂交叉抱胸，手部被手臂/衣服遮挡
-- cropped at elbows / waist-up 构图切掉
-- 背影/侧影（不看到手）
-
-推荐 prompt 片段：`双手插入裤子前口袋，拇指搭在袋口自然外露，其余手指藏在袋内不可见，无手指畸形，手部自然`。
-
-### 策略 2：让手"有事做"（保底可用）
-
-双手拿道具（咖啡杯、书、手机、包带、盆栽、太阳镜、外套翻领）比空手好，因为道具遮挡了手指之间的位置。握把/接触处仍可能有轻度融合；加了负 prompt 后效果提升半档。
-
-必做：
-- 加手负 prompt（见 Recipe 10 的 G5 negative）
-- 道具遮挡点合理（杯把、书脊、包带），不要让手掌大面积裸露
-- 批量出 4-8 张挑最好的一张
-- 手部占画面比例越小越安全（中景比特写安全，远景比中景安全）
-
-### 策略 3：Ref-guided 双手（推荐）
-
-分两步：(1) 单独在 1:1 特写里生成一双干净的手+道具，(2) 用 `edit --reference-image` 把这双手的姿势/解剖结构带到全身肖像里。两步总共约 ¥0.60-1.20，但手畸形率显著下降。
-
-- 第一步用简洁 1:1 特写（无全身干扰，专注手解剖）
-- 第二步 prompt 里显式重申"每只手 5 根手指、完美解剖结构、自然指甲"
-- 会有 pose drift（握法变化）但不会出现 6 指/融合/断指
-- 不保证手指 pose 100% 复刻，但保证可编辑的干净结果
-
-### 三种策略选择决策树
-
-```
-需要 POD/白底服装主图，不要真人？   → 策略 ghost mannequin（Recipe 9）/ flat-lay（Recipe 5）
-需要真人 lookbook，构图允许藏手？  → 策略 1（揣兜/背手/裁剪）
-需要真人 lookbook，手必须拿道具？  → 策略 3（ref-guided，Recipe 10）；时间紧才用策略 2（直接拿道具+负 prompt）
-需要真人 lookbook，手必须裸露？    → 策略 3（ref-guided）且批量出 8 张挑；或用手模实拍合成
-```
-
-### 手专用 Negative Prompt（中文版，叠加在默认 negative 上）
-
-```
-手部畸形, 多余手指, 手指融合, 手指缺失, 六指, 断指, 指甲畸形,
-手和道具融合穿帮, 手指数量错误, 手看起来塑料不真实
-```
-
-（英文版见 Recipe 10；服装/人物场景中英混合最稳。）
+第二步仍可能发生 pose drift、手指数量错误或融合，需分别检查握法、手指和道具接触关系。
 
 ---
 
@@ -327,12 +262,12 @@ uv run scripts/seedream_image_gen.py edit \
 6. **商品标签文字控制 ≤8 字符。** 价格牌（如"¥99"、"特价"、"NEW"、"HOT"）成功率高；长段产品卖点、功效说明、成分表、多行使用说明不要让模型生成——后期用 PS/Figma 叠加更稳。
 7. **白底主图注意"隐性灰底"。** 模型偶发会把纯白背景渲染成浅灰或带色偏。显式写 `纯白背景 #FFFFFF、背景色值准确统一、无暗角、无渐变`，出图后用 PS 色阶对白底复核，必要时魔棒一键换纯白。
 8. **服饰面料质感要写具体。** 不要统一写"衣服"——要写"棉质 T 恤"、"真丝连衣裙"、"羊毛针织开衫"、"牛仔外套"、"皮革手袋"。加 `面料纹理可见、垂坠感自然、无塑料光泽` 更稳。
-9. **批量迭代同一产品固定 seed。** 跑主图 A/B 测试（换背景/换光线/换角度/换配色）时，先用一次生成拿到满意的 seed 值（返回 JSON 里有 `seed` 字段），后续通过 `--seed` 固定产品本体、只改环境变量，可大幅提升产品造型一致性，节省选图时间。
+9. **同一产品的变体使用参考图。** 通过 `--reference-image` 提供同一张产品图，描述需要变化的背景、光线或角度，并检查产品轮廓与细节是否保留。
 10. **人物皮肤/肤质偶发塑料感。** 美妆/服饰带模特的图，如果皮肤渲染过于光滑像塑料，加 `皮肤质感真实、毛孔自然、不过度磨皮`。东亚模特建议显式写 `东亚女性/男性模特`，避免被渲染成其他人种。
 11. **食物上的"假字"要排查。** 外卖/零食包装、瓶身标签上模型偶发会乱填中文或英文（看似品牌名实则乱码）。带包装的产品图务必人工检查标签文字；如果不需要包装文字，加 `瓶身/包装盒无文字、纯白无标签版本` 或 `品牌标签区域留白后期叠加`。
 12. **镜面/屏幕反射里的"鬼影"。** 手机屏幕、笔记本屏幕、墨镜镜片上模型常渲染出不存在的窗口、文字或人脸。需要"黑屏"或"花屏"效果时显式写 `屏幕纯黑无显示无反射内容`；需要显示内容时逐字写出屏幕上显示什么（如 `屏幕显示锁屏壁纸、无应用图标`）。
 13. **电商大促红色容易翻车成"廉价红"。** 大促 banner 如果要高级感，把"大红色"换成 `酒红 #8B0000` / `深红渐变` / `哑光红`，再加金色描边或金箔粒子提升质感；纯大红色 + 粗黑字容易渲出县城促销感。
-14. **同一产品不同图的色差问题。** SKU 铺图（同一款杯子出 5 个颜色主图）时，先固定 seed，再只改颜色词，并用色值描述（`莫兰迪粉 #E8C5C0`、`雾霾蓝 #8DA3B5`）比用模糊形容词（"浅粉色"、"蓝色"）颜色稳定性更高。
+14. **同一产品不同图的色差问题。** SKU 铺图（同一款杯子出 5 个颜色主图）时，复用同一张产品参考图，只改颜色要求，并用色值描述（`莫兰迪粉 #E8C5C0`、`雾霾蓝 #8DA3B5`）比用模糊形容词（"浅粉色"、"蓝色"）颜色稳定性更高。
 
 ## 快速套用模板
 

@@ -105,7 +105,7 @@ uv run scripts/seedream_image_gen.py edit \
 
 | 步骤 | 命令 |
 |---|---|
-| 1. 出 base 海报 | `uv run scripts/seedream_image_gen.py generate --portrait --no-negative-prompt --prompt "米色亚麻纸张背景的杂志封面海报 3:4 竖版，顶部 1/4 处有黑色粗无衬线中文主标题「深秋来信」居中，副标题灰色衬线英文「Letters from late autumn」..."` |
+| 1. 出 base 海报 | `uv run scripts/seedream_image_gen.py generate --portrait --prompt "米色亚麻纸张背景的杂志封面海报 3:4 竖版，顶部 1/4 处有黑色粗无衬线中文主标题「深秋来信」居中，副标题灰色衬线英文「Letters from late autumn」..."` |
 | 2. 框主标题 | `--marker-rect "10%,12%,80%,18%"` |
 | 3. Marker edit | `uv run scripts/seedream_image_gen.py edit --reference-image poster-base.png --marker-rect "10%,12%,80%,18%" --prompt "红框内：原黑色粗无衬线中文主标题「深秋来信」四个字删除，替换为「立夏物语」四个字，保持原有粗黑无衬线字体、字号大小、黑色、居中对齐、顶部位置不变；下方灰色衬线英文副标题「Letters from late autumn」完全保持不变（即使部分在红框内也不改）；红框外的米色亚麻纸张背景、左下右下留白、整体光线完全保持原样；红框标记擦除不要出现在结果中"` |
 
@@ -351,8 +351,7 @@ POST https://ark.cn-beijing.volces.com/api/v3/images/generations
   "image": ["data:image/png;base64,iVBORw0...（带红框的 annotated PNG）"],
   "prompt": "红框内：把原本的 medium rare 粉棕色切开的和牛牛排替换为...\n\n图中彩色方框/圆圈/涂写是我手工标出的编辑区域标记，请严格按上面的描述修改标记区域内的内容，标记区域之外的像素尽量保持不变，完成后清除所有彩色标记线条与填充。",
   "size": "2K",
-  "output_format": "png",
-  "negative_prompt": "模糊, 低质量, 水印, 变形, 多余肢体"
+  "output_format": "png"
 }
 ```
 

@@ -14,12 +14,8 @@ Subcommands:
   edit             Modify an image — supports marker-based region edits (colored-rect protocol),
                    reference-based style transfer, character consistency, and outpainting.
   generate-batch   Run many generation jobs from a JSONL file.
+  decompose        Extract a base image and transparent foreground layers.
   list-models      Print the known model table and exit.
-
-Pro is the default model because it ships SOTA Chinese/English text rendering and a
-powerful marker-based region-editing workflow (draw a colored rectangle on the reference,
-describe the change in natural language, the model replaces that region and removes the
-marker). Text-in-image and pixel-localised edits are the headline features.
 
 API docs:
   Seedream 5.0 Pro: https://www.volcengine.com/docs/82379/1824121
@@ -76,7 +72,6 @@ MODELS: dict[str, dict[str, Any]] = {
         **_COMMON_CAPS,
         "aliases": MODEL_PRO_ALIASES,
         "label": "Seedream 5.0 Pro (2026-06-28 build)",
-        "supports_negative_prompt": True,  # Legacy, undocumented Pro behavior only.
         "optimize_modes": {"standard", "fast"},
         "price_per_image": "2026-10-24 list: generation <=2.61MP CNY0.30 / larger CNY0.60; layers CNY0.15/0.30",
         "notes": "Default quality model; standard/fast, coordinate/marker edits, alpha-image editing and layer decomposition.",
@@ -85,7 +80,6 @@ MODELS: dict[str, dict[str, Any]] = {
         **_COMMON_CAPS,
         "aliases": MODEL_FLASH_ALIASES,
         "label": "Seedream 5.0 Flash (2026-09-15 build)",
-        "supports_negative_prompt": False,  # No documented negative_prompt field; use the prompt.
         "optimize_modes": {"standard"},
         "price_per_image": "2026-10-24 list: CNY0.12/output image; input images free",
         "notes": "Lower-latency/cost model; same generation/edit/layer API, standard mode only.",
@@ -104,14 +98,6 @@ RETRY_BACKOFF = (2.0, 4.0, 8.0, 16.0, 30.0, 30.0, 30.0, 30.0)
 MAX_REFERENCE_BYTES = 30 * 1024 * 1024
 MAX_PROMPT_CHARS = 6_000
 ALLOWED_OUTPUT_FORMATS = ("png", "jpeg", "jpg")
-
-# Pro default negative prompt — gentle quality guard. User can override with
-# --negative-prompt "" (disable) or --negative-prompt "..." (replace).
-PRO_DEFAULT_NEGATIVE = "模糊, 低质量, 水印, 变形, 多余肢体"
-
-# Opt-in content guards; clearing quality negatives leaves requested guards on.
-GUARD_NO_PEOPLE = "NO people, figures, statues"
-GUARD_NO_TEXT = "no text, letters, logo, watermark"
 
 # Automatic marker-cleanup suffix appended after the user's edit prompt (unless
 # --no-marker-cleanup-prompt is passed). Selected by prompt language heuristic.
@@ -664,7 +650,7 @@ def _append_suffix(prompt: str, suffix: str) -> str:
 def _build_request_body(
     *, model: str, caps: dict[str, Any], prompt: str, size: str,
     output_format: str, watermark: bool, reference_images: Optional[list[str]],
-    optimize_prompt: Optional[str], negative_prompt: Optional[str],
+    optimize_prompt: Optional[str],
     background: str = "opaque", layer_decomposition: bool = False,
 ) -> dict[str, Any]:
     mode = optimize_prompt or "standard"
@@ -689,10 +675,6 @@ def _build_request_body(
         body["layer_decomposition"] = True
     else:
         body["background"] = background
-    if negative_prompt:
-        if not caps["supports_negative_prompt"]:
-            _die("negative_prompt is undocumented for Flash; put constraints in the prompt instead.")
-        body["negative_prompt"] = negative_prompt
     return body
 
 
@@ -737,7 +719,6 @@ def _write_metadata(
     base_url: str,
     dry_run: bool,
     background: str = "opaque",
-    negative_prompt: Optional[str] = None,
     marker_rects: Optional[list[str]] = None,
     outpaint_specs: Optional[list[str]] = None,
     reported_size: Optional[str] = None,
@@ -760,7 +741,6 @@ def _write_metadata(
         "reference_images_count": reference_count,
         # Don't persist data URLs — they're huge and can contain secrets-adjacent material
         "reference_images_are_data_urls": None,  # populated below only when refs exist
-        "negative_prompt": negative_prompt,
         "marker_rects": marker_rects or [],
         "outpaint": outpaint_specs or [],
         "base_url": base_url,
@@ -961,7 +941,6 @@ def _cmd_list_models(_args: argparse.Namespace) -> int:
         print(f"    Pixel range:  {caps['pixel_min']:,} – {caps['pixel_max']:,}")
         print(f"    Max refs:     {caps['max_refs']}")
         print("    Modes:        single image, alpha editing, layer decomposition")
-        print(f"    neg prompt:   {'yes (beta/undocumented)' if caps['supports_negative_prompt'] else 'no'}")
         print(f"    Opt modes:    {', '.join(sorted(caps['optimize_modes']))}")
         print(f"    Price:        {caps['price_per_image']}")
         print(f"    Notes:        {caps['notes']}")
@@ -988,10 +967,10 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) 
     p.add_argument("--output-format", default=DEFAULT_OUTPUT_FORMAT, choices=list(ALLOWED_OUTPUT_FORMATS),
                    help=f"Output image format (default: {DEFAULT_OUTPUT_FORMAT}).")
     p.add_argument("--wechat-header", action="store_true",
-                   help="Shorthand for --size 1792x1024 (16:9 wide cover). "
+                   help="Shorthand for --size 1792x1024 (wide cover). "
                         "Alias: --wide.")
     p.add_argument("--wide", action="store_true",
-                   help="Shorthand for --size 1792x1024 (16:9 wide cover/banner). "
+                   help="Shorthand for --size 1792x1024 (wide cover/banner). "
                         "Alias of --wechat-header.")
     p.add_argument("--square", action="store_true",
                    help="Shorthand for square output (1024x1024).")
@@ -1008,22 +987,6 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) 
                    help="Include Seedream watermark (default: off).")
     p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None,
                    help="Prompt optimization: Pro standard/fast; Flash standard only.")
-    p.add_argument("--negative-prompt", default=None,
-                   help=f"Negative prompt. On Pro defaults to a gentle quality guard "
-                        f"({PRO_DEFAULT_NEGATIVE!r}); pass --negative-prompt '' to disable. "
-                        f"Flash uses prompt constraints instead.")
-    p.add_argument("--no-negative-prompt", action="store_true",
-                   help="Disable the default quality negative prompt (Pro only). "
-                        "Does not clear guards turned on by --no-people / --no-text / --cover.")
-    p.add_argument("--no-people", action="store_true",
-                   help="Opt-in guard: 'NO people, figures, statues' (Pro: negative_prompt; "
-                        "Flash: appended to the prompt). Off by default.")
-    p.add_argument("--no-text", action="store_true",
-                   help="Opt-in guard: 'no text, letters, logo, watermark' (Pro: negative_prompt; "
-                        "Flash: appended to the prompt). Off by default.")
-    p.add_argument("--cover", action="store_true",
-                   help="Cover/banner preset: --no-people + --no-text + auto-upscale "
-                        "(overrides --no-auto-upscale).")
     p.add_argument("--no-auto-upscale", action="store_true",
                    help="Disable auto-upscale for WxH sizes below the model's pixel floor "
                         "(Pro ~0.92MP / 921600). Default: generate at the smallest valid "
@@ -1041,7 +1004,7 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) 
 
 
 def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) -> dict[str, Any]:
-    """Resolve model, size, prompt, negatives, and edit-preprocess (markers/outpaint)
+    """Resolve model, size, prompt, and edit-preprocess (markers/outpaint)
     from argparse args. Returns a dict with everything needed to build the body.
     """
     model_id, caps = _resolve_model(args.model)
@@ -1052,8 +1015,7 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         getattr(args, "phone", False), caps,
     )
     requested_size = size
-    cover = bool(getattr(args, "cover", False))
-    auto_upscale = cover or not bool(getattr(args, "no_auto_upscale", False))
+    auto_upscale = not bool(getattr(args, "no_auto_upscale", False))
     wh = _validate_size(size, caps, model_id, enforce_min=not auto_upscale)
     downscale_to: Optional[tuple[int, int]] = None
     if wh != (0, 0) and wh[0] * wh[1] < caps["pixel_min"]:
@@ -1079,33 +1041,6 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         if require_prompt else ""
     if len(prompt) > MAX_PROMPT_CHARS:
         _warn("Very long prompt: the official guide recommends concise prompts (about 300 Chinese characters or 600 English words).")
-
-    # Retain legacy Pro negatives; Flash has no documented negative field.
-    if getattr(args, "no_negative_prompt", False):
-        negative_prompt = ""
-    elif getattr(args, "negative_prompt", None) is not None:
-        negative_prompt = args.negative_prompt
-    else:
-        # default on Pro, none on Flash
-        negative_prompt = PRO_DEFAULT_NEGATIVE if caps["supports_negative_prompt"] else None
-    # Normalize empty string to None (so it doesn't get sent)
-    if negative_prompt == "":
-        negative_prompt = None
-
-    guards: list[str] = []
-    if cover or getattr(args, "no_people", False):
-        guards.append(GUARD_NO_PEOPLE)
-    if cover or getattr(args, "no_text", False):
-        guards.append(GUARD_NO_TEXT)
-    if guards:
-        guard_str = ", ".join(guards)
-        if caps["supports_negative_prompt"]:
-            negative_prompt = (
-                f"{negative_prompt}, {guard_str}" if negative_prompt else guard_str
-            )
-        else:
-            # Use documented prompt conditioning for Flash.
-            prompt = _append_suffix(prompt, guard_str)
 
     # Reference images (used by both generate (optional) and edit (required))
     ref_paths = list(getattr(args, "reference_image", []) or [])
@@ -1229,7 +1164,6 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         "web_search": False,
         "background": background,
         "optimize_prompt": args.optimize_prompt,
-        "negative_prompt": negative_prompt,
         "downscale_to": downscale_to,
         "reference_images": refs,
         "reference_image_paths": list(getattr(args, "reference_image", []) or []),
@@ -1268,7 +1202,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
         output_format=r["output_format"], watermark=r["watermark"],
         reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-        negative_prompt=r["negative_prompt"], background=r["background"],
+        background=r["background"],
     )
 
     out = getattr(args, "out", None)
@@ -1285,7 +1219,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
             output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
             reference_count=len(r.get("reference_image_paths", []) or []) or (1 if r["reference_images"] else 0),
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
-            base_url=DEFAULT_BASE_URL, dry_run=True, negative_prompt=r["negative_prompt"],
+            base_url=DEFAULT_BASE_URL, dry_run=True,
             marker_rects=r["marker_specs"],
             outpaint_specs=r["outpaint_specs"],
             background=r["background"],
@@ -1334,7 +1268,6 @@ async def _generate_one(
             output_format=r["output_format"], watermark=r["watermark"],
             web_search=r["web_search"], reference_count=r["reference_count"],
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"), base_url=base_url, dry_run=False,
-            negative_prompt=r["negative_prompt"],
             marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
             reported_size=reported_size, elapsed_ms=elapsed_ms,
             revised_prompt=revised_prompt, usage=usage,
@@ -1394,7 +1327,6 @@ async def _generate_concurrent(
                 output_format=r["output_format"], watermark=r["watermark"],
                 web_search=r["web_search"], reference_count=r["reference_count"],
                 optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"), base_url=base_url, dry_run=False,
-                negative_prompt=r["negative_prompt"],
                 marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
                 reported_size=reported_size, elapsed_ms=elapsed_ms,
                 revised_prompt=revised_prompt, usage=usage,
@@ -1454,7 +1386,7 @@ def _cmd_edit(args: argparse.Namespace) -> int:
         model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
         output_format=r["output_format"], watermark=r["watermark"],
         reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-        negative_prompt=r["negative_prompt"], background=r["background"],
+        background=r["background"],
     )
 
     out = getattr(args, "out", None)
@@ -1468,7 +1400,7 @@ def _cmd_edit(args: argparse.Namespace) -> int:
             output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
             reference_count=r["reference_count"],
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
-            base_url=DEFAULT_BASE_URL, dry_run=True, negative_prompt=r["negative_prompt"],
+            base_url=DEFAULT_BASE_URL, dry_run=True,
             marker_rects=r["marker_specs"],
             outpaint_specs=r["outpaint_specs"],
             background=r["background"],
@@ -1508,12 +1440,6 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--watermark", action="store_true", help="Default watermark on.")
     p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None,
                    help="Pro standard/fast; Flash standard only.")
-    p.add_argument("--negative-prompt", default=None, help="Default negative prompt.")
-    p.add_argument("--no-negative-prompt", action="store_true", help="Default quality negative-prompt off.")
-    p.add_argument("--no-people", action="store_true", help="Default no-people guard on (opt-in).")
-    p.add_argument("--no-text", action="store_true", help="Default no-text guard on (opt-in).")
-    p.add_argument("--cover", action="store_true",
-                   help="Default cover preset on: both guards + auto-upscale.")
     p.add_argument("--no-auto-upscale", action="store_true",
                    help="Disable auto-upscale for sizes below the model pixel floor.")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help=f"Timeout (default: {DEFAULT_TIMEOUT}).")
@@ -1575,12 +1501,7 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         ns.landscape = bool(job.get("landscape", args.landscape))
         ns.watermark = bool(job.get("watermark", args.watermark))
         ns.optimize_prompt = job.get("optimize_prompt", args.optimize_prompt)
-        ns.negative_prompt = job.get("negative_prompt", args.negative_prompt)
-        ns.no_negative_prompt = bool(job.get("no_negative_prompt", args.no_negative_prompt))
         ns.background = job.get("background", args.background)
-        ns.no_people = bool(job.get("no_people", args.no_people))
-        ns.no_text = bool(job.get("no_text", args.no_text))
-        ns.cover = bool(job.get("cover", args.cover))
         ns.no_auto_upscale = bool(job.get("no_auto_upscale", getattr(args, "no_auto_upscale", False)))
         ns.reference_image = list(job.get("reference_image", []) or [])
         ns.marker_rect = list(job.get("marker_rects", []) or [])
@@ -1606,7 +1527,7 @@ def _cmd_batch(args: argparse.Namespace) -> int:
             model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
             output_format=r["output_format"], watermark=r["watermark"],
             reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-                negative_prompt=r["negative_prompt"], background=r["background"],
+            background=r["background"],
         )
         bodies.append((job["prompt"], body, r))
 
@@ -1658,7 +1579,6 @@ async def _run_batch(
                         web_search="tools" in body, reference_count=r["reference_count"],
                         optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
                         base_url=base_url, dry_run=False,
-                        negative_prompt=body.get("negative_prompt"),
                         marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
                         reported_size=reported_size, elapsed_ms=elapsed_ms,
                         revised_prompt=revised_prompt, usage=usage,
@@ -1726,7 +1646,7 @@ def _cmd_decompose(args: argparse.Namespace) -> int:
     body = _build_request_body(
         model=model, caps=caps, prompt=prompt, size=args.size, output_format=output_format,
         watermark=args.watermark, reference_images=_resolve_reference_images(paths),
-        optimize_prompt=args.optimize_prompt, negative_prompt=None, layer_decomposition=True,
+        optimize_prompt=args.optimize_prompt, layer_decomposition=True,
     )
     if args.dry_run:
         print(json.dumps(body, ensure_ascii=False, indent=2))

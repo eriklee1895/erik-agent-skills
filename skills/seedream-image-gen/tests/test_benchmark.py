@@ -91,7 +91,6 @@ class BenchmarkEvidenceTests(unittest.TestCase):
         self.assertIn("--marker-rect", args)
         self.assertIn("10%,10%,30%,20%", args)
         self.assertEqual(args[args.index("--output-format") + 1], "jpeg")
-        self.assertIn("--no-negative-prompt", args)
         self.assertIn("--marker-alpha", args)
         self.assertEqual(args[args.index("--marker-alpha") + 1], "0")
 

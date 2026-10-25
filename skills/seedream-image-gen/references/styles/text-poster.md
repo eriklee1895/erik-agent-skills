@@ -90,7 +90,6 @@ uv run scripts/seedream_image_gen.py generate --size 1792x1024 \
 ```
 
 - 促销类用金色/红色/宋体比无衬线更有节庆感
-- 可以加 `--no-negative-prompt` 放开"多余肢体"类的负面限制（电商图不一定有人）
 
 ### Recipe 5：杂志封面（人物 + 大标题）
 

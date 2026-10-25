@@ -1,5 +1,7 @@
 # Seedream Pro / Flash migration and benchmark plan
 
+Historical plan from 2026-10-24. For the current CLI and supported options, use [SKILL.md](../SKILL.md).
+
 ## Outcome and scope
 
 Retire Lite from the published skill and support `doubao-seedream-5-0-flash-260915` alongside the default `doubao-seedream-5-0-pro-260628`. Keep one Images API request/download path. Preserve dry-run metadata protection, exact-size downscaling, optional concurrency and explicit 429/5xx backoff; add no fixed IPM scheduler.
