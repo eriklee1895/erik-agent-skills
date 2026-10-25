@@ -8,6 +8,12 @@ The initial design is eighteen cases, two independent samples each for Pro stand
 
 Judge composition/style, exact text, edit scope, reference adherence, transparency and layer reconstruction separately. Publish every planned case including failures and uncertainty. Hidden-model contact sheets reduce label bias but are not independent human double-blind judgments. Two samples establish case-level observations, not population quality rankings. Original images, credentials and expiring URLs stay outside Git; only portable prompts, hashes, measurements and review records belong in the skill.
 
+### Registered prompt comparisons
+
+Twenty-four additional intentional requests compare three recipe hypotheses, each with two variants, two standard models and two independent samples. The targets/rubrics, size and references stay fixed within each experiment: (1) a minimal recolor instruction versus a coordinate-plus-preservation recipe; (2) Chinese versus equivalent English operation instructions for Chinese title replacement; (3) concise semantic infographic directions versus an extended camera/CSS/position recipe. The first and third compare recipe bundles, so their outcomes cannot establish an isolated causal effect of one token or coordinate field. These experiments address specific existing guide claims; they are separate journaled studies, not retries of the main eighty cases.
+
+After the main marker case showed pink fill remaining in two outputs, register eight further requests comparing marker alpha 80 versus 0. Hold the prompt, input, rectangle, stroke, size and optimization mode fixed, with two samples per model/variant. This tests an observed workflow failure; the original failed-quality images remain in the record.
+
 ## Task 1: Freeze the suite and extend the runner
 
 Create an immutable eighteen-case suite with explicit criteria and repeat indices. Reuse the existing single-submission worker and safe journals. Add marker/format argument support and exclude annotated reference previews from generated-output counts. Preserve the original sixteen-case suite. Add failing offline contracts first, then implement and run the entire Seedream test suite.

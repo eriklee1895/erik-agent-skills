@@ -102,3 +102,50 @@ def cases():
     random.Random(20261025).shuffle(result)
     smoke = [f"{name}-{model}-standard-r1" for name in ("cn-poster", "coordinate-edit") for model in ("flash", "pro")]
     return [next(case for case in result if case["id"] == name) for name in smoke] + [case for case in result if case["id"] not in smoke]
+
+
+def prompt_cases():
+    """Three preregistered recipe comparisons, not missing-result retries."""
+    source = {case["case"]: case for case in definitions()}
+    experiments = [
+        ("ab-edit-preservation", source["coordinate-edit"],
+         "Compare a minimal edit instruction with the full coordinate+preservation recipe as a bundle; do not attribute the result to coordinates alone.",
+         {"minimal": "把图1左侧红色杯子改为深蓝色。", "explicit": source["coordinate-edit"]["prompt"]}),
+        ("ab-edit-language", source["text-replace"],
+         "Check the old claim that Chinese editing operations need English instructions, with the same box, replacement and preservation requirements.",
+         {"chinese": source["text-replace"]["prompt"],
+          "english": 'In image 1 replace the top title NOVA inside <bbox>70 40 460 210</bbox> with the exact Chinese text "星野". Keep its dark-blue bold sans-serif style, occupied title area and left alignment. Show 星野 once and remove NOVA completely. Keep the cup, vase, background and all other areas unchanged.'}),
+    ]
+    infographic = dict(source["portrait-infographic"], criteria=[
+        "Exact title and all four labels/percentages", "Four cards in the requested 2x2 order",
+        "Translucent frosted cards over a photographic street", "Legible hierarchy with no duplicated or extra copy"])
+    short = '3:4竖版信息图，绿树街道真实摄影为底图。顶部居中深蓝色大标题“城市慢行”。四张白色半透明毛玻璃卡片按2乘2排列在画面两侧，可以透过卡片看到背景，柔和圆角。左上“步行 35%”，右上“骑行 25%”，左下“公交 30%”，右下“其他 10%”。深蓝色清晰文字，每项只出现一次，不加其他文字、图表或图标。'
+    detailed = '3:4竖版数据新闻信息图，全画幅真实摄影质感的绿树街道底图，Sony A1 50MP，soft overcast daylight，色彩自然，保持摄影而非CGI/游戏截图/3D渲染。顶部3%-12%居中标题“城市慢行”，深蓝色粗无衬线黑体，字号占高度约1/9。下方四张等尺寸卡片按2乘2排布：左上x4% y30%宽24%高18%写“步行 35%”；右上x72% y30%同尺寸写“骑行 25%”；左下x4% y58%同尺寸写“公交 30%”；右下x72% y58%同尺寸写“其他 10%”。卡片为frosted white glass毛玻璃效果，rgba(255,255,255,0.7)填充、backdrop-blur约24px、1px rgba(255,255,255,0.4)浅白描边、16px圆角、柔和投影，必须能透过卡片看见背后街道，禁止不透明白纸/卡纸/亚克力板。卡片内深蓝#1E293B无衬线文字，数字tabular numerals，字号清晰。所有文字逐字准确，每项只出现一次。只允许标题和四组标签数字，不加其他文字、图表或图标。'
+    experiments.append(("ab-infographic-detail", infographic,
+                        "Compare concise semantic directions with a longer camera/CSS/position recipe for the same text, four-card order and frosted-photo intent; size and references are fixed.",
+                        {"concise": short, "detailed": detailed}))
+    result = []
+    for name, base, hypothesis, variants in experiments:
+        for variant, prompt in variants.items():
+            for model in ("pro", "flash"):
+                for repeat in (1, 2):
+                    result.append({**base, "case": name, "id": f"{name}-{variant}-{model}-r{repeat}",
+                                   "prompt": prompt, "model": model, "mode": "standard",
+                                   "configuration": f"{model}-standard", "repeat": repeat,
+                                   "variant": variant, "hypothesis": hypothesis})
+    random.Random(2026102501).shuffle(result)
+    return result
+
+
+def marker_cases():
+    base = next(case for case in definitions() if case["case"] == "marker-edit")
+    result = []
+    for model in ("pro", "flash"):
+        for variant, alpha in (("filled", 80), ("outline", 0)):
+            for repeat in (1, 2):
+                result.append({**base, "case": "ab-marker-opacity", "id": f"ab-marker-opacity-{variant}-{model}-r{repeat}",
+                               "model": model, "mode": "standard", "configuration": f"{model}-standard",
+                               "repeat": repeat, "variant": variant, "marker_alpha": alpha,
+                               "hypothesis": "Hold prompt/box/stroke/size/reference fixed and compare alpha80 fill with alpha0 outline after observed pink-marker residue in the main study."})
+    random.Random(2026102502).shuffle(result)
+    return result

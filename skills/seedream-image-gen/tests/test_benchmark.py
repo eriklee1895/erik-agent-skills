@@ -18,6 +18,32 @@ SPEC.loader.exec_module(benchmark)
 
 
 class BenchmarkEvidenceTests(unittest.TestCase):
+    def test_marker_ab_changes_only_opacity_for_each_model(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            cases = benchmark.prepare(Path(temporary), suite="marker-ab")["cases"]
+            self.assertEqual(len(cases), 8)
+            self.assertEqual({case["marker_alpha"] for case in cases}, {0, 80})
+            self.assertEqual(len({case["prompt"] for case in cases}), 1)
+            self.assertEqual(len({tuple(case["references"]) for case in cases}), 1)
+            self.assertEqual(len({tuple(case["marker_rect"]) for case in cases}), 1)
+
+    def test_prompt_ab_suite_has_three_balanced_paired_hypotheses(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            manifest = benchmark.prepare(Path(temporary), suite="prompt-ab")
+            cases = manifest["cases"]
+            self.assertEqual(len(cases), 24)
+            self.assertEqual(len({case["id"] for case in cases}), 24)
+            self.assertEqual(len({case["case"] for case in cases}), 3)
+            for name in {case["case"] for case in cases}:
+                group = [case for case in cases if case["case"] == name]
+                self.assertEqual(len({case["variant"] for case in group}), 2)
+                self.assertEqual(len({case["size"] for case in group}), 1)
+                self.assertEqual(len({tuple(case["references"]) for case in group}), 1)
+                self.assertEqual(len({tuple(case["criteria"]) for case in group}), 1)
+                for model in ("pro", "flash"):
+                    selected = [case for case in group if case["model"] == model]
+                    self.assertEqual(sorted(case["repeat"] for case in selected), [1, 1, 2, 2])
+
     def test_comprehensive_suite_is_balanced_repeated_and_immutable(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -50,12 +76,14 @@ class BenchmarkEvidenceTests(unittest.TestCase):
     def test_case_arguments_keep_marker_and_output_settings(self):
         case = dict(command="edit", model="pro", prompt="change the marked title", size="1.5K",
                     mode="standard", references=["objects.png"], output_format="jpeg",
-                    marker_rect=["10%,10%,30%,20%"], marker_color=["#ff0000"])
+                    marker_rect=["10%,10%,30%,20%"], marker_color=["#ff0000"], marker_alpha=0)
         args = benchmark.case_arguments(Path("/study"), case, Path("/study/cases/sample"))
         self.assertIn("--marker-rect", args)
         self.assertIn("10%,10%,30%,20%", args)
         self.assertEqual(args[args.index("--output-format") + 1], "jpeg")
         self.assertIn("--no-negative-prompt", args)
+        self.assertIn("--marker-alpha", args)
+        self.assertEqual(args[args.index("--marker-alpha") + 1], "0")
 
     def test_preparing_existing_study_does_not_rewrite_its_fixtures(self):
         with tempfile.TemporaryDirectory() as temporary:

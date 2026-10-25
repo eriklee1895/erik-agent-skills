@@ -28,6 +28,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "seedream_image_gen.py"
+SUITE_COUNTS = {"smoke": 16, "comprehensive": 80, "prompt-ab": 24, "marker-ab": 8}
 
 
 def write_json(path, value):
@@ -37,12 +38,14 @@ def write_json(path, value):
 
 
 def prepare(root, suite="smoke"):
+    if suite not in SUITE_COUNTS:
+        raise SystemExit("Unknown study suite.")
     comprehensive = None
-    if suite == "comprehensive":
+    if suite != "smoke":
         spec = importlib.util.spec_from_file_location("seedream_comprehensive_suite", Path(__file__).with_name("comprehensive_suite.py"))
         comprehensive = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(comprehensive)
-    count = 80 if comprehensive else 16
+    count = SUITE_COUNTS[suite]
     root.mkdir(parents=True, exist_ok=True)
     fixtures = root / "fixtures"
     existing = root / "cases.json"
@@ -108,8 +111,9 @@ def prepare(root, suite="smoke"):
                           prompt="只拆出图1 <bbox>100 350 550 780</bbox> 中的红色杯子和 <bbox>80 60 500 220</bbox> 中的NOVA标题文字，分别成为两个独立的透明图层；其余内容保留在底图。"))
     if comprehensive:
         comprehensive.make_fixtures(fixtures)
-        cases = comprehensive.cases()
-    manifest = {"study": "seedream-pro-flash-comprehensive-20261025" if comprehensive else "seedream-pro-flash-20261024",
+        cases = {"comprehensive": comprehensive.cases, "prompt-ab": comprehensive.prompt_cases,
+                 "marker-ab": comprehensive.marker_cases}[suite]()
+    manifest = {"study": f"seedream-pro-flash-{suite}-20261025" if comprehensive else "seedream-pro-flash-20261024",
                 "max_requests": count, "cases": cases,
                 "fixtures": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in fixtures.glob("*.png")}}
     write_json(existing, manifest)
@@ -146,6 +150,8 @@ def case_arguments(root, case, folder):
     for option in ("marker_rect", "marker_color"):
         for value in case.get(option, []):
             arguments += ["--" + option.replace("_", "-"), value]
+    if "marker_alpha" in case:
+        arguments += ["--marker-alpha", str(case["marker_alpha"])]
     for reference in case["references"]:
         arguments += ["--reference-image", str(root / "fixtures" / reference)]
     return arguments
@@ -247,7 +253,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--execute", action="store_true")
-    parser.add_argument("--suite", choices=("smoke", "comprehensive"), default="smoke")
+    parser.add_argument("--suite", choices=tuple(SUITE_COUNTS), default="smoke")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--concurrency", type=int, default=2)
     parser.add_argument("--worker", help=argparse.SUPPRESS)
@@ -257,7 +263,7 @@ def main():
         manifest = json.loads((root / "cases.json").read_text())
         worker(root, next(case for case in manifest["cases"] if case["id"] == args.worker))
         return
-    count = 80 if args.suite == "comprehensive" else 16
+    count = SUITE_COUNTS[args.suite]
     limit = count if args.limit is None else args.limit
     if not 1 <= limit <= count or args.concurrency < 1:
         parser.error(f"Use a limit of 1–{count} and positive concurrency.")
