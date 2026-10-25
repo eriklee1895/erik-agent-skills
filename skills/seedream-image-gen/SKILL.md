@@ -92,7 +92,7 @@ uv run scripts/seedream_image_gen.py edit --reference-image poster.png \
   --prompt '把红框内标题改成“新绿计划”，保持字体、对齐和其他内容，移除彩色标记。'
 ```
 
-`--marker-rect` uses **x,y,width,height**, in pixels or percentages, and draws a temporary annotated copy. Repeat rectangles/colors for multiple targets. The historical 8%/70% marker-size observations belong to the old Pro experiments and are not bounds on the native coordinate API. See [marker edits](references/marker-editing.md) and the [visual protocol guide](guides/marker-edit-protocol.md).
+`--marker-rect` uses **x,y,width,height**, in pixels or percentages, and draws a temporary annotated copy. Repeat rectangles/colors for multiple targets. The historical 8%/70% marker-size observations belong to the old Pro experiments and are not bounds on the native coordinate API. See [marker edits](references/marker-editing.md) and the [visual protocol guide](references/marker-edit-protocol.md).
 
 ## Transparent images
 

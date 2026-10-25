@@ -1,4 +1,4 @@
-> 本文保留历史 Pro marker 实验。新的原生坐标协议和 Pro/Flash 图层能力以 [API 参考](../references/api-reference.md) 为准；框外保持是生成效果，不是硬像素遮罩保证。
+> 本文保留历史 Pro marker 实验。新的原生坐标协议和 Pro/Flash 图层能力以 [API 参考](api-reference.md) 为准；框外保持是生成效果，不是硬像素遮罩保证。
 
 # Marker Edit Protocol — Seedream 5.0 Pro via `seedream-image-gen`
 
@@ -321,7 +321,7 @@ uv run scripts/seedream_image_gen.py edit \
 | 大块空白中的物体 | ⚠️ 4-6/10 | ⚠️ 6-7/10 |
 | 夜景 + 反光表面 + 霓虹场景中的物体 | ❌ 1-4/10 | ⚠️ 5-7/10 |
 
-详细讨论见 [marker-editing.md](../references/marker-editing.md).
+详细讨论见 [marker-editing.md](marker-editing.md).
 
 ---
 
@@ -365,7 +365,7 @@ Pro 保持默认；Flash 用于时延/成本敏感的迭代。两者都支持 1K
 | `references/prompt-engineering.md` | 通用 prompt 公式 + 11 条 anti-pattern |
 | `references/flash-quickref.md` | Flash 选择、共享 API 与迁移边界 |
 | `references/styles/text-poster.md` | 6 份 text-rendering recipes |
-| `guides/marker-edit-protocol.md` | 本文档 (协议动机 + threshold 表 + 4 组 demo 记录) |
+| `references/marker-edit-protocol.md` | 本文档 (协议动机 + threshold 表 + 4 组 demo 记录) |
 
 > 早期 smoke test 的三栏对比图和端到端测试报告不随 skill 分发。
 
