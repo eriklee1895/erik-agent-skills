@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) · [仓库首页](../README.zh-CN.md)
 
-这里列出全部 **21 个 skills**：[写作（4）](#写作)、[媒体（12）](#媒体)、[通用工具（5）](#通用工具)。
+这里列出全部 **22 个 skills**：[写作（4）](#写作)、[媒体（13）](#媒体)、[通用工具（5）](#通用工具)。
 点击名称即可打开对应的 `SKILL.md`，查看使用方法、环境要求和参考资料。
 
 ## 写作
@@ -26,6 +26,7 @@
 | [avatar-creator](./avatar-creator/SKILL.md) | 制作静态头像、不同角色家族、同角色套图及固定 Seedance GIF/MP4 动画。图片使用可用图像工具；动图需 Ark 凭据、uv 和 ffmpeg，不依赖其他 skill。不负责交互式 3D 程序。 |
 | [live-avatar-3d](./live-avatar-3d/SKILL.md) | 将角色图制作成无需构建步骤的交互式 3D 网页头像，支持环视、动作和可选的本地麦克风嘴型。 |
 | [seedance-video-gen](./seedance-video-gen/SKILL.md) | 使用 Seedance 根据文本、图片或多模态参考生成视频。 |
+| [earshot-audio-effect](./earshot-audio-effect/SKILL.md) | 使用 CPU 为视频和动画生成、调参及定制程序化音效，并组织成套音效。 |
 | [volcengine-bigmusic-bgm](./volcengine-bigmusic-bgm/SKILL.md) | 为视频和文章媒体工作流生成无人声背景音乐。 |
 | [volcengine-tts](./volcengine-tts/SKILL.md) | 使用火山引擎语音合成模型生成语音音频。 |
 | [volcengine-transcribe](./volcengine-transcribe/SKILL.md) | 用火山引擎语音识别将音视频转写为文本并生成 SRT/VTT 字幕；内置说话人分离与 ffmpeg 视频抽音轨。 |
