@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" width="1440" height="960">
+  <!-- Synthetic routing example: criteria belong to routes; feedback names its target. -->
+  <defs>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#64748B"/></marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#2563EB"/></marker>
+    <marker id="arrow-amber" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#B45309"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1440" height="960" fill="#F8FAFC"/>
+  <text x="80" y="96" font-size="34" font-weight="700" fill="#0F172A" data-bg="#F8FAFC">分流不只看方向：判据、汇合与回流都要可读</text>
+  <text x="80" y="136" font-size="20" fill="#475569" data-bg="#F8FAFC">先检查自动交付的全部条件；未命中任一条件即进入人机协同</text>
+
+  <rect id="route-input" x="80" y="200" width="300" height="130" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  <rect x="80" y="200" width="300" height="7" rx="3" fill="#64748B"/>
+  <text x="110" y="250" font-size="25" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">变更输入</text>
+  <text x="110" y="292" font-size="20" fill="#475569" data-bg="#FFFFFF">目标 · 影响面 · 验收上下文</text>
+
+  <line data-role="edge" x1="380" y1="265" x2="520" y2="265" stroke="#64748B" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+  <rect id="route-analysis" x="520" y="200" width="400" height="130" rx="14" fill="#FFFFFF" stroke="#93C5FD" stroke-width="2"/>
+  <rect x="520" y="200" width="400" height="7" rx="3" fill="#2563EB"/>
+  <text x="550" y="250" font-size="25" font-weight="700" fill="#1D4ED8" data-bg="#FFFFFF">风险分析</text>
+  <text x="550" y="292" font-size="20" fill="#475569" data-bg="#FFFFFF">按来源判据选择交付路线</text>
+
+  <polyline data-role="edge" points="620,330 620,390 410,390 410,430" fill="none" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <polyline data-role="edge" points="820,330 820,390 1030,390 1030,430" fill="none" stroke="#B45309" stroke-width="2" marker-end="url(#arrow-amber)"/>
+
+  <rect id="route-standard" x="160" y="430" width="500" height="180" rx="14" fill="#FFFFFF" stroke="#93C5FD" stroke-width="2"/>
+  <rect x="160" y="430" width="500" height="7" rx="3" fill="#2563EB"/>
+  <text x="190" y="480" font-size="24" font-weight="700" fill="#1D4ED8" data-bg="#FFFFFF">标准变更 · 自动交付</text>
+  <text data-role="criterion" x="190" y="522" font-size="20" fill="#334155" data-bg="#FFFFFF">判据：上下文完整、低风险且可自动验证</text>
+  <text x="190" y="566" font-size="20" fill="#475569" data-bg="#FFFFFF">人工处理异常，随后进入共同准出</text>
+
+  <rect id="route-complex" x="780" y="430" width="500" height="180" rx="14" fill="#FFFFFF" stroke="#FCD34D" stroke-width="2"/>
+  <rect x="780" y="430" width="500" height="7" rx="3" fill="#B45309"/>
+  <text x="810" y="480" font-size="24" font-weight="700" fill="#92400E" data-bg="#FFFFFF">复杂变更 · 人机协同</text>
+  <text data-role="criterion" x="810" y="522" font-size="20" fill="#334155" data-bg="#FFFFFF">兜底：未满足任一自动交付条件</text>
+  <text x="810" y="566" font-size="20" fill="#475569" data-bg="#FFFFFF">高风险、上下文缺失或需人工判断</text>
+
+  <polyline data-role="edge" points="410,610 410,660 620,660 620,700" fill="none" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <polyline data-role="edge" points="1030,610 1030,660 820,660 820,700" fill="none" stroke="#B45309" stroke-width="2" marker-end="url(#arrow-amber)"/>
+
+  <rect id="route-gate" x="520" y="700" width="400" height="110" rx="14" fill="#FFFFFF" stroke="#99D5CC" stroke-width="2"/>
+  <rect x="520" y="700" width="400" height="7" rx="3" fill="#0F766E"/>
+  <text x="550" y="748" font-size="24" font-weight="700" fill="#0F766E" data-bg="#FFFFFF">共同准出</text>
+  <text x="550" y="786" font-size="20" fill="#475569" data-bg="#FFFFFF">自动验证 + 必要人工验收</text>
+
+  <line data-role="edge" x1="920" y1="755" x2="1040" y2="755" stroke="#64748B" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <rect id="route-release" x="1040" y="700" width="320" height="110" rx="14" fill="#FFFFFF" stroke="#99D5CC" stroke-width="2"/>
+  <text x="1070" y="748" font-size="24" font-weight="700" fill="#0F766E" data-bg="#FFFFFF">按需发布</text>
+  <text x="1070" y="786" font-size="20" fill="#475569" data-bg="#FFFFFF">通过后交付</text>
+
+  <polyline data-role="edge" points="720,810 720,900 60,900 60,265 80,265" fill="none" stroke="#B45309" stroke-width="2" stroke-dasharray="8 6" marker-end="url(#arrow-amber)"/>
+  <rect x="430" y="854" width="520" height="38" rx="8" fill="#F8FAFC"/>
+  <text x="690" y="880" text-anchor="middle" font-size="19" fill="#92400E" data-bg="#F8FAFC">验证失败：返回补充验收上下文</text>
+</svg>
