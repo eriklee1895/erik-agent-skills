@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 880" width="1440" height="880">
+  <!-- Synthetic variants: N1-N4, relative geometry and sequence stay fixed. -->
+  <defs>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#2563EB"/></marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#0F766E"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1440" height="880" fill="#F8FAFC"/>
+  <text x="80" y="96" font-size="34" font-weight="700" fill="#0F172A" data-bg="#F8FAFC">同骨架变体：固定流程，只比较人机分工</text>
+  <text x="80" y="136" font-size="20" fill="#475569" data-bg="#F8FAFC">N1–N4、顺序与相对位置不变；状态槽位只替换有依据的差异</text>
+
+  <rect x="80" y="200" width="600" height="580" rx="18" fill="#EFF6FF" stroke="#93C5FD" stroke-width="2"/>
+  <text x="120" y="248" font-size="26" font-weight="700" fill="#1D4ED8" data-bg="#EFF6FF">人机协同</text>
+  <rect x="760" y="200" width="600" height="580" rx="18" fill="#ECFDF5" stroke="#99D5CC" stroke-width="2"/>
+  <text x="800" y="248" font-size="26" font-weight="700" fill="#0F766E" data-bg="#ECFDF5">AI 全托管</text>
+
+  <rect data-variant="guided" data-node="N1" x="120" y="280" width="520" height="90" rx="12" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="2"/>
+  <text x="145" y="320" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">N1 · 需求澄清</text>
+  <rect x="450" y="302" width="160" height="40" rx="20" fill="#FFEDD5"/>
+  <text x="530" y="329" text-anchor="middle" font-size="18" fill="#9A3412" data-bg="#FFEDD5">人工对齐</text>
+  <line data-role="edge" x1="380" y1="370" x2="380" y2="400" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <rect data-variant="guided" data-node="N2" x="120" y="400" width="520" height="90" rx="12" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="2"/>
+  <text x="145" y="440" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">N2 · 方案评审</text>
+  <rect x="450" y="422" width="160" height="40" rx="20" fill="#FFEDD5"/>
+  <text x="530" y="449" text-anchor="middle" font-size="18" fill="#9A3412" data-bg="#FFEDD5">人工审核</text>
+  <line data-role="edge" x1="380" y1="490" x2="380" y2="520" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <rect data-variant="guided" data-node="N3" x="120" y="520" width="520" height="90" rx="12" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="2"/>
+  <text x="145" y="560" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">N3 · 开发验证</text>
+  <rect x="430" y="542" width="180" height="40" rx="20" fill="#DBEAFE"/>
+  <text x="520" y="569" text-anchor="middle" font-size="18" fill="#1D4ED8" data-bg="#DBEAFE">Agent + 人工</text>
+  <line data-role="edge" x1="380" y1="610" x2="380" y2="640" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <rect data-variant="guided" data-node="N4" x="120" y="640" width="520" height="90" rx="12" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="2"/>
+  <text x="145" y="680" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">N4 · 准出交付</text>
+  <rect x="450" y="662" width="160" height="40" rx="20" fill="#FFEDD5"/>
+  <text x="530" y="689" text-anchor="middle" font-size="18" fill="#9A3412" data-bg="#FFEDD5">人工验收</text>
+
+  <rect data-variant="managed" data-node="N1" x="800" y="280" width="520" height="90" rx="12" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="2"/>
+  <text x="825" y="320" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">N1 · 需求澄清</text>
+  <rect x="1130" y="302" width="160" height="40" rx="20" fill="#D1FAE5"/>
+  <text x="1210" y="329" text-anchor="middle" font-size="18" fill="#065F46" data-bg="#D1FAE5">自动补全</text>
+  <line data-role="edge" x1="1060" y1="370" x2="1060" y2="400" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <rect data-variant="managed" data-node="N2" x="800" y="400" width="520" height="90" rx="12" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="2"/>
+  <text x="825" y="440" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">N2 · 方案评审</text>
+  <rect x="1130" y="422" width="160" height="40" rx="20" fill="#D1FAE5"/>
+  <text x="1210" y="449" text-anchor="middle" font-size="18" fill="#065F46" data-bg="#D1FAE5">自动校验</text>
+  <line data-role="edge" x1="1060" y1="490" x2="1060" y2="520" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <rect data-variant="managed" data-node="N3" x="800" y="520" width="520" height="90" rx="12" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="2"/>
+  <text x="825" y="560" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">N3 · 开发验证</text>
+  <rect x="1110" y="542" width="180" height="40" rx="20" fill="#D1FAE5"/>
+  <text x="1200" y="569" text-anchor="middle" font-size="18" fill="#065F46" data-bg="#D1FAE5">Agent 自循环</text>
+  <line data-role="edge" x1="1060" y1="610" x2="1060" y2="640" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <rect data-variant="managed" data-node="N4" x="800" y="640" width="520" height="90" rx="12" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="2"/>
+  <text x="825" y="680" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">N4 · 准出交付</text>
+  <rect x="1130" y="662" width="160" height="40" rx="20" fill="#FFEDD5"/>
+  <text x="1210" y="689" text-anchor="middle" font-size="18" fill="#9A3412" data-bg="#FFEDD5">人工验收</text>
+
+  <text x="80" y="834" font-size="20" fill="#475569" data-bg="#F8FAFC">复核：同编号必须是同实体；无关流程不为了统一而强行套用此骨架。</text>
+</svg>

@@ -182,6 +182,42 @@
         "Uses the source-format workflow rather than SVG-specific lint",
         "Does not claim native editability or client experience from source alone"
       ]
+    },
+    {
+      "id": 17,
+      "prompt": "为同一交付流程画人机协同与 AI 全托管两张图。N1 需求澄清、N2 方案评审、N3 开发验证、N4 准出交付，实体与顺序不变。协同版状态依次为人工对齐、人工审核、Agent+人工、人工验收；托管版依次为自动补全、自动校验、Agent 自循环、人工验收。共同 N3 验证环内部为编码→自检→部署验证→合入，请展开该节点。先做本地，不写飞书。",
+      "expected_output": "Two same-skeleton workflow variants with stable entity IDs and an explicit N3 detail view.",
+      "files": [],
+      "expectations": [
+        "Keeps N1-N4, their relative geometry and sequence stable across variants",
+        "Changes only the supplied human/AI status and explains the differences in text",
+        "Connects the N3 overview to its detail with navigation rather than a new execution edge",
+        "Runs local validation without claiming Feishu acceptance"
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "画团队交付路由：一个编排者管理 X 个需求；仅当上下文完整、低风险且验收可自动验证时走自动交付，未满足任一条件就走人机协同。两路准出后汇合，验证失败返回补充上下文。用 A/B/C…N 表示其余需求，不要复制 N 张卡。只做本地。",
+      "expected_output": "A native conditional router with explicit criteria, merge and feedback plus a representative-instance fan-out.",
+      "files": [],
+      "expectations": [
+        "Requires all three automatic-delivery conditions and makes human collaboration the explicit fallback",
+        "Preserves the merge and labels the failure return and its target",
+        "Uses representative instances and ellipsis without inventing additional categories",
+        "Keeps structural arrows native and reports local evidence only"
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "为一篇效率改进文章做两张本地画板：第一张说明业务压力增加、编码提速但端到端交付未提速，最后导出必须改善交付链路；没有量化数据。第二张按三组列出已有工具：需求组为 PRD 助手／把对话整理为 PRD／PRD 文档，测试组为用例生成器／按验收标准生成用例／测试用例集，发布组为发布检查器／核对上线前置条件／发布检查单。",
+      "expected_output": "A qualitative tension-to-action figure and a grouped asset catalog with no unsupported quantitative or flow claims.",
+      "files": [],
+      "expectations": [
+        "Uses text or explicitly qualitative treatment rather than unscaled bar lengths",
+        "Keeps the action conclusion tied to the supplied tension",
+        "Groups assets by the supplied categories with a repeated name/purpose/artifact structure",
+        "Does not add catalog arrows or assets without source support"
+      ]
     }
   ]
 }

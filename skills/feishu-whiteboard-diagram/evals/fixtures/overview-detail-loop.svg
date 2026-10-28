@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1180" width="1440" height="1180">
+  <!-- Synthetic overview/detail: C...N and Worker ...Y collapse repeated instances. -->
+  <defs>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#2563EB"/></marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#0F766E"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1440" height="1180" fill="#F8FAFC"/>
+  <text x="80" y="90" font-size="34" font-weight="700" fill="#0F172A" data-bg="#F8FAFC">总览保留多重性，详图只展开一个代表实例</text>
+  <text x="80" y="130" font-size="20" fill="#475569" data-bg="#F8FAFC">团队编排者管理 X 个需求；需求 B 再协调 Y 个执行 Worker</text>
+
+  <rect id="team-router" x="80" y="270" width="300" height="140" rx="14" fill="#FFFFFF" stroke="#93C5FD" stroke-width="2"/>
+  <rect x="80" y="270" width="300" height="7" rx="3" fill="#2563EB"/>
+  <text x="110" y="322" font-size="24" font-weight="700" fill="#1D4ED8" data-bg="#FFFFFF">团队编排者</text>
+  <text x="110" y="364" font-size="20" fill="#475569" data-bg="#FFFFFF">1 个共享入口</text>
+
+  <polyline data-role="edge" points="380,310 460,310 460,225 560,225" fill="none" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <line data-role="edge" x1="380" y1="335" x2="560" y2="335" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <polyline data-role="edge" points="380,370 460,370 460,445 560,445" fill="none" stroke="#2563EB" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <rect id="request-a" x="560" y="180" width="320" height="90" rx="12" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="2"/>
+  <text x="585" y="220" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">需求 A</text>
+  <text x="585" y="252" font-size="18" fill="#475569" data-bg="#FFFFFF">独立上下文与交付流程</text>
+
+  <rect id="request-b" x="560" y="290" width="320" height="90" rx="12" fill="#FFFFFF" stroke="#60A5FA" stroke-width="3"/>
+  <text x="585" y="330" font-size="22" font-weight="700" fill="#1D4ED8" data-bg="#FFFFFF">需求 B · 代表实例</text>
+  <text x="585" y="362" font-size="18" fill="#475569" data-bg="#FFFFFF">下方展开内部执行结构</text>
+
+  <rect data-representative="ellipsis" id="request-more" x="560" y="400" width="320" height="90" rx="12" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="585" y="440" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">需求 C…N</text>
+  <text x="585" y="472" font-size="18" fill="#475569" data-bg="#FFFFFF">其余同类实例折叠</text>
+
+  <rect id="detail-panel" x="80" y="560" width="1280" height="540" rx="18" fill="#F0FDF4" stroke="#99D5CC" stroke-width="2"/>
+  <polyline data-role="edge" data-detail-for="request-b" points="880,335 960,335 960,675 880,675" fill="none" stroke="#0F766E" stroke-width="2" stroke-dasharray="8 6" marker-end="url(#arrow-green)"/>
+  <text x="985" y="480" font-size="20" fill="#0F766E" data-bg="#F8FAFC">展开需求 B（导航）</text>
+  <text x="120" y="610" font-size="26" font-weight="700" fill="#0F766E" data-bg="#F0FDF4">局部展开：需求 B 内部如何分配执行</text>
+
+  <rect id="request-b-detail" x="560" y="640" width="320" height="70" rx="12" fill="#FFFFFF" stroke="#0F766E" stroke-width="2"/>
+  <text x="720" y="683" text-anchor="middle" font-size="23" font-weight="700" fill="#0F766E" data-bg="#FFFFFF">需求 B · 执行协调</text>
+
+  <polyline data-role="edge" points="600,710 600,750 280,750 280,800" fill="none" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <line data-role="edge" x1="720" y1="710" x2="720" y2="800" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <polyline data-role="edge" points="840,710 840,750 1160,750 1160,800" fill="none" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <rect id="worker-1" x="120" y="800" width="320" height="90" rx="12" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="2"/>
+  <text x="145" y="840" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">Worker 1</text>
+  <text x="145" y="872" font-size="18" fill="#475569" data-bg="#FFFFFF">实现与自检</text>
+
+  <rect id="worker-2" x="560" y="800" width="320" height="90" rx="12" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="2"/>
+  <text x="585" y="840" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">Worker 2</text>
+  <text x="585" y="872" font-size="18" fill="#475569" data-bg="#FFFFFF">实现与自检</text>
+
+  <rect data-representative="ellipsis" id="worker-more" x="1000" y="800" width="320" height="90" rx="12" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="1025" y="840" font-size="22" font-weight="700" fill="#0F172A" data-bg="#FFFFFF">Worker …Y</text>
+  <text x="1025" y="872" font-size="18" fill="#475569" data-bg="#FFFFFF">其余执行单元折叠</text>
+
+  <polyline data-role="edge" points="280,890 280,950 640,950 640,1010" fill="none" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <line data-role="edge" x1="720" y1="890" x2="720" y2="1010" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <polyline data-role="edge" points="1160,890 1160,950 800,950 800,1010" fill="none" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <rect id="detail-result" x="560" y="1010" width="320" height="60" rx="12" fill="#D1FAE5" stroke="#0F766E" stroke-width="2"/>
+  <text x="720" y="1049" text-anchor="middle" font-size="22" font-weight="700" fill="#065F46" data-bg="#D1FAE5">汇合验证结果</text>
+</svg>

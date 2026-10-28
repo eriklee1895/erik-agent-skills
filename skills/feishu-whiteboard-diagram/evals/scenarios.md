@@ -185,3 +185,33 @@ The entrypoint decreased from 178 to 86 lines at this revision. Reference links 
 A fresh forward pass correctly handled warm neutral comparison, read-only fail/unknown findings, and preservation of supplied Mermaid plus provenance. Its independent comparison SVG used equal-weight panels and a custom warm palette; after correcting a title-margin warning and equalizing repeated node sizes, fit/lint/parser passed (0 errors / 0 warnings). Conversion produced 22 native nodes: 10 shapes, 11 text nodes and one undirected connector. Parent review inspected the PNG and the absence of arrowheads; drag binding was not established.
 
 The forward reviewer noted that Mermaid local validation was less explicit than SVG and that the base skill uses a version range. The verification reference now states the pinned local version and gives format-specific Mermaid check/conversion/preview commands. Those commands were exercised on the existing sequence fixture: 0 errors / 0 warnings, 4 native life_line nodes and 6 connectors; PNG inspected. This is one local sequence sample, not all-syntax or remote acceptance. The final lint diagnostic wording change also passed its 15 focused tests.
+
+## 18. Same-skeleton variants and focused detail
+
+**Prompt.** “为同一交付流程画人机协同与 AI 全托管两张图。N1 需求澄清、N2 方案评审、N3 开发验证、N4 准出交付，实体与顺序不变。协同版状态依次为人工对齐、人工审核、Agent+人工、人工验收；托管版依次为自动补全、自动校验、Agent 自循环、人工验收。共同 N3 验证环内部为编码→自检→部署验证→合入，请展开该节点。先做本地，不写飞书。”
+
+**Pass.** Keeps N1–N4, their sequence and relative geometry stable; changes only the supplied human/AI statuses and labels them in text. The N3 detail has an explicit navigation relationship and adds internal information rather than duplicating the whole chain.
+
+**Fail.** Re-lays out each variant, reuses an ID for a different entity, invents automation differences, or draws the zoom link as an additional execution step.
+
+## 19. Conditional routing with representative instances
+
+**Prompt.** “画团队交付路由：一个编排者管理 X 个需求；仅当上下文完整、低风险且验收可自动验证时走自动交付，未满足任一条件就走人机协同。两路准出后汇合，验证失败返回补充上下文。用 A/B/C…N 表示其余需求，不要复制 N 张卡。只做本地。”
+
+**Pass.** Requires complete context, low risk and automatic verification together for automatic delivery; every unmet condition routes to human collaboration, so the routes cannot overlap or leave an unmatched case. Preserves the merge and labels the failure return and target. Uses representative instances and ellipsis for the remaining requests. Native arrows retain direction; local checks do not establish drag binding.
+
+**Fail.** Shows only yes/no arrows, loses the merge or feedback target, duplicates every request card, or invents another route/category.
+
+## 20. Qualitative tension and an asset catalog
+
+**Prompt.** “为一篇效率改进文章做两张本地画板：第一张说明业务压力增加、编码提速但端到端交付未提速，最后导出必须改善交付链路；没有量化数据。第二张按三组列出已有工具：需求组为 PRD 助手／把对话整理为 PRD／PRD 文档，测试组为用例生成器／按验收标准生成用例／测试用例集，发布组为发布检查器／核对上线前置条件／发布检查单。”
+
+**Pass.** Uses context → tension → action for the first figure without unscaled quantitative bars. Groups the second by the supplied categories, repeats name/purpose/artifact, and adds no unsupported flow arrows or assets.
+
+**Fail.** Implies a numeric ratio from decorative bar lengths, adds an unsupported conclusion, or turns a neutral asset inventory into a process chain.
+
+### 2026-10-28 local pattern-fixture validation
+
+- The three original synthetic fixtures [`conditional-routing.svg`](fixtures/conditional-routing.svg), [`workflow-variants.svg`](fixtures/workflow-variants.svg) and [`overview-detail-loop.svg`](fixtures/overview-detail-loop.svg) passed fit-check, lint and parser 0.2.13 checks with 0 errors / 0 warnings. OpenAPI conversion kept all structural elements native, with 7 / 6 / 10 directed connectors respectively and no `image` / `svg` fallback. Tests also check branch criteria, exact native endpoints for the gate-to-input feedback, both merge routes and the request-B zoom link, shared variant geometry, and representative-instance navigation.
+- Full PNGs and approximately 900px-wide copies were visually inspected. The first overview render hid the zoom arrow beneath the detail panel; a paint-order regression assertion now covers it, and the corrected PNG shows the complete navigation arrow. These individual artifacts reach `local-render-valid`; no Feishu write, client edit or drag test was performed.
+- The complete skill suite passed 57 tests. The three prompts above remain behavioral scenario specifications, not claims of fresh agent runs or repeated reliability.
