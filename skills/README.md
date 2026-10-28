@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) · [Repository home](../README.md)
 
-Browse all **21 skills**: [Writing (4)](#writing), [Media (12)](#media), and
+Browse all **22 skills**: [Writing (4)](#writing), [Media (13)](#media), and
 [General Utilities (5)](#general-utilities). Each name opens its `SKILL.md`,
 with usage instructions, requirements, and supporting references.
 
@@ -27,6 +27,7 @@ with usage instructions, requirements, and supporting references.
 | [avatar-creator](./avatar-creator/SKILL.md) | Create static avatar images, distinct-character families, same-character sets, and fixed Seedance GIF/MP4 animations. Uses available image tools; animation requires Ark credentials, uv, and ffmpeg with no other skill dependency. Does not build interactive 3D runtimes. |
 | [live-avatar-3d](./live-avatar-3d/SKILL.md) | Turn a character image into a no-build interactive 3D browser avatar with orbit, gestures, and optional local microphone mouth motion. |
 | [seedance-video-gen](./seedance-video-gen/SKILL.md) | Generate videos with Seedance from text, images, or multimodal references. |
+| [earshot-audio-effect](./earshot-audio-effect/SKILL.md) | Generate and customize CPU procedural sound effects and sound kits for video and animation. |
 | [volcengine-bigmusic-bgm](./volcengine-bigmusic-bgm/SKILL.md) | Generate instrumental background music for video and article media workflows. |
 | [volcengine-tts](./volcengine-tts/SKILL.md) | Synthesize speech audio with Volcano Engine's text-to-speech models. |
 | [volcengine-transcribe](./volcengine-transcribe/SKILL.md) | Transcribe audio/video to text with Volcano Engine's speech recognition and generate SRT/VTT subtitles; speaker diarization and ffmpeg video extraction built in. |

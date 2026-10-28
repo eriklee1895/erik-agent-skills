@@ -5,7 +5,7 @@
 ![Erik Lee Agent Skills](assets/erik-agent-skills-cover-wide.jpg)
 
 <p align="center">
-  <a href="skills/README.zh-CN.md"><img alt="21 个 skills" src="https://img.shields.io/badge/COLLECTION-21_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="skills/README.zh-CN.md"><img alt="22 个 skills" src="https://img.shields.io/badge/COLLECTION-22_SKILLS-0B1F3A?style=for-the-badge"></a>
   <a href="skills/README.zh-CN.md"><img alt="3 个分类" src="https://img.shields.io/badge/CATEGORIES-3-6750A4?style=for-the-badge"></a>
   <a href="README.md"><img alt="中英文文档" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
 </p>
@@ -21,11 +21,12 @@
 | 生成或编辑图片 | [GPT Image](skills/gpt-image-api/SKILL.md) · [OpenRouter](skills/openrouter-image/SKILL.md) · [Seedream](skills/seedream-image-gen/SKILL.md) |
 | 制作文章封面和插图 | [Article Illustration](skills/article-illustration/SKILL.md) |
 | 根据文字或参考素材生成视频 | [Seedance](skills/seedance-video-gen/SKILL.md) |
+| 为视频生成和定制音效 | [Earshot 音效](skills/earshot-audio-effect/SKILL.md) |
 | 生成语音、音乐或完整音频场景 | [TTS 配音](skills/volcengine-tts/SKILL.md) · [BGM 配乐](skills/volcengine-bigmusic-bgm/SKILL.md) · [Seed Audio 场景音](skills/seed-audio-gen/SKILL.md) |
 | 把 Markdown 转为飞书文档，或为文档配图 | [Markdown 转飞书](skills/markdown-article-to-feishu-doc/SKILL.md) · [原生画板](skills/feishu-whiteboard-diagram/SKILL.md) · [交互图表](skills/feishu-html-diagram/SKILL.md) |
 | 联网搜索或收集文章素材 | [DeepSeek 搜索](skills/deepseek-web-search/SKILL.md) · [豆包搜索](skills/volcengine-web-search/SKILL.md) · [微信文章提取](skills/wechat-article-fetcher/SKILL.md) |
 
-[浏览全部 21 个 skills →](skills/README.zh-CN.md)，还包括头像、语音转写、Notion、官方文档抓取和 macOS 磁盘审计。
+[浏览全部 22 个 skills →](skills/README.zh-CN.md)，还包括头像、语音转写、Notion、官方文档抓取和 macOS 磁盘审计。
 
 ## 快速开始
 

@@ -5,7 +5,7 @@
 ![Erik Lee Agent Skills](assets/erik-agent-skills-cover-wide.jpg)
 
 <p align="center">
-  <a href="skills/README.md"><img alt="21 skills" src="https://img.shields.io/badge/COLLECTION-21_SKILLS-0B1F3A?style=for-the-badge"></a>
+  <a href="skills/README.md"><img alt="22 skills" src="https://img.shields.io/badge/COLLECTION-22_SKILLS-0B1F3A?style=for-the-badge"></a>
   <a href="skills/README.md"><img alt="3 categories" src="https://img.shields.io/badge/CATEGORIES-3-6750A4?style=for-the-badge"></a>
   <a href="README.zh-CN.md"><img alt="English and Chinese documentation" src="https://img.shields.io/badge/DOCS-EN_%7C_%E4%B8%AD%E6%96%87-F2B134?style=for-the-badge&logo=markdown&logoColor=white"></a>
 </p>
@@ -23,11 +23,12 @@ the skills you need and use them with your agent.
 | Generate or edit images | [GPT Image](skills/gpt-image-api/SKILL.md) · [OpenRouter](skills/openrouter-image/SKILL.md) · [Seedream](skills/seedream-image-gen/SKILL.md) |
 | Create article covers and illustrations | [Article Illustration](skills/article-illustration/SKILL.md) |
 | Generate video from text or references | [Seedance](skills/seedance-video-gen/SKILL.md) |
+| Generate and customize sound effects for video | [Earshot Audio Effects](skills/earshot-audio-effect/SKILL.md) |
 | Create speech, music, or a mixed audio scene | [TTS](skills/volcengine-tts/SKILL.md) · [BGM](skills/volcengine-bigmusic-bgm/SKILL.md) · [Seed Audio](skills/seed-audio-gen/SKILL.md) |
 | Turn Markdown into a Feishu document or add diagrams | [Markdown to Feishu](skills/markdown-article-to-feishu-doc/SKILL.md) · [Native whiteboards](skills/feishu-whiteboard-diagram/SKILL.md) · [Interactive diagrams](skills/feishu-html-diagram/SKILL.md) |
 | Search the web or collect article sources | [DeepSeek Search](skills/deepseek-web-search/SKILL.md) · [Doubao Search](skills/volcengine-web-search/SKILL.md) · [WeChat article extraction](skills/wechat-article-fetcher/SKILL.md) |
 
-[Browse all 21 skills →](skills/README.md), including avatars, transcription,
+[Browse all 22 skills →](skills/README.md), including avatars, transcription,
 Notion, documentation retrieval, and macOS disk audits.
 
 ## Quick start

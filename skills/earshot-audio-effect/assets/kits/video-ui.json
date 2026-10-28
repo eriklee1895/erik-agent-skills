@@ -1,0 +1,13 @@
+{
+  "kit": 1,
+  "name": "video-ui",
+  "sr": 48000,
+  "roles": {
+    "click": {"sound": "click/soft", "takes": 3, "seed": 42, "align": "onset", "level_db": -20, "note": "Small contact feedback; one voice across UI presses."},
+    "snap": {"sound": "toggle/on", "takes": 2, "seed": 42, "align": "onset", "level_db": -22, "note": "Switch/latch action."},
+    "whoosh.short": {"sound": "whoosh_fast/crisp", "takes": 2, "seed": 42, "edits": {"dur": 0.8, "apex": 0.32}, "align": "peak", "level_db": -25, "note": "Measured energy peak on a strong motion beat."},
+    "bell": {"sound": "pluck/kalimba", "takes": 1, "pitches": ["C5", "E5", "G5"], "seed": 42, "align": "onset", "level_db": -24, "note": "Related completion/accent notes."},
+    "riser": null
+  },
+  "off": {"riser": "Only add a build when the video's action calls for it."}
+}

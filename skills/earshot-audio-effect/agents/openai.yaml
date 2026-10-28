@@ -1,0 +1,4 @@
+interface:
+  display_name: "Earshot Audio Effects"
+  short_description: "Generate procedural SFX and sound kits on CPU"
+  default_prompt: "Use $earshot-audio-effect to generate sound effects or a sound kit for my video, with timing metadata and no audio-model dependencies."
