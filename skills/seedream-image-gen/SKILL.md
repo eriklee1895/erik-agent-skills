@@ -127,6 +127,8 @@ Each JSONL line is a prompt string or an object. Per-job fields include `prompt`
 
 `--concurrency` sets parallel batch requests. `--n 1..4` creates independent variants in `generate`.
 
+`--seed N` (`-1`..`2147483647`) is near-reproducible only with prompt optimization mode `standard`; `fast` mode is not reproducible. With `--n`, each take uses `seed+i`.
+
 Other common options: `--reference-image` (repeatable), `--out`, `--out-dir`, `--watermark`, `--timeout`, `--force`, `--prompt-file`. Outpainting remains available through `edit --outpaint left:400` and the [existing protocol](references/api-reference.md#outpainting).
 
 ## Errors, retries and output

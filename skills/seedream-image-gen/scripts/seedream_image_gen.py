@@ -652,6 +652,7 @@ def _build_request_body(
     output_format: str, watermark: bool, reference_images: Optional[list[str]],
     optimize_prompt: Optional[str],
     background: str = "opaque", layer_decomposition: bool = False,
+    seed: Optional[int] = None,
 ) -> dict[str, Any]:
     mode = optimize_prompt or "standard"
     if mode not in caps["optimize_modes"]:
@@ -664,6 +665,8 @@ def _build_request_body(
     }
     if prompt:
         body["prompt"] = prompt
+    if seed is not None:
+        body["seed"] = seed
     if reference_images:
         limit = 1 if layer_decomposition else caps["max_refs"]
         if len(reference_images) > limit:
@@ -987,6 +990,10 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) 
                    help="Include Seedream watermark (default: off).")
     p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None,
                    help="Prompt optimization: Pro standard/fast; Flash standard only.")
+    p.add_argument("--seed", type=int, default=None,
+                   help="Random seed in [-1, 2147483647] (-1 = random). Same seed + prompt + params "
+                        "gives near-identical images with --optimize-prompt standard only; fast mode "
+                        "is not reproducible. With --n > 1, take i uses seed + i.")
     p.add_argument("--no-auto-upscale", action="store_true",
                    help="Disable auto-upscale for WxH sizes below the model's pixel floor "
                         "(Pro ~0.92MP / 921600). Default: generate at the smallest valid "
@@ -1001,6 +1008,12 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) 
         p.add_argument("--n", type=int, default=1,
                        help=f"Number of independent images to generate (1-{DEFAULT_MAX_N}, default: 1).")
 
+
+
+def _check_seed(seed: Optional[int]) -> Optional[int]:
+    if seed is not None and not -1 <= int(seed) <= 2_147_483_647:
+        _die(f"--seed must be in [-1, 2147483647] (got {seed}).")
+    return None if seed is None else int(seed)
 
 
 def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) -> dict[str, Any]:
@@ -1164,6 +1177,7 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         "web_search": False,
         "background": background,
         "optimize_prompt": args.optimize_prompt,
+        "seed": _check_seed(getattr(args, "seed", None)),
         "downscale_to": downscale_to,
         "reference_images": refs,
         "reference_image_paths": list(getattr(args, "reference_image", []) or []),
@@ -1202,7 +1216,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
         output_format=r["output_format"], watermark=r["watermark"],
         reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-        background=r["background"],
+        background=r["background"], seed=r["seed"],
     )
 
     out = getattr(args, "out", None)
@@ -1277,6 +1291,13 @@ async def _generate_one(
     return 0
 
 
+def _body_for_take(body: dict[str, Any], i: int) -> dict[str, Any]:
+    b = body.copy()
+    if b.get("seed", -1) >= 0:
+        b["seed"] = (b["seed"] + i) % 2_147_483_648  # distinct but reproducible takes
+    return b
+
+
 async def _generate_concurrent(
     args: argparse.Namespace,
     body: dict[str, Any],
@@ -1290,7 +1311,7 @@ async def _generate_concurrent(
         t0 = time.monotonic()
         try:
             images, revised_prompt, usage, reported_size, _call_ms = await _generate_with_retry(
-                api_key, base_url, body.copy(), r["timeout"],
+                api_key, base_url, _body_for_take(body, i), r["timeout"],
             )
             return i, images, revised_prompt, usage, reported_size, int((time.monotonic() - t0) * 1000), None
         except _APIError as e:
@@ -1386,7 +1407,7 @@ def _cmd_edit(args: argparse.Namespace) -> int:
         model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
         output_format=r["output_format"], watermark=r["watermark"],
         reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-        background=r["background"],
+        background=r["background"], seed=r["seed"],
     )
 
     out = getattr(args, "out", None)
@@ -1501,6 +1522,7 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         ns.landscape = bool(job.get("landscape", args.landscape))
         ns.watermark = bool(job.get("watermark", args.watermark))
         ns.optimize_prompt = job.get("optimize_prompt", args.optimize_prompt)
+        ns.seed = job.get("seed", getattr(args, "seed", None))
         ns.background = job.get("background", args.background)
         ns.no_auto_upscale = bool(job.get("no_auto_upscale", getattr(args, "no_auto_upscale", False)))
         ns.reference_image = list(job.get("reference_image", []) or [])
@@ -1527,7 +1549,7 @@ def _cmd_batch(args: argparse.Namespace) -> int:
             model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
             output_format=r["output_format"], watermark=r["watermark"],
             reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-            background=r["background"],
+            background=r["background"], seed=r["seed"],
         )
         bodies.append((job["prompt"], body, r))
 
