@@ -25,7 +25,7 @@ Avoid: beauty-filter smoothing, staged studio polish, artificial blur, extra tex
 **Visual QA:** Inspect anatomy, hands, skin texture, perspective, contact, light agreement,
 and whether the scene looks observed rather than staged.
 
-**Evidence/status:** Adapted from the [official GPT Image 2.5 prompting guide](https://developers.openai.com/api/docs/guides/image-prompting); structure locally reviewed, not a quality guarantee.
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Editorial or article illustration
 
@@ -49,7 +49,7 @@ Avoid: unrelated symbolism, decorative elements that change the meaning, extra t
 **Visual QA:** Check that the metaphor communicates the article idea, hierarchy survives
 at publication size, and decorative content does not introduce a false claim.
 
-**Evidence/status:** Original 2.5-oriented scaffold informed by OpenAI's deliverable-first and concrete-visual-language guidance; not benchmarked as a fixed style.
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Transparent asset, icon, or sprite
 

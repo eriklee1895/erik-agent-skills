@@ -1,8 +1,29 @@
-# GPT Image 2.5 live evaluation plan
+# GPT Image 2.6 live evaluation plan
 
 This evaluation exercises the bundled CLI against the configured OpenAI-compatible
 endpoint. It is intentionally separate from `evals/evals.json`: that file describes
 agent behavior, while this plan records observable model and artifact quality.
+
+The September matrices and reports are historical **2.5** evidence. Their shorthand IDs are now written as the original effective undated `gpt-image-2.5-flare` / `gpt-image-2.5-sunburst` names so moving CLI aliases cannot silently switch a replay to 2.6. This preserves the historical model family; undated aliases still do not guarantee snapshot reproducibility. `generation-matrix-26.jsonl` is a separate current-generation copy; `native-gif-matrix-26.jsonl` adds native animation coverage. Keep run artifacts and credentials outside the published skill.
+
+## 2.6 native-format checks
+
+Run only the cases required by the user's task; a prepared matrix is not a reason to repeat paid successful calls.
+
+1. Dry-run the GIF matrix with the current configured provider. Verify `output_format=gif`, exact 2.6 model/wire ID, frame fields, per-frame size, complexity, unique output paths, and `network_call=false`.
+2. Generate a short mascot loop, a product microloop, a transparent loop, and a label-sensitive loop as needed. Record real container, dimensions, frame count, per-frame timing, cycle duration, unique frames, loop metadata, alpha across frames, latency, and usage. Separate requested fields from decoded facts.
+3. Play several cycles, inspect the seam, and check identity, text, contacts, fixed background, and flicker. A loop flag or a successful HTTP status does not satisfy the visual gate.
+4. Compare one lower/higher complexity pair with all other settings fixed only when that comparison is authorized. Quality and complexity remain independent axes.
+5. For reference GIFs, use the explicitly enabled OFOX extension and record the provider. Other providers and the official OpenAI edit contract do not gain support from this observation.
+6. For markup, construct at least two plausible targets and a left/right annotation A/B while keeping text identical. A single-object edit cannot prove the layer controlled spatial targeting. The local OFOX A/B failed; retain that uncertainty.
+7. For SVG, use `n=1`, no stream/compression/downscale, and decode UTF-8 XML. Verify static vector structure and inspect rendering. If the provider requires `svg.model`, select a confirmed author model explicitly; record separate `svg_usage`. The local OFOX route returned a missing-`svg.model` error even with a confirmed author supplied; SVG remained blocked there. Selector flags implement the documented request, not a verified OFOX workaround.
+8. Confirm invalid combinations fail before paid calls: frame fields on PNG, GIF/SVG streaming/compression/downscale, official GIF edit, markup+mask, invalid markup geometry/alpha, and 2.6-only fields on legacy pins.
+
+Current provider observations are documented in [animated-gif.md](../references/animated-gif.md) and [community-practices.md](../references/community-practices.md). Do not copy account-specific receipts, access URLs, or generated media into the published source.
+
+## Historical raster evaluation procedure
+
+The sections below preserve the 2.5 baseline method. To measure 2.6, select `generation-matrix-26.jsonl` explicitly and keep that run's result separate.
 
 ## Goals
 
@@ -73,8 +94,10 @@ uv run "$SKILL_DIR/scripts/gpt_image_api.py" generate-batch \
   --timeout 300
 ```
 
-The first command is the paid-call gate. Confirm `network_call=false`, 16 jobs, correct
-wire model IDs, and no existing output collisions before running the second command.
+Inspect the first command's `network_call=false`, 16 jobs and wire model IDs before
+running the second command. Batch dry-run validates structure and duplicate destinations.
+Live execution additionally checks existing image and sidecar paths before creating the
+API client.
 
 ## Edit matrix
 

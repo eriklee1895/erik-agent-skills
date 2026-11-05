@@ -25,7 +25,7 @@ Avoid: new objects, composition change, global relighting, restyling, extra text
 **Visual QA:** Compare the target and all protected regions before/after; inspect seams,
 supporting shadows, repeated textures, and accidental object loss.
 
-**Evidence/status:** Official single-change pattern from the [GPT Image 2.5 editing examples](https://developers.openai.com/api/docs/guides/image-prompting), reinforced by community preservation workflows.
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Conservative restoration or detail recovery
 
@@ -98,7 +98,7 @@ Avoid: face redesign, extra people or limbs, clothing change unless authorized, 
 **Visual QA:** Compare identity against the source at similar scale; inspect anatomy,
 hands, feet, ground contact, light, occlusion, and whether scene objects drifted.
 
-**Evidence/status:** Official identity insertion/preservation pattern from the [GPT Image 2.5 guide](https://developers.openai.com/api/docs/guides/image-prompting).
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Clothing try-on with multiple references
 
@@ -196,7 +196,7 @@ Avoid: object removal/addition, structural change, style transfer, face change, 
 **Visual QA:** Verify scene geometry and identities, then check consistent light direction,
 shadow density, reflections, atmosphere, and believable weather interaction.
 
-**Evidence/status:** Official one-condition iterative-edit pattern from the [GPT Image 2.5 guide](https://developers.openai.com/api/docs/guides/image-prompting).
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Role-bounded style transfer
 

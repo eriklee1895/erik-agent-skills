@@ -29,7 +29,7 @@ Avoid: additional letters or numbers, invented dates, fake logos, signatures, or
 **Visual QA:** Compare every character, count occurrences, inspect line breaks, hierarchy,
 margins, crop, contrast, and any accidental text.
 
-**Evidence/status:** Official exact-text pattern plus a source-attributed community [poster adaptation](https://github.com/wuyoscar/GPT-Image2-Skill/blob/main/skills/gpt-image/references/templates-gpt-image-2.5.md).
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Conceptual typography poster
 
@@ -54,7 +54,7 @@ Avoid: extra readable copy, generic word art, default-font appearance, unrelated
 **Visual QA:** Verify title spelling and readability first, then conceptual relevance,
 hierarchy, negative space, figure/type interaction, and absence of extra copy.
 
-**Evidence/status:** Selective structural adaptation from the community [industrial template library](https://github.com/freestylefly/awesome-gpt-image-2/blob/main/docs/templates.md); requires 2.5 visual evaluation.
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Technical or educational infographic
 
@@ -159,7 +159,7 @@ Avoid: invented values, misleading scale, clip art, generic stock photos, decora
 **Visual QA:** Verify all data and source text, chart encoding, axes, legends, arrows,
 hierarchy, readability at presentation size, and absence of invented numbers.
 
-**Evidence/status:** Official productivity-visual pattern from the [GPT Image 2.5 guide](https://developers.openai.com/api/docs/guides/image-prompting); deterministic charting remains preferable for exact data graphics.
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Visual abstract or executive summary
 
@@ -187,8 +187,7 @@ Avoid: decorative clutter, fake citations, unsupported claims, extra readable te
 **Visual QA:** Verify every fact, label, module/action count, reading order, text string,
 and relationship. For publication-critical copy, finish typography deterministically.
 
-**Evidence/status:** Two local GPT Image 2.5 checks produced usable visual-abstract and
-executive-summary concepts; text-heavy success is sample evidence, not a guarantee.
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Document or publication page concept
 

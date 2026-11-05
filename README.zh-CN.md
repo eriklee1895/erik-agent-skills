@@ -19,6 +19,7 @@
 | 我想要…… | 从这里开始 |
 | --- | --- |
 | 生成或编辑图片 | [GPT Image](skills/gpt-image-api/SKILL.md) · [OpenRouter](skills/openrouter-image/SKILL.md) · [Seedream](skills/seedream-image-gen/SKILL.md) |
+| 生成短循环 GIF | [GPT Image 2.6](skills/gpt-image-api/SKILL.md) |
 | 制作文章封面和插图 | [Article Illustration](skills/article-illustration/SKILL.md) |
 | 根据文字或参考素材生成视频 | [Seedance](skills/seedance-video-gen/SKILL.md) |
 | 生成语音、音乐或完整音频场景 | [TTS 配音](skills/volcengine-tts/SKILL.md) · [BGM 配乐](skills/volcengine-bigmusic-bgm/SKILL.md) · [Seed Audio 场景音](skills/seed-audio-gen/SKILL.md) |

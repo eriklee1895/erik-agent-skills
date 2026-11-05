@@ -1,7 +1,6 @@
-# Prompting GPT Image 2.5 (`sunburst` / `flare`)
+# Prompting GPT Image 2.6 (`sunburst` / `flare`)
 
-The two GPT Image 2.5 models share one parameter matrix; this is their model
-knowledge, mirroring [banana-prompting.md](banana-prompting.md).
+The two GPT Image 2.6 models share one OpenRouter parameter matrix. Use `sunburst` or `flare` and select quality and complexity for the deliverable.
 
 ## What these models are good at
 
@@ -15,8 +14,8 @@ knowledge, mirroring [banana-prompting.md](banana-prompting.md).
 
 ## sunburst vs flare
 
-The two aliases share the same controls. Sunburst is the base/quality tier;
-Flare is the small/speed tier. Use the requested tier, or start with Sunburst
+The two aliases share the same controls. Sunburst emphasizes detail and
+consistency across edits; Flare emphasizes speed. Use the requested tier, or start with Sunburst
 for a task whose text/layout or edit fidelity needs evaluation. The tier name
 is not a guarantee for a particular prompt; inspect the required details.
 
@@ -28,11 +27,46 @@ addresses a visible requirement, and read actual usage after generation.
 | Lever | Values | Notes |
 |---|---|---|
 | `--quality` | auto/low/medium/high/xhigh/max | rendering detail, latency, and cost tradeoff |
+| `--complexity` | low/medium/high | 2.6 planning before rendering; omitted uses the upstream default |
+| `--output-format` | png/jpeg/webp | omitted uses provider default; GIF/SVG unavailable on this route |
+| `--output-compression` | 0–100 | requires explicit jpeg/webp; PNG has no compression knob here |
 | `--n` | 1–10 | distinct variants of one prompt |
 | `--aspect` | 1:1, 3:2, 2:3, 4:3, 3:4, 16:9, 9:16, 21:9, auto | `auto` allowed |
 | `--background` | auto/transparent/opaque | transparency is native |
 | references | up to 16 | repeated `--image` |
 | streaming | API supported | SSE partial frames; not exposed by this CLI |
+
+`complexity` and `quality` are separate: use less planning for a straightforward
+draft, more planning for a complex arrangement, and quality for rendering detail.
+The CLI sends complexity under `provider.options.openai`, never as a top-level
+field. Native OpenAI's default is high; this CLI omits the field when unspecified.
+Transparent background requires PNG or WebP and is rejected with JPEG.
+
+## OpenRouter access boundary
+
+OpenAI's official API demo describes its GIF workflow as sprite-sheet generation followed by automatic frame extraction and looping GIF assembly. Native GIF names the finished API deliverable. OpenRouter's supported output formats determine whether that workflow is available through this access path. [Official OpenAI demo](https://www.youtube.com/watch?v=9ZxCOHkfn_8)
+
+Use `POST https://openrouter.ai/api/v1/images` for generation and edits.
+Reference images use `input_references`; this route exposes no native mask or
+markup image field. GPT 2.6's native GIF and SVG features appear in the model
+description, but OpenRouter's per-endpoint output formats are png/jpeg/webp and
+its passthrough allowlist is only moderation/complexity. `frame_count` and
+`frame_duration_ms` are unavailable; do not bury them inside provider options.
+The global Image API can return SVG for other vector models, which does not
+establish SVG support for GPT 2.6.
+
+Buffered responses carry `data[].b64_json`, optional `media_type`, and `usage`.
+Inspect actual bytes and the saved metadata's `response.images` labels. Rates
+on 2026-11-05 were $5/M text-input tokens, $8/M image-input tokens, and $30/M
+image-output tokens for both tiers; query current rates before budgeting and
+use actual `usage.cost` after calls.
+
+Verified sources (2026-11-05):
+
+- [Sunburst endpoint descriptor](https://openrouter.ai/api/v1/images/models/openai/gpt-image-2.6-sunburst/endpoints)
+- [Flare endpoint descriptor](https://openrouter.ai/api/v1/images/models/openai/gpt-image-2.6-flare/endpoints)
+- [OpenRouter Image API](https://openrouter.ai/docs/guides/overview/multimodal/image-generation)
+- [Typed Python SDK image parameters](https://openrouter.ai/docs/client-sdks/python/sdks/images/README.md)
 
 Model choice (`flare`) and `--quality max` are separate: "flare + quality max"
 is the fast family at maximum detail, not a different model.
@@ -88,5 +122,5 @@ rather than assuming a multi-output call saves money.
 - Reference-based recontextualization where banana's behavior suits the brief;
   reference count alone does not favor banana (GPT accepts 16, banana 14).
 - Extreme ratios like 8:1 / 1:8.
-- Output canvases beyond GPT Image 2.5's documented edge/pixel limits. More
+- Output canvases beyond the chosen GPT route's supported dimensions. More
   output pixels alone do not imply better visual detail.

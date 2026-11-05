@@ -1,4 +1,4 @@
-# GPT Image 2.5 sample prompts
+# GPT Image 2.6 sample prompts
 
 Adapt these examples rather than stacking every field into every request.
 For a sparse or specialized brief, use
@@ -67,3 +67,19 @@ Style and medium: clean technical editorial illustration, white background, dark
 Text: render every stage label exactly once; no other text.
 Constraints: relationships and arrow direction must be logically correct.
 ```
+
+## Native mascot GIF
+
+```text
+A small charcoal cat with a turquoise scarf, centered on a pale cream background. Locked camera, stable framing and scale. The cat blinks, gives one small paw wave, and returns toward its starting pose for a repeating loop. Keep scarf, face markings, body proportions, baseline and lighting unchanged. No captions, grid, sprite sheet, logos or extra characters.
+```
+
+Use `--output-format gif --frame-count 9 --frame-duration-ms 200 --size 512x512`; inspect actual frame settings and seam continuity. These fields are requests, not proof of the returned animation's properties.
+
+## Markup-guided localized edit
+
+```text
+Image 1 is the original scene. The separate markup layer has a red circle identifying the left vase. Recolor only that vase to cobalt blue ceramic. Preserve the vase shape, stems, both other vases, furniture, crop, lighting and background. Remove the red circle from the final result.
+```
+
+Use `--markup annotations.png` with the original target in `--image`; inspect spatial following, particularly on OFOX.

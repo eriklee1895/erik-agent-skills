@@ -1,6 +1,6 @@
 ---
 name: openrouter-image
-description: "Use when generating or editing raster images through OpenRouter with GPT Image 2.5 Sunburst/Flare, Nano Banana 2.1, Grok Imagine Image 2.0, or MAI-Image-2.6: photos, posters, text-heavy layouts, product shots, illustrations, reference composites, variants, or JSONL batches. Especially relevant when the user names OpenRouter, Nano Banana, Sunburst/Flare, Grok Imagine, or MAI-Image, or wants one API key for these models. Excludes SVG, code-native diagrams, and deterministic layout."
+description: "Use when generating or editing raster images through OpenRouter with GPT Image 2.6 Sunburst/Flare, Nano Banana 2.1, Grok Imagine Image 2.0, or MAI-Image-2.6: photos, posters, text-heavy layouts, product shots, illustrations, reference composites, variants, or JSONL batches. Also use to check whether OpenRouter exposes a requested GPT Image 2.6 GIF or SVG feature. Excludes code-native diagrams and deterministic layout."
 ---
 
 # openrouter-image
@@ -10,11 +10,19 @@ curated models:
 
 | Alias | Model | Use for |
 |---|---|---|
-| `sunburst` | openai/gpt-image-2.5-sunburst | GPT base tier; text/layout, reference edits, variants, transparency |
-| `flare` | openai/gpt-image-2.5-flare | GPT speed tier; drafts, variants, transparency |
+| `sunburst` | openai/gpt-image-2.6-sunburst | GPT detail tier; text/layout, reference edits, variants, transparency |
+| `flare` | openai/gpt-image-2.6-flare | GPT speed tier; drafts, variants, transparency |
 | `banana` | google/gemini-nano-banana-2.1 | ultra-wide/tall, large canvases, routine reference edits, 1K–4K |
 | `grok` | x-ai/grok-imagine-image-2.0 | subject-led generation, local edits and reframing; separate resolution/quality controls, 3 refs |
 | `mai` | microsoft/mai-image-2.6 | combine composition, subject, product and style references; iterative edits, up to 5 refs |
+
+OpenRouter's GPT 2.6 endpoints currently expose **PNG, JPEG, and WebP stills**.
+Their model descriptions mention native animated GIF, SVG, and markup editing,
+but the definitive endpoint descriptors do not expose those controls. A live
+GIF request returned HTTP 400 on 2026-11-05. For native GIF/SVG requirements,
+explain this route limitation and use a supported native API only when the
+user's requested access path allows it. Do not replace a GIF request with a
+static image or claim that prompted motion creates an animation.
 
 Use the table for routine selection. Read only the references relevant to the job:
 
@@ -48,12 +56,17 @@ briefing it. These guides are self-contained.
    mismatches): GPT models take `--quality` + `--n` + `--background`; banana
    takes `--resolution` with n=1; grok supports independent `--resolution` and
    `--quality` controls with n=1; mai has no detail control, n=1. The model guides
-   specify defaults and omissions.
+   specify defaults and omissions. GPT models also take `--complexity`
+   (`low/medium/high`, planning before rendering) and GPT models expose
+   `--output-format png/jpeg/webp`. Compression requires explicit JPEG/WebP;
+   transparent backgrounds require PNG/WebP.
 4. For complex requests, run `--dry-run` first and inspect the exact JSON body.
 5. Run the script with `python3` (standard library only, no install needed).
 6. Inspect the saved image and its sibling `.json` metadata: exact copy, counts,
    preserved details, returned dimensions, and actual `usage.cost`. Use the
    recorded output paths; the saved suffix follows the returned image bytes.
+   `response.images[].media_type` preserves the server's format label when
+   supplied, while byte detection determines the saved extension.
 
 For a cost-sensitive request, check current OpenRouter rates and the relevant
 reference/detail settings before estimating spend. Use actual `usage.cost` for
@@ -82,12 +95,12 @@ python3 scripts/openrouter_image.py generate \
   --aspect 3:4 --quality high \
   --out output/poster.png
 
-# Flare: fast everyday image at high quality
+# Flare: high-quality still with less planning and explicit WebP encoding
 python3 scripts/openrouter_image.py generate \
   --model flare \
   --prompt "A cozy alpine cabin at dawn, mist over the lake, warm light" \
-  --aspect 16:9 --quality high \
-  --out output/cabin.png
+  --aspect 16:9 --quality high --complexity low --output-format webp \
+  --out output/cabin.webp
 
 # Banana (Nano Banana 2.1): 4K ultra-wide, resolution dialect
 python3 scripts/openrouter_image.py generate \
@@ -159,7 +172,8 @@ Each line is one job:
 
 Supported job fields: `name`, `model` (alias or full id), `prompt`,
 `aspect_ratio`, `quality` / `resolution` (per model), `n`, `background`,
-`images` (reference paths), `output_compression`. Results and a
+`images` (reference paths), `output_compression`, `output_format`, `complexity`.
+The last two fields follow the model restrictions above. Results and a
 `batch-summary.json` land in the output directory. Jobs run sequentially.
 Legacy `aspect` is accepted; if both ratio keys are present, they must match.
 The full batch is validated before paid calls; unsupported fields are rejected.
@@ -172,6 +186,8 @@ for collision rules, dry-run limits, and retrying selected jobs.
 | | sunburst / flare | banana | grok | mai |
 |---|---|---|---|---|
 | Detail | `--quality` auto→max | `--resolution` 1K/2K/4K | `--resolution` 1K/2K + `--quality` low/medium | none |
+| Planning | `--complexity` low/medium/high | none | none | none |
+| Encoding | `--output-format` png/jpeg/webp | provider default | provider default | provider default |
 | Variants | `--n` up to 10 | n = 1 | n = 1 | n = 1 |
 | References | up to 16 | up to 14 | **up to 3** | up to 5 |
 | Transparency | `--background transparent` | unsupported | unsupported | unsupported |
@@ -188,7 +204,8 @@ explanatory message.
 
 ## Notes
 
-- `--out` supplies the destination stem, not an output-format request. Banana
+- `--out` supplies the destination stem; GPT encoding is selected separately
+  with `--output-format`. Banana
   returned JPEG in the live probes; the CLI saves `.jpg` when JPEG bytes arrive,
   even if `--out` ends in `.png`, and preserves the returned bytes. Reference
   MIME types are also detected from bytes, including older mislabeled files.

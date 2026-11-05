@@ -55,7 +55,7 @@ Avoid: missing/duplicate numbers, repeated poses, cropped anatomy, extra charact
 **Visual QA:** Count cells and numbers; verify sequence order, distinct poses, identity,
 accessories, garment patterns, anatomy, full limbs, and constant camera/scale.
 
-**Evidence/status:** Source-attributed community adaptation from a [GPT Image 2.5 pose-sheet workflow](https://github.com/wuyoscar/GPT-Image2-Skill/blob/main/skills/gpt-image/references/templates-gpt-image-2.5.md); the structure is useful but not locally benchmarked across actions.
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Multi-camera continuity sheet
 
@@ -81,8 +81,7 @@ Avoid: new locations, changed wardrobe, duplicated characters, broken 3D perspec
 **Visual QA:** Check identity, wardrobe, architecture, anchor-object positions, camera
 logic, perspective continuity, shot order, and any accidental scene redesign.
 
-**Evidence/status:** Two local GPT Image 2.5 runs produced coherent 3×3 sheets with both
-models; this remains a continuity heuristic, not a guarantee for every cast or scene.
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Continue a character across scenes
 
@@ -106,7 +105,7 @@ Avoid: character redesign, wardrobe change unless requested, duplicate character
 **Visual QA:** Compare the new image with the anchor, not only the previous scene; inspect
 face, silhouette, proportions, clothing, accessories, palette, medium, and story action.
 
-**Evidence/status:** Official multi-turn character-consistency pattern from the [GPT Image 2.5 guide](https://developers.openai.com/api/docs/guides/image-prompting).
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Storyboard or comic sequence
 

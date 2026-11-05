@@ -1,4 +1,4 @@
-# Prompting GPT Image 2.5
+# Prompting GPT Image 2.6
 
 The model reads natural-language briefs, not unordered keyword bags. Choose the format that makes requirements easy to inspect and update. Short paragraphs work for simple scenes; labeled sections help complex layouts and edits.
 
@@ -41,3 +41,9 @@ Number every input and state what it controls: identity, product, garment, style
 ## Iterate
 
 Change one condition at a time and use the approved result as the next input. Restate critical invariants. Compare accumulated texture and small text against the original, not only the previous pass. Once all changes are settled, consider a single consolidated edit from the approved base to reduce accumulated drift.
+
+## GIF motion and markup
+
+For native GIF generation, add a short action arc, the return toward the initial pose, and fixed visual landmarks. Keep the camera, subject scale, baseline, identity, accessories, and background explicit. Ask for a finished animation without sprite-sheet language. Frame count and timing belong in API fields; inspect what the provider actually returns. See [animated-gif.md](animated-gif.md).
+
+For markup edits, the prompt describes the action and preservation constraints while a separate transparent PNG identifies the location. Mention the annotation color/shape and removal of visible marks in the result. Annotation acceptance does not establish spatial following.

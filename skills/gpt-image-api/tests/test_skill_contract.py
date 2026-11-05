@@ -11,13 +11,13 @@ TEMPLATE_DIR = SKILL_DIR / "assets" / "templates"
 
 
 class SkillContractTests(unittest.TestCase):
-    def test_skill_entrypoint_is_current_model_only_and_progressive(self):
+    def test_skill_entrypoint_covers_current_models_and_is_progressive(self):
         text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("name: gpt-image-api", text)
         self.assertIn("description: Use when", text)
-        self.assertIn("gpt-image-2.5-flare", text)
-        self.assertIn("gpt-image-2.5-sunburst", text)
-        self.assertIsNone(re.search(r"gpt-image-2(?![.-]5)", text))
+        self.assertIn("gpt-image-2.6-flare", text)
+        self.assertIn("gpt-image-2.6-sunburst", text)
+        self.assertIsNone(re.search(r"gpt-image-2(?![.-][56])", text))
         self.assertLess(len(text.split()), 900)
 
     def test_model_selection_is_agent_owned_with_explicit_user_override(self):
@@ -153,7 +153,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertNotIn("system imagegen", text)
         self.assertNotIn("built-in image_gen", text)
         self.assertNotIn("openrouter", text)
-        self.assertIsNone(re.search(r"gpt-image-2(?![.-]5)", visible_text))
+        self.assertIsNone(re.search(r"gpt-image-2(?![.-][56])", visible_text))
 
     def test_cli_and_eval_contract_are_present(self):
         self.assertTrue((SKILL_DIR / "scripts" / "gpt_image_api.py").is_file())
@@ -181,7 +181,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Scoring rubric", plan)
         self.assertEqual(len(matrix_lines), 16)
         models = {json.loads(line)["model"] for line in matrix_lines}
-        self.assertEqual(models, {"flare", "sunburst"})
+        self.assertEqual(models, {"gpt-image-2.5-flare", "gpt-image-2.5-sunburst"})
         scorecard = SKILL_DIR / "evals" / "live" / "scorecard-template.md"
         self.assertTrue(scorecard.is_file())
         regression = SKILL_DIR / "evals" / "live" / "regression-text-matrix.jsonl"
@@ -194,7 +194,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(len(regression_lines), 4)
         self.assertEqual(
             {json.loads(line)["model"] for line in regression_lines},
-            {"flare", "sunburst"},
+            {"gpt-image-2.5-flare", "gpt-image-2.5-sunburst"},
         )
         v3 = SKILL_DIR / "evals" / "live" / "regression-text-matrix-v3.jsonl"
         self.assertTrue(v3.is_file())
@@ -204,7 +204,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(len(v3_lines), 4)
 
     def test_live_findings_are_recorded_as_reusable_guidance(self):
-        model_text = (SKILL_DIR / "references" / "model-selection.md").read_text(
+        model_text = (SKILL_DIR / "evals" / "history" / "prompt-provenance.md").read_text(
             encoding="utf-8"
         )
         generation_text = (SKILL_DIR / "references" / "generation.md").read_text(
@@ -220,10 +220,10 @@ class SkillContractTests(unittest.TestCase):
             SKILL_DIR / "assets" / "templates" / "layout-and-text.md"
         ).read_text(encoding="utf-8")
         community_text = (
-            SKILL_DIR / "references" / "community-practices.md"
+            SKILL_DIR / "evals" / "history" / "prompt-provenance.md"
         ).read_text(encoding="utf-8")
         for needle in ("2026-09-16", "paired", "latency", "workflow"):
-            with self.subTest(file="model-selection.md", needle=needle):
+            with self.subTest(file="prompt-provenance.md", needle=needle):
                 self.assertIn(needle, model_text)
         for needle in ("allowlist", "unapproved", "critical", "Alpha"):
             with self.subTest(file="generation.md", needle=needle):
@@ -256,7 +256,7 @@ class SkillContractTests(unittest.TestCase):
             "restoration",
             "transient",
         ):
-            with self.subTest(file="community-practices.md", needle=needle):
+            with self.subTest(file="prompt-provenance.md", needle=needle):
                 self.assertIn(needle, community_text)
         regression_report = (
             SKILL_DIR / "evals" / "live" / "results" / "2026-09-16-text-regression.md"

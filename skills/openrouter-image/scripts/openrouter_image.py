@@ -6,8 +6,8 @@
 """Generate, edit, and batch-create images through the OpenRouter unified image API.
 
 Supported model shortlist (deliberately curated, not the full OpenRouter catalog):
-  sunburst  openai/gpt-image-2.5-sunburst   precision tier (quality 6 tiers, n<=10)
-  flare     openai/gpt-image-2.5-flare      speed tier  (same parameter matrix)
+  sunburst  openai/gpt-image-2.6-sunburst   detail tier (quality 6 tiers, n<=10)
+  flare     openai/gpt-image-2.6-flare      speed tier (same parameter matrix)
   banana    google/gemini-nano-banana-2.1   Nano Banana 2.1 (resolution tiers, n=1)
   grok      x-ai/grok-imagine-image-2.0     independent detail controls (3 refs, n=1)
   mai       microsoft/mai-image-2.6         multi-reference editing (5 refs, n=1)
@@ -35,10 +35,12 @@ API_URL = "https://openrouter.ai/api/v1/images"
 
 # Parameter matrices transcribed from
 # GET https://openrouter.ai/api/v1/images/models and the banana per-endpoint
-# record (2026-10-08). Thinking/search are not exposed on this Image API route.
+# record (2026-10-08); GPT 2.6 endpoint records rechecked 2026-11-05.
+# GPT 2.6 complexity is an OpenAI passthrough. GIF/SVG and animation controls
+# are not supported by these GPT endpoints despite native-model capabilities.
 MODELS: dict[str, dict] = {
     "sunburst": {
-        "id": "openai/gpt-image-2.5-sunburst",
+        "id": "openai/gpt-image-2.6-sunburst",
         "dialect": "gpt",
         "aspect_ratios": ["1:1", "3:2", "2:3", "4:3", "3:4",
                           "16:9", "9:16", "21:9", "auto"],
@@ -46,12 +48,14 @@ MODELS: dict[str, dict] = {
         "quality_default": "auto",
         "backgrounds": ["auto", "transparent", "opaque"],
         "compression_range": (0, 100),
+        "output_formats": ["png", "jpeg", "webp"],
+        "complexities": ["low", "medium", "high"],
         "n_max": 10,
         "refs_max": 16,
         "streaming": True,
     },
     "flare": {
-        "id": "openai/gpt-image-2.5-flare",
+        "id": "openai/gpt-image-2.6-flare",
         "dialect": "gpt",
         "aspect_ratios": ["1:1", "3:2", "2:3", "4:3", "3:4",
                           "16:9", "9:16", "21:9", "auto"],
@@ -59,6 +63,8 @@ MODELS: dict[str, dict] = {
         "quality_default": "auto",
         "backgrounds": ["auto", "transparent", "opaque"],
         "compression_range": (0, 100),
+        "output_formats": ["png", "jpeg", "webp"],
+        "complexities": ["low", "medium", "high"],
         "n_max": 10,
         "refs_max": 16,
         "streaming": True,
@@ -101,6 +107,13 @@ MODELS: dict[str, dict] = {
         "streaming": False,
     },
 }
+
+# Explicit 2.5 IDs stay pinned; ordinary aliases select the current 2.6 model.
+for _tier in ("sunburst", "flare"):
+    MODELS[f"{_tier}-2.5"] = {
+        key: value for key, value in MODELS[_tier].items() if key != "complexities"
+    }
+    MODELS[f"{_tier}-2.5"]["id"] = f"openai/gpt-image-2.5-{_tier}"
 
 ALIASES = {m["id"]: name for name, m in MODELS.items()}
 
@@ -165,7 +178,9 @@ def data_url(path: Path) -> str:
 
 def build_request(model_name: str, prompt: str, aspect: str, quality: str | None,
                   resolution: str | None, background: str | None, n: int,
-                  refs: list[Path], compression: int | None) -> dict:
+                  refs: list[Path], compression: int | None,
+                  output_format: str | None = None,
+                  complexity: str | None = None) -> dict:
     """Validate against the model's declared parameter set, then build the body.
 
     A model supports a parameter exactly when its MODELS entry declares the
@@ -207,6 +222,21 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
             "transparent images. Use sunburst/flare for that.")
     if compression is not None and "compression_range" not in m:
         raise SystemExit(f"{model_name} does not support output_compression.")
+    if output_format is not None:
+        if "output_formats" not in m:
+            raise SystemExit(f"{model_name} has no output_format control in this CLI.")
+        if output_format not in m["output_formats"]:
+            raise SystemExit(
+                f"{model_name} output_format must be png, jpeg, or webp. "
+                "GPT GIF/SVG output is unavailable through the OpenRouter Image API; "
+                "use a native API that supports the requested format.")
+        if background == "transparent" and output_format == "jpeg":
+            raise SystemExit("transparent background cannot use jpeg; choose png or webp.")
+    if complexity is not None:
+        if "complexities" not in m:
+            raise SystemExit(f"{model_name} does not support complexity in this CLI.")
+        if complexity not in m["complexities"]:
+            raise SystemExit("complexity must be low, medium, or high.")
 
     if quality is not None and quality not in m["qualities"]:
         raise SystemExit(
@@ -242,7 +272,14 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
             raise SystemExit(
                 f"{model_name} output_compression must be between {minimum} "
                 f"and {maximum}; got {compression}.")
+        if output_format not in ("jpeg", "webp"):
+            raise SystemExit(
+                "output_compression requires explicit output_format jpeg or webp.")
         body["output_compression"] = compression
+    if output_format is not None:
+        body["output_format"] = output_format
+    if complexity is not None:
+        body["provider"] = {"options": {"openai": {"complexity": complexity}}}
 
     return body
 
@@ -346,6 +383,13 @@ def write_meta(out: Path, body: dict, resp: dict, elapsed: float, paths: list[Pa
         "request": body,
         "outputs": [str(p) for p in paths],
         "usage": resp.get("usage"),
+        "response": {
+            "created": resp.get("created"),
+            "images": [
+                {"media_type": item["media_type"]} if "media_type" in item else {}
+                for item in resp.get("data", []) if isinstance(item, dict)
+            ],
+        },
         "elapsed_seconds": round(elapsed, 1),
     }
     write_json(out.with_suffix(".json"), meta)
@@ -384,6 +428,7 @@ def execute_request(body: dict, out: Path, timeout: int) -> dict:
 BATCH_FIELDS = {
     "name", "model", "prompt", "aspect_ratio", "aspect", "quality", "resolution",
     "n", "background", "images", "output_compression",
+    "output_format", "complexity",
 }
 
 
@@ -423,6 +468,8 @@ def prepare_batch_job(job: dict, line_number: int, out_dir: Path) -> dict:
         job.get("n", 1),
         [Path(path) for path in images],
         job.get("output_compression"),
+        job.get("output_format"),
+        job.get("complexity"),
     )
     return {"line": line_number, "name": name, "model_alias": model_name,
             "request": body, "outputs": [str(p) for p in output_paths(
@@ -497,6 +544,8 @@ def main():
         p.add_argument("--prompt-file")
         p.add_argument("--aspect", default="1:1", help="aspect_ratio, e.g. 16:9")
         p.add_argument("--n", type=int, default=1)
+        p.add_argument("--output-format", help="png|jpeg|webp (GPT models only)")
+        p.add_argument("--complexity", help="low|medium|high (GPT 2.6 planning effort)")
         p.add_argument("--image", action="append", default=[],
                        help="reference image (repeatable)")
         p.add_argument("--out", required=True)
@@ -544,7 +593,8 @@ def main():
     refs = [Path(p) for p in args.image]
     body = build_request(
         model_name, prompt, args.aspect, args.quality, args.resolution,
-        args.background, args.n, refs, args.output_compression)
+        args.background, args.n, refs, args.output_compression,
+        args.output_format, args.complexity)
     out = Path(args.out)
     reserved_outputs(out, body["n"])
 
