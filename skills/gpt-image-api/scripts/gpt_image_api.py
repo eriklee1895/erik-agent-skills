@@ -2,11 +2,11 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#   "openai>=3.10.0",
+#   "openai>=3.46.0",
 #   "pillow>=10.0.0",
 # ]
 # ///
-"""Generate, edit, stream, and batch-create images with GPT Image 2.5."""
+"""Generate, edit, stream, and batch-create images with GPT Image 2.6."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ import asyncio
 import base64
 import datetime as dt
 import getpass
+import hashlib
 import json
 import os
 import random
@@ -22,6 +23,7 @@ import re
 import sys
 import time
 import uuid
+import xml.etree.ElementTree as ET
 from contextlib import ExitStack
 from io import BytesIO
 from pathlib import Path
@@ -29,20 +31,24 @@ from threading import Event, Thread
 from typing import Any, Iterable, Optional
 from urllib.parse import urlparse
 
-DEFAULT_MODEL = "gpt-image-2.5-flare"
+DEFAULT_MODEL = "gpt-image-2.6-flare"
 ALLOWED_MODELS = {
+    "gpt-image-2.6-flare",
+    "gpt-image-2.6-sunburst",
     "gpt-image-2.5-flare",
     "gpt-image-2.5-flare-2026-09-08",
     "gpt-image-2.5-sunburst",
     "gpt-image-2.5-sunburst-2026-09-08",
 }
 MODEL_ALIASES = {
-    "flare": "gpt-image-2.5-flare",
-    "sunburst": "gpt-image-2.5-sunburst",
+    "flare": "gpt-image-2.6-flare",
+    "sunburst": "gpt-image-2.6-sunburst",
 }
+ALLOWED_COMPLEXITIES = {"low", "medium", "high"}
+ALLOWED_SVG_REASONING = {"none", "minimal", "low", "medium", "high", "xhigh", "max"}
 ALLOWED_QUALITIES = {"auto", "low", "medium", "high", "xhigh", "max"}
 ALLOWED_BACKGROUNDS = {"auto", "opaque", "transparent"}
-ALLOWED_OUTPUT_FORMATS = {"png", "jpeg", "webp"}
+ALLOWED_OUTPUT_FORMATS = {"png", "jpeg", "webp", "gif", "svg"}
 ALLOWED_MODERATION = {"auto", "low"}
 ALLOWED_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
 
@@ -62,6 +68,8 @@ MAX_PROMPT_CHARS = 32_000
 MAX_INPUT_IMAGES = 16
 MAX_IMAGE_BYTES = 50 * 1024 * 1024
 MAX_MASK_BYTES = 4 * 1024 * 1024
+MAX_MARKUP_PIXELS = 16_777_216
+MAX_GIF_FRAMES = 16  # Conservative endpoint-schema limit; guide currently says 64.
 MAX_N = 10
 MAX_CONCURRENCY = 25
 MAX_ATTEMPTS = 10
@@ -177,6 +185,10 @@ def resolve_provider_spec(
 ) -> dict[str, Any]:
     resolved = dict(spec)
     resolved["provider"] = resolve_provider(base_url)
+    if spec.get("experimental_gif_edit") and resolved["provider"] != "ofox":
+        raise UsageError("experimental GIF edits require an OFOX base URL; unsupported by the official OpenAI edit contract")
+    if spec.get("markup") and resolved["provider"] == "ofox":
+        _warn("OFOX accepts markup, but spatial following failed a local left/right A/B check; inspect the selected region")
     resolved["wire_model"] = resolve_wire_model(spec["model"], base_url)
     return resolved
 
@@ -223,6 +235,20 @@ def validate_size(value: str) -> str:
     return resolved
 
 
+def validate_gif_size(value: str) -> str:
+    """GIF size is per frame and has a different envelope from still images."""
+    resolved = SIZE_PRESETS.get(value, value)
+    if resolved == "auto":
+        return resolved
+    match = re.fullmatch(r"([0-9]+)x([0-9]+)", resolved)
+    if not match:
+        raise UsageError("GIF size must be auto or WIDTHxHEIGHT")
+    width, height = (int(match.group(1)), int(match.group(2)))
+    if width <= 0 or height <= 0 or width % 16 or height % 16:
+        raise UsageError("GIF frame dimensions must be positive multiples of 16")
+    return resolved
+
+
 def is_experimental_size(value: str) -> bool:
     resolved = validate_size(value)
     if resolved == "auto":
@@ -234,7 +260,7 @@ def is_experimental_size(value: str) -> bool:
 def normalize_output_format(value: str) -> str:
     normalized = "jpeg" if value.lower() == "jpg" else value.lower()
     if normalized not in ALLOWED_OUTPUT_FORMATS:
-        raise UsageError("output-format must be png, jpeg, or webp")
+        raise UsageError("output-format must be png, jpeg, webp, gif, or svg")
     return normalized
 
 
@@ -244,8 +270,8 @@ def validate_output_options(
     if background not in ALLOWED_BACKGROUNDS:
         raise UsageError("background must be auto, opaque, or transparent")
     output_format = normalize_output_format(output_format)
-    if background == "transparent" and output_format not in {"png", "webp"}:
-        raise UsageError("transparent background requires PNG or WebP output")
+    if background == "transparent" and output_format not in {"png", "webp", "gif", "svg"}:
+        raise UsageError("transparent background requires PNG, WebP, GIF, or SVG output")
     if output_compression is not None:
         if not 0 <= output_compression <= 100:
             raise UsageError("output-compression must be between 0 and 100")
@@ -266,6 +292,9 @@ def _validate_common(
     output_compression: Optional[int],
     stream: bool,
     partial_images: int,
+    complexity: Optional[str] = None,
+    frame_count: Optional[int] = None,
+    frame_duration_ms: Optional[int] = None,
 ) -> dict[str, Any]:
     if not 1 <= n <= MAX_N:
         raise UsageError(f"n must be between 1 and {MAX_N}")
@@ -278,11 +307,34 @@ def _validate_common(
     background, output_format, output_compression = validate_output_options(
         background, output_format, output_compression
     )
-    resolved_size = validate_size(size)
-    if is_experimental_size(resolved_size):
+    resolved_model = resolve_model(model)
+    if complexity is not None and complexity not in ALLOWED_COMPLEXITIES:
+        raise UsageError("complexity must be low, medium, or high (omit for model default)")
+    if not resolved_model.startswith("gpt-image-2.6-") and (
+        complexity is not None or output_format in {"gif", "svg"}
+    ):
+        raise UsageError("complexity and native GIF/SVG output require GPT Image 2.6")
+    if output_format != "gif" and (frame_count is not None or frame_duration_ms is not None):
+        raise UsageError("frame_count and frame_duration_ms are only valid for GIF output")
+    if output_format in {"gif", "svg"} and (stream or partial_images):
+        raise UsageError("native GIF/SVG output does not support streaming or partial images")
+    if output_format == "svg" and n != 1:
+        raise UsageError("SVG output requires n=1")
+    if frame_count is not None and (
+        isinstance(frame_count, bool) or not isinstance(frame_count, int)
+        or not 2 <= frame_count <= MAX_GIF_FRAMES
+    ):
+        raise UsageError(f"frame_count must be an integer between 2 and {MAX_GIF_FRAMES}")
+    if frame_duration_ms is not None and (
+        isinstance(frame_duration_ms, bool) or not isinstance(frame_duration_ms, int)
+        or not 20 <= frame_duration_ms <= 2000
+    ):
+        raise UsageError("frame_duration_ms must be an integer between 20 and 2000")
+    resolved_size = validate_gif_size(size) if output_format == "gif" else validate_size(size)
+    if output_format != "gif" and is_experimental_size(resolved_size):
         _warn("requested resolution exceeds 2560x1440 total pixels and is experimental")
     return {
-        "model": resolve_model(model),
+        "model": resolved_model,
         "prompt": validate_prompt(prompt),
         "n": n,
         "size": resolved_size,
@@ -292,6 +344,9 @@ def _validate_common(
         "output_compression": output_compression,
         "stream": stream,
         "partial_images": partial_images,
+        "complexity": complexity,
+        "frame_count": frame_count,
+        "frame_duration_ms": frame_duration_ms,
     }
 
 
@@ -308,6 +363,11 @@ def build_generate_spec(
     moderation: str = "auto",
     stream: bool = False,
     partial_images: int = 0,
+    complexity: Optional[str] = None,
+    frame_count: Optional[int] = None,
+    frame_duration_ms: Optional[int] = None,
+    svg_model: Optional[str] = None,
+    svg_reasoning: Optional[str] = None,
 ) -> dict[str, Any]:
     if moderation not in ALLOWED_MODERATION:
         raise UsageError("moderation must be auto or low")
@@ -322,12 +382,27 @@ def build_generate_spec(
         output_compression=output_compression,
         stream=stream,
         partial_images=partial_images,
+        complexity=complexity,
+        frame_count=frame_count,
+        frame_duration_ms=frame_duration_ms,
     )
+    svg = None
+    if svg_model is not None or svg_reasoning is not None:
+        if spec["output_format"] != "svg":
+            raise UsageError("svg-model and svg-reasoning are only valid for SVG output")
+        if not isinstance(svg_model, str) or not svg_model.strip():
+            raise UsageError("svg-model must name an available SVG author model")
+        if svg_reasoning is not None and svg_reasoning not in ALLOWED_SVG_REASONING:
+            raise UsageError("unsupported SVG reasoning effort")
+        svg = {"model": svg_model}
+        if svg_reasoning is not None:
+            svg["reasoning"] = {"effort": svg_reasoning}
     return {
         "command": "generate",
         "endpoint": "/v1/images/generations",
         **spec,
         "moderation": moderation,
+        "svg": svg,
     }
 
 
@@ -378,12 +453,44 @@ def _validate_mask(mask: Path, first_image: Path) -> Path:
     return mask
 
 
+def _validate_markup(markup: Path, first_image: Path) -> Path:
+    if not markup.is_file() or markup.suffix.lower() != ".png":
+        raise UsageError("markup must be a separate transparent PNG file")
+    if markup.resolve() == first_image.resolve():
+        raise UsageError("markup must be a separate annotation layer from the edit target")
+    if markup.stat().st_size >= MAX_IMAGE_BYTES:
+        raise UsageError("markup must be smaller than 50MB")
+    try:
+        from PIL import Image, ImageOps
+
+        with Image.open(markup) as layer, Image.open(first_image) as source:
+            if layer.format != "PNG":
+                raise UsageError("markup bytes must be PNG")
+            oriented_layer = ImageOps.exif_transpose(layer)
+            oriented_source = ImageOps.exif_transpose(source)
+            if oriented_layer.size != oriented_source.size:
+                raise UsageError("markup dimensions must match the first image after orientation")
+            if oriented_layer.width * oriented_layer.height > MAX_MARKUP_PIXELS:
+                raise UsageError("markup and first image may each contain at most 16,777,216 pixels")
+            if "A" not in layer.getbands() and "transparency" not in layer.info:
+                raise UsageError("markup must contain transparent pixels")
+            if oriented_layer.convert("RGBA").getchannel("A").getextrema()[0] == 255:
+                raise UsageError("markup must contain transparent pixels")
+    except UsageError:
+        raise
+    except Exception as exc:
+        raise UsageError(f"could not inspect markup: {exc}") from exc
+    return markup
+
+
 def build_edit_spec(
     *,
     prompt: str,
     images: Iterable[Path | str],
     roles: Optional[list[str]] = None,
     mask: Optional[Path | str] = None,
+    markup: Optional[Path | str] = None,
+    experimental_gif_edit: bool = False,
     model: Optional[str] = None,
     n: int = 1,
     size: str = "auto",
@@ -393,7 +500,21 @@ def build_edit_spec(
     output_compression: Optional[int] = None,
     stream: bool = False,
     partial_images: int = 0,
+    complexity: Optional[str] = None,
+    frame_count: Optional[int] = None,
+    frame_duration_ms: Optional[int] = None,
 ) -> dict[str, Any]:
+    output_format = normalize_output_format(output_format)
+    if experimental_gif_edit and output_format != "gif":
+        raise UsageError("experimental-gif-edit requires output-format=gif")
+    if output_format == "svg" or (output_format == "gif" and not experimental_gif_edit):
+        raise UsageError("native GIF/SVG output is generation only in the official OpenAI API")
+    if experimental_gif_edit and (mask is not None or markup is not None):
+        raise UsageError("experimental GIF edits cannot combine mask or markup")
+    if markup is not None and mask is not None:
+        raise UsageError("markup cannot be combined with mask")
+    if markup is not None and not resolve_model(model).startswith("gpt-image-2.6-"):
+        raise UsageError("markup requires GPT Image 2.6")
     paths = [_validate_image_file(Path(path)) for path in images]
     if not paths:
         raise UsageError("edit requires at least one --image")
@@ -405,6 +526,7 @@ def build_edit_spec(
         raise UsageError("image roles must not be empty")
     role_values = roles or [f"image {index}" for index in range(1, len(paths) + 1)]
     mask_path = _validate_mask(Path(mask), paths[0]) if mask is not None else None
+    markup_path = _validate_markup(Path(markup), paths[0]) if markup is not None else None
     spec = _validate_common(
         prompt=prompt,
         model=model,
@@ -416,6 +538,9 @@ def build_edit_spec(
         output_compression=output_compression,
         stream=stream,
         partial_images=partial_images,
+        complexity=complexity,
+        frame_count=frame_count,
+        frame_duration_ms=frame_duration_ms,
     )
     return {
         "command": "edit",
@@ -424,6 +549,8 @@ def build_edit_spec(
         "images": [str(path) for path in paths],
         "image_roles": role_values,
         "mask": str(mask_path) if mask_path else None,
+        "markup": str(markup_path) if markup_path else None,
+        "experimental_gif_edit": experimental_gif_edit,
     }
 
 
@@ -518,6 +645,10 @@ def extract_response_metadata(response: Any) -> dict[str, Any]:
         "background": value("background"),
         "output_format": value("output_format"),
         "usage": _json_safe(usage),
+        "svg_usage": _json_safe(value("svg_usage")),
+        "complexity": value("complexity"),
+        "frame_count": value("frame_count"),
+        "frame_duration_ms": value("frame_duration_ms"),
         "request_id": value("_request_id") or value("request_id"),
     }
 
@@ -552,6 +683,8 @@ def validate_transparent_image(data: bytes) -> None:
 
 
 def downscale_image(data: bytes, *, max_dim: int, output_format: str) -> bytes:
+    if output_format in {"gif", "svg"}:
+        raise UsageError("downscale is unavailable for native GIF/SVG; preserve original bytes")
     if max_dim <= 0:
         raise UsageError("downscale-max-dim must be positive")
     try:
@@ -760,6 +893,10 @@ def _sdk_common_payload(spec: dict[str, Any]) -> dict[str, Any]:
             "background",
             "output_format",
             "output_compression",
+            "complexity",
+            "frame_count",
+            "frame_duration_ms",
+            "svg",
         )
         if spec.get(key) is not None
     }
@@ -785,7 +922,7 @@ def _make_metadata(
     request = {
         key: value
         for key, value in spec.items()
-        if key not in {"endpoint", "command", "images", "image_roles", "mask"}
+        if key not in {"endpoint", "command", "images", "image_roles", "mask", "markup"}
     }
     inputs = [
         {"index": index, "path": path, "role": role}
@@ -801,6 +938,7 @@ def _make_metadata(
         "request": request,
         "inputs": inputs,
         "mask": spec.get("mask"),
+        "markup": spec.get("markup"),
         "response": extract_response_metadata(response),
         "elapsed_seconds": round(elapsed_seconds, 3),
         "attempts": attempts,
@@ -809,6 +947,127 @@ def _make_metadata(
         "derived_output": str(derived_output) if derived_output else None,
         "created_at": _now_iso(),
     }
+
+
+def validate_postprocessing(spec: dict[str, Any], downscale_max_dim: Optional[int]) -> None:
+    if downscale_max_dim is not None and spec["output_format"] in {"gif", "svg"}:
+        raise UsageError("downscale is unavailable for native GIF/SVG; preserve original bytes")
+
+
+def _decode_css_escapes(value: str) -> str:
+    def decode(match: re.Match[str]) -> str:
+        hexadecimal = match.group(1)
+        if hexadecimal:
+            codepoint = int(hexadecimal, 16)
+            if codepoint == 0 or codepoint > 0x10FFFF or 0xD800 <= codepoint <= 0xDFFF:
+                return "\ufffd"
+            return chr(codepoint)
+        return match.group(2) or ""
+
+    pattern = r"\\([0-9a-fA-F]{1,6})(?:[ \t\r\n\f])?|\\([^\r\n\f])|\\(?:\r\n|[\r\n\f])"
+    return re.sub(pattern, decode, value)
+
+
+def inspect_output(data: bytes, spec: dict[str, Any]) -> dict[str, Any]:
+    """Inspect the real container; a filename and HTTP success do not prove animation."""
+    output_format = spec["output_format"]
+    if output_format == "svg":
+        try:
+            text = data.decode("utf-8")
+            if re.search(r"<!DOCTYPE|<!ENTITY", text, re.IGNORECASE):
+                raise UsageError("SVG must not contain a document type or entities")
+            instructions = ET.iterparse(BytesIO(data), events=("pi",))
+            if next(instructions, None) is not None:
+                raise UsageError("SVG output must not contain processing instructions")
+            root = ET.fromstring(text)
+            if root.tag not in {"svg", "{http://www.w3.org/2000/svg}svg"}:
+                raise UsageError("SVG output is not an SVG XML document")
+            for element in root.iter():
+                tag = element.tag.rsplit("}", 1)[-1].lower()
+                if tag in {"script", "image", "foreignobject", "set"} or tag.startswith("animate"):
+                    raise UsageError("SVG output must contain static vector content only")
+                for name, value in element.attrib.items():
+                    if name == "{http://www.w3.org/XML/1998/namespace}base":
+                        raise UsageError("SVG output must not redefine its base URI")
+                    local_name = name.rsplit("}", 1)[-1].lower()
+                    if local_name.startswith("on") or (local_name == "href" and not value.startswith("#")):
+                        raise UsageError("SVG output contains active content or an external resource")
+                content = " ".join(element.attrib.values())
+                if tag == "style":
+                    content += element.text or ""
+                content = _decode_css_escapes(content)
+                content = re.sub(r"/\*.*?\*/", "", content, flags=re.DOTALL)
+                if re.search(
+                    r"@(?:-[\w]+-)?keyframes\b|\b(?:animation|transition)(?:-[\w-]+)?\s*:",
+                    content,
+                    re.IGNORECASE,
+                ):
+                    raise UsageError("SVG output must contain static vector content only")
+                references = re.findall(r"url\(\s*([^)]+)\)", content, re.IGNORECASE)
+                if "@import" in content.lower() or any(
+                    not target.strip().strip("\"'").startswith("#") for target in references
+                ):
+                    raise UsageError("SVG output contains an external resource")
+            return {"format": "svg", "width": root.get("width"), "height": root.get("height"),
+                    "view_box": root.get("viewBox"), "byte_count": len(data)}
+        except UsageError:
+            raise
+        except (UnicodeError, ET.ParseError) as exc:
+            raise UsageError(f"API did not return valid UTF-8 SVG XML: {exc}") from exc
+    try:
+        from PIL import Image
+
+        with Image.open(BytesIO(data)) as image:
+            actual_format = (image.format or "").lower()
+            if actual_format != output_format:
+                raise UsageError(f"API returned {actual_format or 'unknown'} bytes; expected {output_format}")
+            artifact: dict[str, Any] = {"format": actual_format, "width": image.width,
+                                        "height": image.height, "byte_count": len(data)}
+            if output_format != "gif":
+                if spec["background"] == "transparent":
+                    validate_transparent_image(data)
+                return artifact
+            frame_count = getattr(image, "n_frames", 1)
+            if frame_count < 2:
+                raise UsageError("GIF output contains only one frame; expected a native animation")
+            loop = image.info.get("loop")
+            durations: list[int] = []
+            frame_hashes: set[bytes] = set()
+            transparent_frames = 0
+            for index in range(frame_count):
+                image.seek(index)
+                frame = image.convert("RGBA")
+                durations.append(int(image.info.get("duration", 0)))
+                frame_hashes.add(hashlib.sha256(frame.tobytes()).digest())
+                if frame.getchannel("A").getextrema()[0] < 255:
+                    transparent_frames += 1
+            if spec["background"] == "transparent" and transparent_frames != frame_count:
+                raise UsageError("transparent GIF output must contain transparent pixels in every decoded frame")
+            warnings: list[str] = []
+            requested_count = spec.get("frame_count")
+            if requested_count is not None and requested_count != frame_count:
+                warnings.append(f"requested frame_count={requested_count}; actual frame_count={frame_count}")
+            requested_duration = spec.get("frame_duration_ms")
+            if requested_duration is not None:
+                expected_duration = ((requested_duration + 5) // 10) * 10
+                if any(duration != expected_duration for duration in durations):
+                    warnings.append(f"requested frame_duration_ms={requested_duration}; actual durations_ms={durations}")
+            requested_size = spec.get("size", "auto")
+            if requested_size != "auto" and requested_size != f"{image.width}x{image.height}":
+                warnings.append(f"requested size={requested_size}; actual size={image.width}x{image.height}")
+            if len(frame_hashes) == 1:
+                warnings.append("all decoded frames are visually identical; motion was not verified")
+            for message in warnings:
+                _warn(message)
+            artifact.update({"frame_count": frame_count, "durations_ms": durations,
+                             "duration_ms": sum(durations), "loop": loop,
+                             "unique_frame_count": len(frame_hashes),
+                             "transparent_frames": transparent_frames, "warnings": warnings})
+            return artifact
+    except UsageError:
+        raise
+    except Exception as exc:
+        raise UsageError(f"could not inspect {output_format} output: {exc}") from exc
 
 
 def _save_final_images(
@@ -822,6 +1081,7 @@ def _save_final_images(
     downscale_max_dim: Optional[int],
     downscale_suffix: str,
 ) -> list[Path]:
+    validate_postprocessing(spec, downscale_max_dim)
     items = list(getattr(response, "data", None) or [])
     if len(items) != len(output_paths):
         raise UsageError(
@@ -830,8 +1090,7 @@ def _save_final_images(
     written: list[Path] = []
     for item, path in zip(items, output_paths, strict=True):
         raw = decode_base64_image(getattr(item, "b64_json", None))
-        if spec["background"] == "transparent":
-            validate_transparent_image(raw)
+        artifact = inspect_output(raw, spec)
         derived_path = None
         if downscale_max_dim is not None:
             derived_path = _downscale_path(path, downscale_suffix)
@@ -850,6 +1109,7 @@ def _save_final_images(
             attempts=attempts,
             derived_output=derived_path,
         )
+        metadata["artifact"] = artifact
         write_json(_metadata_path(path), metadata, force=force)
         written.append(path)
     return written
@@ -935,6 +1195,7 @@ def run_live_request(
     downscale_max_dim: Optional[int] = None,
     downscale_suffix: str = "-web",
 ) -> list[Path]:
+    validate_postprocessing(spec, downscale_max_dim)
     api_key, base_url = get_api_settings(require_key=True)
     assert api_key is not None
     spec = resolve_provider_spec(spec, base_url)
@@ -960,6 +1221,8 @@ def run_live_request(
                 ]
                 if spec.get("mask"):
                     request["mask"] = stack.enter_context(Path(spec["mask"]).open("rb"))
+                if spec.get("markup"):
+                    request["markup"] = stack.enter_context(Path(spec["markup"]).open("rb"))
                 return client.images.edit(**request)
 
     else:
@@ -1055,6 +1318,11 @@ def load_batch_jobs(source: Path, out_dir: Path) -> list[dict[str, Any]]:
             "output_format",
             "output_compression",
             "moderation",
+            "complexity",
+            "frame_count",
+            "frame_duration_ms",
+            "svg_model",
+            "svg_reasoning",
             "out",
         }
         unknown = sorted(set(data) - allowed_keys)
@@ -1066,6 +1334,11 @@ def load_batch_jobs(source: Path, out_dir: Path) -> list[dict[str, Any]]:
         if not isinstance(prompt, str):
             raise UsageError(f"line {line_number} requires a string prompt")
         model = _batch_string(data, "model", None, line_number)
+        complexity = _batch_string(data, "complexity", None, line_number)
+        svg_model = _batch_string(data, "svg_model", None, line_number)
+        svg_reasoning = _batch_string(data, "svg_reasoning", None, line_number)
+        frame_count = _batch_integer(data, "frame_count", None, line_number)
+        frame_duration_ms = _batch_integer(data, "frame_duration_ms", None, line_number)
         size = _batch_string(data, "size", "auto", line_number)
         quality = _batch_string(data, "quality", "auto", line_number)
         background = _batch_string(data, "background", "auto", line_number)
@@ -1095,6 +1368,11 @@ def load_batch_jobs(source: Path, out_dir: Path) -> list[dict[str, Any]]:
             output_format=output_format,
             output_compression=output_compression,
             moderation=moderation,
+            complexity=complexity,
+            frame_count=frame_count,
+            frame_duration_ms=frame_duration_ms,
+            svg_model=svg_model,
+            svg_reasoning=svg_reasoning,
         )
         job_outputs = build_output_paths(output, output_format, spec["n"])
         job_artifacts = {
@@ -1264,18 +1542,21 @@ def _shared_request_args(
     parser.add_argument(
         "--model",
         default=DEFAULT_MODEL,
-        help="flare, sunburst, or an exact GPT Image 2.5 alias/snapshot",
+        help="flare, sunburst, or an explicit supported model ID",
     )
     parser.add_argument("--prompt")
     parser.add_argument("--prompt-file")
     parser.add_argument("--n", type=int, default=1)
     parser.add_argument("--size", default="auto")
     parser.add_argument("--quality", default="auto")
+    parser.add_argument("--complexity", choices=sorted(ALLOWED_COMPLEXITIES))
+    parser.add_argument("--frame-count", type=int, help="GIF only, 2–16 frames (API schema limit)")
+    parser.add_argument("--frame-duration-ms", type=int, help="GIF only, 20–2000ms; encoded in 10ms units")
     parser.add_argument(
         "--background", choices=sorted(ALLOWED_BACKGROUNDS), default="auto"
     )
     parser.add_argument(
-        "--output-format", choices=["png", "jpeg", "jpg", "webp"], default="png"
+        "--output-format", choices=["png", "jpeg", "jpg", "webp", "gif", "svg"], default="png"
     )
     parser.add_argument("--output-compression", type=int)
     if include_moderation:
@@ -1306,6 +1587,9 @@ def _spec_from_args(args: argparse.Namespace) -> dict[str, Any]:
         "output_compression": args.output_compression,
         "stream": args.stream,
         "partial_images": args.partial_images,
+        "complexity": args.complexity,
+        "frame_count": args.frame_count,
+        "frame_duration_ms": args.frame_duration_ms,
     }
     if args.command == "edit":
         return build_edit_spec(
@@ -1313,8 +1597,12 @@ def _spec_from_args(args: argparse.Namespace) -> dict[str, Any]:
             images=args.image,
             roles=args.image_role,
             mask=args.mask,
+            markup=args.markup,
+            experimental_gif_edit=args.experimental_gif_edit,
         )
     common["moderation"] = args.moderation
+    common["svg_model"] = args.svg_model
+    common["svg_reasoning"] = args.svg_reasoning
     return build_generate_spec(**common)
 
 
@@ -1338,19 +1626,24 @@ def _dry_run_document(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate and edit images with OpenAI GPT Image 2.5 via the Image API."
+            "Generate and edit images with OpenAI GPT Image 2.6 via the Image API."
         )
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     generate = subparsers.add_parser("generate", help="generate a new image")
     _shared_request_args(generate, include_moderation=True)
+    generate.add_argument("--svg-model", help="available SVG author model, only when provider requires selection")
+    generate.add_argument("--svg-reasoning", choices=sorted(ALLOWED_SVG_REASONING))
 
     edit = subparsers.add_parser("edit", help="edit using one to sixteen input images")
     _shared_request_args(edit, include_moderation=False)
     edit.add_argument("--image", action="append", required=True, type=Path)
     edit.add_argument("--image-role", action="append")
     edit.add_argument("--mask", type=Path)
+    edit.add_argument("--markup", type=Path, help="separate transparent PNG annotation layer")
+    edit.add_argument("--experimental-gif-edit", action="store_true",
+                      help="OFOX-only empirically supported reference-to-GIF extension")
 
     batch = subparsers.add_parser(
         "generate-batch", help="generate distinct jobs from a JSONL file"
@@ -1426,6 +1719,9 @@ def main(argv: Optional[list[str]] = None) -> int:
             downscale_max_dim=args.downscale_max_dim,
         )
         spec = _spec_from_args(args)
+        validate_postprocessing(spec, args.downscale_max_dim)
+        if args.out == DEFAULT_OUTPUT:
+            args.out = args.out.with_suffix("." + spec["output_format"])
         if args.dry_run:
             _, base_url = get_api_settings(require_key=False)
             print(

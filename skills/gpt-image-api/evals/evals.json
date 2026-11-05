@@ -4,7 +4,7 @@
     {
       "id": 1,
       "name": "exact-bilingual-poster",
-      "prompt": "Use GPT Image 2.5 to generate a 2048x1152 bilingual launch poster with exact text ‘曜石计划’ and ‘PROJECT OBSIDIAN’, each exactly once, on a truly transparent PNG background. Optimize quality without automatically choosing the most expensive setting, save it under output/gpt-image-api/, and retain request metadata.",
+      "prompt": "Use GPT Image 2.6 to generate a 2048x1152 bilingual launch poster with exact text ‘曜石计划’ and ‘PROJECT OBSIDIAN’, each exactly once, on a truly transparent PNG background. Optimize quality without automatically choosing the most expensive setting, save it under output/gpt-image-api/, and retain request metadata.",
       "expected": [
         "Uses generate with a current Flare or Sunburst model",
         "Uses native transparent PNG output and verifies alpha",
@@ -15,7 +15,7 @@
     {
       "id": 2,
       "name": "precision-multi-reference-edit",
-      "prompt": "Edit product.png using person.png and mask.png. Put the person into the product scene and change only the jacket to dark green. Preserve identity, product label, camera angle, lighting, and background. Choose the appropriate GPT Image 2.5 model and save a non-destructive result.",
+      "prompt": "Edit product.png using person.png and mask.png. Put the person into the product scene and change only the jacket to dark green. Preserve identity, product label, camera angle, lighting, and background. Choose the appropriate GPT Image 2.6 model and save a non-destructive result.",
       "expected": [
         "Uses edit and orders the base image first",
         "Role-labels both inputs",
@@ -37,7 +37,7 @@
     {
       "id": 4,
       "name": "auditable-jsonl-batch",
-      "prompt": "Generate 80 distinct image prompts from requests.jsonl with GPT Image 2.5 Flare, bounded concurrency, transient-only retries, no overwrites, and per-image metadata including model, size, quality, timing, request ID, and token usage.",
+      "prompt": "Generate 80 distinct image prompts from requests.jsonl with GPT Image 2.6 Flare, bounded concurrency, transient-only retries, no overwrites, and per-image metadata including model, size, quality, timing, request ID, and token usage.",
       "expected": [
         "Uses generate-batch rather than n for distinct prompts",
         "Runs dry-run before the live batch",
@@ -51,7 +51,7 @@
       "prompt": "Use my configured OFOX base URL to generate a Flare image. Keep the current OpenAI Images API request shape and show the resolved request in a dry run before making the call.",
       "expected": [
         "Uses client.images.generate and the images/generations endpoint",
-        "Resolves Flare to openai/gpt-image-2.5-flare for OFOX",
+        "Resolves Flare to openai/gpt-image-2.6-flare for OFOX",
         "Does not introduce a provider-specific endpoint or payload",
         "Does not expose credentials in the dry run or metadata"
       ]
@@ -208,6 +208,67 @@
         "Keeps source facts and reading order explicit",
         "Checks every text string, module/action count, relationship, and invented claim",
         "Treats publication-critical typography as requiring deterministic finishing"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "native-gif-delivery",
+      "prompt": "Create an animated cat GIF with GPT Image 2.6: blink, wave once and return to the start. Use 512px frames, 9 frames at 200ms, save actual animated output.",
+      "expected": [
+        "Uses generate with output_format gif rather than a static sprite sheet or a renamed PNG",
+        "Keeps camera, scale, identity and background stable in the motion brief",
+        "Uses per-frame GIF sizing without the static minimum-pixel gate",
+        "Inspects actual frame count, delays, unique frames, dimensions and loop seam; retains original bytes"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "provider-gif-controls-mismatch",
+      "prompt": "The GIF request asked for 16 frames at 100ms; the OFOX response contains 9 frames at 200ms. Deliver it accurately without paying again.",
+      "expected": [
+        "Preserves valid returned GIF bytes and reports actual settings separately from requested settings",
+        "Treats the requested timing as unmet instead of inferring it from HTTP 200",
+        "Does not flatten, relabel or silently regenerate the file"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "reference-gif-provider-scope",
+      "prompt": "Animate approved-mascot.png as a native GIF through the configured OFOX account. Preserve the reference and save the downloadable animation.",
+      "expected": [
+        "Uses edit with the real reference and explicit experimental-gif-edit flag",
+        "Identifies this as an empirically supported OFOX extension rather than official OpenAI GIF edit support",
+        "Rejects the extension for other provider hosts and inspects reference fidelity across every frame"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "markup-spatial-gate",
+      "prompt": "Use annotations.png as a transparent overlay circling the left of two similar mugs; recolor only that mug blue. Configured provider is OFOX.",
+      "expected": [
+        "Keeps the original first image and separate multipart markup layer; verifies oriented dimensions and real transparent pixels",
+        "Does not combine markup with a mask",
+        "Acknowledges the provider warning and inspects spatial targeting; acceptance of the upload is not proof the layer was followed"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "complexity-quality-separation",
+      "prompt": "Create a simple GPT Image 2.6 background with low rendering quality and high planning complexity, preserving the prompt literally.",
+      "expected": [
+        "Sends quality low and complexity high independently",
+        "Does not introduce a complexity auto value or silently change the quality setting",
+        "Omitted complexity elsewhere remains omitted, allowing the API default"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "svg-author-selection",
+      "prompt": "Generate a static vector icon as SVG. The compatible provider rejects the request because svg.model is required.",
+      "expected": [
+        "Keeps output_format svg, n=1 and original UTF-8 XML; no raster conversion or streaming",
+        "Uses a confirmed available author model via svg-model only after resolving availability; does not invent a model name or claim this fixes the observed OFOX forwarding failure",
+        "Records separate SVG usage and distinguishes configuration acceptance from rendered quality"
       ]
     }
   ]

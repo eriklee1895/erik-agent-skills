@@ -8,7 +8,7 @@ Use `generate` when no image input is needed. When an existing image must contro
 2. Name the deliverable and audience.
 3. Describe the subject, action, environment, composition, style/medium, lighting, materials, and only consequential exclusions.
 4. Set the model and quality separately from the prompt.
-5. Dry-run the request, generate, and evaluate the decoded image.
+5. Dry-run the request, generate, and evaluate the decoded image. For animated output, follow [animated-gif.md](animated-gif.md); for SVG selection and restrictions, read [image-api.md](image-api.md).
 
 ## Composition
 
@@ -52,6 +52,8 @@ Use `n` for variants of one prompt. Use `generate-batch` for distinct prompts. B
 {"prompt":"A winter campaign banner","model":"sunburst","size":"2048x1152","out":"winter-banner.png"}
 ```
 
-Per-job fields: `prompt`, `model`, `n`, `size`, `quality`, `background`, `output_format`, `output_compression`, `moderation`, and relative `out`. Unknown fields and duplicate output paths are rejected.
+Per-job fields: `prompt`, `model`, `n`, `size`, `quality`, `complexity`, `background`, `output_format`, `output_compression`, `moderation`, `frame_count`, `frame_duration_ms`, `svg_model`, `svg_reasoning`, and relative `out`. Frame controls are GIF-only; SVG author fields are SVG-only. Unknown fields and duplicate output paths are rejected.
 
-The CLI preflights the whole batch and stops before any API call when a final image or sibling metadata file already exists. After a partial failure, create a failed-only JSONL for the retry; do not use `--force` on the original full batch unless replacing successful outputs is intentional. Save the command's JSON summary as a run log when failed-job auditing matters.
+Dry-run validates JSONL fields, model controls, and duplicate destinations and prints the planned requests. It does not inspect existing destination files. Live execution additionally checks every final image and sibling metadata path before creating the API client. After a partial failure, create a failed-only JSONL for the retry; do not use `--force` on the original full batch unless replacing successful outputs is intentional. Save the command's JSON summary as a run log when failed-job auditing matters.
+
+For example, a native GIF batch job is `{"prompt":"A panda waves once, then returns to its first pose. Locked camera, stable background.","model":"flare","output_format":"gif","size":"512x512","frame_count":9,"frame_duration_ms":200,"complexity":"low","out":"panda.gif"}`. Actual container metadata and request mismatches are recorded per output.

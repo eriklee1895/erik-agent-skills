@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import importlib.util
 import io
+import json
 import os
 import tempfile
 import time
@@ -32,21 +33,23 @@ class ModelAndRequestTests(unittest.TestCase):
     def setUpClass(cls):
         cls.mod = load_module()
 
-    def test_only_current_gpt_image_25_models_are_supported(self):
+    def test_current_and_explicit_legacy_models_are_supported(self):
         self.assertEqual(
             self.mod.ALLOWED_MODELS,
             {
+                "gpt-image-2.6-flare",
                 "gpt-image-2.5-flare",
                 "gpt-image-2.5-flare-2026-09-08",
+                "gpt-image-2.6-sunburst",
                 "gpt-image-2.5-sunburst",
                 "gpt-image-2.5-sunburst-2026-09-08",
             },
         )
-        self.assertEqual(self.mod.DEFAULT_MODEL, "gpt-image-2.5-flare")
+        self.assertEqual(self.mod.DEFAULT_MODEL, "gpt-image-2.6-flare")
 
     def test_model_shorthands_resolve_to_current_aliases(self):
-        self.assertEqual(self.mod.resolve_model("flare"), "gpt-image-2.5-flare")
-        self.assertEqual(self.mod.resolve_model("sunburst"), "gpt-image-2.5-sunburst")
+        self.assertEqual(self.mod.resolve_model("flare"), "gpt-image-2.6-flare")
+        self.assertEqual(self.mod.resolve_model("sunburst"), "gpt-image-2.6-sunburst")
 
     def test_ofox_uses_namespaced_wire_model_only(self):
         for base_url in (
@@ -57,11 +60,11 @@ class ModelAndRequestTests(unittest.TestCase):
                 self.assertEqual(self.mod.resolve_provider(base_url), "ofox")
                 self.assertEqual(
                     self.mod.resolve_wire_model("flare", base_url),
-                    "openai/gpt-image-2.5-flare",
+                    "openai/gpt-image-2.6-flare",
                 )
                 self.assertEqual(
                     self.mod.resolve_wire_model("sunburst", base_url),
-                    "openai/gpt-image-2.5-sunburst",
+                    "openai/gpt-image-2.6-sunburst",
                 )
 
     def test_other_providers_keep_official_model_id(self):
@@ -69,7 +72,7 @@ class ModelAndRequestTests(unittest.TestCase):
             with self.subTest(base_url=base_url):
                 self.assertEqual(
                     self.mod.resolve_wire_model("flare", base_url),
-                    "gpt-image-2.5-flare",
+                    "gpt-image-2.6-flare",
                 )
 
     def test_provider_resolution_does_not_change_images_api_endpoints(self):
@@ -79,7 +82,7 @@ class ModelAndRequestTests(unittest.TestCase):
         self.assertEqual(generate["endpoint"], "/v1/images/generations")
         self.assertEqual(
             self.mod._sdk_common_payload(generate)["model"],
-            "openai/gpt-image-2.5-flare",
+            "openai/gpt-image-2.6-flare",
         )
 
     def test_legacy_or_unknown_model_is_rejected(self):
@@ -87,7 +90,7 @@ class ModelAndRequestTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(self.mod.UsageError):
                 self.mod.resolve_model(value)
 
-    def test_all_gpt_image_25_quality_values_are_accepted(self):
+    def test_all_documented_quality_values_are_accepted(self):
         for quality in ("auto", "low", "medium", "high", "xhigh", "max"):
             with self.subTest(quality=quality):
                 self.assertEqual(self.mod.validate_quality(quality), quality)
@@ -174,7 +177,7 @@ class ModelAndRequestTests(unittest.TestCase):
             stream=True,
         )
         self.assertEqual(spec["prompt"], prompt)
-        self.assertEqual(spec["model"], "gpt-image-2.5-flare")
+        self.assertEqual(spec["model"], "gpt-image-2.6-flare")
         self.assertEqual(spec["partial_images"], 2)
         self.assertTrue(spec["stream"])
         self.assertNotIn("input_fidelity", spec)
@@ -239,7 +242,7 @@ class EditInputTests(unittest.TestCase):
         self.assertEqual(spec["images"], [str(self.base), str(self.reference)])
         self.assertEqual(spec["image_roles"], ["edit target", "identity reference"])
         self.assertEqual(spec["mask"], str(self.mask))
-        self.assertEqual(spec["model"], "gpt-image-2.5-sunburst")
+        self.assertEqual(spec["model"], "gpt-image-2.6-sunburst")
         self.assertNotIn("input_fidelity", spec)
 
     def test_edit_rejects_more_than_sixteen_images(self):
@@ -422,8 +425,8 @@ class OutputAndBatchTests(unittest.TestCase):
             )
             jobs = self.mod.load_batch_jobs(source, root / "out")
             self.assertEqual(len(jobs), 2)
-            self.assertEqual(jobs[0]["model"], "gpt-image-2.5-flare")
-            self.assertEqual(jobs[1]["model"], "gpt-image-2.5-sunburst")
+            self.assertEqual(jobs[0]["model"], "gpt-image-2.6-flare")
+            self.assertEqual(jobs[1]["model"], "gpt-image-2.6-sunburst")
             self.assertNotEqual(jobs[0]["out"], jobs[1]["out"])
 
     def test_batch_loader_rejects_duplicate_output_names(self):
@@ -566,6 +569,277 @@ class OutputAndBatchTests(unittest.TestCase):
                 )
             self.assertEqual(result, 2)
             self.assertIn("concurrency", stderr.getvalue())
+
+
+class NativeOutputTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mod = load_module()
+
+    def animated_gif(self):
+        buffer = io.BytesIO()
+        frames = [Image.new("RGB", (32, 48), color) for color in ("red", "blue", "green")]
+        frames[0].save(buffer, format="GIF", save_all=True, append_images=frames[1:],
+                       duration=[100, 200, 300], loop=0, optimize=False)
+        return buffer.getvalue()
+
+    def response(self, data, **values):
+        return SimpleNamespace(data=[SimpleNamespace(b64_json=base64.b64encode(data).decode())],
+                               **values)
+
+    def save(self, data, root, **options):
+        spec = self.mod.build_generate_spec(prompt="A bouncing ball, seamless loop",
+                                             output_format="gif", **options)
+        output = root / "loop.gif"
+        with redirect_stderr(io.StringIO()) as stderr:
+            self.mod._save_final_images(response=self.response(data), spec=spec,
+                output_paths=[output], elapsed_seconds=1, attempts=1, force=False,
+                downscale_max_dim=None, downscale_suffix="-web")
+        return output, json.loads(output.with_suffix(".json").read_text()), stderr.getvalue()
+
+    def test_alias_upgrade_preserves_explicit_legacy_pin(self):
+        spec = self.mod.build_generate_spec(prompt="x", model="gpt-image-2.5-flare-2026-09-08")
+        self.assertEqual(spec["model"], "gpt-image-2.5-flare-2026-09-08")
+        self.assertEqual(self.mod.resolve_wire_model(spec["model"], "https://api.ofox.io/v1"),
+                         "openai/gpt-image-2.5-flare-2026-09-08")
+
+    def test_complexity_is_independent_and_omitted_by_default(self):
+        default = self.mod._sdk_common_payload(self.mod.build_generate_spec(prompt="x"))
+        self.assertNotIn("complexity", default)
+        spec = self.mod.build_generate_spec(prompt="x", quality="low", complexity="high")
+        payload = self.mod._sdk_common_payload(spec)
+        self.assertEqual((payload["quality"], payload["complexity"]), ("low", "high"))
+        with self.assertRaises(self.mod.UsageError):
+            self.mod.build_generate_spec(prompt="x", complexity="auto")
+
+    def test_26_features_are_rejected_for_explicit_legacy_models(self):
+        for options in ({"complexity": "low"}, {"output_format": "gif"},
+                        {"output_format": "svg"}):
+            with self.subTest(options=options), self.assertRaises(self.mod.UsageError):
+                self.mod.build_generate_spec(prompt="x", model="gpt-image-2.5-flare", **options)
+
+    def test_gif_size_does_not_inherit_static_minimum_pixels(self):
+        spec = self.mod.build_generate_spec(prompt="x", output_format="gif", size="512x512",
+                                             frame_count=9, frame_duration_ms=100)
+        self.assertEqual(spec["size"], "512x512")
+        payload = self.mod._sdk_common_payload(spec)
+        self.assertEqual((payload["frame_count"], payload["frame_duration_ms"]), (9, 100))
+        for size in ("0x512", "513x512", "-16x512"):
+            with self.subTest(size=size), self.assertRaises(self.mod.UsageError):
+                self.mod.build_generate_spec(prompt="x", output_format="gif", size=size)
+
+    def test_gif_controls_fail_locally_before_paid_request(self):
+        cases = ({"frame_count": 1}, {"frame_count": 17}, {"frame_count": True},
+                 {"frame_duration_ms": 19}, {"frame_duration_ms": 2001},
+                 {"frame_duration_ms": 20.5}, {"stream": True}, {"partial_images": 1},
+                 {"output_compression": 70})
+        for options in cases:
+            with self.subTest(options=options), self.assertRaises(self.mod.UsageError):
+                self.mod.build_generate_spec(prompt="x", output_format="gif", **options)
+        for options in ({"frame_count": 9}, {"frame_duration_ms": 100}):
+            with self.subTest(options=options), self.assertRaises(self.mod.UsageError):
+                self.mod.build_generate_spec(prompt="x", **options)
+
+    def test_downscale_rejected_for_gif_before_client_or_credentials(self):
+        spec = self.mod.build_generate_spec(prompt="x", output_format="gif")
+        with mock.patch.object(self.mod, "get_api_settings", side_effect=AssertionError("paid path")):
+            with self.assertRaisesRegex(self.mod.UsageError, "downscale"):
+                self.mod.run_live_request(spec=spec, out=Path("loop.gif"), force=False,
+                                         max_attempts=1, timeout=30, downscale_max_dim=64)
+        with self.assertRaisesRegex(self.mod.UsageError, "downscale"):
+            self.mod.downscale_image(self.animated_gif(), max_dim=16, output_format="gif")
+
+    def test_real_animation_saved_unchanged_with_actual_frame_metadata(self):
+        raw = self.animated_gif()
+        with tempfile.TemporaryDirectory() as tmp:
+            output, metadata, warnings = self.save(raw, Path(tmp), frame_count=3, frame_duration_ms=200)
+            self.assertEqual(output.read_bytes(), raw)
+            artifact = metadata["artifact"]
+            self.assertEqual((artifact["format"], artifact["width"], artifact["height"]), ("gif", 32, 48))
+            self.assertEqual(artifact["frame_count"], 3)
+            self.assertEqual(artifact["durations_ms"], [100, 200, 300])
+            self.assertEqual(artifact["duration_ms"], 600)
+            self.assertEqual(artifact["unique_frame_count"], 3)
+            self.assertEqual(artifact["loop"], 0)
+            self.assertIn("duration", warnings)
+
+    def test_transparent_gif_requires_alpha_in_every_frame(self):
+        frames = [Image.new("RGBA", (32, 48), (0, 0, 0, 0)) for _ in range(3)]
+        for i, frame in enumerate(frames):
+            frame.putpixel((i, i), (255, 0, 0, 255))
+        buf = io.BytesIO()
+        frames[0].save(buf, format="GIF", save_all=True, append_images=frames[1:],
+                       duration=200, loop=0, disposal=2)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, metadata, _ = self.save(buf.getvalue(), Path(tmp), background="transparent")
+            self.assertEqual(metadata["artifact"]["transparent_frames"], 3)
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(self.mod.UsageError, "transparent"):
+                self.save(self.animated_gif(), Path(tmp), background="transparent")
+
+    def test_provider_frame_mismatch_is_recorded_and_warned_without_losing_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output, metadata, warnings = self.save(self.animated_gif(), Path(tmp), frame_count=9)
+            self.assertTrue(output.exists())
+            self.assertEqual(metadata["request"]["frame_count"], 9)
+            self.assertEqual(metadata["artifact"]["frame_count"], 3)
+            self.assertTrue(metadata["artifact"]["warnings"])
+            self.assertIn("frame_count", warnings)
+
+    def test_png_renamed_gif_and_single_frame_gif_are_rejected(self):
+        for fmt in ("PNG", "GIF"):
+            buf = io.BytesIO()
+            Image.new("RGB", (32, 48), "red").save(buf, format=fmt)
+            with self.subTest(fmt=fmt), tempfile.TemporaryDirectory() as tmp:
+                with self.assertRaises(self.mod.UsageError):
+                    self.save(buf.getvalue(), Path(tmp))
+                self.assertFalse((Path(tmp) / "loop.gif").exists())
+
+    def test_native_formats_cannot_be_edit_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source.png"
+            Image.new("RGB", (32, 32), "red").save(source)
+            for fmt in ("gif", "svg"):
+                with self.subTest(fmt=fmt), self.assertRaises(self.mod.UsageError):
+                    self.mod.build_edit_spec(prompt="x", images=[source], output_format=fmt)
+
+    def test_reference_gif_edit_requires_explicit_ofox_extension(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source.png"
+            Image.new("RGB", (32, 32), "red").save(source)
+            spec = self.mod.build_edit_spec(prompt="wave", images=[source], output_format="gif",
+                size="512x512", experimental_gif_edit=True)
+            resolved = self.mod.resolve_provider_spec(spec, "https://api.ofox.io/v1")
+            self.assertEqual(resolved["endpoint"], "/v1/images/edits")
+            self.assertTrue(resolved["experimental_gif_edit"])
+            for base in (None, "https://api.openai.com/v1", "https://images.example.com/v1"):
+                with self.subTest(base=base), self.assertRaisesRegex(self.mod.UsageError, "OFOX"):
+                    self.mod.resolve_provider_spec(spec, base)
+            for options in ({"output_format": "png"}, {"mask": source}, {"markup": source}):
+                fields = {"output_format": "gif", **options}
+                with self.subTest(options=options), self.assertRaises(self.mod.UsageError):
+                    self.mod.build_edit_spec(prompt="x", images=[source], experimental_gif_edit=True, **fields)
+
+    def test_svg_bytes_remain_vector_and_usage_is_saved(self):
+        raw = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M0 0L32 32"/></svg>'
+        spec = self.mod.build_generate_spec(prompt="simple icon", output_format="svg")
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "icon.svg"
+            self.mod._save_final_images(response=self.response(raw, svg_usage={"total_tokens": 7}),
+                spec=spec, output_paths=[out], elapsed_seconds=1, attempts=1,
+                force=False, downscale_max_dim=None, downscale_suffix="-web")
+            self.assertEqual(out.read_bytes(), raw)
+            metadata = json.loads(out.with_suffix(".json").read_text())
+            self.assertEqual(metadata["artifact"]["format"], "svg")
+            self.assertEqual(metadata["response"]["svg_usage"], {"total_tokens": 7})
+        for options in ({"n": 2}, {"stream": True}, {"output_compression": 70}):
+            with self.subTest(options=options), self.assertRaises(self.mod.UsageError):
+                self.mod.build_generate_spec(prompt="x", output_format="svg", **options)
+
+    def test_svg_author_selection_is_opt_in_and_separate_from_image_model(self):
+        spec = self.mod.build_generate_spec(prompt="icon", output_format="svg",
+                                             svg_model="svg-author-from-provider", svg_reasoning="low")
+        payload = self.mod._sdk_common_payload(spec)
+        self.assertEqual(payload["model"], "gpt-image-2.6-flare")
+        self.assertEqual(payload["svg"], {"model": "svg-author-from-provider", "reasoning": {"effort": "low"}})
+        self.assertNotIn("svg", self.mod._sdk_common_payload(
+            self.mod.build_generate_spec(prompt="x", output_format="svg")))
+        for options in ({"svg_model": "x"}, {"svg_reasoning": "low"},
+                        {"output_format": "svg", "svg_reasoning": "low"},
+                        {"output_format": "svg", "svg_model": " "}):
+            with self.subTest(options=options), self.assertRaises(self.mod.UsageError):
+                self.mod.build_generate_spec(prompt="x", **options)
+
+    def test_svg_allows_internal_gradient_references(self):
+        spec = self.mod.build_generate_spec(prompt="x", output_format="svg")
+        for value in ("url(#g)", "url('#g')", 'url("#g")', "url( #g )", "url( '#g' )"):
+            escaped = value.replace('"', '&quot;')
+            raw = f'<svg><defs><linearGradient id="g"/></defs><path fill="{escaped}"/></svg>'.encode()
+            with self.subTest(value=value):
+                artifact = self.mod.inspect_output(raw, spec)
+                self.assertEqual(artifact["format"], "svg")
+
+        declared = b'<?xml version="1.0" encoding="UTF-8"?><svg><defs><path id="g" d="M0 0L1 1"/></defs><use href="#g"/></svg>'
+        self.assertEqual(self.mod.inspect_output(declared, spec)["format"], "svg")
+        escaped_local = br'<svg><defs><path id="g"/></defs><path style="fill:u\72l(#g)"/></svg>'
+        self.assertEqual(self.mod.inspect_output(escaped_local, spec)["format"], "svg")
+
+    def test_svg_rejects_raster_masquerade_and_active_content(self):
+        spec = self.mod.build_generate_spec(prompt="x", output_format="svg")
+        cases = [b"not xml", b"<html/>", b'<svg><script>alert(1)</script></svg>',
+                 b'<svg><image href="data:image/png;base64,eA=="/></svg>',
+                 b'<svg><use href="https://example.com/a.svg#x"/></svg>',
+                 b"<svg><path fill=\"url('https://example.com/a.svg#g')\"/></svg>",
+                 b"<svg><style>@import 'https://example.com/a.css';</style></svg>",
+                 b'<?xml-stylesheet type="text/css" href="https://example.invalid/a.css"?><svg/>',
+                 b'<svg xml:base="https://example.invalid/remote.svg"><use href="#remote"/></svg>',
+                 b'<svg><style>@keyframes blink {to {opacity:0}} rect {animation:blink 1s infinite}</style><rect/></svg>',
+                 br'<svg><style>@\69mport "https://example.invalid/a.css";</style></svg>',
+                 br'<svg><path style="fill:u\72l(https://example.invalid/a.svg#g)"/></svg>',
+                 br'<svg><style>rect {\61nimation:blink 1s infinite} @\6b eyframes blink {to {opacity:0}}</style></svg>']
+        for raw in cases:
+            with self.subTest(raw=raw), self.assertRaises(self.mod.UsageError):
+                self.mod.inspect_output(raw, spec)
+
+    def test_batch_accepts_complexity_and_gif_controls(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "jobs.jsonl"
+            source.write_text(json.dumps({"prompt": "ball loop", "output_format": "gif",
+                "size": "512x512", "frame_count": 9, "frame_duration_ms": 100,
+                "complexity": "low"}) + "\n")
+            jobs = self.mod.load_batch_jobs(source, root / "out")
+            self.assertEqual(jobs[0]["complexity"], "low")
+            self.assertEqual(jobs[0]["frame_count"], 9)
+            self.assertTrue(jobs[0]["out"].endswith(".gif"))
+
+
+class MarkupTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mod = load_module()
+
+    def test_markup_is_separate_transparent_annotation_layer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "source.png"
+            markup = root / "markup.png"
+            Image.new("RGB", (32, 48), "white").save(source)
+            Image.new("RGBA", (32, 48), (255, 0, 0, 0)).save(markup)
+            spec = self.mod.build_edit_spec(prompt="change marked vase", images=[source],
+                                             markup=markup, complexity="low")
+            self.assertEqual(spec["images"], [str(source)])
+            self.assertEqual(spec["markup"], str(markup))
+            for options in ({"mask": markup}, {"model": "gpt-image-2.5-flare"}):
+                with self.subTest(options=options), self.assertRaises(self.mod.UsageError):
+                    self.mod.build_edit_spec(prompt="x", images=[source], markup=markup, **options)
+            for mode, dimensions in (("RGBA", (48, 32)), ("RGB", (32, 48))):
+                Image.new(mode, dimensions, "white").save(markup)
+                with self.subTest(mode=mode), self.assertRaises(self.mod.UsageError):
+                    self.mod.build_edit_spec(prompt="x", images=[source], markup=markup)
+
+    def test_ofox_markup_warns_about_unverified_spatial_following(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source.png"
+            markup = Path(tmp) / "markup.png"
+            Image.new("RGB", (32, 48), "white").save(source)
+            Image.new("RGBA", (32, 48), (255, 0, 0, 0)).save(markup)
+            spec = self.mod.build_edit_spec(prompt="marked object", images=[source], markup=markup)
+            with redirect_stderr(io.StringIO()) as stderr:
+                self.mod.resolve_provider_spec(spec, "https://api.ofox.io/v1")
+            self.assertIn("markup", stderr.getvalue())
+            self.assertIn("spatial", stderr.getvalue())
+
+    def test_markup_dimension_comparison_applies_exif_orientation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source.jpg"
+            markup = Path(tmp) / "markup.png"
+            exif = Image.Exif()
+            exif[274] = 6
+            Image.new("RGB", (48, 32), "white").save(source, exif=exif)
+            Image.new("RGBA", (32, 48), (255, 0, 0, 0)).save(markup)
+            spec = self.mod.build_edit_spec(prompt="x", images=[source], markup=markup)
+            self.assertEqual(spec["markup"], str(markup))
 
 
 if __name__ == "__main__":

@@ -83,3 +83,11 @@ The mask must be a same-dimension PNG with alpha and at least one fully transpar
 - Start over when an instruction fails repeatedly, protected detail softens, or preservation instructions become longer than the change.
 
 For a settled sequence, consider restating all approved changes in one edit from the original source to reduce accumulated rerendering drift.
+
+## Markup annotations
+
+Use a separate transparent PNG with annotations as `--markup`; keep the unannotated original as Image 1. After orientation their dimensions must match. Markup is distinct from a mask and cannot be combined with one. State what the marks identify, the intended change, and what stays fixed; ask to remove annotation marks from the finished result. See [image-api.md](image-api.md) for file and pixel limits.
+
+OFOX accepts the field, but a local left/right A/B test failed spatial targeting. The CLI warns for this provider; inspect whether the intended object actually changed before treating the edit as successful.
+
+For reference animation, the official Image API edit contract does not support GIF. An empirically tested OFOX extension is available only through explicit `--experimental-gif-edit`; see [animated-gif.md](animated-gif.md). SVG edits remain unsupported.

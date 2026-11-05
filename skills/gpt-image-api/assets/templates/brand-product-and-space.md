@@ -77,7 +77,7 @@ Avoid: logo redesign, invented slogans, changed product labels, inconsistent col
 **Visual QA:** Compare logo/product references, count touchpoints, verify all copy, palette,
 type consistency, application realism, hierarchy, and accidental identity variations.
 
-**Evidence/status:** Community brand-touchpoint pattern rewritten as a reference-guided 2.5 composition template; not a substitute for a deterministic brand guideline.
+**Evidence/status:** Prompt structure maintained for GPT Image 2.6 using the [current OpenAI prompting guidance](https://developers.openai.com/api/docs/guides/image-prompting). Evaluate the generated output against this template's Visual QA criteria.
 
 ## Architecture or interior visualization
 

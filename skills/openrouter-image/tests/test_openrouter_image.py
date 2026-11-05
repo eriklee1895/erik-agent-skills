@@ -242,7 +242,8 @@ class RequestTests(OfflineTests):
         for model in ("sunburst", "flare"):
             for value in (0, 100):
                 with self.subTest(model=model, compression=value):
-                    self.assertEqual(self.request(model_name=model, compression=value)[
+                    self.assertEqual(self.request(model_name=model, compression=value,
+                                                  output_format="webp")[
                         "output_compression"], value)
             for value in (-1, 101):
                 with self.subTest(model=model, compression=value):
@@ -290,12 +291,14 @@ class RequestTests(OfflineTests):
             "generate", "--model", mod.MODELS["flare"]["id"], "--prompt", prompt,
             "--aspect", "3:4", "--quality", "xhigh", "--n", "2",
             "--background", "transparent", "--output-compression", "80",
+            "--output-format", "webp",
             "--out", str(self.out / "poster.png"), "--dry-run"))
         self.assertEqual(preview["model_alias"], "flare")
         self.assertEqual(preview["request"], {
             "model": mod.MODELS["flare"]["id"], "prompt": prompt,
             "aspect_ratio": "3:4", "quality": "xhigh", "n": 2,
             "background": "transparent", "output_compression": 80,
+            "output_format": "webp",
         })
         self.api.assert_not_called()
         self.assertFalse(self.out.exists())

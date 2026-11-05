@@ -12,7 +12,11 @@ present, their values must match. The `generate` / `edit` CLI flag is still
 field is omitted: model=`sunburst`, aspect_ratio=`1:1`, n=1, GPT quality=`auto`,
 banana resolution=`1K`, images=[]; unnamed outputs use `job-000`, etc., based on
 the physical zero-based row. Grok's quality/resolution fields are omitted unless
-supplied; MAI accepts neither. Explicit nulls, empty strings, invalid types or
+supplied; MAI accepts neither. Optional GPT `complexity` accepts low/medium/high and maps
+to `provider.options.openai.complexity`. Optional GPT `output_format` accepts
+png/jpeg/webp; `output_compression` requires explicit jpeg/webp and transparent
+background cannot use jpeg. GIF/SVG and frame controls are rejected before any
+paid call, including when they occur on a later row. Explicit nulls, empty strings, invalid types or
 model values, dialect mismatches, and unknown fields (including typos) are
 errors. `images` must be a list of reference path strings; paths resolve from
 the current working directory, as they do for `--image`. Blank lines and lines

@@ -1,75 +1,21 @@
-# Community practices and evidence status
+# Community practices for GPT Image 2.6
 
-Community material is empirical guidance, not an OpenAI API contract. Provider-specific fields and model names must not be copied into `scripts/gpt_image_api.py`.
+Use attributed observations to shape prompts and inspect outputs. Provider behavior, article examples, and suggested templates carry their own evidence scope.
 
-Community patterns are absorbed in two layers: this file preserves evidence and
-confidence; the optional assets under `assets/templates/` make only stable structural
-parts reusable. Selection and adaptation rules live in
-[template-selection.md](template-selection.md). Do not copy prompt-farm wording,
-reconstructed hidden prompts, creator-name imitation, or provider-specific API fields
-into template assets.
+## Native GIF evidence (2026-11-05)
 
-| Practice | Source | Official overlap | Local evaluation | Benefit | Tradeoff |
-| --- | --- | --- | --- | --- | --- |
-| Open with the deliverable and decide dimensions before framing | [Runware prompting guide](https://runware.ai/docs/models/openai-gpt-image-2-5-flare/guides/prompting) | Consistent with OpenAI's intended-use and composition guidance | Not yet benchmarked | Gives the model a concrete layout target | Can overconstrain exploratory ideation |
-| Use exact numeric counts and positions relative to named objects | [Runware prompting guide](https://runware.ai/docs/models/openai-gpt-image-2-5-flare/guides/prompting) | Consistent with explicit composition guidance | Not yet benchmarked | More inspectable than “several” or pixel coordinates | Counts and positions still require visual QA |
-| Name medium, material, lighting, and optical behavior instead of vague style adjectives | [Runware prompting guide](https://runware.ai/docs/models/openai-gpt-image-2-5-flare/guides/prompting) | Consistent with OpenAI's visible-detail guidance | Not yet benchmarked | Produces actionable visual constraints | Camera terms are cues, not physical guarantees |
-| Write edits as one change followed by a longer preservation list | [Runware editing guide](https://runware.ai/docs/models/openai-gpt-image-2-5-flare/guides/editing-images) | Directly overlaps OpenAI's change-versus-preserve guidance | One bounded Sunburst check changed only badge color while preserving text and alpha; broader quality remains unverified | Reduces ambiguous edit scope | Long lists can conflict if not curated |
-| Keep intermediates; compare accumulated drift with the original; consolidate settled edits | [Runware iterative-editing guide](https://runware.ai/docs/models/openai-gpt-image-2-5-flare/guides/iterative-editing) | Consistent with one-change-at-a-time iteration | Not yet benchmarked | Preserves approval checkpoints and exposes texture drift | Consolidation costs an extra render |
-| Keep exclusions short and role-label references | [Community reconstruction analysis](https://cybercorsairs.com/someone-reverse-engineered-278-hidden-prompts/) | Reference roles overlap official guidance; short-exclusion claim is community-only | Not yet benchmarked | Reduces vague reference use and prompt clutter | Source prompts are reconstructions, not OpenAI originals |
-| Attach source status and per-template visual QA | [Community 2.5 template pack](https://github.com/wuyoscar/GPT-Image2-Skill/blob/main/skills/gpt-image/references/templates-gpt-image-2.5.md) | Visual inspection and preservation checks overlap official guidance | Structure reviewed; templates not reproduced locally | Makes empirical material auditable and prevents prompt constraints from being mistaken for guarantees | Source model and local verification vary by template |
-| Route by deliverable category, then load one template | [Community industrial template library](https://github.com/freestylefly/awesome-gpt-image-2/blob/main/docs/templates.md) | Intended use and artifact type overlap official deliverable-first guidance | Taxonomy reviewed; individual prompts not imported or benchmarked | Improves retrieval across brand, space, series, publishing, and technical work | Large reverse-engineered libraries contain stale, verbose, or model-specific material |
+The official API demo describes a sprite sheet that captures the poses, followed by automatic frame extraction and looping GIF assembly. Treat native GIF as the API's finished output format when discussing community results. [Official OpenAI demo](https://www.youtube.com/watch?v=9ZxCOHkfn_8)
 
-## Local 2.5 evidence
+These launch-day examples are small, attributed observations, not reliability benchmarks or proof of model architecture.
 
-The 2026-09-16 paired run covered 16 generation jobs, one edit-source generation, and
-10 edits against one configured custom endpoint. All 27 calls succeeded with no retry.
-The UI pair both produced extra readable copy despite an allowlist; Flare's retrieval
-infographic added explanatory sentences while Sunburst kept the five requested labels.
-Both transparent spheres passed decoded Alpha validation, and all ten edit calls were
-visually usable. These observations justify regression checks, not universal model
-claims; the full scorecard is [here](../evals/live/results/2026-09-16-run-01.md).
+| Source | Observed result | Reusable implication |
+| --- | --- | --- |
+| [Kingy's direct Sunburst API test](https://kingy.ai/blog/chatgpt-gifs-images-2-6-vs-2-5-hands-on-test/) | A decoded 512px ten-frame product GIF retained readable labels, but gained a badge artifact and had uneven movement and a reset jump. A separate ChatGPT test returned different dimensions. | Inspect labels, motion spacing, and the seam. Keep ChatGPT and API evidence separate. |
+| [CellCog's paid API experiment](https://cellcog.ai/blog/gpt-image-2-6-vs-2-5/#animated-gifs-from-one-prompt) | A mascot wave and labeled process animation worked; the diagram marker stepped and the reset jumped. Sixteen frames were accepted; 17/32 were rejected despite the guide advertising 64. | Prefer one action and stable landmarks. The CLI uses the schema's conservative 2–16 bound. |
+| [Tencent creator examples](https://cloud.tencent.com/developer/article/2776489) | Returned product/character/ambient GIFs showed background and object-shape drift, changing fine details, and a broken hand/umbrella relationship. | Inspect every frame's contact relationships and fixed geometry. A successful action sequence does not prove reference fidelity. |
+| [OFOX native GIF example](https://ofox.ai/blog/gpt-image-2-6-gif-guide/) | Provider-native Flare GIF had nine distinct 512px frames at 200 ms; the bird moved while branch and leaf details shifted. Its separate sheet conversion and untested templates were labeled separately. | A finished returned GIF is a real deliverable; a converted sheet or proposed template is different evidence. |
+| [Official launch and partner demos](https://openai.com/index/introducing-images-2-6/) | Reaction stickers, a hand-drawn owl animation, and Town's mascot typing indicator illustrate short-form uses. | Useful pilot ideas; selected launch examples do not establish production outcomes or universal quality. |
 
-The follow-up allowlist run removed the unapproved explanatory copy from both
-infographics and reduced UI copy to placeholders, but both UI outputs repeated the
-allowlisted labels in multiple regions. Treat global occurrence count and repeated
-navigation labels as a separate regression dimension.
+The shared practical pattern is one subject, one short action, a locked camera, named identity details, and an explicit return toward the start. This is a synthesis, not a measured success-rate claim. Animated text, exact diagrams, complicated contact, and long camera moves remain acceptance-sensitive. ChatGPT's reference-to-GIF interface does not establish the official image edit API's GIF contract.
 
-The v3 global-count run removed repeated labels from the UI layouts, but introduced a
-precision/recall tradeoff: Flare rendered the structural numerals but omitted all five
-required word labels; Sunburst rendered the five word labels and allowed numerals
-without explanatory copy. Required UI copy should therefore be typeset deterministically
-after the model supplies the visual layout. Keep v2 and v3 as separate evidence; do not
-call the stronger wording a universal fix.
-
-For UI specifically:
-
-- UI: Flare omitted `VENDORS`, `SPECIALS`, and `PROFILE` in v3.
-- UI: Sunburst omitted `PROFILE`.
-
-For the infographic, Flare precision passed but recall failed; Sunburst passed both.
-Keep UI and infographic results as separate categories.
-
-The 2026-09-21 article-driven live check used the two community posts
-[赛博踱步](https://mp.weixin.qq.com/s/9dy4JoyqZFHuAWO9utISpA) and
-[远见明察](https://mp.weixin.qq.com/s/Dwbow-EPAmz1y640HJdLcg) as hypothesis sources,
-not as API contracts. It produced 12 accepted outputs plus one transient batch failure
-that succeeded when the failed item was retried. The controlled edit pair tested a one-line
-minimal-delta instruction against the structured `Change / Preserve / Avoid` form on the
-same lamp-move task with both models. Both forms made the intended local edit and plausible
-relighting; the structured form was not visibly superior in this small sample, and latency
-was not monotonic, so do not mandate long prompts for obvious local edits.
-
-The same run produced coherent 3×3 multi-camera continuity sheets with Flare and Sunburst,
-usable 4×4 sixteen-pose action sheets with both models, a readable Sunburst visual abstract,
-and a readable Flare executive-summary concept without obvious extra copy. A conservative
-Sunburst restoration improved a 512×341 derivative, but the result remains generative rather
-than lossless restoration. These outputs support optional scaffolds for minimal-delta edits,
-baseline locking, restoration, multi-camera continuity, and source-grounded one-page summaries;
-they do not establish universal identity, frame, typography, or restoration guarantees.
-
-The first six-job batch had one connection failure and later completed the failed item
-separately. Keep transient retry evidence separate from visual quality, and inspect every
-panel or text string before treating a contact sheet or summary as production-ready.
-
-Adopt the structural parts that improve clarity. Do not claim that a community pattern improves GPT Image 2.5 until representative live comparisons show it.
+A local OFOX check on the same date verified real native generation and reference-edit GIF bytes, distinct decoded frames, and transparent pixels in every frame for a transparent request. However, multiple requested frame counts/delays still returned nine frames at 200 ms. Separate left/right markup requests were accepted but both recolored the right mug, so markup spatial following was not validated. These are provider-route observations. The CLI records actual artifact settings, warns on mismatches and OFOX markup, and requires explicit opt-in for that provider's GIF edit extension. They do not show equivalent behavior on direct OpenAI. OFOX SVG requests failed with a missing-`svg.model` error both without selection and with an explicit model from its live catalog, so native SVG delivery was not validated on that route.

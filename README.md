@@ -21,6 +21,7 @@ the skills you need and use them with your agent.
 | I want to… | Start here |
 | --- | --- |
 | Generate or edit images | [GPT Image](skills/gpt-image-api/SKILL.md) · [OpenRouter](skills/openrouter-image/SKILL.md) · [Seedream](skills/seedream-image-gen/SKILL.md) |
+| Generate a short looping GIF | [GPT Image 2.6](skills/gpt-image-api/SKILL.md) |
 | Create article covers and illustrations | [Article Illustration](skills/article-illustration/SKILL.md) |
 | Generate video from text or references | [Seedance](skills/seedance-video-gen/SKILL.md) |
 | Create speech, music, or a mixed audio scene | [TTS](skills/volcengine-tts/SKILL.md) · [BGM](skills/volcengine-bigmusic-bgm/SKILL.md) · [Seed Audio](skills/seed-audio-gen/SKILL.md) |

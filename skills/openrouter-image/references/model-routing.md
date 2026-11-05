@@ -10,7 +10,9 @@ owns its parameters, prompting methods, and verification limits.
 |---|---|---|
 | Several variants in one call | sunburst / flare | `--n` up to 10; other aliases return one |
 | Transparent background | sunburst / flare | explicit background control |
-| GPT text/layout or controlled edits | sunburst; flare for the speed tier | same controls; base and speed tiers, respectively |
+| GPT text/layout or controlled edits | sunburst; flare for the speed tier | same controls; detail and speed tiers, respectively |
+| GPT 2.6 planning control | sunburst / flare | `--complexity low/medium/high`; independent of quality |
+| Native GPT 2.6 GIF, SVG, or markup editing | a supported native API | currently unavailable through these OpenRouter GPT endpoints |
 | Ultra-wide/tall `8:1`, `1:8`, `4:1`, or 4K output setting | banana | supported ratios and resolution settings |
 | Grok subject-led stills, reframing, or targeted edits | grok | independent 1K/2K and low/medium controls; up to three references |
 | MAI compositions combining subject, product, scene and style | mai | up to five references; role/authority-based iterative editing |
@@ -27,6 +29,8 @@ requirements; explain a required model change before generating.
 ## Match the controls to the deliverable
 
 Sunburst and Flare share quality, variants, reference, and background controls.
+They expose complexity through OpenAI provider passthrough and support PNG/JPEG/WebP encoding. Compression requires explicit
+JPEG/WebP. Transparent background requires PNG/WebP.
 Model selection and `--quality` are separate choices: Flare at `max` is still the
 speed tier. Inspect copy and preserved details on either model.
 
@@ -78,8 +82,8 @@ preflight, actual output paths, failure receipts, and controlled recovery.
 
 - [OpenRouter Image API](https://openrouter.ai/docs/guides/overview/multimodal/image-generation)
 - [OpenRouter image model descriptors](https://openrouter.ai/api/v1/images/models)
-- [Sunburst](https://openrouter.ai/openai/gpt-image-2.5-sunburst),
-  [Flare](https://openrouter.ai/openai/gpt-image-2.5-flare),
+- [Sunburst](https://openrouter.ai/openai/gpt-image-2.6-sunburst),
+  [Flare](https://openrouter.ai/openai/gpt-image-2.6-flare),
   [Banana](https://openrouter.ai/google/gemini-nano-banana-2.1),
   [Grok](https://openrouter.ai/x-ai/grok-imagine-image-2.0), and
   [MAI](https://openrouter.ai/microsoft/mai-image-2.6): current model information

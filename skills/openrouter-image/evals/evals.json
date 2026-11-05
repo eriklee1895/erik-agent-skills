@@ -133,6 +133,27 @@
       "prompt": "Grok是不是插画最好，MAI是不是永远最便宜？五张参考图是否保证比三张融合更好？MAI是不是有1024像素硬上限？",
       "expected_output": "不把单次画面观察、参考数量、固定价格或实测尺寸当稳定排名或全局硬上限；用当前参数描述说明可调用能力，质量按匹配brief的实际结果比较，成本查当前费率和usage，MAI约1MP仅是旧样本；模型独立指南服务于发挥能力，不是偏好榜单。",
       "files": []
+    },
+    {
+      "id": 19,
+      "name": "gpt-26-openrouter-animation-boundary",
+      "prompt": "OpenRouter 的 GPT Image 2.6 Flare 页面说支持 GIF，帮我生成4帧、每帧100毫秒的眨眼动图。不要换账号或接入渠道。",
+      "expected_output": "读取 sunburst-flare-prompting 的接入边界；说明当前 OpenRouter GPT 端点只声明 png/jpeg/webp，实测 gif 请求 HTTP400；不发送 frame_count/frame_duration_ms，不偷换静态图或原生OpenAI账号，不将模型原生能力当路由能力。",
+      "files": []
+    },
+    {
+      "id": 20,
+      "name": "gpt-26-complexity-and-format",
+      "prompt": "用 OpenRouter Flare 2.6 生成一张高细节产品图，构图简单少规划，透明 WebP，保存到 output/product.png；另有旧任务明确用 openai/gpt-image-2.5-flare，不能自动升级。",
+      "expected_output": "2.6任务使用 quality high、complexity low、background transparent、output_format webp；complexity透传到provider.options.openai；以返回字节保存product.webp并记录media_type、usage.cost。旧任务显式2.5 ID保持2.5且不发送complexity；不要把--out扩展名当编码请求。",
+      "files": []
+    },
+    {
+      "id": 21,
+      "name": "gpt-26-native-svg-markup-boundary",
+      "prompt": "用这个 OpenRouter skill 的 Sunburst 2.6 做 SVG，并传一个原生 markup 编辑图；都只用 OpenRouter。先验证，不要花钱。",
+      "expected_output": "以具体OpenRouter端点而非模型描述判定能力：GPT只声明png/jpeg/webp，markup无对应字段且不是允许透传键；明确不可用，在网络调用前拒绝；不拿全局API支持其他模型SVG当GPT支持，也不把markup偷偷当普通参考图。",
+      "files": []
     }
   ]
 }

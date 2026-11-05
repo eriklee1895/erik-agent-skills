@@ -1,0 +1,16 @@
+{
+  "skill_name": "gpt-image-api",
+  "purpose": "Explicit historical caller compatibility",
+  "evals": [
+    {
+      "id": 26,
+      "name": "legacy-25-reproducibility",
+      "prompt": "Replay a historical raster request with gpt-image-2.5-flare-2026-09-08. Keep that exact model despite the new defaults.",
+      "expected": [
+        "Preserves the explicit2.5snapshot and corresponding provider wire ID",
+        "Does not add2.6-only complexity, markup, GIF or SVG fields",
+        "Labels the old benchmark as2.5 rather than inferring2.6 quality from it"
+      ]
+    }
+  ]
+}
