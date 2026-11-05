@@ -7,28 +7,21 @@ knowledge, mirroring [banana-prompting.md](banana-prompting.md).
 
 - **Exact in-image text**: posters, slides, infographics with many verbatim
   labels; precise hierarchy and counts.
-- **Structured edits that preserve everything else**: state the change and the
-  preservation list, and regions outside the edit stay stable.
+- **Controlled edits**: state the change and preservation list, then inspect
+  the regions and attributes that should remain.
 - **Transparent backgrounds, natively**: soft alpha, real refraction through
   glass — no downstream cutout needed.
 - **Up to 16 reference images** and up to **10 variants per call** (`--n`).
 
 ## sunburst vs flare
 
-Same family, same per-token price; the difference is the speed/quality point:
+The two aliases share the same controls. Sunburst is the base/quality tier;
+Flare is the small/speed tier. Use the requested tier, or start with Sunburst
+for a task whose text/layout or edit fidelity needs evaluation. The tier name
+is not a guarantee for a particular prompt; inspect the required details.
 
-- **sunburst** = base/quality model — use for finals, text-heavy and edit-critical
-  work.
-- **flare** = small/speed model, quality "comparable to
-  GPT Image 2" — use for drafts, exploration, high-volume everyday work.
-
-Historical 2026-09-30 skill probes measured ~34s/18s medians at high. These are
-not current latency guarantees or a matched comparison with Nano Banana 2.1.
-
-Their per-token rates match; equal cost per call is not guaranteed because
-token consumption can differ. Flare prioritizes speed. To spend less, try lower
-`--quality` and check actual usage. For demanding references or edits, evaluate
-Sunburst; a useful workflow is Flare for exploration and Sunburst for final work.
+Model selection and `--quality` are separate controls. Adjust quality when it
+addresses a visible requirement, and read actual usage after generation.
 
 ## Parameter model
 
@@ -39,7 +32,7 @@ Sunburst; a useful workflow is Flare for exploration and Sunburst for final work
 | `--aspect` | 1:1, 3:2, 2:3, 4:3, 3:4, 16:9, 9:16, 21:9, auto | `auto` allowed |
 | `--background` | auto/transparent/opaque | transparency is native |
 | references | up to 16 | repeated `--image` |
-| streaming | supported | SSE partial frames |
+| streaming | API supported | SSE partial frames; not exposed by this CLI |
 
 Model choice (`flare`) and `--quality max` are separate: "flare + quality max"
 is the fast family at maximum detail, not a different model.
@@ -55,8 +48,8 @@ is the fast family at maximum detail, not a different model.
 除此以外画面中不出现任何文字。
 ```
 
-Listing exactly what text is allowed is what prevents decorative copy the model
-might otherwise invent.
+An explicit copy list reduces ambiguity about decorative text; check that the
+result contains only those strings, with the correct spelling and counts.
 
 **Structured edit — Change / Preserve:**
 
@@ -67,8 +60,8 @@ Preserve: the title “产品发布会”, the background, the layout, and every
 pixel outside the date region.
 ```
 
-A bare "change the date" can let the model re-render the whole scene; naming
-what is preserved is what makes the edit stay local.
+Naming the preserved layout and attributes helps constrain the edit. It does
+not establish pixel-identical regions outside the requested change.
 
 **Fuse references — number each image's role:**
 
@@ -77,21 +70,18 @@ Image 1 is the product, image 2 supplies only the style (palette and light).
 Keep image 1's product shape and edges identical; do not let image 2 alter it.
 ```
 
-**Variants:** use `--n 4` to get four alternatives in one call (cost scales
-with the count). This is cheaper than reasoning about four separate prompts
-when only composition varies.
+**Variants:** use `--n 4` for four alternatives to the same prompt in one call.
+Use separate prompts when the brief itself changes, and check returned usage
+rather than assuming a multi-output call saves money.
 
 ## Behavior to expect
 
 - These models support controlled generation and editing. Inspect framing and
   product form after each edit rather than treating preservation as guaranteed.
-- **flare** occasionally adds unrequested text/decoration; if the canvas must
-  stay clean, use the allowlist wording or switch to sunburst.
-- **Mask edits are a guide, not a hard pixel boundary** — the model is nudged
-  by the mask rather than physically constrained. For pixel-exact compositing,
-  composite the result deterministically afterward.
-- Mask handling on upstream gateways has shown occasional hiccups (a region
-  flattened to black); rerun critical mask edits rather than trusting one try.
+- Inspect unrequested text or decoration on either model; refine the copy list
+  and layout when the brief requires a clean canvas.
+- This CLI exposes no mask control. For pixel-exact preservation outside an
+  edited region, composite the result deterministically afterward.
 
 ## When Banana may fit better
 

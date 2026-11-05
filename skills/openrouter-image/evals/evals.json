@@ -91,6 +91,48 @@
       "prompt": "检查两条批量生图任务：第一条 name=poster、sunburst、n=2，第二条 name=poster-1、flare、n=1。先验证，发现问题就说明原因，不要付费生成。",
       "expected_output": "构造 JSONL 并运行 batch --dry-run；报告第二行输出路径与第一行 poster-1.png 冲突，退出非零；没有 API 调用或输出写入",
       "files": []
+    },
+    {
+      "id": 13,
+      "name": "current-budget-routing",
+      "prompt": "我需要用 OpenRouter 生成30张低成本草稿。应该选最便宜的哪个模型？先估预算，不要生成。",
+      "expected_output": "不从 skill 的静态价格或模型排名推导最低价；先按所需控制筛选候选，查询当前 OpenRouter 费率，说明参考图、质量、分辨率、输出数与 token 用量假设；用有范围的估算而非固定每张报价，dry-run 不是费用报价，生成后用 usage.cost 核对。",
+      "files": []
+    },
+    {
+      "id": 14,
+      "name": "grok-banner-reframe",
+      "prompt": "用 Grok Imagine Image 2.0 把已批准的方形人物肖像 approved.png 改成16:9横幅，人物在左侧三分之一，保留脸、服装和姿势，右侧扩展原房间并留白，后续自己排标题。",
+      "expected_output": "读取 grok-prompting；edit 传批准底图，aspect 16:9，按细节需要显式使用 resolution 2K、quality medium；提示词先写重构画幅和移动位置，再写人物与空间的保留项，右侧留白无文字；检查人物尺度、边缘、透视与实际尺寸，不承诺像素不变或把2K当固定边长。",
+      "files": []
+    },
+    {
+      "id": 15,
+      "name": "grok-native-parameter-boundary",
+      "prompt": "按 xAI 原生示例给这个 OpenRouter skill 的 Grok 设置 quality auto、resolution 2k，做两张候选。先检查参数。",
+      "expected_output": "区分原生 API 与 OpenRouter：本 CLI 仅支持 quality low/medium、resolution 1K/2K，n=1；拒绝直接发送 auto/2k/n=2，给出有效显式设置与分开两次调用的方案，不默默切模型；若省略 quality/resolution，应说明发送时省略而非代填原生默认值。",
+      "files": []
+    },
+    {
+      "id": 16,
+      "name": "mai-five-reference-authority",
+      "prompt": "用 MAI 合成五张参考图：approved.png 管构图，person.png 管身份，product.png 管产品和 ERIK LAB / SERUM 21 标签，room.png 管房间，style.png 只管色调。保持构图，做完后只改墙色；若脸或标签漂移怎么办？",
+      "expected_output": "读取 mai-prompting；五个 --image 按顺序编号，逐一指定角色，构图以批准底图为准、身份和产品以原始素材为准、风格图不带入物体文字；n=1且无quality/resolution；下一次传批准结果作底图，漂移时从最后批准底图重做并按需补回人物与产品原图，总数不超5，不把错误结果继续当底图，不保证五参考融合或像素完全一致。",
+      "files": []
+    },
+    {
+      "id": 17,
+      "name": "mai-grounding-and-resolution-boundary",
+      "prompt": "用这个 skill 的 MAI 开 web_grounding 搜索今天的新产品，生成4K透明产品海报，n=2。先告诉我参数是否可用，不要调用。",
+      "expected_output": "识别 MAI 上游及 OpenRouter Azure passthrough 有 web_grounding，但本 CLI 不暴露 provider.options/search；也无resolution/background，n仅1；先外部核实产品信息，不伪造透传字段或用prompt冒充4K透明控制；说明4K或透明要求需要相应支持的模型，得到范围内的模型选择后再生成。",
+      "files": []
+    },
+    {
+      "id": 18,
+      "name": "model-capability-evidence",
+      "prompt": "Grok是不是插画最好，MAI是不是永远最便宜？五张参考图是否保证比三张融合更好？MAI是不是有1024像素硬上限？",
+      "expected_output": "不把单次画面观察、参考数量、固定价格或实测尺寸当稳定排名或全局硬上限；用当前参数描述说明可调用能力，质量按匹配brief的实际结果比较，成本查当前费率和usage，MAI约1MP仅是旧样本；模型独立指南服务于发挥能力，不是偏好榜单。",
+      "files": []
     }
   ]
 }

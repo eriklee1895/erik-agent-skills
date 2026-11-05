@@ -565,5 +565,73 @@ class ImageSavingTests(OfflineTests):
         self.api.assert_not_called()
 
 
+class GrokAndMaiTests(OfflineTests):
+    """Behavior verified against live OpenRouter calls on 2026-11-04."""
+
+    def test_grok_accepts_resolution_and_quality_together(self):
+        body = self.request(model_name="grok", resolution="2K", quality="medium")
+        self.assertEqual(body["model"], "x-ai/grok-imagine-image-2.0")
+        self.assertEqual(body["resolution"], "2K")
+        self.assertEqual(body["quality"], "medium")
+        self.assertNotIn("background", body)
+        self.assertNotIn("output_compression", body)
+
+    def test_grok_omits_undeclared_defaults_when_flags_are_absent(self):
+        body = self.request(model_name="grok")
+        self.assertNotIn("resolution", body)
+        self.assertNotIn("quality", body)
+
+    def test_grok_rejects_a_fourth_reference(self):
+        ref = self.root / "ref.png"
+        ref.write_bytes(PNG_BYTES)
+        with self.assertRaisesRegex(SystemExit, "at most 3 reference"):
+            self.request(model_name="grok", refs=[ref] * 4)
+        body = self.request(model_name="grok", refs=[ref] * 3)
+        self.assertEqual(len(body["input_references"]), 3)
+
+    def test_grok_rejects_unsupported_quality_and_limits(self):
+        for kwargs in ({"quality": "high"}, {"n": 2},
+                       {"aspect": "4:5"}, {"background": "transparent"},
+                       {"compression": 80}):
+            with self.subTest(kwargs=kwargs), self.assertRaises(SystemExit):
+                self.request(model_name="grok", **kwargs)
+
+    def test_mai_accepts_only_aspect_n_and_references(self):
+        body = self.request(model_name="mai", aspect="4:3")
+        self.assertEqual(body, {
+            "model": "microsoft/mai-image-2.6", "prompt": "A poster",
+            "aspect_ratio": "4:3", "n": 1,
+        })
+
+    def test_mai_rejects_quality_resolution_variants_and_background(self):
+        for kwargs in ({"quality": "high"}, {"resolution": "2K"}, {"n": 2},
+                       {"background": "transparent"}, {"compression": 80},
+                       {"aspect": "21:9"}):
+            with self.subTest(kwargs=kwargs), self.assertRaises(SystemExit):
+                self.request(model_name="mai", **kwargs)
+
+    def test_mai_accepts_up_to_five_references(self):
+        ref = self.root / "ref.png"
+        ref.write_bytes(PNG_BYTES)
+        body = self.request(model_name="mai", refs=[ref] * 5)
+        self.assertEqual(len(body["input_references"]), 5)
+        with self.assertRaisesRegex(SystemExit, "at most 5 reference"):
+            self.request(model_name="mai", refs=[ref] * 6)
+
+    def test_new_models_appear_in_batch_preflight_and_reject_bad_fields(self):
+        bodies = self.run_batch([
+            {"name": "g", "model": "grok", "prompt": "cup", "resolution": "1K",
+             "quality": "low"},
+            {"name": "m", "model": "mai", "prompt": "cup", "aspect_ratio": "16:9"},
+        ])
+        self.assertEqual(bodies[0]["resolution"], "1K")
+        self.assertEqual(bodies[1]["aspect_ratio"], "16:9")
+        with self.assertRaisesRegex(SystemExit, "quality"):
+            self.write_jobs([{"name": "bad", "model": "mai", "prompt": "cup",
+                              "quality": "high"}])
+            with redirect_stdout(io.StringIO()):
+                mod.run_batch(self.input, self.out, 123)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,108 +1,86 @@
 # Model routing guide
 
-Three curated models behind OpenRouter's dedicated Image API. Use this guide
-for model tradeoffs; the paired prompting guides own model-specific controls,
-reference handling, and verification limits.
+Five curated models behind OpenRouter's dedicated Image API. Select by the
+requested model, required controls, and reference workflow. Each model guide
+owns its parameters, prompting methods, and verification limits.
 
 ## Decision matrix
 
-| Job | Choose | Reason |
+| Requirement | Candidate | Basis |
 |---|---|---|
-| Final image with strict copy, hierarchy, counts, or edits | **sunburst** | precision-oriented GPT Image 2.5 tier |
-| Fast everyday image, draft, exploration | **flare** | speed-oriented GPT Image 2.5 tier |
-| Multiple candidates per call | **sunburst / flare** | `--n` up to 10; banana gives 1 |
-| Routine subject/product recontextualization | **banana** | useful reference editing at 1K/2K; inspect face, shape and copy |
-| Same job with especially strict identity/label preservation | **sunburst** | prefer precision, inspect the preserved details |
-| Ultra-wide/ultra-tall: `8:1`, `1:8`, `4:1` | **banana** | supported ratios; 2.1 addresses panoramic tiling artifacts |
-| Canvas beyond GPT Image 2.5's documented pixel/edge limits | **banana** | 4K outputs can exceed those limits; inspect actual detail and dimensions |
-| Transparent asset | **sunburst / flare** | explicit transparent-background support |
-| Generate from current verified facts | research, then chosen model | this CLI does not activate Google Search grounding |
+| Several variants in one call | sunburst / flare | `--n` up to 10; other aliases return one |
+| Transparent background | sunburst / flare | explicit background control |
+| GPT text/layout or controlled edits | sunburst; flare for the speed tier | same controls; base and speed tiers, respectively |
+| Ultra-wide/tall `8:1`, `1:8`, `4:1`, or 4K output setting | banana | supported ratios and resolution settings |
+| Grok subject-led stills, reframing, or targeted edits | grok | independent 1K/2K and low/medium controls; up to three references |
+| MAI compositions combining subject, product, scene and style | mai | up to five references; role/authority-based iterative editing |
+| More than three references | mai (up to 5), banana (14), GPT (16) | Grok's endpoint accepts at most three |
+| Image based on current facts | research, then chosen model | this CLI has no search/grounding control |
+| Cost-constrained batch | compare current rates and request settings | no fixed cheapest model or stored price ranking |
 
-Model reference limits alone do not rank fusion quality: GPT accepts 16 images,
-banana 14. Use the fewest references that explain the job, with an explicit role
-and source of authority for each. Improved text rendering makes banana worth
-trying for posters; it does not guarantee every glyph or layout constraint.
+Grok and MAI also generate images without references. Their rows identify useful
+workflows, not capabilities exclusive to them or a ranking against other models.
+For an ordinary request with no model preference or control requirement, use the
+CLI default, sunburst. Honor an explicitly requested model when it can meet the
+requirements; explain a required model change before generating.
 
-Banana's clearest format advantage is extreme ratios: GPT Image 2.5's documented
-API range is 1:3 to 3:1, with each edge at most 3840 pixels and at most 8,294,400
-pixels total. Our Banana 4K / 21:9 probe returned 6336×2688. This establishes a
-larger output canvas, not superior visual detail or native rendering. The CLI
-does not expose GPT's custom `size` control.
+## Match the controls to the deliverable
 
-## Sunburst vs Flare
+Sunburst and Flare share quality, variants, reference, and background controls.
+Model selection and `--quality` are separate choices: Flare at `max` is still the
+speed tier. Inspect copy and preserved details on either model.
 
-Both have identical parameter choices and per-token pricing. Flare is the
-small/speed model; Sunburst is the base/quality model. The existing 2026-09-30
-skill probes at `quality high` measured medians of $0.042/34s for Sunburst and
-$0.042/18s for Flare (1372 image tokens). Those are historical samples, not
-current latency or equal-cost guarantees. Compare actual `usage.cost` because
-token consumption can differ even at the same quality label.
+Banana exposes 1K/2K/4K and extreme ratios. Start at 1K for a draft or large
+headings; increase the resolution when the intended viewing size needs it. A
+prior 4K/21:9 probe returned 6336×2688. This is an observed canvas, not evidence
+of better detail, text accuracy, or the internal rendering method.
 
-Choose Flare when fast iteration matters, Sunburst when precise final edits
-matter. Model selection and `--quality` are separate controls; try higher quality
-only when it addresses a visible unmet requirement.
+Grok exposes resolution and quality independently. Pin both for a controlled
+comparison; leaving either absent uses the provider's default. Use its guide's
+subject/material/light recipe for generation, and a focused change followed by
+preservation instructions for edits and reframing.
 
-## Banana — Nano Banana 2.1
+MAI combines multiple visual sources without a quality or resolution flag on
+this CLI. Assign each reference a role and choose which source governs framing,
+identity, product details, and style. Reuse the approved base for the next edit.
+The reference ceiling does not measure identity preservation or fusion quality.
 
-Choose `banana` for wide/panoramic formats or routine reference-based
-recontextualization. Start at `1K` for drafts or large poster headings, `2K` for
-finer copy/detail, and `4K` when the deliverable needs more pixels.
-For strict identity or label preservation,
-compare with Sunburst. See [banana-prompting.md](banana-prompting.md) for the
-parameter matrix, source authority, follow-up edits, and access-path limits.
+## Quality and cost decisions
 
-Google's current standard image-output estimates are $0.0336 (1K), $0.0504 (2K),
-and $0.1134 (4K). OpenRouter's checked endpoint publishes $30 per million image
-output tokens. Read the actual response usage; estimates exclude input,
-text/thinking, and other applicable charges. 1K/2K output is about half the old
-Nano Banana 2 price; 4K is about 25% lower. Output dimensions and tokens do not
-establish whether detail was rendered natively or upscaled. The inspected local
-probes and measured per-call tradeoffs are summarized in
-[banana-prompting.md](banana-prompting.md).
+Check outputs against the actual brief: exact copy, counts, composition, face or
+product details, and requested dimensions. A successful sample is evidence for
+that sample; it does not establish a stable model ranking. When a quality choice
+matters, compare candidates on the same brief, references, and delivery size.
 
-## Evidence boundaries
-
-2.1's main upgrades are better editing/subject consistency, text/layout, and
-panoramic artifact handling. 4K, multiple references, and Google Search grounding
-were already available in Nano Banana 2. The underlying Google API's integrated
-Web/Image Search can simplify a factual-image workflow, but this CLI route does
-not activate it. GPT workflows can also search before generating; grounding
-support alone does not establish better factual accuracy.
-
-Google's model card reports improvements over Nano Banana 2 in text-to-image,
-editing, multi-character consistency, and mask/ink editing. Arena's 2026-10-07
-text-to-image and 2026-10-06 single-image-edit snapshots still place 2.1 behind
-GPT Image 2.5 Sunburst/Flare and GPT Image 2. Overall preference does not settle
-a particular prompt; inspect the result for the actual brief. The 12-call local
-Banana probe did not compare matched GPT outputs, so it cannot establish better
-Chinese text, multi-reference fidelity, speed, or cost than Flare/Sunburst.
-In particular, GPT quality levels change cost; Banana is not universally cheaper.
+For a budget estimate, consult current OpenRouter model/endpoint rates and state
+the request assumptions: reference inputs, detail settings, output count, and
+batch size. Use a range when token usage is unknown. Read actual `usage.cost`
+from saved metadata and `batch-summary.json` after execution; missing usage is
+unknown spend. Preflight/dry-run performs no generation and returns no quote.
 
 ## Prompting references
 
-- [sunburst-flare-prompting.md](sunburst-flare-prompting.md): exact copy,
-  Change/Preserve edits, references, variants, transparency.
+- [sunburst-flare-prompting.md](sunburst-flare-prompting.md): quoted copy,
+  Change/Preserve edits, variants, and transparency.
 - [banana-prompting.md](banana-prompting.md): text/layout, reference authority,
-  stateless follow-ups, extreme-ratio composition, endpoint boundaries.
+  stateless follow-ups, extreme formats, and endpoint boundaries.
+- [grok-prompting.md](grok-prompting.md): subject/material/light structure,
+  targeted edits, reframing, and independent detail settings.
+- [mai-prompting.md](mai-prompting.md): multi-reference composition, source
+  precedence, iterative edits, and grounding boundaries.
 
-## Access path and errors
+## Access path and sources
 
-This skill uses OpenRouter for GPT Image 2.5 Sunburst/Flare and Nano Banana 2.1.
-It does not need another image skill. A capability available through Google's
-native API or a chat route is not automatically available through `/images`.
-
-402: credits/account issue; 404: model or provider unavailable; 429: inspect
-whether it is transient throttling or exhausted upstream quota; 502: upstream
-failure. Do not promise that every failed request is unbilled; inspect available
-usage/account evidence. The CLI does not retry or switch models automatically.
-
-## Official sources
+This CLI uses `/api/v1/images`. Native APIs and other gateways can expose
+different values or extra controls; use the chosen guide's OpenRouter matrix.
+The CLI does not retry or silently switch models. See [batch.md](batch.md) for
+preflight, actual output paths, failure receipts, and controlled recovery.
 
 - [OpenRouter Image API](https://openrouter.ai/docs/guides/overview/multimodal/image-generation)
-- [Nano Banana 2.1 on OpenRouter](https://openrouter.ai/google/gemini-nano-banana-2.1)
-- [Google model card](https://deepmind.google/models/model-cards/nano-banana-2-1/)
-- [Google image-output pricing](https://ai.google.dev/gemini-api/docs/pricing)
-- [OpenAI GPT Image guidance](https://developers.openai.com/api/docs/guides/image-prompting)
-- [OpenAI output size/format limits](https://developers.openai.com/api/docs/guides/image-generation)
-- [Arena text-to-image](https://arena.ai/leaderboard/text-to-image) and
-  [single-image editing](https://arena.ai/leaderboard/image-edit)
+- [OpenRouter image model descriptors](https://openrouter.ai/api/v1/images/models)
+- [Sunburst](https://openrouter.ai/openai/gpt-image-2.5-sunburst),
+  [Flare](https://openrouter.ai/openai/gpt-image-2.5-flare),
+  [Banana](https://openrouter.ai/google/gemini-nano-banana-2.1),
+  [Grok](https://openrouter.ai/x-ai/grok-imagine-image-2.0), and
+  [MAI](https://openrouter.ai/microsoft/mai-image-2.6): current model information
+  and rates.
