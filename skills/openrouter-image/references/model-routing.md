@@ -10,12 +10,15 @@ reference handling, and verification limits.
 |---|---|---|
 | Final image with strict copy, hierarchy, counts, or edits | **sunburst** | precision-oriented GPT Image 2.5 tier |
 | Fast everyday image, draft, exploration | **flare** | speed-oriented GPT Image 2.5 tier |
-| Multiple candidates per call | **sunburst / flare** | `--n` up to 10; banana gives 1 |
+| Multiple candidates per call | **sunburst / flare** | `--n` up to 10; every other alias gives 1 |
 | Routine subject/product recontextualization | **banana** | useful reference editing at 1K/2K; inspect face, shape and copy |
 | Same job with especially strict identity/label preservation | **sunburst** | prefer precision, inspect the preserved details |
 | Ultra-wide/ultra-tall: `8:1`, `1:8`, `4:1` | **banana** | supported ratios; 2.1 addresses panoramic tiling artifacts |
 | Canvas beyond GPT Image 2.5's documented pixel/edge limits | **banana** | 4K outputs can exceed those limits; inspect actual detail and dimensions |
 | Transparent asset | **sunburst / flare** | explicit transparent-background support |
+| Stylized illustration, character art, painterly covers | **grok** | best stylized rendering of the curated set, native 2K |
+| High-volume cheap drafts, product/UI visuals, thumbnails | **mai** | ~$0.03 per image, clean editorial look; ~1MP ceiling |
+| More than three references on a cheap model | **mai** (5) or GPT (16) | Grok rejects a fourth reference |
 | Generate from current verified facts | research, then chosen model | this CLI does not activate Google Search grounding |
 
 Model reference limits alone do not rank fusion quality: GPT accepts 16 images,
@@ -78,6 +81,22 @@ Banana probe did not compare matched GPT outputs, so it cannot establish better
 Chinese text, multi-reference fidelity, speed, or cost than Flare/Sunburst.
 In particular, GPT quality levels change cost; Banana is not universally cheaper.
 
+## Grok Imagine 2.0 and MAI-Image-2.6
+
+Added after a 14-call live probe on 2026-11-04 (see
+[grok-mai-prompting.md](grok-mai-prompting.md) for the measurements).
+
+- **grok** — `x-ai/grok-imagine-image-2.0`. Best stylized illustration and the
+  only alias with native 2K outside GPT/Banana. Costs $0.04–0.08 per image and
+  takes 45–110 s. Hard limits: three references, `n=1`, `quality` only
+  `low`/`medium`, `resolution` only `1K`/`2K`.
+- **mai** — `microsoft/mai-image-2.6`. Cheapest curated option (~$0.03) with a
+  clean editorial finish and five references. Hard limits: ~1 MP output,
+  `n=1`, and no quality/resolution/background/compression controls.
+
+Neither supports transparency, compression, or masks. Neither should be used
+for print or anything needing fine type at large size; that is sunburst's job.
+
 ## Prompting references
 
 - [sunburst-flare-prompting.md](sunburst-flare-prompting.md): exact copy,
@@ -87,7 +106,8 @@ In particular, GPT quality levels change cost; Banana is not universally cheaper
 
 ## Access path and errors
 
-This skill uses OpenRouter for GPT Image 2.5 Sunburst/Flare and Nano Banana 2.1.
+This skill uses OpenRouter for GPT Image 2.5 Sunburst/Flare, Nano Banana 2.1,
+Grok Imagine Image 2.0, and MAI-Image-2.6.
 It does not need another image skill. A capability available through Google's
 native API or a chat route is not automatically available through `/images`.
 

@@ -9,9 +9,11 @@ Supported model shortlist (deliberately curated, not the full OpenRouter catalog
   sunburst  openai/gpt-image-2.5-sunburst   precision tier (quality 6 tiers, n<=10)
   flare     openai/gpt-image-2.5-flare      speed tier  (same parameter matrix)
   banana    google/gemini-nano-banana-2.1   Nano Banana 2.1 (resolution tiers, n=1)
+  grok      x-ai/grok-imagine-image-2.0     2K stylized illustration (3 refs, n=1)
+  mai       microsoft/mai-image-2.6         budget editorial tier (~1MP, n=1)
 
-The two GPT models and the Gemini model speak different parameter dialects;
-this script validates requests against each model's matrix before calling.
+Each model declares the parameters it supports; requests are validated against
+that declaration before any network call.
 """
 
 from __future__ import annotations
@@ -41,6 +43,7 @@ MODELS: dict[str, dict] = {
         "aspect_ratios": ["1:1", "3:2", "2:3", "4:3", "3:4",
                           "16:9", "9:16", "21:9", "auto"],
         "qualities": ["auto", "low", "medium", "high", "xhigh", "max"],
+        "quality_default": "auto",
         "backgrounds": ["auto", "transparent", "opaque"],
         "compression_range": (0, 100),
         "n_max": 10,
@@ -53,6 +56,7 @@ MODELS: dict[str, dict] = {
         "aspect_ratios": ["1:1", "3:2", "2:3", "4:3", "3:4",
                           "16:9", "9:16", "21:9", "auto"],
         "qualities": ["auto", "low", "medium", "high", "xhigh", "max"],
+        "quality_default": "auto",
         "backgrounds": ["auto", "transparent", "opaque"],
         "compression_range": (0, 100),
         "n_max": 10,
@@ -66,8 +70,36 @@ MODELS: dict[str, dict] = {
                           "4:1", "4:3", "4:5", "5:4", "8:1", "9:16",
                           "16:9", "21:9"],
         "resolutions": ["1K", "2K", "4K"],
+        "resolution_default": "1K",
         "n_max": 1,
         "refs_max": 14,
+        "streaming": False,
+    },
+    # Verified against live OpenRouter calls on 2026-11-04: 2K output,
+    # stylized illustration strength, Chinese short copy accurate, but only
+    # three references and 45-110s latency per image.
+    "grok": {
+        "id": "x-ai/grok-imagine-image-2.0",
+        "dialect": "paramset",
+        "aspect_ratios": ["1:1", "3:4", "4:3", "9:16", "16:9", "2:3",
+                          "3:2", "9:19.5", "19.5:9", "9:20", "20:9",
+                          "1:2", "2:1", "auto"],
+        "qualities": ["low", "medium"],
+        "resolutions": ["1K", "2K"],
+        "n_max": 1,
+        "refs_max": 3,
+        "streaming": False,
+    },
+    # Verified against live OpenRouter calls on 2026-11-04: clean editorial
+    # rendering and accurate Chinese short copy at ~$0.03, but tops out near
+    # 1MP and the provider rejects any n other than 1.
+    "mai": {
+        "id": "microsoft/mai-image-2.6",
+        "dialect": "paramset",
+        "aspect_ratios": ["1:1", "4:3", "3:4", "16:9", "9:16", "3:2",
+                          "2:3", "auto"],
+        "n_max": 1,
+        "refs_max": 5,
         "streaming": False,
     },
 }
@@ -136,6 +168,11 @@ def data_url(path: Path) -> str:
 def build_request(model_name: str, prompt: str, aspect: str, quality: str | None,
                   resolution: str | None, background: str | None, n: int,
                   refs: list[Path], compression: int | None) -> dict:
+    """Validate against the model's declared parameter set, then build the body.
+
+    A model supports a parameter exactly when its MODELS entry declares the
+    matching key, so adding a model never requires a new branch here.
+    """
     m = MODELS[model_name]
 
     # ---- validation (errors before any network call) ----
@@ -157,6 +194,32 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
     if compression is not None and type(compression) is not int:
         raise SystemExit("output_compression must be an integer.")
 
+    if quality is not None and "qualities" not in m:
+        raise SystemExit(
+            f"{model_name} has no 'quality' parameter — it accepts only "
+            f"aspect_ratio, n and references. Drop --quality.")
+    if resolution is not None and "resolutions" not in m:
+        raise SystemExit(
+            f"{model_name} has no 'resolution' parameter — use --aspect and, "
+            f"where supported, --quality instead. Drop --resolution.")
+    if background is not None and "backgrounds" not in m:
+        raise SystemExit(
+            f"{model_name} has no background control and cannot produce "
+            "transparent images. Use sunburst/flare for that.")
+    if compression is not None and "compression_range" not in m:
+        raise SystemExit(f"{model_name} does not support output_compression.")
+
+    if quality is not None and quality not in m["qualities"]:
+        raise SystemExit(
+            f"{model_name} does not accept quality '{quality}'. Allowed: "
+            f"{', '.join(m['qualities'])}")
+    if resolution is not None and resolution not in m["resolutions"]:
+        raise SystemExit(
+            f"{model_name} does not accept resolution '{resolution}'. Allowed: "
+            f"{', '.join(m['resolutions'])}")
+    if background is not None and background not in m["backgrounds"]:
+        raise SystemExit(f"unknown background '{background}'.")
+
     body: dict = {"model": m["id"], "prompt": prompt, "aspect_ratio": aspect, "n": n}
 
     if refs:
@@ -164,44 +227,23 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
             {"type": "image_url", "image_url": {"url": data_url(p)}} for p in refs
         ]
 
-    if m["dialect"] == "gpt":
-        if resolution is not None:
+    if "qualities" in m:
+        value = quality if quality is not None else m.get("quality_default")
+        if value is not None:
+            body["quality"] = value
+    if "resolutions" in m:
+        value = resolution if resolution is not None else m.get("resolution_default")
+        if value is not None:
+            body["resolution"] = value
+    if background is not None and background != "auto":
+        body["background"] = background
+    if compression is not None:
+        minimum, maximum = m["compression_range"]
+        if not minimum <= compression <= maximum:
             raise SystemExit(
-                f"{model_name} has no 'resolution' parameter — it uses '--quality' "
-                "(low..max) and aspect_ratio instead. Drop --resolution.")
-        if quality is not None and quality not in m["qualities"]:
-            raise SystemExit(
-                f"{model_name} does not accept quality '{quality}'. Allowed: "
-                f"{', '.join(m['qualities'])}")
-        body["quality"] = "auto" if quality is None else quality
-        if background is not None:
-            if background not in m["backgrounds"]:
-                raise SystemExit(f"unknown background '{background}'.")
-            if background != "auto":
-                body["background"] = background
-        if compression is not None:
-            minimum, maximum = m["compression_range"]
-            if not minimum <= compression <= maximum:
-                raise SystemExit(
-                    f"{model_name} output_compression must be between {minimum} "
-                    f"and {maximum}; got {compression}.")
-            body["output_compression"] = compression
-    else:  # banana
-        if quality is not None:
-            raise SystemExit(
-                f"{model_name} (Nano Banana 2.1) has no 'quality' tiers — it uses "
-                "'--resolution' (1K/2K/4K). Drop --quality.")
-        if background is not None:
-            raise SystemExit(
-                f"{model_name} has no background control and cannot produce "
-                "transparent PNGs. Use sunburst/flare for that.")
-        if compression is not None:
-            raise SystemExit(f"{model_name} does not support output_compression.")
-        if resolution is not None and resolution not in m["resolutions"]:
-            raise SystemExit(
-                f"{model_name} does not accept resolution '{resolution}'. Allowed: "
-                f"{', '.join(m['resolutions'])}")
-        body["resolution"] = "1K" if resolution is None else resolution
+                f"{model_name} output_compression must be between {minimum} "
+                f"and {maximum}; got {compression}.")
+        body["output_compression"] = compression
 
     return body
 
@@ -451,7 +493,7 @@ def main():
 
     def add_common(p):
         p.add_argument("--model", default="sunburst",
-                       help="sunburst | flare | banana (or full OpenRouter id)")
+                       help="sunburst | flare | banana | grok | mai (or full OpenRouter id)")
         p.add_argument("--prompt")
         p.add_argument("--prompt-file")
         p.add_argument("--aspect", default="1:1", help="aspect_ratio, e.g. 16:9")
@@ -464,8 +506,8 @@ def main():
 
     g = sub.add_parser("generate", help="text-to-image")
     add_common(g)
-    g.add_argument("--quality", help="auto|low|medium|high|xhigh|max (GPT models)")
-    g.add_argument("--resolution", help="1K|2K|4K (Nano Banana 2.1)")
+    g.add_argument("--quality", help="auto|low|medium|high|xhigh|max (GPT), low|medium (grok)")
+    g.add_argument("--resolution", help="1K|2K|4K (banana), 1K|2K (grok)")
     g.add_argument("--background", help="transparent|opaque (GPT models)")
     g.add_argument("--output-compression", type=int)
 

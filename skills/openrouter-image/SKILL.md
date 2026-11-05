@@ -1,11 +1,11 @@
 ---
 name: openrouter-image
-description: "Use when generating or editing raster images through OpenRouter with GPT Image 2.5 Sunburst/Flare or Nano Banana 2.1: photos, posters, text-heavy layouts, product shots, illustrations, reference composites, variants, or JSONL batches. Especially relevant when the user names OpenRouter, Nano Banana, Sunburst/Flare, or wants one API key for these models. Excludes SVG, code-native diagrams, and deterministic layout."
+description: "Use when generating or editing raster images through OpenRouter with GPT Image 2.5 Sunburst/Flare, Nano Banana 2.1, Grok Imagine Image 2.0, or MAI-Image-2.6: photos, posters, text-heavy layouts, product shots, illustrations, reference composites, variants, or JSONL batches. Especially relevant when the user names OpenRouter, Nano Banana, Sunburst/Flare, Grok Imagine, or MAI-Image, or wants one API key for these models. Excludes SVG, code-native diagrams, and deterministic layout."
 ---
 
 # openrouter-image
 
-Generate and edit images through OpenRouter's unified image API, using three
+Generate and edit images through OpenRouter's unified image API, using five
 curated models:
 
 | Alias | Model | Use for |
@@ -13,6 +13,8 @@ curated models:
 | `sunburst` | openai/gpt-image-2.5-sunburst | precise text, dense layouts, final assets, transparency |
 | `flare` | openai/gpt-image-2.5-flare | fast everyday generation, drafts, variants |
 | `banana` | google/gemini-nano-banana-2.1 | ultra-wide/tall, large canvases, routine reference edits, 1K–4K |
+| `grok` | x-ai/grok-imagine-image-2.0 | 2K stylized illustration, anime/painterly character art; 3 refs max, slow |
+| `mai` | microsoft/mai-image-2.6 | budget editorial rendering (~$0.03), clean product/UI visuals; ~1MP, n=1 |
 
 Use the table for routine selection. Read only the references relevant to the job:
 
@@ -22,6 +24,8 @@ Use the table for routine selection. Read only the references relevant to the jo
   — GPT text/layout, reference edits, variants, and transparent assets.
 - [references/banana-prompting.md](references/banana-prompting.md) — Banana
   text/layout, reference roles, follow-up edits, extreme ratios, and API limits.
+- [references/grok-mai-prompting.md](references/grok-mai-prompting.md) — Grok
+  and MAI measured strengths, reference ceilings, and prompt patterns.
 
 - [references/batch.md](references/batch.md) — JSONL preflight, output collisions,
   failure summaries, and controlled retries; read before running a batch.
@@ -35,11 +39,13 @@ briefing it. These guides are self-contained.
    (`edit`), or many jobs from a file (`batch`).
 2. Honor a specified model. Otherwise: strict copy/identity/layout → sunburst;
    fast everyday generation → flare; extreme ratios, large canvases, or routine
-   reference recontextualization → banana. Reference count alone does not rank
-   edit quality; compare actual outputs when preservation is critical.
-3. Use the parameters that match the model's dialect (the CLI rejects mismatches):
-   GPT models take `--quality` + `--n` + `--background`; banana takes
-   `--resolution`, n=1, no transparency.
+   reference recontextualization → banana; stylized illustration or character
+   art → grok; high-volume cheap drafts → mai. Reference count alone does not
+   rank edit quality; compare actual outputs when preservation is critical.
+3. Use the parameters that match the model's declaration (the CLI rejects
+   mismatches): GPT models take `--quality` + `--n` + `--background`; banana
+   takes `--resolution` with n=1; grok takes `--resolution` **and** `--quality`
+   with n=1; mai takes only the aspect ratio, n=1.
 4. For complex requests, run `--dry-run` first and inspect the exact JSON body.
 5. Run the script with `python3` (standard library only, no install needed).
 6. Inspect the saved image and its sibling `.json` metadata: exact copy, counts,
@@ -81,13 +87,27 @@ python3 scripts/openrouter_image.py generate \
   --prompt "A wide cinematic market street at golden hour, rich detail" \
   --aspect 21:9 --resolution 4K \
   --out output/market.png
+
+# Grok Imagine 2.0: stylized 2K illustration
+python3 scripts/openrouter_image.py generate \
+  --model grok \
+  --prompt "精致日漫插画头像，紫发设计师，发光蝴蝶，柔和侧光" \
+  --aspect 1:1 --resolution 2K --quality medium \
+  --out output/avatar.png
+
+# MAI-Image-2.6: cheap, clean editorial visual
+python3 scripts/openrouter_image.py generate \
+  --model mai \
+  --prompt "极简陶瓷杯产品图，奶油白背景，柔和侧光" \
+  --aspect 1:1 \
+  --out output/cup.png
 ```
 
 ## Editing
 
 Provide one or more reference images with repeated `--image`. The CLI limits the
-count per model (16 for GPT, 14 for banana) and embeds them as
-`input_references`.
+count per model (16 for GPT, 14 for banana, 5 for MAI, 3 for Grok) and embeds
+them as `input_references`.
 
 ```bash
 # Keep a product exactly as-is, change only the background (sunburst)
@@ -130,7 +150,7 @@ Each line is one job:
 ```
 
 Supported job fields: `name`, `model` (alias or full id), `prompt`,
-`aspect_ratio`, `quality` / `resolution` (per dialect), `n`, `background`,
+`aspect_ratio`, `quality` / `resolution` (per model), `n`, `background`,
 `images` (reference paths), `output_compression`. Results and a
 `batch-summary.json` land in the output directory. Jobs run sequentially.
 Legacy `aspect` is accepted; if both ratio keys are present, they must match.
@@ -141,17 +161,20 @@ for collision rules, dry-run limits, and retrying selected jobs.
 
 ## Quick parameter reference
 
-| | sunburst / flare | banana |
-|---|---|---|
-| Detail | `--quality` auto/low/medium/high/xhigh/max | `--resolution` 1K/2K/4K |
-| Variants | `--n` up to 10 | n = 1 |
-| References | up to 16 | up to 14 |
-| Transparency | `--background transparent` | unsupported |
-| Ratios | incl. 21:9 | incl. 8:1, 4:1 |
+| | sunburst / flare | banana | grok | mai |
+|---|---|---|---|---|
+| Detail | `--quality` auto→max | `--resolution` 1K/2K/4K | `--resolution` 1K/2K + `--quality` low/medium | none |
+| Variants | `--n` up to 10 | n = 1 | n = 1 | n = 1 |
+| References | up to 16 | up to 14 | **up to 3** | up to 5 |
+| Transparency | `--background transparent` | unsupported | unsupported | unsupported |
+| Ratios | incl. 21:9 | incl. 8:1, 4:1 | incl. 20:9 | 1:1/4:3/3:4/16:9/9:16/3:2/2:3 |
+| Output ceiling | per provider | up to 4K | 2048×2048 at 2K | ~1024×1024 |
+| Typical cost | ~$0.042 | $0.034–0.11 | $0.04–0.08 | ~$0.03 |
 
-The CLI checks model/dialect combinations, ratios, quality/resolution values,
-output counts, and reference ceilings before calling. For example, banana with
-`--quality`, `--n 3`, or `--resolution 512` fails with an explanatory message.
+The CLI checks each model's declared parameters, ratios, detail values, output
+counts, and reference ceilings before calling. For example, banana with
+`--quality`, mai with `--n 2`, or grok with a fourth `--image` fails with an
+explanatory message.
 
 ## Notes
 
