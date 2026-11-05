@@ -63,9 +63,9 @@ consider sunburst and inspect its output too.
 Specify punctuation as part of the copy contract. In a plain-prompt probe the
 model added a middle dot to the date/location and pseudo lettering to the cube;
 two 2K whitelist probes preserved the visible date formatting and avoided that
-extra copy. The same whitelist also worked at 1K for these large headings:
-15.48s/$0.0374 versus 25.35–26.45s/$0.0547 at 2K. This small comparison supports
-trying 1K when the viewing size allows it, not a guarantee for small or dense text.
+extra copy. The same whitelist also worked at 1K for these large headings.
+This small comparison supports trying 1K when the viewing size allows it,
+not a guarantee for small or dense text.
 
 ## Reference roles and authority
 
@@ -154,11 +154,10 @@ allowlist. Recheck these records before adding new controls.
 After earlier upstream 429s, 12 dedicated Image API calls succeeded on 2026-10-08:
 poster control/whitelist/repeat/1K comparison, product and portrait fixtures,
 two-reference composite, date-only edit, two background edits, and 2K/4K
-panoramas. Total reported cost was $0.666531; latency ranged from 11.92 to 34.15s.
-The examples above reflect those inspected outputs. This is a small application
-probe, not a reliability benchmark or a head-to-head GPT comparison; 14-reference
-capacity, thinking/search control, transparency and long edit chains were not
-tested. Nano Banana 2 observations do not establish 2.1 performance.
+panoramas. The examples above reflect those inspected outputs. This is a small
+application probe, not a reliability benchmark or a head-to-head GPT comparison;
+14-reference capacity, thinking/search control, transparency and long edit
+chains were not tested. Nano Banana 2 observations do not establish 2.1 performance.
 
 - [OpenRouter model](https://openrouter.ai/google/gemini-nano-banana-2.1) and
   [Image API capabilities](https://openrouter.ai/docs/guides/overview/multimodal/image-generation)

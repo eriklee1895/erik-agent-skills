@@ -9,8 +9,8 @@ Supported model shortlist (deliberately curated, not the full OpenRouter catalog
   sunburst  openai/gpt-image-2.5-sunburst   precision tier (quality 6 tiers, n<=10)
   flare     openai/gpt-image-2.5-flare      speed tier  (same parameter matrix)
   banana    google/gemini-nano-banana-2.1   Nano Banana 2.1 (resolution tiers, n=1)
-  grok      x-ai/grok-imagine-image-2.0     2K stylized illustration (3 refs, n=1)
-  mai       microsoft/mai-image-2.6         budget editorial tier (~1MP, n=1)
+  grok      x-ai/grok-imagine-image-2.0     independent detail controls (3 refs, n=1)
+  mai       microsoft/mai-image-2.6         multi-reference editing (5 refs, n=1)
 
 Each model declares the parameters it supports; requests are validated against
 that declaration before any network call.
@@ -75,9 +75,8 @@ MODELS: dict[str, dict] = {
         "refs_max": 14,
         "streaming": False,
     },
-    # Verified against live OpenRouter calls on 2026-11-04: 2K output,
-    # stylized illustration strength, Chinese short copy accurate, but only
-    # three references and 45-110s latency per image.
+    # OpenRouter endpoint descriptor checked on 2026-11-05; generation and
+    # two-reference editing were exercised in the earlier application probe.
     "grok": {
         "id": "x-ai/grok-imagine-image-2.0",
         "dialect": "paramset",
@@ -90,9 +89,8 @@ MODELS: dict[str, dict] = {
         "refs_max": 3,
         "streaming": False,
     },
-    # Verified against live OpenRouter calls on 2026-11-04: clean editorial
-    # rendering and accurate Chinese short copy at ~$0.03, but tops out near
-    # 1MP and the provider rejects any n other than 1.
+    # OpenRouter endpoint descriptor checked on 2026-11-05. Its five-reference
+    # capacity is a request limit, not a guarantee of reference fidelity.
     "mai": {
         "id": "microsoft/mai-image-2.6",
         "dialect": "paramset",
@@ -195,9 +193,10 @@ def build_request(model_name: str, prompt: str, aspect: str, quality: str | None
         raise SystemExit("output_compression must be an integer.")
 
     if quality is not None and "qualities" not in m:
+        hint = (f"Use --resolution ({'/'.join(m['resolutions'])}) instead. "
+                if "resolutions" in m else "")
         raise SystemExit(
-            f"{model_name} has no 'quality' parameter — it accepts only "
-            f"aspect_ratio, n and references. Drop --quality.")
+            f"{model_name} has no 'quality' parameter. {hint}Drop --quality.")
     if resolution is not None and "resolutions" not in m:
         raise SystemExit(
             f"{model_name} has no 'resolution' parameter — use --aspect and, "

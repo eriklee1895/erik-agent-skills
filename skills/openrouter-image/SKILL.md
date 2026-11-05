@@ -10,11 +10,11 @@ curated models:
 
 | Alias | Model | Use for |
 |---|---|---|
-| `sunburst` | openai/gpt-image-2.5-sunburst | precise text, dense layouts, final assets, transparency |
-| `flare` | openai/gpt-image-2.5-flare | fast everyday generation, drafts, variants |
+| `sunburst` | openai/gpt-image-2.5-sunburst | GPT base tier; text/layout, reference edits, variants, transparency |
+| `flare` | openai/gpt-image-2.5-flare | GPT speed tier; drafts, variants, transparency |
 | `banana` | google/gemini-nano-banana-2.1 | ultra-wide/tall, large canvases, routine reference edits, 1K–4K |
-| `grok` | x-ai/grok-imagine-image-2.0 | 2K stylized illustration, anime/painterly character art; 3 refs max, slow |
-| `mai` | microsoft/mai-image-2.6 | budget editorial rendering (~$0.03), clean product/UI visuals; ~1MP, n=1 |
+| `grok` | x-ai/grok-imagine-image-2.0 | subject-led generation, local edits and reframing; separate resolution/quality controls, 3 refs |
+| `mai` | microsoft/mai-image-2.6 | combine composition, subject, product and style references; iterative edits, up to 5 refs |
 
 Use the table for routine selection. Read only the references relevant to the job:
 
@@ -24,9 +24,10 @@ Use the table for routine selection. Read only the references relevant to the jo
   — GPT text/layout, reference edits, variants, and transparent assets.
 - [references/banana-prompting.md](references/banana-prompting.md) — Banana
   text/layout, reference roles, follow-up edits, extreme ratios, and API limits.
-- [references/grok-mai-prompting.md](references/grok-mai-prompting.md) — Grok
-  and MAI measured strengths, reference ceilings, and prompt patterns.
-
+- [references/grok-prompting.md](references/grok-prompting.md) — Grok subject,
+  material and light descriptions, targeted edits, reframing, and API controls.
+- [references/mai-prompting.md](references/mai-prompting.md) — MAI multi-reference
+  roles, composition authority, iterative edits, and access-path limits.
 - [references/batch.md](references/batch.md) — JSONL preflight, output collisions,
   failure summaries, and controlled retries; read before running a batch.
 
@@ -37,20 +38,27 @@ briefing it. These guides are self-contained.
 
 1. Classify the request: new image (`generate`), edit/composite existing images
    (`edit`), or many jobs from a file (`batch`).
-2. Honor a specified model. Otherwise: strict copy/identity/layout → sunburst;
-   fast everyday generation → flare; extreme ratios, large canvases, or routine
-   reference recontextualization → banana; stylized illustration or character
-   art → grok; high-volume cheap drafts → mai. Reference count alone does not
-   rank edit quality; compare actual outputs when preservation is critical.
+2. Honor a specified model. Otherwise route by required controls: variants or
+   transparency → sunburst/flare; extreme ratios or 4K → banana; Grok generation
+   or reframing with separate detail controls → grok; MAI reference composition
+   or iterative edits → mai. For ordinary work without a model preference or
+   format constraint, use the default sunburst. These are capability-based
+   starting points; compare outputs for the actual brief when quality decides.
 3. Use the parameters that match the model's declaration (the CLI rejects
    mismatches): GPT models take `--quality` + `--n` + `--background`; banana
-   takes `--resolution` with n=1; grok takes `--resolution` **and** `--quality`
-   with n=1; mai takes only the aspect ratio, n=1.
+   takes `--resolution` with n=1; grok supports independent `--resolution` and
+   `--quality` controls with n=1; mai has no detail control, n=1. The model guides
+   specify defaults and omissions.
 4. For complex requests, run `--dry-run` first and inspect the exact JSON body.
 5. Run the script with `python3` (standard library only, no install needed).
 6. Inspect the saved image and its sibling `.json` metadata: exact copy, counts,
    preserved details, returned dimensions, and actual `usage.cost`. Use the
    recorded output paths; the saved suffix follows the returned image bytes.
+
+For a cost-sensitive request, check current OpenRouter rates and the relevant
+reference/detail settings before estimating spend. Use actual `usage.cost` for
+completed calls; no alias is selected as a permanently cheapest option. Dry-run
+validates request structure and does not estimate charges.
 
 Ratio/resolution are best effort. Accept provider dimensions; this CLI does
 not crop, resize, or regenerate on a pixel mismatch. Apply exact sizing only
@@ -95,7 +103,7 @@ python3 scripts/openrouter_image.py generate \
   --aspect 1:1 --resolution 2K --quality medium \
   --out output/avatar.png
 
-# MAI-Image-2.6: cheap, clean editorial visual
+# MAI-Image-2.6: product composition with an explicit setting
 python3 scripts/openrouter_image.py generate \
   --model mai \
   --prompt "极简陶瓷杯产品图，奶油白背景，柔和侧光" \
@@ -168,8 +176,10 @@ for collision rules, dry-run limits, and retrying selected jobs.
 | References | up to 16 | up to 14 | **up to 3** | up to 5 |
 | Transparency | `--background transparent` | unsupported | unsupported | unsupported |
 | Ratios | incl. 21:9 | incl. 8:1, 4:1 | incl. 20:9 | 1:1/4:3/3:4/16:9/9:16/3:2/2:3 |
-| Output ceiling | per provider | up to 4K | 2048×2048 at 2K | ~1024×1024 |
-| Typical cost | ~$0.042 | $0.034–0.11 | $0.04–0.08 | ~$0.03 |
+
+Resolution labels are provider settings, not fixed dimensions or evidence of
+native rendering detail. Inspect actual sizes; each model guide records any
+observed dimensions separately from supported controls.
 
 The CLI checks each model's declared parameters, ratios, detail values, output
 counts, and reference ceilings before calling. For example, banana with
