@@ -1,0 +1,64 @@
+{
+  "id": "photo-reaction",
+  "title": "照片里的趣味回应",
+  "purpose": "玩偶回应、局部表情、照片情景",
+  "route": "photo-conditioned sheet and original-photo static compositing",
+  "slots": {
+    "source_photo": "用户提供的照片",
+    "reaction_subject": "主要变化对象",
+    "beats": "简短回应阶段",
+    "motion_region": "检查后确定的局部区域"
+  },
+  "defaults": {
+    "canvas": [
+      640,
+      360
+    ],
+    "poses": 9,
+    "grid": [
+      3,
+      3
+    ],
+    "sheet": [
+      1920,
+      1080
+    ],
+    "delay_ms": 130,
+    "palette_colors": 128
+  },
+  "prompt_template": "以参考照片为精确场景和身份依据，制作3列3行等大动画精灵图，各格同一横版取景。保留人物、道具、位置、光照和背景。让{{reaction_subject}}按{{beats}}做小幅回应，其余画面稳定。按行排列各格，完整主体位于单元内部。",
+  "postprocess": [
+    "根据原照片和用途选择画幅",
+    "检查生成与原照片的对应位置",
+    "按需求固定原照片中的区域",
+    "逐帧检查人物面貌、接触关系与道具"
+  ],
+  "acceptance": [
+    "回应对象与动作明确",
+    "人物和道具关系成立",
+    "静止区域检查",
+    "首尾与面部边界检查"
+  ],
+  "evidence": [
+    "user-photo-bear-reaction-wide-9",
+    "user-scene-comedy-square-12"
+  ],
+  "sources": [
+    "openart-reactions"
+  ],
+  "maturity": "single-source-photo",
+  "conditions": [
+    "本轮使用一张用户照片，第二个情景版本另有用户GIF关键帧参考",
+    "公开资源包使用抽象输入槽位，样例回执保存在本次实验目录"
+  ],
+  "execution": {
+    "model": "doubao-seedream-5-0-pro-260628",
+    "generation_output": "png",
+    "master_frames": "RGBA PNG",
+    "delivery_formats": [
+      "webp",
+      "gif"
+    ],
+    "loop_count": 0
+  }
+}

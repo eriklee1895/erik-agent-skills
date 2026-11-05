@@ -1,0 +1,56 @@
+{
+  "id": "sleepy-idle",
+  "title": "困倦与呼吸待机",
+  "purpose": "宠物、吉祥物待机状态",
+  "route": "Seedream still or approved pose, followed by bounded local deformation",
+  "slots": {
+    "subject": "闭眼休息的角色",
+    "breathing_region": "检查图像后确定的胸腹范围",
+    "period_ms": "呼吸周期"
+  },
+  "defaults": {
+    "canvas": [
+      256,
+      256
+    ],
+    "local_frames": 12,
+    "delay_ms": 160,
+    "palette_colors": 128
+  },
+  "prompt_template": "{{subject}}安静休息，构图清楚，胸腹轮廓可见，头部与支撑物稳定，主体四周留出空隙。使用易于分离的纯色背景，主体避开背景颜色。作为后续局部呼吸动画的角色底图。",
+  "postprocess": [
+    "获取透明角色或清理纯色背景",
+    "检查并指定胸腹范围",
+    "在该范围内进行轻微周期形变，范围外保持底图",
+    "逐帧检查头部、肢体与支撑物的变化"
+  ],
+  "acceptance": [
+    "呼吸幅度在256像素下可辨识",
+    "形变范围克制",
+    "接缝节奏连续"
+  ],
+  "evidence": [
+    "template-sleepy-cat-9",
+    "template-sleepy-robot-9"
+  ],
+  "sources": [
+    "autosprite-author",
+    "living-illustration",
+    "dreamloop-paper"
+  ],
+  "maturity": "conditional-local-motion",
+  "conditions": [
+    "本轮生成的九格带动了头部或坐垫，候选采用单个姿态加局部形变",
+    "运动区域由Agent查看素材后选择"
+  ],
+  "execution": {
+    "model": "doubao-seedream-5-0-pro-260628",
+    "generation_output": "png",
+    "master_frames": "RGBA PNG",
+    "delivery_formats": [
+      "webp",
+      "gif"
+    ],
+    "loop_count": 0
+  }
+}

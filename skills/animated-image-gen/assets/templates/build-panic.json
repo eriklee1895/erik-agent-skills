@@ -1,0 +1,74 @@
+{
+  "id": "build-panic",
+  "title": "又报错了",
+  "purpose": "工程师表情包、工作情绪反应",
+  "route": "reaction sprite sheet, fixed scene regions and local caption",
+  "slots": {
+    "subject": "成年工程师的外观与服装",
+    "caption": "例如又报错了",
+    "screen_symbol": "简洁警示图案"
+  },
+  "defaults": {
+    "canvas": [
+      256,
+      256
+    ],
+    "poses": 9,
+    "grid": [
+      3,
+      3
+    ],
+    "sheet": [
+      1536,
+      1536
+    ],
+    "durations_ms": [
+      250,
+      120,
+      100,
+      100,
+      250,
+      180,
+      180,
+      160,
+      300
+    ],
+    "palette_colors": 128
+  },
+  "prompt_template": "精确3列3行等大情绪反应精灵图。每格左侧{{subject}}，右侧是面对观众的显示器，屏幕中央固定{{screen_symbol}}。角色依次平静、注意、瞪眼、皱眉、张嘴震惊、闭眼无奈、叹气、低头、恢复。双手放桌面，桌椅、显示器、镜头、大小和位置固定。纯色背景与主体颜色分离，字幕留给后期。",
+  "postprocess": [
+    "检查角色身份和显示器朝向",
+    "按需固定桌椅、屏幕和身体",
+    "清理背景",
+    "本地叠加{{caption}}，按阅读时间分配停留"
+  ],
+  "acceptance": [
+    "警示图案位置固定",
+    "情绪变化可读",
+    "文案准确",
+    "角色形态符合输入"
+  ],
+  "evidence": [
+    "template-panic-human-9",
+    "template-panic-human-repeat-9",
+    "template-panic-robot-9",
+    "template-panic-robot-revised-9"
+  ],
+  "sources": [
+    "openart-reactions"
+  ],
+  "maturity": "conditional-human-scene",
+  "conditions": [
+    "默认角色范围限定为人类工程师。机器人迁移样本有身份或显示器布局偏离，修订后显示器问题仍保留在实验记录"
+  ],
+  "execution": {
+    "model": "doubao-seedream-5-0-pro-260628",
+    "generation_output": "png",
+    "master_frames": "RGBA PNG",
+    "delivery_formats": [
+      "webp",
+      "gif"
+    ],
+    "loop_count": 0
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "skill_name": "animated-image-gen",
+  "evals": [
+    {"id": 1, "prompt": "Make a transparent256x256 animated WebP of this fox blinking. Use Seedream5.0 Pro.", "expected_output": "One inspected WebP, saved RGBA frames, Pro/PNG request, actual timing and alpha metadata, bounded generation calls."},
+    {"id": 2, "prompt": "Convert this variable-duration GIF into WebP and keep its timing and repeat behavior.", "expected_output": "The existing animation is decoded and locally encoded, with duration and total plays checked without a model call."},
+    {"id": 3, "prompt": "Make an animated reaction for a Notion page.", "expected_output": "A suitable reaction brief and compatibility format are selected. Target-page playback is distinguished from file-type support."},
+    {"id": 4, "prompt": "Explain a four-node Agent tool call on a1280x720 animated diagram.", "expected_output": "Fixed labels and geometry with locally animated paths. The fixed-topology helper's scope is observed."},
+    {"id": 5, "prompt": "This character is sleeping. Make a subtle breathing loop without moving its pillow.", "expected_output": "The pose is inspected, a chest-outline region is selected, and bounded local movement is checked across the loop."}
+  ]
+}

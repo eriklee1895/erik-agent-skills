@@ -1,0 +1,320 @@
+{
+  "date": "2026-11-05",
+  "model": "doubao-seedream-5-0-pro-260628",
+  "scope": "Small-sample creative-template probes with explicit processing conditions",
+  "templates": [
+    {
+      "template_id": "blink-reaction",
+      "maturity": "measured-candidate",
+      "conditions": [],
+      "evidence": [
+        {
+          "case_id": "baseline-blink-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 47605,
+          "review": null
+        },
+        {
+          "case_id": "repeat-baseline-blink-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 40656,
+          "review": null
+        },
+        {
+          "case_id": "native-alpha-fox-blink-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 76915,
+          "review": null
+        },
+        {
+          "case_id": "repeat-native-alpha-fox-blink-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 72761,
+          "review": null
+        }
+      ]
+    },
+    {
+      "template_id": "sleepy-idle",
+      "maturity": "conditional-local-motion",
+      "conditions": [
+        "本轮生成的九格带动了头部或坐垫，候选采用单个姿态加局部形变",
+        "运动区域由Agent查看素材后选择"
+      ],
+      "evidence": [
+        {
+          "case_id": "template-sleepy-cat-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 54660,
+          "review": {
+            "status": "改用局部呼吸候选",
+            "note": "原始九格带动头部或支撑物。候选用单个姿态和手选胸腹区域，进行小幅周期形变，需检查区域边缘。"
+          }
+        },
+        {
+          "case_id": "template-sleepy-robot-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 49522,
+          "review": {
+            "status": "改用局部呼吸候选",
+            "note": "原始九格带动头部或支撑物。候选用单个姿态和手选胸腹区域，进行小幅周期形变，需检查区域边缘。"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "build-panic",
+      "maturity": "conditional-human-scene",
+      "conditions": [
+        "默认角色范围限定为人类工程师。机器人迁移样本有身份或显示器布局偏离，修订后显示器问题仍保留在实验记录"
+      ],
+      "evidence": [
+        {
+          "case_id": "template-panic-human-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 59785,
+          "review": {
+            "status": "人类反应候选",
+            "note": "面部完成注意、惊讶、无奈和恢复。候选清理纯色背景并本地叠字，角色和警示画面在256像素可辨认。"
+          }
+        },
+        {
+          "case_id": "template-panic-human-repeat-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 46762,
+          "review": {
+            "status": "人类反应候选",
+            "note": "独立重复样本完成了警示、惊讶、无奈和恢复。低头幅度更大，固定眼部范围的合成会限制动作，候选采用完整姿态与本地字幕。"
+          }
+        },
+        {
+          "case_id": "template-panic-robot-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 50148,
+          "review": {
+            "status": "迁移未达标",
+            "note": "角色形态偏向穿连帽衫的人物，显示器警示构图也偏离。该机器人迁移结果保留在失败记录。"
+          }
+        },
+        {
+          "case_id": "template-panic-robot-revised-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 48365,
+          "review": {
+            "status": "身份修正，布局仍偏离",
+            "note": "修订明确机械形态后角色成立，显示器朝向与红色图案位置仍偏离，机器人方向继续保留为探索样本。"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "pixel-flame",
+      "maturity": "measured-candidate",
+      "conditions": [
+        "属于像素风创作候选，游戏引擎中的像素网格与碰撞规格需按实际项目验收"
+      ],
+      "evidence": [
+        {
+          "case_id": "template-flame-warm-8",
+          "sheet": [
+            2048,
+            1024
+          ],
+          "poses": 8,
+          "elapsed_ms": 53936,
+          "review": {
+            "status": "像素风特效候选",
+            "note": "火舌依序变化。纯色抠图、底部对齐与最近邻缩放后得到256像素透明特效，实际游戏像素规格需另检。"
+          }
+        },
+        {
+          "case_id": "template-flame-blue-8",
+          "sheet": [
+            2048,
+            1024
+          ],
+          "poses": 8,
+          "elapsed_ms": 39380,
+          "review": {
+            "status": "像素风特效候选",
+            "note": "火舌依序变化。纯色抠图、底部对齐与最近邻缩放后得到256像素透明特效，实际游戏像素规格需另检。"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "comic-argument",
+      "maturity": "conditional-caption-bands",
+      "conditions": [
+        "本轮模型添加了空白框和一例小标签，候选通过本地字幕区统一处理",
+        "对话段子采用可接受的剪接回环"
+      ],
+      "evidence": [
+        {
+          "case_id": "template-comic-engineers-16",
+          "sheet": [
+            2048,
+            2048
+          ],
+          "poses": 16,
+          "elapsed_ms": 73693,
+          "review": {
+            "status": "字幕分层候选",
+            "note": "四阶段对话动作成立。模型附加了空白框和小标签，候选统一预留的文字区域，并本地绘制对白和姓名。手部与首尾需要检查。"
+          }
+        },
+        {
+          "case_id": "template-comic-mascots-16",
+          "sheet": [
+            2048,
+            2048
+          ],
+          "poses": 16,
+          "elapsed_ms": 56153,
+          "review": {
+            "status": "字幕分层候选",
+            "note": "机器人和狐狸的对话阶段可读，身份总体稳定。候选使用本地文字与分段停留，表演与接缝需要视觉检查。"
+          }
+        }
+      ]
+    },
+    {
+      "template_id": "product-steam",
+      "maturity": "conditional-motion-region",
+      "conditions": [],
+      "evidence": [
+        {
+          "case_id": "baseline-steam-6",
+          "sheet": [
+            1536,
+            1024
+          ],
+          "poses": 6,
+          "elapsed_ms": 34872,
+          "review": null
+        },
+        {
+          "case_id": "baseline-steam-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 45093,
+          "review": null
+        },
+        {
+          "case_id": "repeat-baseline-steam-9",
+          "sheet": [
+            1536,
+            1536
+          ],
+          "poses": 9,
+          "elapsed_ms": 55101,
+          "review": null
+        },
+        {
+          "case_id": "aspect-steam-wide-6",
+          "sheet": [
+            2304,
+            864
+          ],
+          "poses": 6,
+          "elapsed_ms": 40302,
+          "review": null
+        }
+      ]
+    },
+    {
+      "template_id": "photo-reaction",
+      "maturity": "single-source-photo",
+      "conditions": [
+        "本轮使用一张用户照片，第二个情景版本另有用户GIF关键帧参考",
+        "公开资源包使用抽象输入槽位，样例回执保存在本次实验目录"
+      ],
+      "evidence": [
+        {
+          "case_id": "user-photo-bear-reaction-wide-9",
+          "sheet": [
+            1920,
+            1080
+          ],
+          "poses": 9,
+          "elapsed_ms": 80782,
+          "review": null
+        },
+        {
+          "case_id": "user-scene-comedy-square-12",
+          "sheet": [
+            1536,
+            2048
+          ],
+          "poses": 12,
+          "elapsed_ms": 93288,
+          "review": null
+        }
+      ]
+    },
+    {
+      "template_id": "agent-tool-loop",
+      "maturity": "fixed-topology-local-demo",
+      "conditions": [
+        "本轮验证的是四节点带工具回传的固定示例，其他拓扑另行检查"
+      ],
+      "evidence": [
+        {
+          "case_id": "template-agent-tool-flow",
+          "canvas": [
+            1280,
+            720
+          ],
+          "local_timeline_frames": 48,
+          "decoded_frames": 34,
+          "cycle_ms": 4800,
+          "bytes": 93527,
+          "new_model_calls": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,504 @@
+{
+  "date": "2026-11-05",
+  "pillow": "13.0.0",
+  "webp_library": "1.6.0",
+  "scope": "Four representative RGBA sequences, encoded as GIF and lossy/lossless WebP. Sizes and visible pixel error describe these samples.",
+  "cases": [
+    {
+      "id": "transparent-sticker",
+      "source_frames": 9,
+      "source_cycle_ms": 1080,
+      "results": [
+        {
+          "label": "GIF",
+          "format": "GIF",
+          "mime": "image/gif",
+          "size": [
+            256,
+            256
+          ],
+          "decoded_frames": 9,
+          "durations_ms": [
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0
+          ],
+          "cycle_ms": 1080.0,
+          "loop_metadata": 0,
+          "bytes": 95049,
+          "encode_seconds": 0,
+          "mean_display_error_on_white": 1.364196,
+          "mean_display_error_on_black": 0.917302,
+          "mean_alpha_error": 1.175886
+        },
+        {
+          "label": "WebP lossless",
+          "options": {
+            "lossless": true,
+            "quality": 100,
+            "method": 4,
+            "exact": true
+          },
+          "format": "WEBP",
+          "mime": "image/webp",
+          "size": [
+            256,
+            256
+          ],
+          "decoded_frames": 9,
+          "durations_ms": [
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0
+          ],
+          "cycle_ms": 1080.0,
+          "loop_metadata": 0,
+          "bytes": 263884,
+          "encode_seconds": 1.017,
+          "mean_display_error_on_white": 0.0,
+          "mean_display_error_on_black": 0.0,
+          "mean_alpha_error": 0.0
+        },
+        {
+          "label": "WebP q80",
+          "options": {
+            "lossless": false,
+            "quality": 80,
+            "alpha_quality": 100,
+            "method": 4
+          },
+          "format": "WEBP",
+          "mime": "image/webp",
+          "size": [
+            256,
+            256
+          ],
+          "decoded_frames": 9,
+          "durations_ms": [
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0,
+            120.0
+          ],
+          "cycle_ms": 1080.0,
+          "loop_metadata": 0,
+          "bytes": 100388,
+          "encode_seconds": 0.062,
+          "mean_display_error_on_white": 2.031452,
+          "mean_display_error_on_black": 2.031452,
+          "mean_alpha_error": 0.0
+        }
+      ]
+    },
+    {
+      "id": "photo-story",
+      "source_frames": 12,
+      "source_cycle_ms": 1560,
+      "results": [
+        {
+          "label": "GIF",
+          "format": "GIF",
+          "mime": "image/gif",
+          "size": [
+            384,
+            384
+          ],
+          "decoded_frames": 12,
+          "durations_ms": [
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0
+          ],
+          "cycle_ms": 1560.0,
+          "loop_metadata": 0,
+          "bytes": 1103691,
+          "encode_seconds": 0,
+          "mean_display_error_on_white": 3.029686,
+          "mean_display_error_on_black": 3.029686,
+          "mean_alpha_error": 0.0
+        },
+        {
+          "label": "WebP lossless",
+          "options": {
+            "lossless": true,
+            "quality": 100,
+            "method": 4,
+            "exact": true
+          },
+          "format": "WEBP",
+          "mime": "image/webp",
+          "size": [
+            384,
+            384
+          ],
+          "decoded_frames": 12,
+          "durations_ms": [
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0
+          ],
+          "cycle_ms": 1560.0,
+          "loop_metadata": 0,
+          "bytes": 2619692,
+          "encode_seconds": 7.264,
+          "mean_display_error_on_white": 0.0,
+          "mean_display_error_on_black": 0.0,
+          "mean_alpha_error": 0.0
+        },
+        {
+          "label": "WebP q80",
+          "options": {
+            "lossless": false,
+            "quality": 80,
+            "alpha_quality": 100,
+            "method": 4
+          },
+          "format": "WEBP",
+          "mime": "image/webp",
+          "size": [
+            384,
+            384
+          ],
+          "decoded_frames": 12,
+          "durations_ms": [
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0
+          ],
+          "cycle_ms": 1560.0,
+          "loop_metadata": 0,
+          "bytes": 146930,
+          "encode_seconds": 0.148,
+          "mean_display_error_on_white": 2.9301,
+          "mean_display_error_on_black": 2.9301,
+          "mean_alpha_error": 0.0
+        }
+      ]
+    },
+    {
+      "id": "photo-local-motion",
+      "source_frames": 9,
+      "source_cycle_ms": 1170,
+      "results": [
+        {
+          "label": "GIF",
+          "format": "GIF",
+          "mime": "image/gif",
+          "size": [
+            640,
+            360
+          ],
+          "decoded_frames": 9,
+          "durations_ms": [
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0
+          ],
+          "cycle_ms": 1170.0,
+          "loop_metadata": 0,
+          "bytes": 274572,
+          "encode_seconds": 0,
+          "mean_display_error_on_white": 3.042149,
+          "mean_display_error_on_black": 3.042149,
+          "mean_alpha_error": 0.0
+        },
+        {
+          "label": "WebP lossless",
+          "options": {
+            "lossless": true,
+            "quality": 100,
+            "method": 4,
+            "exact": true
+          },
+          "format": "WEBP",
+          "mime": "image/webp",
+          "size": [
+            640,
+            360
+          ],
+          "decoded_frames": 9,
+          "durations_ms": [
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0
+          ],
+          "cycle_ms": 1170.0,
+          "loop_metadata": 0,
+          "bytes": 572092,
+          "encode_seconds": 0.845,
+          "mean_display_error_on_white": 0.0,
+          "mean_display_error_on_black": 0.0,
+          "mean_alpha_error": 0.0
+        },
+        {
+          "label": "WebP q80",
+          "options": {
+            "lossless": false,
+            "quality": 80,
+            "alpha_quality": 100,
+            "method": 4
+          },
+          "format": "WEBP",
+          "mime": "image/webp",
+          "size": [
+            640,
+            360
+          ],
+          "decoded_frames": 9,
+          "durations_ms": [
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0,
+            130.0
+          ],
+          "cycle_ms": 1170.0,
+          "loop_metadata": 0,
+          "bytes": 78240,
+          "encode_seconds": 0.067,
+          "mean_display_error_on_white": 2.302356,
+          "mean_display_error_on_black": 2.302356,
+          "mean_alpha_error": 0.0
+        }
+      ]
+    },
+    {
+      "id": "large-flow",
+      "source_frames": 48,
+      "source_cycle_ms": 4800,
+      "results": [
+        {
+          "label": "GIF",
+          "format": "GIF",
+          "mime": "image/gif",
+          "size": [
+            1280,
+            720
+          ],
+          "decoded_frames": 34,
+          "durations_ms": [
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            800.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            800.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0
+          ],
+          "cycle_ms": 4800.0,
+          "loop_metadata": 0,
+          "bytes": 93527,
+          "encode_seconds": 0,
+          "mean_display_error_on_white": 3.095391,
+          "mean_display_error_on_black": 3.095391,
+          "mean_alpha_error": 0.0
+        },
+        {
+          "label": "WebP lossless",
+          "options": {
+            "lossless": true,
+            "quality": 100,
+            "method": 4,
+            "exact": true
+          },
+          "format": "WEBP",
+          "mime": "image/webp",
+          "size": [
+            1280,
+            720
+          ],
+          "decoded_frames": 34,
+          "durations_ms": [
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            800.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            800.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0
+          ],
+          "cycle_ms": 4800.0,
+          "loop_metadata": 0,
+          "bytes": 91130,
+          "encode_seconds": 0.754,
+          "mean_display_error_on_white": 0.0,
+          "mean_display_error_on_black": 0.0,
+          "mean_alpha_error": 0.0
+        },
+        {
+          "label": "WebP q80",
+          "options": {
+            "lossless": false,
+            "quality": 80,
+            "alpha_quality": 100,
+            "method": 4
+          },
+          "format": "WEBP",
+          "mime": "image/webp",
+          "size": [
+            1280,
+            720
+          ],
+          "decoded_frames": 34,
+          "durations_ms": [
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            800.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            800.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0,
+            100.0
+          ],
+          "cycle_ms": 4800.0,
+          "loop_metadata": 0,
+          "bytes": 173390,
+          "encode_seconds": 0.53,
+          "mean_display_error_on_white": 0.474589,
+          "mean_display_error_on_black": 0.474589,
+          "mean_alpha_error": 0.0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "id": "blink-reaction",
+  "title": "眨眼与轻反应",
+  "purpose": "表情包、头像、单角色轻反应",
+  "route": "reference-alpha-edit or opaque sprite sheet followed by inspected motion-region compositing",
+  "slots": {
+    "subject": "角色及身份关键特征",
+    "style": "画风",
+    "reference": "可选角色参考图",
+    "caption": "可选短文案"
+  },
+  "defaults": {
+    "canvas": [
+      256,
+      256
+    ],
+    "poses": 9,
+    "grid": [
+      3,
+      3
+    ],
+    "sheet": [
+      1536,
+      1536
+    ],
+    "delay_ms": 120,
+    "palette_colors": 128
+  },
+  "prompt_template": "生成3列3行等大动画精灵图，每格同一{{subject}}，{{style}}。九格眼睑依次睁开、睁开、半闭、近闭、闭合、近闭、半睁、睁开、睁开。镜头、角色大小、头部中心、身体和身份细节固定，各格按行排序。完整主体留在单元内，省略格线和文字。",
+  "postprocess": [
+    "依据实际图像尺寸切帧",
+    "检查眼睛运动范围，按需求固定范围外图像",
+    "已有alpha参考图的编辑保持PNG透明通道",
+    "导出后在256像素与深浅背景检查"
+  ],
+  "acceptance": [
+    "眼睛完成闭合与睁开",
+    "身份和静止区域稳定",
+    "透明边缘与首尾单独检查"
+  ],
+  "evidence": [
+    "baseline-blink-9",
+    "repeat-baseline-blink-9",
+    "native-alpha-fox-blink-9",
+    "repeat-native-alpha-fox-blink-9"
+  ],
+  "sources": [
+    "openart-reactions",
+    "living-illustration"
+  ],
+  "maturity": "measured-candidate",
+  "execution": {
+    "model": "doubao-seedream-5-0-pro-260628",
+    "generation_output": "png",
+    "master_frames": "RGBA PNG",
+    "delivery_formats": [
+      "webp",
+      "gif"
+    ],
+    "loop_count": 0
+  }
+}

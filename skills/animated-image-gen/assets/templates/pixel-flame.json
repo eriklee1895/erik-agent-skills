@@ -1,0 +1,63 @@
+{
+  "id": "pixel-flame",
+  "title": "像素风火苗与能量特效",
+  "purpose": "小型装饰、状态图、游戏原型特效",
+  "route": "isolated effect sprite sheet, color key and base registration",
+  "slots": {
+    "palette": "固定火焰色组，避开抠图背景色",
+    "effect": "火苗或相近的独立循环特效"
+  },
+  "defaults": {
+    "canvas": [
+      256,
+      256
+    ],
+    "poses": 8,
+    "grid": [
+      4,
+      2
+    ],
+    "sheet": [
+      2048,
+      1024
+    ],
+    "delay_ms": 100,
+    "palette_colors": 64,
+    "resize": "nearest"
+  },
+  "prompt_template": "精确4列2行等大特效精灵图，按行排序。每格一个{{effect}}，使用{{palette}}，硬边像素块和少量固定颜色。底部位置固定，八格形态沿直立、左弯、左卷、回中升高、右弯、右卷、回中变矮、恢复推进。纯色背景与特效颜色分离，完整轮廓留在格子内部。",
+  "postprocess": [
+    "清理纯色背景及单元边缘",
+    "以底部锚点统一位置",
+    "使用最近邻缩放",
+    "检查完整周期与边缘颜色"
+  ],
+  "acceptance": [
+    "底部稳定",
+    "火舌形态发生可读变化",
+    "透明边缘清楚",
+    "像素风在成品尺寸下保持可辨识"
+  ],
+  "evidence": [
+    "template-flame-warm-8",
+    "template-flame-blue-8"
+  ],
+  "sources": [
+    "sprite-forge-author",
+    "combat-sheet"
+  ],
+  "maturity": "measured-candidate",
+  "conditions": [
+    "属于像素风创作候选，游戏引擎中的像素网格与碰撞规格需按实际项目验收"
+  ],
+  "execution": {
+    "model": "doubao-seedream-5-0-pro-260628",
+    "generation_output": "png",
+    "master_frames": "RGBA PNG",
+    "delivery_formats": [
+      "webp",
+      "gif"
+    ],
+    "loop_count": 0
+  }
+}

@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) · [仓库首页](../README.zh-CN.md)
 
-这里列出全部 **21 个 skills**：[写作（4）](#写作)、[媒体（12）](#媒体)、[通用工具（5）](#通用工具)。
+这里列出全部 **22 个 skills**：[写作（4）](#写作)、[媒体（13）](#媒体)、[通用工具（5）](#通用工具)。
 点击名称即可打开对应的 `SKILL.md`，查看使用方法、环境要求和参考资料。
 
 ## 写作
@@ -23,6 +23,7 @@
 | [gpt-image-api](./gpt-image-api/SKILL.md) | 使用 GPT Image 2.6 Flare/Sunburst 生成和编辑图片，支持原生循环 GIF、SVG 输出、标注编辑、流式与批处理，并核对动图的实际帧数和时序。 |
 | [openrouter-image](./openrouter-image/SKILL.md) | 通过 OpenRouter 使用 GPT Image 2.6 Sunburst/Flare、Nano Banana 2.1、Grok Imagine Image 2.0 与 MAI-Image-2.6 生成和编辑静态图片；独立指南涵盖提示词、参考图编辑、complexity 与路由边界。该路由暂未开放 GPT GIF/SVG 输出。 |
 | [seedream-image-gen](./seedream-image-gen/SKILL.md) | 使用 Seedream 5.0 Pro/Flash 生图和编辑，支持文字设计、坐标编辑、透明图层编辑、原生图层拆分与批量工作流。 |
+| [animated-image-gen](./animated-image-gen/SKILL.md) | 将文字、参考图或已有帧制作成 WebP/GIF 动图，生图使用 Seedream 5.0 Pro，提供创作模板、字幕与局部运动处理，并核对实际时序和透明度。 |
 | [avatar-creator](./avatar-creator/SKILL.md) | 制作静态头像、不同角色家族、同角色套图及固定 Seedance GIF/MP4 动画。图片使用可用图像工具；动图需 Ark 凭据、uv 和 ffmpeg，不依赖其他 skill。不负责交互式 3D 程序。 |
 | [live-avatar-3d](./live-avatar-3d/SKILL.md) | 将角色图制作成无需构建步骤的交互式 3D 网页头像，支持环视、动作和可选的本地麦克风嘴型。 |
 | [seedance-video-gen](./seedance-video-gen/SKILL.md) | 使用 Seedance 根据文本、图片或多模态参考生成视频。 |
