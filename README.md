@@ -24,6 +24,7 @@ the skills you need and use them with your agent.
 | Create animated WebP or GIF | [Animated Image Gen](skills/animated-image-gen/SKILL.md) · [GPT Image 2.6 GIF](skills/gpt-image-api/SKILL.md) |
 | Create article covers and illustrations | [Article Illustration](skills/article-illustration/SKILL.md) |
 | Generate video from text or references | [Seedance](skills/seedance-video-gen/SKILL.md) |
+| Generate and customize sound effects for video | [Earshot Audio Effects](skills/earshot-audio-effect/SKILL.md) |
 | Create speech, music, or a mixed audio scene | [TTS](skills/volcengine-tts/SKILL.md) · [BGM](skills/volcengine-bigmusic-bgm/SKILL.md) · [Seed Audio](skills/seed-audio-gen/SKILL.md) |
 | Turn Markdown into a Feishu document or add diagrams | [Markdown to Feishu](skills/markdown-article-to-feishu-doc/SKILL.md) · [Native whiteboards](skills/feishu-whiteboard-diagram/SKILL.md) · [Interactive diagrams](skills/feishu-html-diagram/SKILL.md) |
 | Search the web or collect article sources | [DeepSeek Search](skills/deepseek-web-search/SKILL.md) · [Doubao Search](skills/volcengine-web-search/SKILL.md) · [WeChat article extraction](skills/wechat-article-fetcher/SKILL.md) |
