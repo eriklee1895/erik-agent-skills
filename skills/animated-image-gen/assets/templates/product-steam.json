@@ -1,0 +1,62 @@
+{
+  "id": "product-steam",
+  "title": "产品与文章局部微动",
+  "purpose": "咖啡蒸汽、静物氛围、文章配图",
+  "route": "small-motion sprite sheet with fixed-region compositing",
+  "slots": {
+    "product": "静物主体及需保持的特征",
+    "motion": "蒸汽等局部运动",
+    "motion_region": "检查后指定的运动范围"
+  },
+  "defaults": {
+    "canvas": [
+      640,
+      360
+    ],
+    "poses": 6,
+    "grid": [
+      3,
+      2
+    ],
+    "sheet": [
+      2304,
+      864
+    ],
+    "delay_ms": 200,
+    "palette_colors": 128
+  },
+  "prompt_template": "3列2行等大动画精灵图，各格为16:9横版。每格相同{{product}}，固定镜头和光照。只有{{motion}}缓慢变化并回环，产品、标签和背景位置稳定。每格同一取景、比例、大小和基线，按行读取，完整主体位于单元内。",
+  "postprocess": [
+    "生成前根据目标画幅计算匹配的单格与sheet尺寸",
+    "检查运动范围",
+    "以首帧或原照片固定范围外画面",
+    "共享调色板并检查静物与标签"
+  ],
+  "acceptance": [
+    "产品轮廓和文字稳定",
+    "运动自然",
+    "范围边界平顺",
+    "亮度和首尾接缝检查"
+  ],
+  "evidence": [
+    "baseline-steam-6",
+    "baseline-steam-9",
+    "repeat-baseline-steam-9",
+    "aspect-steam-wide-6"
+  ],
+  "sources": [
+    "living-illustration",
+    "dreamloop-paper"
+  ],
+  "maturity": "conditional-motion-region",
+  "execution": {
+    "model": "doubao-seedream-5-0-pro-260628",
+    "generation_output": "png",
+    "master_frames": "RGBA PNG",
+    "delivery_formats": [
+      "webp",
+      "gif"
+    ],
+    "loop_count": 0
+  }
+}

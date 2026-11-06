@@ -1,0 +1,4 @@
+interface:
+  display_name: "Animated Image Gen"
+  short_description: "Create animated WebP and GIF with Seedream Pro"
+  default_prompt: "Use $animated-image-gen to create a small transparent animated WebP from my character and inspect its loop."

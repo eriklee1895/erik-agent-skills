@@ -1,0 +1,76 @@
+{
+  "id": "agent-tool-loop",
+  "title": "Agent工具调用流程",
+  "purpose": "技术文档、README中的动态过程",
+  "route": "fixed diagram, local moving tokens and optional Seedream mascot asset",
+  "slots": {
+    "nodes": "固定四节点User、Agent、Tool、Result的显示名",
+    "phase_labels": "六个步骤的说明",
+    "mascot": "可选透明角色素材"
+  },
+  "defaults": {
+    "canvas": [
+      1280,
+      720
+    ],
+    "alternate_canvas": [
+      960,
+      540
+    ],
+    "local_frames": 48,
+    "delay_ms": 100,
+    "palette_colors": 128
+  },
+  "scene_template": {
+    "nodes": [
+      "User",
+      "Agent",
+      "Tool",
+      "Result"
+    ],
+    "routes": [
+      "User→Agent",
+      "Agent→Tool",
+      "Tool→Agent",
+      "Agent→Result"
+    ],
+    "phases": [
+      "接收请求",
+      "规划下一步",
+      "调用工具",
+      "接收工具结果",
+      "汇总与检查",
+      "输出结果"
+    ]
+  },
+  "postprocess": [
+    "固定节点文字、连线和布局",
+    "按阶段高亮并沿指定路径移动数据点",
+    "保持读取停留",
+    "核对解码时间与实际尺寸"
+  ],
+  "acceptance": [
+    "连线方向和阶段顺序准确",
+    "文字稳定可读",
+    "两个画布尺寸核对",
+    "重复帧合并后周期时长仍正确"
+  ],
+  "evidence": [
+    "template-agent-tool-flow"
+  ],
+  "sources": [],
+  "maturity": "fixed-topology-local-demo",
+  "conditions": [
+    "本轮验证的是四节点带工具回传的固定示例，其他拓扑另行检查"
+  ],
+  "execution": {
+    "model": "doubao-seedream-5-0-pro-260628",
+    "generation_output": "png",
+    "master_frames": "RGBA PNG",
+    "delivery_formats": [
+      "webp",
+      "gif"
+    ],
+    "loop_count": 0
+  }
+}

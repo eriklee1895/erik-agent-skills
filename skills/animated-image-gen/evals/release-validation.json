@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-06",
+  "skill_name": "animated-image-gen",
+  "delivery_formats": ["webp", "gif"],
+  "model": "doubao-seedream-5-0-pro-260628",
+  "installation": {
+    "method": "npx skills add with project scope, copy mode and agent codex",
+    "isolated_project": true,
+    "sibling_skill_dependency": false,
+    "normal_entrypoint_exercised": true
+  },
+  "regressions": {
+    "tests": 37,
+    "python_versions": ["3.12", "3.14"],
+    "result": "passed",
+    "coverage": [
+      "Variable frame delays, GIF repeat mapping and WebP total plays",
+      "Saved RGBA frame timeline and duplicate-frame duration retention",
+      "GIF palette and partial-alpha WebP export",
+      "Local byte limits, output collisions and metadata preservation",
+      "Per-output contact sheets preserve an existing user contact.jpg",
+      "Pre-submission reference, static-image, pose, timing and font validation",
+      "Multiple caption overlays and missing-glyph rejection",
+      "Pixel template palette and nearest-neighbor defaults",
+      "Opaque transport outcome, download-only retries and cross-origin authorization removal"
+    ]
+  },
+  "live_smoke": {
+    "paid_operations": 3,
+    "successful_operations": 3,
+    "scope": "These calls are additional to the earlier template research.",
+    "cases": [
+      {"id": "text-transparent-webp", "format": "webp", "mode": "lossy", "size": [256, 256], "source_frames": 9, "decoded_frames": 9, "cycle_ms": 1200, "plays": 0, "bytes": 97812},
+      {"id": "alpha-reference-webp", "format": "webp", "mode": "lossless", "size": [256, 256], "source_frames": 9, "decoded_frames": 9, "cycle_ms": 1200, "plays": 0, "bytes": 263228},
+      {"id": "pixel-template-gif", "format": "gif", "size": [256, 256], "source_frames": 8, "decoded_frames": 8, "cycle_ms": 800, "plays": 0, "colors": 64, "resample": "nearest", "bytes": 20273}
+    ]
+  },
+  "local_smoke": [
+    {"id": "finite-gif-to-webp-with-multiple-chinese-captions", "size": [256, 256], "durations_ms": [30, 70, 130], "cycle_ms": 230, "plays": 3, "bytes": 7312, "contact_sheet_isolated": true},
+    {"id": "finite-webp-to-gif", "size": [256, 256], "durations_ms": [30, 70, 130], "cycle_ms": 230, "plays": 3, "bytes": 8494},
+    {"id": "fixed-chinese-agent-flow", "format": "webp", "size": [960, 540], "source_frames": 48, "decoded_frames": 34, "cycle_ms": 4800, "plays": 1, "bytes": 127282},
+    {"id": "bounded-local-breathing", "format": "webp", "size": [256, 256], "source_frames": 12, "decoded_frames": 12, "cycle_ms": 1920, "plays": 0, "bytes": 401702},
+    {"id": "rgba-master-to-gif", "format": "gif", "size": [256, 256], "cycle_ms": 1200, "timeline_override": false}
+  ],
+  "independent_review": {
+    "isolated_copy": true,
+    "paid_calls": 0,
+    "observed_findings_fixed": ["Multiple overlays", "Static image preflight", "Single-pose route", "Glyph coverage", "Pixel template defaults"]
+  },
+  "visual_scope": {
+    "requires_inspection": ["Pose consistency", "Subject margins", "Transparent edges", "Loop seam", "Caption legibility", "Static-region selection"],
+    "helper_topology": "The flow helper renders a fixed four-node process.",
+    "notion_animated_webp_target_page": "not tested"
+  }
+}

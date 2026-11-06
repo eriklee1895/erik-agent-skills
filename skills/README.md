@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) · [Repository home](../README.md)
 
-Browse all **21 skills**: [Writing (4)](#writing), [Media (12)](#media), and
+Browse all **22 skills**: [Writing (4)](#writing), [Media (13)](#media), and
 [General Utilities (5)](#general-utilities). Each name opens its `SKILL.md`,
 with usage instructions, requirements, and supporting references.
 
@@ -24,6 +24,7 @@ with usage instructions, requirements, and supporting references.
 | [gpt-image-api](./gpt-image-api/SKILL.md) | Generate and edit images with GPT Image 2.6 Flare/Sunburst, including native looping GIFs, SVG output, markup edits, streaming, and batches; inspect actual animation frames and timing. |
 | [openrouter-image](./openrouter-image/SKILL.md) | Generate and edit still images through OpenRouter with GPT Image 2.6 Sunburst/Flare, Nano Banana 2.1, Grok Imagine Image 2.0, and MAI-Image-2.6; model-specific guides cover prompting, reference edits, complexity, and route limits. GPT GIF/SVG output is not yet exposed on this route. |
 | [seedream-image-gen](./seedream-image-gen/SKILL.md) | Generate and edit images with Seedream 5.0 Pro/Flash, including typography, coordinate edits, alpha-layer editing, native layer decomposition, and batches. |
+| [animated-image-gen](./animated-image-gen/SKILL.md) | Create animated WebP and GIF from text, references or existing frames, using Seedream 5.0 Pro, scoped creative templates, local captions and motion, and decoded timing/alpha checks. |
 | [avatar-creator](./avatar-creator/SKILL.md) | Create static avatar images, distinct-character families, same-character sets, and fixed Seedance GIF/MP4 animations. Uses available image tools; animation requires Ark credentials, uv, and ffmpeg with no other skill dependency. Does not build interactive 3D runtimes. |
 | [live-avatar-3d](./live-avatar-3d/SKILL.md) | Turn a character image into a no-build interactive 3D browser avatar with orbit, gestures, and optional local microphone mouth motion. |
 | [seedance-video-gen](./seedance-video-gen/SKILL.md) | Generate videos with Seedance from text, images, or multimodal references. |

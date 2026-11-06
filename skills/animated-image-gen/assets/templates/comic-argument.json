@@ -1,0 +1,81 @@
+{
+  "id": "comic-argument",
+  "title": "双人互怼小段子",
+  "purpose": "带字幕的表情段子、角色对话",
+  "route": "four-beat comic sprite sheet with local caption bands",
+  "slots": {
+    "left_character": "左侧角色的身份、外观和服装",
+    "right_character": "右侧角色的身份、外观和服装",
+    "captions": "四个阶段的短对白",
+    "names": "可选角色名"
+  },
+  "defaults": {
+    "canvas": [
+      256,
+      256
+    ],
+    "poses": 16,
+    "grid": [
+      4,
+      4
+    ],
+    "sheet": [
+      2048,
+      2048
+    ],
+    "durations_ms": [
+      220,
+      160,
+      160,
+      360,
+      220,
+      160,
+      160,
+      360,
+      180,
+      180,
+      240,
+      300,
+      450,
+      350,
+      300,
+      240
+    ],
+    "palette_colors": 128
+  },
+  "prompt_template": "精确4列4行等大动画精灵图，每格同样两个角色，左侧{{left_character}}，右侧{{right_character}}。大头半身漫画，粗线平涂，背景统一，每格上方25%留作字幕区。第1至4格左侧抢话、右侧质疑；第5至8格右侧回应、左侧不满；第9至12格双方争论逐渐夸张；第13至15格抱臂收尾，第16格接近起始姿态。角色左右位置、身份、衣服、大小和镜头固定，肢体留在单元内部。",
+  "postprocess": [
+    "检查两人身份与手臂关系",
+    "统一预留字幕区并清理该区域的模型附加元素",
+    "本地绘制气泡、短对白和可选姓名",
+    "依据对白阅读时间配置阶段停留"
+  ],
+  "acceptance": [
+    "四个表演阶段成立",
+    "左右角色保持身份",
+    "文案准确且在256像素可读",
+    "首尾剪接与手部单独检查"
+  ],
+  "evidence": [
+    "template-comic-engineers-16",
+    "template-comic-mascots-16"
+  ],
+  "sources": [
+    "openart-reactions"
+  ],
+  "maturity": "conditional-caption-bands",
+  "conditions": [
+    "本轮模型添加了空白框和一例小标签，候选通过本地字幕区统一处理",
+    "对话段子采用可接受的剪接回环"
+  ],
+  "execution": {
+    "model": "doubao-seedream-5-0-pro-260628",
+    "generation_output": "png",
+    "master_frames": "RGBA PNG",
+    "delivery_formats": [
+      "webp",
+      "gif"
+    ],
+    "loop_count": 0
+  }
+}
