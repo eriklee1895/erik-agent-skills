@@ -1,6 +1,6 @@
 # 文字海报 / Banner / 封面（Text Poster）
 
-> Pro 默认的文字海报 preset，覆盖科技博客封面、杂志封面、宽幅 banner、信息图、电商 banner、徽章 logo。未指定模型时始终使用 Pro。
+> 源于历史 Pro 测试的文字海报 preset，覆盖科技博客封面、杂志封面、宽幅 banner、信息图、电商 banner、徽章 logo。未指定模型时使用 Seedream 5.5。
 > 详细字效来自历史 Pro 样本；本轮 Pro/Flash 的短标题、双语卡片和标题替换见 [120 次请求报告](../../evals/comprehensive-benchmark.md)。Flash 需用户明确选择。正确出字仍可能伴随字重、布局或对比度偏差，需分别验收。
 
 ## 结构 Guardrails（所有文字海报通用）

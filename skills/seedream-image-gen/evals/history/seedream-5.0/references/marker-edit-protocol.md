@@ -1,4 +1,4 @@
-> 本文保留历史 Pro marker 实验。新的原生坐标协议和 Pro/Flash 图层能力以 [API 参考](api-reference.md) 为准；框外保持是生成效果，不是硬像素遮罩保证。
+> 本文保留历史 Pro marker 实验。新的原生坐标协议和 Pro/Flash 图层能力以 [API 参考](../../../../references/api-reference.md) 为准；框外保持是生成效果，不是硬像素遮罩保证。
 
 # Marker Edit Protocol — Seedream 5.0 Pro via `seedream-image-gen`
 
@@ -26,7 +26,7 @@
 
 下面的对比图说清了官方 API 和 skill 的差异.
 
-![advantage overview](./marker-edit-protocol-advantage-overview.svg)
+![advantage overview](marker-edit-protocol-advantage-overview.svg)
 
 ---
 
@@ -38,7 +38,7 @@ Seedream 5.0 Pro 把"区域编辑"语义编码进两个信号, **二者缺一不
 
 参考图像里被画上彩色矩形 (`alpha=80` 半透明 + 3px 描边). 模型识别这些彩色矩形作为"编辑意图标记".
 
-![visual signal diagram](./marker-edit-protocol-visual-signal.svg)
+![visual signal diagram](marker-edit-protocol-visual-signal.svg)
 
 ### 2. 语言信号 (prompt 输入)
 
@@ -329,7 +329,7 @@ uv run scripts/seedream_image_gen.py edit \
 
 Pro 和 Flash 官方均支持可见标记与 `<point>` / `<bbox>` 提示词坐标。本文的细分评分和 marker 尺寸经验来自历史 Pro 实验；本轮 Flash 只对原生坐标编辑、透明编辑与图层拆分做了小样本验证，不迁移旧模型的文字质量或 4K 结论。
 
-Pro 保持默认；Flash 用于时延/成本敏感的迭代。两者都支持 1K/1.5K/2K，最多十张参考图。选择依据见 [当前 benchmark](../evals/flash-benchmark.md)。
+当前默认 Seedream 5.5；本文 Pro/Flash 结果为历史证据，旧模型仅显式选择时使用。Pro/Flash 都支持 1K/1.5K/2K，最多十张参考图。选择依据见 [当前 benchmark](../evals/flash-benchmark.md)。
 
 ---
 

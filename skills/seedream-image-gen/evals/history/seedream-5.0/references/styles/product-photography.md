@@ -61,7 +61,7 @@
 
 ## Recipes
 
-所有 recipe 默认使用 Pro 模型、2K 输出。`--square` / `--wide` 等 shortcut（`--wechat-header` 是 `--wide` 别名） 尺寸见具体 recipe。同一产品的变体可复用产品参考图，并逐张检查造型和颜色。
+这些历史 recipe 测试使用 Pro 模型；当前默认 5.5、2K 输出。`--square` / `--wide` 等 shortcut（`--wechat-header` 是 `--wide` 别名） 尺寸见具体 recipe。同一产品的变体可复用产品参考图，并逐张检查造型和颜色。
 
 ### Recipe 1：白底电商主图 — 陶瓷马克杯（45° 视角）
 

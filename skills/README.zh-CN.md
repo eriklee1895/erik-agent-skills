@@ -22,7 +22,7 @@
 | [gpt-image-2](./gpt-image-2/SKILL.md) | 使用 OpenAI gpt-image-2 模型生成、编辑和批量制作位图。 |
 | [gpt-image-api](./gpt-image-api/SKILL.md) | 使用 GPT Image 2.6 Flare/Sunburst 生成和编辑图片，支持原生循环 GIF、SVG 输出、标注编辑、流式与批处理，并核对动图的实际帧数和时序。 |
 | [openrouter-image](./openrouter-image/SKILL.md) | 通过 OpenRouter 使用 GPT Image 2.6 Sunburst/Flare、Nano Banana 2.1、Grok Imagine Image 2.0 与 MAI-Image-2.6 生成和编辑静态图片；独立指南涵盖提示词、参考图编辑、complexity 与路由边界。该路由暂未开放 GPT GIF/SVG 输出。 |
-| [seedream-image-gen](./seedream-image-gen/SKILL.md) | 使用 Seedream 5.0 Pro/Flash 生图和编辑，支持文字设计、坐标编辑、透明图层编辑、原生图层拆分与批量工作流。 |
+| [seedream-image-gen](./seedream-image-gen/SKILL.md) | 使用 Seedream 5.5 生图和编辑，支持多语言文字、精准改图、原生透明 PNG、多图融合及带富文本 OCR 的图层拆分。 |
 | [animated-image-gen](./animated-image-gen/SKILL.md) | 将文字、参考图或已有帧制作成 WebP/GIF 动图，生图使用 Seedream 5.0 Pro，提供创作模板、字幕与局部运动处理，并核对实际时序和透明度。 |
 | [avatar-creator](./avatar-creator/SKILL.md) | 制作静态头像、不同角色家族、同角色套图及固定 Seedance GIF/MP4 动画。图片使用可用图像工具；动图需 Ark 凭据、uv 和 ffmpeg，不依赖其他 skill。不负责交互式 3D 程序。 |
 | [live-avatar-3d](./live-avatar-3d/SKILL.md) | 将角色图制作成无需构建步骤的交互式 3D 网页头像，支持环视、动作和可选的本地麦克风嘴型。 |
