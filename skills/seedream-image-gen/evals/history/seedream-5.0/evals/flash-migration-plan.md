@@ -1,6 +1,6 @@
 # Seedream Pro / Flash migration and benchmark plan
 
-Historical plan from 2026-10-24. For the current CLI and supported options, use [SKILL.md](../SKILL.md).
+Historical plan from 2026-10-24. For the current CLI and supported options, use [SKILL.md](../../../../SKILL.md).
 
 ## Outcome and scope
 

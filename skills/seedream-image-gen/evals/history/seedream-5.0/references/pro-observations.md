@@ -1,4 +1,4 @@
-> Retained from the pre-Flash skill for provenance. These are historical Pro observations and subjective scores, not a newly rerun benchmark, a capability guarantee, or evidence about Flash. The old claim that layer decomposition was unavailable is superseded by the 2026-10-24 official API check; see [transparent-layers.md](transparent-layers.md).
+> Retained from the pre-Flash skill for provenance. These are historical Pro observations and subjective scores, not a newly rerun benchmark, a capability guarantee, or evidence about Flash. The old claim that layer decomposition was unavailable is superseded by the 2026-10-24 official API check; see [transparent-layers.md](../../../../references/transparent-layers.md).
 
 # Historical Pro observations
 
@@ -27,6 +27,6 @@ Every row below is empirically rated. "✅ Production" = reliable with the docum
 | 多语言同屏排版 | ✅ Production | 9-9.5/10 | 3-4 scripts per-panel layout; same-line mixing risks diacritic bleed. [multilingual.md](multilingual.md) |
 | 文字鬼画符根治 (garbled text elimination) | ✅ Mostly solved | varies by density | Structured/repeated labels 9-10/10; per-cell-unique content collapses past 30 cells. [text-deep.md](text-deep.md) |
 | 结构纠错 (anatomy/architecture/mechanical perspective) | ✅ Production | 8.5-9.5/10 dedicated tests | Dynamic dance pose (5-finger accuracy, correct joint bends) 9.5/10; two-point architectural perspective (converging grid lines, no warping) 9/10; watch-gear mechanical mesh (correct tooth interlock, plausible ratios) 8.5/10. Hands under complex multi-object interaction (chopsticks, group ≥4) remain the softest sub-case. Absolute quality on these three dedicated single-image tests is high. |
-| 超高分辨率 | ✅ Production | verified | Pro max ~4.6MP (总像素 4,624,220). The active Pro/Flash models now share this limit. See [Size Shortcuts](../SKILL.md#size-and-format) and [api-reference.md](api-reference.md). |
+| 超高分辨率 | ✅ Production | verified | Pro max ~4.6MP (总像素 4,624,220). The active Pro/Flash models now share this limit. See [Size Shortcuts](../../../../SKILL.md#size-and-format) and [api-reference.md](../../../../references/api-reference.md). |
 
 

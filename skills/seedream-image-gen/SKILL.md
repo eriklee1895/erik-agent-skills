@@ -8,7 +8,7 @@ description: >
 
 # Seedream 5.5
 
-Default to **`doubao-seedream-5-5-261028`** (`--model 5.5`). Use the bundled CLI with `uv run`; authentication is `ARK_API_KEY` from the environment or the calling directory's `.env`. Keep credentials outside the skill.
+Use **`doubao-seedream-5-5-261028`** (`--model 5.5`). This is the only supported model. Use the bundled CLI with `uv run`; authentication is `ARK_API_KEY` from the environment or the calling directory's `.env`. Keep credentials outside the skill.
 
 ## Choose the operation
 
@@ -44,6 +44,8 @@ uv run scripts/seedream_image_gen.py decompose --reference-image poster.png \
 
 ## Prompt and inspect
 
+Choose from the [four focused prompt recipes](references/seedream55-workflows.md): exact text, multi-round edits, semantic layer splitting/classification, and transparent assets. Each includes its API switches and artifact checks.
+
 Write subject/action/environment, then composition, material/light and intended use. Quote exact text and specify its position, hierarchy, font style and color. For multi-reference work, assign roles explicitly in upload order: “图1产品形状，图2配色，图3布局”. Up to **10 references** are supported, including transparent mode.
 
 For editing, describe **one intended change plus what must remain**. Feed the last accepted output into the next round. Prefer RGB input and `--background opaque` during long edit chains; the official guide recommends this for consistency. Check the edited target and protected areas after every round, retaining checkpoints. A low pixel difference alone can also mean the requested change failed.
@@ -68,10 +70,10 @@ The CLI immediately downloads the base and foreground PNGs and writes `layers.js
 
 For layer selection, combine the preview with returned names/descriptions; there is no documented native layer-type enum, and missing OCR does not mean a layer contains no text. OCR is opt-in and applies to regular text layers. It returns plain text, line boxes and runs with approximate font/color/style. Fonts are matches, not exact font files; unsupported or uncertain matches can be `unknown`. Artistic/handwritten text and nontext layers may have no OCR. Returned images are raster layers, not PSD text objects. For deterministic copy changes, omit the original text layer and typeset the replacement locally using an available font and its line bbox; inspect line wrapping and fit. Read [layer/OCR contract and reconstruction](references/transparent-layers.md) before composing or changing text.
 
-## Options, legacy models and failures
+## Options and failures
 
 Common flags: `--out`, `--out-dir`, `--prompt-file`, `--watermark`, `--timeout`, `--force`, repeatable `--reference-image`. `edit --outpaint left:400` pads a local opaque canvas; see [API/outpainting](references/api-reference.md#outpainting). Batch JSONL accepts prompt strings or objects with generation options; `--concurrency` controls independent jobs. Decomposition uses its separate command.
 
-5.0 Pro (`--model pro`) and Flash (`--model flash`) remain **explicit legacy alternatives**; do not switch away from 5.5 automatically. They lack 5.5 text-to-RGBA, expanded transparent inputs, layer count options and OCR. Pro alone accepts `--optimize-prompt fast`; 5.5 and Flash accept `standard` only. See [legacy guidance](references/flash-quickref.md) only when requested.
+The CLI accepts only the supported 5.5 model ID and aliases. Other models, including old Pro/Flash aliases and custom IDs, fail before an API request; no silent remapping or fallback is performed. Prompt optimization supports `standard` only. Historical model comparisons remain evaluation evidence, not current usage recipes.
 
 Explicit 429/5xx responses have bounded retries. Unknown transport outcomes stop with `OutcomeUnknown`; do not resubmit a possibly billed request automatically. Failed downloads retry downloads without regenerating. Metadata records model, prompt, sizes, usage and timing, with no credentials or signed response URLs. Layer outputs can incur several output-image charges. See [API contract](references/api-reference.md) and [measured 5.5 benchmark](evals/seedream55-benchmark.md); historical Pro/Flash ratings do not establish 5.5 quality.

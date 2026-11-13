@@ -6,23 +6,23 @@ Checked **2026-11-14** against the official [5.5 tutorial](https://console.volce
 
 `POST https://ark.cn-beijing.volces.com/api/v3/images/generations`, bearer `ARK_API_KEY`. Generation, editing and decomposition use the same endpoint. Default model: **`doubao-seedream-5-5-261028`**. There is no new `/edit` or `/layers` endpoint in the Ark contract. Third-party wrappers may expose their own endpoints and fields.
 
-The CLI retains explicit legacy `pro` / `flash` aliases. Unknown IDs pass through with a warning and 5.5 capability defaults, allowing custom endpoint IDs; verify their actual contract before submitting.
+The CLI accepts only this 5.5 ID and its listed aliases. Other IDs and aliases are rejected before submission; custom endpoints and older models are outside this skill.
 
-## Fields and changes from 5.0
+## Request fields
 
-| Field | 5.5 contract / change |
+| Field | Seedream 5.5 contract |
 |---|---|
 | `model` | Dated 5.5 ID above; aliases resolve locally. |
 | `prompt` | Required for generation/editing; optional for decomposition. |
 | `image` | URL/data URL string or array. Up to ten references for generation, including RGBA output; exactly one for decomposition. |
-| `size` | Generation: 1K/1.5K/2K or WxH, default 2K. Layers: auto/1K/1.5K/2K, default auto. Same pixel range as 5.0. |
-| `background` | **Expanded**: auto (new API default), transparent or opaque. Transparent supports text-only, RGB or alpha inputs, up to ten references. CLI default remains opaque. Omit this field for decomposition. |
-| `output_format` | png (new API default) or jpeg. Transparent requires png. In layer mode it controls the base only; foregrounds always PNG. |
-| `layer_decomposition` | Existing boolean, false by default. 5.5 raises capacity to base + 99 layers; 5.0 supports base + 16. |
-| `layer_decomposition_options` | **New, 5.5 only**; valid with layer_decomposition true. |
+| `size` | Generation: 1K/1.5K/2K or WxH, default 2K. Layers: auto/1K/1.5K/2K, default auto. |
+| `background` | auto (API default), transparent or opaque. Transparent supports text-only, RGB or alpha inputs, up to ten references. CLI default remains opaque. Omit this field for decomposition. |
+| `output_format` | png (API default) or jpeg. Transparent requires png. In layer mode it controls the base only; foregrounds always PNG. |
+| `layer_decomposition` | Existing boolean, false by default. Up to one base + 99 layers. |
+| `layer_decomposition_options` | Valid with layer_decomposition true. |
 | `…max_images` | Integer 2–100, default 30, includes base. Upper bound; not exact output count. CLI `--max-images`. |
 | `…text_recognition` | Boolean, default false. Rich-text OCR for eligible regular text layers. CLI `--text-recognition`. |
-| `optimize_prompt_options.mode` | standard only. 5.0 Pro also supports fast; 5.5 does not. |
+| `optimize_prompt_options.mode` | standard only. `fast` is unsupported. |
 | `response_format` | url (default, valid 24h) or b64_json. CLI downloads URLs immediately; decoder also accepts base64. |
 | `watermark` | API default true; CLI explicitly sends false unless requested. |
 
@@ -73,8 +73,5 @@ Any server-side layer-generation failure fails the whole decomposition request. 
 | Model / task | Input image | Each output image |
 |---|---|---|
 | **5.5, generation or decomposition** | **0.05 each, including first** | **≤2.61M pixels: 0.13; >2.61M through native cap: 0.23** |
-| 5.0 Pro generation | First free; each additional 0.02 | ≤2.61M: 0.30; larger: 0.60 |
-| 5.0 Pro decomposition | Same input pricing | ≤2.61M: 0.15; larger: 0.30 |
-| 5.0 Flash | Free | 0.12 |
 
 Snapshot from official pricing, not an account bill. Total = sum input charges + sum actual output-tier charges. 1.5K normally shares the ≤2.61M tier. Each layer can have its own size/tier; do not calculate all layers using the base's dimensions. A 5.5 two-reference 1K generation is list-estimated 0.23 (0.10 + 0.13), not 0.13. Pricing comparisons should include inputs and distinguish generation from decomposition. Failed outputs are not billed according to the pricing page.

@@ -6,7 +6,7 @@
 #   "pillow>=10.0.0",
 # ]
 # ///
-"""Generate, edit, outpaint, and batch-generate images with Seedream 5.5 (default) / legacy 5.0 Pro and Flash
+"""Generate, edit, outpaint, and batch-generate images with Seedream 5.5
 via the shared Volcengine Ark Images API.
 
 Subcommands:
@@ -18,7 +18,7 @@ Subcommands:
   list-models      Print the known model table and exit.
 
 API docs:
-  Seedream 5.0 Pro: https://www.volcengine.com/docs/82379/1824121
+  Seedream 5.5: https://console.volcengine.com/ark/region:cn-beijing/docs/seedream-5-5
   API reference:   https://www.volcengine.com/docs/82379/1541523
 
 Examples live in SKILL.md.
@@ -47,54 +47,24 @@ from PIL import Image, ImageDraw, ImageOps
 
 
 # ---------------------------------------------------------------------------
-# Model registry — add models here; everything else (validation, body shaping)
-# derives from the capability dict.
+# Single supported model and its API limits.
 # ---------------------------------------------------------------------------
 
 MODEL_55 = "doubao-seedream-5-5-261028"
-MODEL_PRO = "doubao-seedream-5-0-pro-260628"
-MODEL_FLASH = "doubao-seedream-5-0-flash-260915"
-MODEL_PRO_ALIASES = {"pro", "seedream-pro", "5-pro", "seedream-5-pro", "doubao-seedream-5-0-pro"}
-MODEL_FLASH_ALIASES = {"flash", "seedream-flash", "5-flash", "seedream-5-flash", "doubao-seedream-5-0-flash"}
-RETIRED_MODELS = {
-    "lite", "seedream-lite", "5-lite", "seedream-5-lite", "doubao-seedream-5-0",
-    "doubao-seedream-5-0-lite", "doubao-seedream-5-0-260128", "doubao-seedream-5-0-lite-260128",
-}
-_COMMON_CAPS: dict[str, Any] = {
-    "size_strings": {"1K", "1.5K", "2K"},
-    "pixel_min": 921_600,
-    "pixel_max": 4_624_220,
-    "aspect_max": 16,
-    "default_size": "2K",
-    "max_refs": 10,
-}
 MODELS: dict[str, dict[str, Any]] = {
     MODEL_55: {
-        **_COMMON_CAPS,
         "aliases": {"5.5", "seedream-5.5", "seedream-5-5", "doubao-seedream-5-5"},
         "label": "Seedream 5.5 (2026-10-28 build)",
+        "size_strings": {"1K", "1.5K", "2K"},
+        "pixel_min": 921_600,
+        "pixel_max": 4_624_220,
+        "aspect_max": 16,
+        "default_size": "2K",
+        "max_refs": 10,
         "optimize_modes": {"standard"},
-        "native_rgba": True,
-        "layer_options": True,
         "max_layers": 99,
         "price_per_image": "2026-11-14 list: input CNY0.05 each; output <=2.61MP CNY0.13 / larger CNY0.23, including layers.",
-        "notes": "Default; text/reference to RGBA, stable editing, fine layers and rich-text OCR.",
-    },
-    MODEL_PRO: {
-        **_COMMON_CAPS,
-        "aliases": MODEL_PRO_ALIASES,
-        "label": "Seedream 5.0 Pro (2026-06-28 build)",
-        "optimize_modes": {"standard", "fast"},
-        "price_per_image": "2026-10-24 list: generation <=2.61MP CNY0.30 / larger CNY0.60; layers CNY0.15/0.30",
-        "notes": "Legacy opt-in; standard/fast, coordinate/marker edits, alpha-image editing and layer decomposition.",
-    },
-    MODEL_FLASH: {
-        **_COMMON_CAPS,
-        "aliases": MODEL_FLASH_ALIASES,
-        "label": "Seedream 5.0 Flash (2026-09-15 build)",
-        "optimize_modes": {"standard"},
-        "price_per_image": "2026-10-24 list: CNY0.12/output image; input images free",
-        "notes": "Lower-latency/cost model; same generation/edit/layer API, standard mode only.",
+        "notes": "Text/reference to RGBA, stable editing, fine layers and rich-text OCR.",
     },
 }
 
@@ -116,7 +86,7 @@ ALLOWED_OUTPUT_FORMATS = ("png", "jpeg", "jpg")
 MARKER_CLEANUP_ZH = "图中彩色方框/圆圈/涂写是我手工标出的编辑区域标记，请严格按上面的描述修改标记区域内的内容，标记区域之外的像素尽量保持不变，完成后清除所有彩色标记线条与填充。"
 MARKER_CLEANUP_EN = "The colored rectangles/circles/scribbles in the image are edit markers I drew by hand. Apply the change described above strictly inside the marked regions, keep pixels outside the markers unchanged, and remove all colored marks once done."
 
-# Outpaint auto-prompt suffix (Chinese-first, since Pro prefers Chinese prompts).
+# Outpaint auto-prompt suffix (Chinese-first, selected by prompt language).
 OUTPAINT_FILL_ZH = "画布中央是原图片，请自然延伸填充四周的空白区域，使整张图变成一张完整的{aspect_word}图片，延续原有的风格、光照、色调与材质，不要让中心与新填充区域有可见接缝。"
 OUTPAINT_FILL_EN = "The center of this canvas is the original image. Naturally extend and fill the surrounding blank areas to make one complete {aspect_word} image, matching the original style, lighting, palette and materials. No visible seam between center and extended regions."
 
@@ -197,34 +167,13 @@ def _looks_chinese(text: str) -> bool:
 
 
 def _resolve_model(model_arg: str) -> tuple[str, dict[str, Any]]:
-    """Map user-supplied --model (alias or full id) to (canonical_id, capabilities)."""
-    if not model_arg:
-        return DEFAULT_MODEL, MODELS[DEFAULT_MODEL]
-
-    if model_arg.lower().strip() in RETIRED_MODELS:
-        _die("Seedream Lite is retired from this skill. Choose --model flash or --model pro explicitly; no automatic remapping.")
-
-    # Exact id match
-    if model_arg in MODELS:
-        return model_arg, MODELS[model_arg]
-
-    # Alias match
-    needle = model_arg.lower().strip()
-    for mid, caps in MODELS.items():
-        if needle in caps["aliases"] or needle == mid.lower():
-            return mid, caps
-
-    # Pass through unknown model id (user might be using a fresh dated version we
-    # haven't registered) — apply current default capabilities but warn.
-    _warn(
-        f"Unknown model id '{model_arg}'. Using Seedream 5.5 capability defaults; "
-        f"verify this model's API contract before submitting requests."
-    )
-    return model_arg, MODELS[DEFAULT_MODEL]
-
-
-def _model_is_pro(model_id: str) -> bool:
-    return model_id == MODEL_PRO or model_id in MODELS.get(MODEL_PRO, {}).get("aliases", set())
+    """Accept only the supported 5.5 ID/aliases; never remap other models."""
+    needle = (model_arg or DEFAULT_MODEL).strip().lower()
+    caps = MODELS[MODEL_55]
+    if needle == MODEL_55 or needle in caps["aliases"]:
+        return MODEL_55, caps
+    _die(f"This skill only supports Seedream 5.5 ({MODEL_55}); unsupported model: {model_arg!r}. No request was submitted.")
+    raise AssertionError("unreachable")
 
 
 # ---------------------------------------------------------------------------
@@ -316,7 +265,7 @@ def _validate_size(
     if size_upper in {"3K", "4K"} and size_upper not in caps["size_strings"]:
         _die(
             f"Size '{size_upper}' is not supported by model {model_id}. "
-            f"Pro/Flash top out at 2K (~4.6MP method-1 pixel cap). Allowed presets: {sorted(caps['size_strings'])}."
+            f"Seedream 5.5 tops out at 2K (~4.6MP method-1 pixel cap). Allowed presets: {sorted(caps['size_strings'])}."
         )
 
     m = re.fullmatch(r"(\d{3,5})x(\d{3,5})", size)
@@ -358,7 +307,7 @@ def _smallest_valid_size(
     Rounds each side up to a multiple of 8 while preserving aspect as closely as
     possible (e.g. 1500x600 → 1520x608). Falls back to a clean integer scale
     (2x/3x/…) when the 8-aligned size would exceed pixel_max.
-    pixel_min is 921_600 for Pro (official 1280×720 / ~0.92MP floor) — see MODELS.
+    pixel_min is 921_600 for Seedream 5.5 (official 1280×720 / ~0.92MP floor) — see MODELS.
     """
     if w * h >= pixel_min:
         return w, h
@@ -420,20 +369,6 @@ def _maybe_downscale(
 
 def _is_url(path: str) -> bool:
     return path.startswith(("http://", "https://"))
-
-
-def _validate_transparent_input(paths: list[str], output_format: str) -> None:
-    if len(paths) != 1:
-        _die("Transparent editing requires exactly one alpha-bearing reference image.")
-    if output_format != "png":
-        _die("Transparent editing requires PNG output, not JPEG.")
-    if not _is_url(paths[0]):
-        try:
-            with Image.open(Path(paths[0]).expanduser()) as image:
-                if "A" not in image.getbands() and "transparency" not in image.info:
-                    _die("Transparent editing requires an input image with an alpha channel.")
-        except OSError as error:
-            _die(f"Cannot read transparent reference: {error.__class__.__name__}")
 
 
 def _encode_local_image(path: Path) -> str:
@@ -688,8 +623,6 @@ def _build_request_body(
             _die("Layer decomposition requires one reference image.")
         body["layer_decomposition"] = True
         if max_images is not None or text_recognition:
-            if not caps.get("layer_options"):
-                _die("Layer count control and rich-text OCR require Seedream 5.5.")
             if max_images is not None and not 2 <= max_images <= 100:
                 _die("--max-images must be 2–100, including the base image.")
             options: dict[str, Any] = {}
@@ -976,8 +909,7 @@ def _cmd_list_models(_args: argparse.Namespace) -> int:
         print()
     print("Default model: " + DEFAULT_MODEL)
     print()
-    print("Use --model <id> (or 5.5/pro/flash alias) to override. Any other model id is passed through")
-    print("verbatim with 5.5 capability defaults; verify the model contract before use.")
+    print("Only Seedream 5.5 is supported. Other model IDs and aliases are rejected before submission.")
     return 0
 
 
@@ -989,7 +921,7 @@ def _cmd_list_models(_args: argparse.Namespace) -> int:
 def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) -> None:
     """Args shared by generate, edit, and batch (latter uses a subset)."""
     p.add_argument("--model", default=DEFAULT_MODEL,
-                   help=f"Model id or alias (5.5|pro|flash). Default: {DEFAULT_MODEL}.")
+                   help=f"Supported model ID or 5.5 alias. Default: {DEFAULT_MODEL}.")
     p.add_argument("--size", default=None,
                    help="Image size preset (1K/1.5K/2K) or WIDTHxHEIGHT "
                         "(e.g. 1792x1024). Default: 2K.")
@@ -1014,11 +946,11 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) 
                    help="5.5 supports text or up to 10 references to RGBA; transparent requires PNG.")
     p.add_argument("--watermark", action="store_true",
                    help="Include Seedream watermark (default: off).")
-    p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None,
-                   help="5.5/Flash: standard only; legacy Pro: standard/fast.")
+    p.add_argument("--optimize-prompt", choices=["standard"], default=None,
+                   help="Seedream 5.5 supports standard optimization only.")
     p.add_argument("--no-auto-upscale", action="store_true",
                    help="Disable auto-upscale for WxH sizes below the model's pixel floor "
-                        "(Pro ~0.92MP / 921600). Default: generate at the smallest valid "
+                        "(~0.92MP / 921600). Default: generate at the smallest valid "
                         "same-aspect size, then LANCZOS-downscale to the requested size.")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT,
                    help=f"Timeout in seconds (default: {DEFAULT_TIMEOUT}).")
@@ -1048,7 +980,7 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
     wh = _validate_size(size, caps, model_id, enforce_min=not auto_upscale)
     downscale_to: Optional[tuple[int, int]] = None
     if wh != (0, 0) and wh[0] * wh[1] < caps["pixel_min"]:
-        # Below model floor (Pro pixel_min=921_600 ≈ 0.92MP). Generate larger, then downscale.
+        # Below model floor (pixel_min=921_600 ≈ 0.92MP). Generate larger, then downscale.
         api_w, api_h = _smallest_valid_size(wh[0], wh[1], caps["pixel_min"], caps["pixel_max"])
         _info(
             f"Size {wh[0]}x{wh[1]} ({wh[0]*wh[1]:,} px) is below the "
@@ -1060,17 +992,10 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
 
     background = getattr(args, "background", "opaque")
     if background == "transparent":
-        refs_for_alpha = list(getattr(args, "reference_image", []) or [])
-        if caps.get("native_rgba"):
-            if args.output_format != "png":
-                _die("Transparent generation requires PNG output, not JPEG.")
-        else:
-            _validate_transparent_input(refs_for_alpha, args.output_format)
+        if args.output_format != "png":
+            _die("Transparent generation requires PNG output, not JPEG.")
         if getattr(args, "outpaint", None):
-            _die("Transparent editing cannot use the opaque outpaint canvas; edit an alpha layer directly.")
-
-    if background == "auto" and not caps.get("native_rgba"):
-        _die("Automatic background selection requires Seedream 5.5.")
+            _die("Transparent output cannot use the opaque outpaint canvas; generate/edit without --outpaint.")
 
     # Prompt
     prompt = _read_prompt(getattr(args, "prompt", None), getattr(args, "prompt_file", None)) \
@@ -1474,8 +1399,8 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--background", choices=["opaque", "transparent", "auto"], default="opaque",
                    help="5.5 supports text or up to 10 references to RGBA; transparent requires PNG.")
     p.add_argument("--watermark", action="store_true", help="Default watermark on.")
-    p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None,
-                   help="5.5/Flash standard only; legacy Pro standard/fast.")
+    p.add_argument("--optimize-prompt", choices=["standard"], default=None,
+                   help="Seedream 5.5 supports standard optimization only.")
     p.add_argument("--no-auto-upscale", action="store_true",
                    help="Disable auto-upscale for sizes below the model pixel floor.")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help=f"Timeout (default: {DEFAULT_TIMEOUT}).")
@@ -1649,9 +1574,9 @@ def _add_decompose_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--size", choices=["auto", "1K", "1.5K", "2K"], default="auto")
     p.add_argument("--output-format", choices=list(ALLOWED_OUTPUT_FORMATS), default="png",
                    help="Base format only; foreground layers are always PNG.")
-    p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None)
-    p.add_argument("--max-images", type=int, help="5.5 only: maximum output count, 2–100 including base (API default: 30).")
-    p.add_argument("--text-recognition", action="store_true", help="5.5 only: return rich-text OCR for regular text layers.")
+    p.add_argument("--optimize-prompt", choices=["standard"], default=None)
+    p.add_argument("--max-images", type=int, help="Maximum output count, 2–100 including base (API default: 30).")
+    p.add_argument("--text-recognition", action="store_true", help="Return rich-text OCR for regular text layers.")
     p.add_argument("--out-dir", help="Output folder; defaults to a fresh timestamped layers folder.")
     p.add_argument("--watermark", action="store_true")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
@@ -1709,7 +1634,7 @@ async def _decompose(args: argparse.Namespace, body: dict[str, Any], out_dir: Pa
     indices = [image.z_index for image in images]
     if any(type(index) is not int for index in indices) or indices.count(0) != 1 or len(set(indices)) != len(indices):
         _die("Layer response is missing unique z_index values and one base; do not replay generation automatically.")
-    max_layers = MODELS.get(body["model"], MODELS[DEFAULT_MODEL]).get("max_layers", 16)
+    max_layers = MODELS[MODEL_55]["max_layers"]
     if any(index < 0 or index > max_layers for index in indices):
         _die("Layer response exceeds the documented index range; do not replay generation automatically.")
     planned = []
@@ -1760,7 +1685,7 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(
         description="Generate and edit images with Seedream 5.5 (default) via Volcengine Ark API.\n"
-                    "Native RGBA, precise editing, layers and rich-text OCR; legacy Pro/Flash opt-in.\n"
+                    "Native RGBA, precise editing, layers and rich-text OCR.\n"
                     "Docs: https://console.volcengine.com/ark/region:cn-beijing/docs/seedream-5-5",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

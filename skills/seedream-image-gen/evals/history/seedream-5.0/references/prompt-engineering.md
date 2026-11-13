@@ -2,7 +2,7 @@
 
 > 本指南保留 **Seedream 5.0 Pro** 的历史提示词经验。Flash 使用同一生成/编辑接口；旧模型的质量结论不迁移到 Flash。当前短中文文字、坐标编辑与多参考图样本见 [Pro/Flash benchmark](../evals/flash-benchmark.md)。
 
-> **历史记录（2026-10-25）：** 当时默认模型为 Pro；当前默认模型已改为 Seedream 5.5，先读 [5.5 工作流](seedream55-workflows.md)。先读 [本轮实测配方](benchmark-prompt-recipes.md) 和 [120 次请求报告](../evals/comprehensive-benchmark.md)：简单编辑可简洁，坐标用于明确范围；中文/英文操作句都可保留精确中文 payload；字重、标记残留、留白和动作应分别验收。下文历史字体/相机/风格经验不是通用 API 限制。
+> **历史记录（2026-10-25）：** 当时默认模型为 Pro；当前默认模型已改为 Seedream 5.5，先读 [5.5 工作流](../../../../references/seedream55-workflows.md)。先读 [本轮实测配方](benchmark-prompt-recipes.md) 和 [120 次请求报告](../evals/comprehensive-benchmark.md)：简单编辑可简洁，坐标用于明确范围；中文/英文操作句都可保留精确中文 payload；字重、标记残留、留白和动作应分别验收。下文历史字体/相机/风格经验不是通用 API 限制。
 
 ## 本文导航
 

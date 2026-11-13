@@ -3,9 +3,10 @@
 # requires-python = ">=3.12"
 # dependencies = ["httpx>=0.27", "pillow>=10", "numpy>=2"]
 # ///
-"""Live, resumable Ark benchmark. Paid calls require --run. No keys/URLs in results.
+"""Live, resumable Seedream 5.5 benchmark. Paid calls require --run. No keys/URLs in results.
 
 uv run evals/seedream55_benchmark.py --run --out-dir /absolute/private/results
+The original Pro comparison is frozen at git revision 74915f2; this runner now generates only 5.5 outputs.
 Successful AND failed jobs are preserved; remove a failed job directory deliberately
 before a repeat. A transport error never automatically replays a paid submission.
 """
@@ -26,7 +27,7 @@ SPEC = importlib.util.spec_from_file_location('seedream_benchmark_client', SCRIP
 sg = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = sg
 SPEC.loader.exec_module(sg)
-MODELS = {'55': sg.MODEL_55, 'pro': sg.MODEL_PRO}
+MODELS = {'55': sg.MODEL_55}
 
 
 def write_json(path, value):
@@ -79,8 +80,7 @@ async def main(args):
             body['background'] = background
         else:
             body['layer_decomposition'] = True
-            if model == '55':
-                body['layer_decomposition_options'] = layers
+            body['layer_decomposition_options'] = layers
         record = {k: v for k, v in body.items() if k != 'image'}
         record.update(name=name, references=[{'file': str(p.relative_to(root)),
             'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in refs])
@@ -168,7 +168,6 @@ async def main(args):
         run('layers-poster-6', refs=[f], size='auto', layers={'max_images': 6, 'text_recognition': True}),
         run('layers-poster-20', refs=[f], size='auto', layers={'max_images': 20, 'text_recognition': True}),
         run('layers-product', refs=[source], size='auto', layers={'max_images': 10, 'text_recognition': True}),
-        run('layers-pro-poster', model='pro', refs=[f], size='auto', layers={}),
     ]
     # Extension cases: 2K text, realism, alpha auto and >16-layer behavior.
     crowded = root / 'crowded.png'

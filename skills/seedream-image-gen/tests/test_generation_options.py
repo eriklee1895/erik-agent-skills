@@ -95,7 +95,7 @@ class GenerationOptionTests(unittest.TestCase):
                         self.assertEqual(metadata["size"], "1500x600")
 
     def test_default_prompt_has_no_undocumented_negative(self):
-        for model in ("pro", "flash"):
+        for model in ("5.5", "doubao-seedream-5-5-261028"):
             with self.subTest(model=model):
                 body = self.payload("--model", model)
                 self.assertEqual(body["prompt"], "test scene")
@@ -134,7 +134,7 @@ class GenerationOptionTests(unittest.TestCase):
 
     def test_dry_run_metadata_records_requested_size_while_payload_uses_api_size(self):
         for command in ("generate", "edit"):
-            for model, requested, api_size in (("pro", "1500x600", "1520x608"), ("flash", "1500x600", "1520x608")):
+            for model, requested, api_size in (("5.5", "1500x600", "1520x608"),):
                 with self.subTest(command=command, model=model):
                     output = self.root / f"{command}-{model}-preview.png"
                     arguments = [command, "--prompt", "test", "--model", model, "--size", requested,

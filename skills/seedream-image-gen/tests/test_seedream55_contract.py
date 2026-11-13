@@ -3,17 +3,40 @@ import base64
 import json
 import unittest
 
-import test_flash_contract as legacy
+import test_api_contract as contract
 
-picture = legacy.picture
+picture = contract.picture
 
 MODEL = 'doubao-seedream-5-5-261028'
 
 
 class Seedream55ContractTests(unittest.TestCase):
-    setUp = legacy.FlashContractTests.setUp
-    respond = legacy.FlashContractTests.respond
-    invoke = legacy.FlashContractTests.invoke
+    setUp = contract.ApiContractTests.setUp
+    respond = contract.ApiContractTests.respond
+    invoke = contract.ApiContractTests.invoke
+
+    def test_only_55_models_resolve_and_old_or_unknown_ids_never_submit(self):
+        for model in ('pro', 'flash', 'seedream-pro', 'seedream-flash',
+                      'doubao-seedream-5-0-pro-260628', 'doubao-seedream-5-0-flash-260915',
+                      'doubao-seedream-5-0-pro-999999', 'custom-endpoint', '5.6'):
+            with self.subTest(model=model):
+                code, _, err = self.invoke('generate', '--model', model, '--prompt', 'test')
+                self.assertNotEqual(code, 0)
+                self.assertIn('only supports Seedream 5.5', err)
+        self.assertEqual(self.requests, [])
+
+    def test_old_models_rejected_in_edit_decompose_and_batch(self):
+        jobs = self.root / 'jobs.jsonl'
+        jobs.write_text(json.dumps({'prompt': 'test', 'model': 'pro'}) + '\n')
+        for command in (
+            ('edit', '--model', 'flash', '--reference-image', str(self.reference), '--prompt', 'test'),
+            ('decompose', '--model', 'pro', '--reference-image', str(self.reference)),
+            ('generate-batch', '--input', str(jobs)),
+        ):
+            code, _, error = self.invoke(*command)
+            self.assertNotEqual(code, 0)
+            self.assertIn('only supports Seedream 5.5', error)
+        self.assertEqual(self.requests, [])
 
     def test_default_text_to_rgba_and_opaque_reference_to_rgba(self):
         for refs in ([], ['--reference-image', str(self.reference)],

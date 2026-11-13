@@ -260,6 +260,8 @@ def main():
     parser.add_argument("--concurrency", type=int, default=2)
     parser.add_argument("--worker", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.execute:
+        parser.error("Historical 5.0 runner is archived; current skill supports Seedream 5.5 only. Use the original git revision to reproduce this study.")
     root = Path(args.out_dir).expanduser().resolve()
     if args.worker:
         manifest = json.loads((root / "cases.json").read_text())

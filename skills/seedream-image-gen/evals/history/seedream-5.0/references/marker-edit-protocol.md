@@ -1,4 +1,4 @@
-> 本文保留历史 Pro marker 实验。新的原生坐标协议和 Pro/Flash 图层能力以 [API 参考](api-reference.md) 为准；框外保持是生成效果，不是硬像素遮罩保证。
+> 本文保留历史 Pro marker 实验。新的原生坐标协议和 Pro/Flash 图层能力以 [API 参考](../../../../references/api-reference.md) 为准；框外保持是生成效果，不是硬像素遮罩保证。
 
 # Marker Edit Protocol — Seedream 5.0 Pro via `seedream-image-gen`
 
@@ -26,7 +26,7 @@
 
 下面的对比图说清了官方 API 和 skill 的差异.
 
-![advantage overview](./marker-edit-protocol-advantage-overview.svg)
+![advantage overview](marker-edit-protocol-advantage-overview.svg)
 
 ---
 
@@ -38,7 +38,7 @@ Seedream 5.0 Pro 把"区域编辑"语义编码进两个信号, **二者缺一不
 
 参考图像里被画上彩色矩形 (`alpha=80` 半透明 + 3px 描边). 模型识别这些彩色矩形作为"编辑意图标记".
 
-![visual signal diagram](./marker-edit-protocol-visual-signal.svg)
+![visual signal diagram](marker-edit-protocol-visual-signal.svg)
 
 ### 2. 语言信号 (prompt 输入)
 

@@ -19,117 +19,6 @@
       ]
     },
     {
-      "id": 2,
-      "name": "flash-exact-small-output",
-      "prompt": "用 Flash 生成1500x600咖啡壶封面，左侧留白、右侧产品，不要人或文字。保存最终图片和元数据。",
-      "expected_output": "One exact1500x600 PNG, generated through a valid larger native request and locally downscaled.",
-      "files": [],
-      "assertions": [
-        {
-          "name": "Flash explicit model",
-          "description": "Uses doubao-seedream-5-0-flash-260915."
-        },
-        {
-          "name": "exact destination",
-          "description": "Decoded image is1500x600 and metadata.size is1500x600."
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "name": "flash-coordinate-edit",
-      "prompt": "先无付费调用地运行 evals/benchmark.py --out-dir /tmp/seedream-eval 准备fixture。使用Flash编辑 /tmp/seedream-eval/fixtures/objects.png：将图1 <bbox>100 350 550 780</bbox> 中左侧红杯改为蓝色，保留标题、右侧花瓶和背景。",
-      "expected_output": "One edited image; coordinates are prompt tags, not separate unsupported JSON fields.",
-      "files": [
-        "/tmp/seedream-eval/fixtures/objects.png"
-      ],
-      "assertions": [
-        {
-          "name": "selected object changes",
-          "description": "Left cup is blue; other object and title remain recognizable."
-        },
-        {
-          "name": "one reference request",
-          "description": "The input order and 图1 numbering match; no marker painting is required for native coordinates."
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "name": "flash-multi-reference",
-      "prompt": "使用Flash，图1为 /tmp/seedream-eval/fixtures/objects.png，图2为 /tmp/seedream-eval/fixtures/palette.png。保留图1杯子外形，取图2的青绿/米色配色，只画杯子。",
-      "expected_output": "One image combining the stated reference roles, with at most ten supported inputs.",
-      "files": [
-        "/tmp/seedream-eval/fixtures/objects.png",
-        "/tmp/seedream-eval/fixtures/palette.png"
-      ],
-      "assertions": [
-        {
-          "name": "reference roles respected",
-          "description": "Cup shape and palette both appear; do not accidentally substitute upload order."
-        },
-        {
-          "name": "no unsupported sequence mode",
-          "description": "One generation request contains image references, with no sequential/web-search fields."
-        }
-      ]
-    },
-    {
-      "id": 5,
-      "name": "alpha-layer-edit",
-      "prompt": "使用Flash编辑 /tmp/seedream-eval/fixtures/alpha-cup.png，将杯子改为橙黄色，保持轮廓和透明背景。显式使用 --background transparent --output-format png。",
-      "expected_output": "An actual alpha-bearing PNG, rather than an RGB picture of a checkerboard.",
-      "files": [
-        "/tmp/seedream-eval/fixtures/alpha-cup.png"
-      ],
-      "assertions": [
-        {
-          "name": "real transparency",
-          "description": "Decoded output has an alpha channel with transparent pixels."
-        },
-        {
-          "name": "valid alpha contract",
-          "description": "Exactly one alpha-bearing reference and PNG output; invalid JPEG/text-only requests are rejected before submission."
-        }
-      ]
-    },
-    {
-      "id": 6,
-      "name": "native-layer-decomposition",
-      "prompt": "用Flash decompose拆分 /tmp/seedream-eval/fixtures/objects.png，要求只提取红杯和NOVA标题。将底图、前景PNG及layers.json保存到新目录。",
-      "expected_output": "A base and selected transparent foregrounds, each retaining its native size/format and returned position metadata.",
-      "files": [
-        "/tmp/seedream-eval/fixtures/objects.png"
-      ],
-      "assertions": [
-        {
-          "name": "native extraction mode",
-          "description": "Sends layer_decomposition=true to the shared Images endpoint."
-        },
-        {
-          "name": "portable layer manifest",
-          "description": "layers.json preserves z_index and bounding_box without signed URLs/base64."
-        },
-        {
-          "name": "correct reconstruction",
-          "description": "Resize each crop to the returned absolute bbox before stacking; do not stretch every layer to the canvas."
-        }
-      ]
-    },
-    {
-      "id": 7,
-      "name": "retired-model-rejection",
-      "prompt": "尝试 --model lite 和 --model doubao-seedream-5-0-260128 的dry-run，确认它们明确报错，不会映射到Flash或发起API请求。",
-      "expected_output": "Explicit retirement/migration errors with zero generation requests.",
-      "files": [],
-      "assertions": [
-        {
-          "name": "no silent paid substitution",
-          "description": "Neither retired input yields a generation request or a substituted model ID."
-        }
-      ]
-    },
-    {
       "id": 8,
       "name": "keyless-preserving-dry-run",
       "prompt": "在不含.env且不配置ARK_API_KEY的临时目录运行批量dry-run；另用generate/edit --dry-run --force指向已有图片，确认旧元数据逐字节保持不变。",
@@ -143,23 +32,6 @@
         {
           "name": "metadata preserved",
           "description": "Existing image/JSON bytes remain unchanged even with --force."
-        }
-      ]
-    },
-    {
-      "id": 9,
-      "name": "optimization-mode-capabilities",
-      "prompt": "分别dry-run Pro --optimize-prompt fast和Flash --optimize-prompt fast；前者生成fast配置，后者在客户端拒绝，不静默换成standard。",
-      "expected_output": "Per-model prompt-mode validation, without a claim that every fast request is faster.",
-      "files": [],
-      "assertions": [
-        {
-          "name": "Pro fast accepted",
-          "description": "Payload optimize_prompt_options.mode is fast for Pro."
-        },
-        {
-          "name": "Flash fast rejected",
-          "description": "Invalid mode exits before a paid call."
         }
       ]
     },
@@ -216,6 +88,32 @@
         {
           "name": "usable artifact",
           "description": "5.5 decompose with max_images 2–100 and text_recognition true; preserve OCR in layers.json, omit old title layer and typeset local replacement in base-coordinate bbox; disclose font approximation."
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "single-supported-model",
+      "prompt": "在离线临时目录尝试 --model pro、--model flash、旧版完整 model_id 和任意未知 ID；再试一次 --model 5.5。",
+      "expected_output": "Only 5.5 resolves. Every other model fails before an API call, with no silent substitution.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "no legacy submission",
+          "description": "Old and unknown model IDs are rejected; the default and 5.5 alias both resolve to doubao-seedream-5-5-261028."
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "exact-small-output",
+      "prompt": "使用 Seedream 5.5 生成1500x600咖啡壶封面，左侧留白、右侧产品，不要人或文字。保存最终图片和元数据。",
+      "expected_output": "One exact 1500x600 PNG, generated at a valid larger native size and locally downscaled.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "exact dimensions",
+          "description": "Decoded image and metadata both retain the requested 1500x600 destination."
         }
       ]
     }

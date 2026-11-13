@@ -1,6 +1,6 @@
 # Prompt recipes from the 2026-10-25 study
 
-> Legacy 5.0 evidence. Current default is Seedream 5.5; start with [5.5 workflows](seedream55-workflows.md). These ratings and model-selection rules are not 5.5 results.
+> Legacy 5.0 evidence. Current default is Seedream 5.5; start with [5.5 workflows](../../../../references/seedream55-workflows.md). These ratings and model-selection rules are not 5.5 results.
 
 Evidence: [120-request report](../evals/comprehensive-benchmark.md), [per-sample results](../evals/comprehensive-results.json). Seedream 5.5 is the default; Pro/Flash now require explicit selection. A draft, style preset or batch request alone does not change the model.
 

@@ -15,7 +15,7 @@ Default-model migration is supported by the measured product-editing behavior, n
 
 [Sanitized per-request payloads, hashes, response metadata and analysis](seedream55-results.json) retain the evidence without credentials, data URLs, signed response URLs or absolute local artifact paths. Raster outputs stay outside the repository. The source/fixture hashes identify the actual inputs; cross-host font substitution may change a regenerated fixture.
 
-Reproduce paid requests deliberately:
+The current runner generates only the 5.5 subset. The original comparative runner is frozen at [revision 74915f2](https://github.com/eriklee1895/erik-agent-skills/tree/74915f29ae926698c3af398903d3afcb3494204a/skills/seedream-image-gen); use that revision to reproduce the full historical Pro comparison. The saved corpus and results below are unchanged. Run the current 5.5 benchmark deliberately:
 
 ```bash
 uv run evals/seedream55_benchmark.py --run --out-dir /absolute/private/seedream55-results
@@ -114,7 +114,7 @@ The Arial-authored source title is reported as a visually similar **TikTok Sans*
 
 A local demo omits the title raster layer and renders **“新绿工作室”** into OCR bbox `[88,66,787,174]`, using an explicitly available STHeiti font fitted to the line. It performs **zero additional API calls**. Outside the removed title layer's bbox, the result is **100% pixel-identical to the recomposed generated layers**. This does not make it pixel-identical to the original input; decomposition had already introduced differences.
 
-A separate real `decompose --max-images 10 --text-recognition` CLI smoke check downloads six files and persists OCR in `layers.json`, verifying the CLI path beyond direct-client benchmark calls. Offline regression also verifies index 18, nested OCR preservation, actual background metadata, invalid legacy flags and retry behavior.
+A separate real `decompose --max-images 10 --text-recognition` CLI smoke check downloads six files and persists OCR in `layers.json`, verifying the CLI path beyond direct-client benchmark calls. Offline regression also verifies index 18, nested OCR preservation, actual background metadata, rejection of unsupported models and retry behavior.
 
 ## Cost and interpretation
 
@@ -133,6 +133,6 @@ This is a computed **public-list estimate, not a retrieved account bill**. The t
 
 ## Resulting skill guidance
 
-Default to 5.5; keep Pro/Flash explicit and preserve their actual parameter restrictions. Enable direct text/RGB/multi-reference RGBA, auto background, max_images and structured OCR. Use geometry constraints and checkpoints for edit chains, inspect small text and actual alpha, and prefer local text composition for invariant production copy. Preserve native crop sizes and base-coordinate boxes, with all returned OCR available for downstream tools.
+Support only 5.5 in the current skill and runner; reject all other model selections before submission. Historical Pro/Flash comparisons remain evidence, not supported runtime alternatives. Enable direct text/RGB/multi-reference RGBA, auto background, max_images and structured OCR. Use geometry constraints and checkpoints for edit chains, inspect small text and actual alpha, and prefer local text composition for invariant production copy. Preserve native crop sizes and base-coordinate boxes, with all returned OCR available for downstream tools.
 
 Community research sources and the distinction between firsthand reports, wrapper behavior and official Ark parameters are recorded in [5.5 workflows](../references/seedream55-workflows.md). The official 100-round and global text-error claims remain vendor evidence; this report measures the smaller disclosed corpus above.

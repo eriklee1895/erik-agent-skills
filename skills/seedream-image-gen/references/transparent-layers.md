@@ -8,8 +8,6 @@ Verified against the official [5.5 tutorial](https://console.volcengine.com/ark/
 
 Decode the downloaded PNG and inspect its alpha range, fully transparent fraction and partial-alpha fraction. Composite onto light and dark backgrounds. A PNG/checkerboard preview or partial-alpha edge alone cannot prove physically plausible glass, smoke or shadow. Generative extraction may change a subject; compare identity and contours with the input.
 
-Legacy 5.0 Pro/Flash only support transparent editing with exactly one alpha-bearing input. The CLI retains that validation for those models.
-
 ## Decomposition request
 
 ```json
