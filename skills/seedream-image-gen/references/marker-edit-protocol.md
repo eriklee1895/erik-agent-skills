@@ -329,7 +329,7 @@ uv run scripts/seedream_image_gen.py edit \
 
 Pro 和 Flash 官方均支持可见标记与 `<point>` / `<bbox>` 提示词坐标。本文的细分评分和 marker 尺寸经验来自历史 Pro 实验；本轮 Flash 只对原生坐标编辑、透明编辑与图层拆分做了小样本验证，不迁移旧模型的文字质量或 4K 结论。
 
-Pro 保持默认；Flash 用于时延/成本敏感的迭代。两者都支持 1K/1.5K/2K，最多十张参考图。选择依据见 [当前 benchmark](../evals/flash-benchmark.md)。
+当前默认 Seedream 5.5；本文 Pro/Flash 结果为历史证据，旧模型仅显式选择时使用。Pro/Flash 都支持 1K/1.5K/2K，最多十张参考图。选择依据见 [当前 benchmark](../evals/flash-benchmark.md)。
 
 ---
 

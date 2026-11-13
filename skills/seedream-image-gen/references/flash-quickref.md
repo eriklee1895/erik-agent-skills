@@ -1,10 +1,12 @@
 # Seedream 5.0 Flash
 
-ID: `doubao-seedream-5-0-flash-260915`; aliases include `flash`, `seedream-flash`, `5-flash`. Pro remains the default. Lite is retired from this skill; old aliases/IDs produce an explicit migration error rather than being redirected.
+> Legacy 5.0 evidence. Current default is Seedream 5.5; start with [5.5 workflows](seedream55-workflows.md). These ratings and model-selection rules are not 5.5 results.
+
+ID: `doubao-seedream-5-0-flash-260915`; aliases include `flash`, `seedream-flash`, `5-flash`. Seedream 5.5 is now the default. Lite is retired from this skill; old aliases/IDs produce an explicit migration error rather than being redirected.
 
 Flash uses the same endpoint, ten-reference limit, native size range, editing protocol, transparent-image option and layer-decomposition mode as Pro. Its optimization mode is **standard only**; Pro also offers fast. Neither active model offers the former model's web search, sequential storyboards or streaming.
 
-Always default to Pro. Flash is an option only when the user explicitly selects it or authorizes a faster/lower-cost replacement; a draft, UGC or batch alone does not authorize switching. The official price, rechecked 2026-10-25, is CNY0.12 per output including each decomposed layer. See the [120-request study](../evals/comprehensive-benchmark.md) for task-specific timing and prompt observations; they do not override the user's model preference or establish universal quality parity.
+Default to Seedream 5.5. Flash is a legacy option only when the user explicitly selects it or authorizes a faster/lower-cost replacement; a draft, UGC or batch alone does not authorize switching. The official price, rechecked 2026-10-25, is CNY0.12 per output including each decomposed layer. See the [120-request study](../evals/comprehensive-benchmark.md) for task-specific timing and prompt observations; they do not override the user's model preference or establish universal quality parity.
 
 Both accept 1K, 1.5K, 2K and valid explicit pixels. Use 1.5K for an economical intermediate tier, 2K for fine text/detail, and exact WxH when a downstream layout requires pixels. A short Chinese headline is not automatically a reason to reject Flash; inspect the actual [benchmark examples and limitations](../evals/flash-benchmark.md).
 

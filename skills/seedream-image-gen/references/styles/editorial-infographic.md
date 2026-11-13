@@ -2,7 +2,7 @@
 
 > 一整张真实摄影质感的 hero 底图，叠加若干半透明毛玻璃数据卡片 + 顶部大标题 + 独立横带时间轴，整体呈现 National Geographic 跨页 / Bloomberg 数据新闻 / 政府科研报告封面的编辑质感。典型应用是南极科考站、高铁复兴号、野生动物迁徙、新能源基地、航天发射、气候数据等"强主体摄影 + 关键数据点"的解释型信息图。下方 Recipes 提供可直接 copy-paste 的 winning recipe。
 
-> **2026-10-25 更新：** Pro 保持默认。先看 [实测 Prompt 起点](../benchmark-prompt-recipes.md#5-infographics-semantics-first-renderer-like-tokens-optional)：简洁描述和下文较长的相机/CSS 配方都生成了正确文字和透明卡片。相机名、rgba、blur/圆角数值是可选视觉类比，非必要项或精确渲染参数。下文“必须”指复用特定历史配方时的经验，不是所有信息图的前提；字体、标题对比度和布局始终需检查。
+> **2026-10-25 更新：** 当前默认 Seedream 5.5（本文 Pro 结果为历史证据）。先看 [实测 Prompt 起点](../benchmark-prompt-recipes.md#5-infographics-semantics-first-renderer-like-tokens-optional)：简洁描述和下文较长的相机/CSS 配方都生成了正确文字和透明卡片。相机名、rgba、blur/圆角数值是可选视觉类比，非必要项或精确渲染参数。下文“必须”指复用特定历史配方时的经验，不是所有信息图的前提；字体、标题对比度和布局始终需检查。
 
 适合：16:9 宽幅数据新闻信息图、3:4 竖版社交配图（小红书/IG 科普）、科研/政府/企业报告封面、科普类文章头图、品牌白皮书插页。
 
@@ -167,7 +167,7 @@ backdrop-blur 约 24px（必须能清晰透过卡片看到背后的场景）,
 
 ## Recipes
 
-所有 recipe 默认 Pro、2K、`png`、`--wide` 横版（除 Recipe 3 是 `--portrait`）、neg-prompt 用 §8 的推荐版本、`watermark=false`。文字（主标题、时间轴节点名、卡片短标题）**必须用中文引号「」逐字包裹**并指定字体族/字号占比/位置/颜色；单条中文 ≤6 字最稳。一次生成 2-4 张挑文字最干净的。
+这些历史 recipe 测试使用 Pro；当前默认 5.5。输出为2K、`png`、`--wide` 横版（除 Recipe 3 是 `--portrait`）、neg-prompt 用 §8 的推荐版本、`watermark=false`。文字（主标题、时间轴节点名、卡片短标题）**必须用中文引号「」逐字包裹**并指定字体族/字号占比/位置/颜色；单条中文 ≤6 字最稳。一次生成 2-4 张挑文字最干净的。
 
 ### Recipe 1：横版 16:9 南极科考信息图（canonical baseline recipe）
 

@@ -1,6 +1,8 @@
 # Prompt recipes from the 2026-10-25 study
 
-Evidence: [120-request report](../evals/comprehensive-benchmark.md), [per-sample results](../evals/comprehensive-results.json). Pro is always the default unless the user explicitly selects Flash or authorizes replacing Pro with a faster/lower-cost model. A draft, style preset or batch request alone does not change the model.
+> Legacy 5.0 evidence. Current default is Seedream 5.5; start with [5.5 workflows](seedream55-workflows.md). These ratings and model-selection rules are not 5.5 results.
+
+Evidence: [120-request report](../evals/comprehensive-benchmark.md), [per-sample results](../evals/comprehensive-results.json). Seedream 5.5 is the default; Pro/Flash now require explicit selection. A draft, style preset or batch request alone does not change the model.
 
 These are starting points and inspection criteria, not hard model guarantees. The controlled comparisons used two samples per variant/model. Keep the user's actual subject/style rather than copying the test objects into unrelated tasks.
 

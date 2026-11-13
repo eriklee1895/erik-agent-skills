@@ -6,11 +6,11 @@
 #   "pillow>=10.0.0",
 # ]
 # ///
-"""Generate, edit, outpaint, and batch-generate images with Seedream 5.0 Pro (default) / 5.0 Flash
-via the Volcengine Ark API (one shared Pro/Flash endpoint).
+"""Generate, edit, outpaint, and batch-generate images with Seedream 5.5 (default) / legacy 5.0 Pro and Flash
+via the shared Volcengine Ark Images API.
 
 Subcommands:
-  generate         Create a new image from a text prompt (default: Pro / 2K / URL download).
+  generate         Create a new image from a text prompt (default: 5.5 / 2K / URL download).
   edit             Modify an image — supports marker-based region edits (colored-rect protocol),
                    reference-based style transfer, character consistency, and outpainting.
   generate-batch   Run many generation jobs from a JSONL file.
@@ -51,6 +51,7 @@ from PIL import Image, ImageDraw, ImageOps
 # derives from the capability dict.
 # ---------------------------------------------------------------------------
 
+MODEL_55 = "doubao-seedream-5-5-261028"
 MODEL_PRO = "doubao-seedream-5-0-pro-260628"
 MODEL_FLASH = "doubao-seedream-5-0-flash-260915"
 MODEL_PRO_ALIASES = {"pro", "seedream-pro", "5-pro", "seedream-5-pro", "doubao-seedream-5-0-pro"}
@@ -68,13 +69,24 @@ _COMMON_CAPS: dict[str, Any] = {
     "max_refs": 10,
 }
 MODELS: dict[str, dict[str, Any]] = {
+    MODEL_55: {
+        **_COMMON_CAPS,
+        "aliases": {"5.5", "seedream-5.5", "seedream-5-5", "doubao-seedream-5-5"},
+        "label": "Seedream 5.5 (2026-10-28 build)",
+        "optimize_modes": {"standard"},
+        "native_rgba": True,
+        "layer_options": True,
+        "max_layers": 99,
+        "price_per_image": "2026-11-14 list: input CNY0.05 each; output <=2.61MP CNY0.13 / larger CNY0.23, including layers.",
+        "notes": "Default; text/reference to RGBA, stable editing, fine layers and rich-text OCR.",
+    },
     MODEL_PRO: {
         **_COMMON_CAPS,
         "aliases": MODEL_PRO_ALIASES,
         "label": "Seedream 5.0 Pro (2026-06-28 build)",
         "optimize_modes": {"standard", "fast"},
         "price_per_image": "2026-10-24 list: generation <=2.61MP CNY0.30 / larger CNY0.60; layers CNY0.15/0.30",
-        "notes": "Default quality model; standard/fast, coordinate/marker edits, alpha-image editing and layer decomposition.",
+        "notes": "Legacy opt-in; standard/fast, coordinate/marker edits, alpha-image editing and layer decomposition.",
     },
     MODEL_FLASH: {
         **_COMMON_CAPS,
@@ -86,7 +98,7 @@ MODELS: dict[str, dict[str, Any]] = {
     },
 }
 
-DEFAULT_MODEL = MODEL_PRO
+DEFAULT_MODEL = MODEL_55
 DEFAULT_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 DEFAULT_OUTPUT_DIR = "output/seedream-image-gen"
 DEFAULT_OUTPUT_FORMAT = "png"
@@ -117,6 +129,8 @@ class ImageOutput(NamedTuple):
     bounding_box: Optional[dict[str, Any]] = None
     name: Optional[str] = None
     description: Optional[str] = None
+    text_recognition: Optional[dict[str, Any]] = None
+    background: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -201,11 +215,10 @@ def _resolve_model(model_arg: str) -> tuple[str, dict[str, Any]]:
             return mid, caps
 
     # Pass through unknown model id (user might be using a fresh dated version we
-    # haven't registered) — apply Pro defaults but warn.
+    # haven't registered) — apply current default capabilities but warn.
     _warn(
-        f"Unknown model id '{model_arg}'. Using Pro-capability defaults; "
-        f"if this is a newer dated Pro build, things should work. Pass the full id "
-        f"silently if you know what you're doing."
+        f"Unknown model id '{model_arg}'. Using Seedream 5.5 capability defaults; "
+        f"verify this model's API contract before submitting requests."
     )
     return model_arg, MODELS[DEFAULT_MODEL]
 
@@ -652,6 +665,7 @@ def _build_request_body(
     output_format: str, watermark: bool, reference_images: Optional[list[str]],
     optimize_prompt: Optional[str],
     background: str = "opaque", layer_decomposition: bool = False,
+    max_images: Optional[int] = None, text_recognition: bool = False,
 ) -> dict[str, Any]:
     mode = optimize_prompt or "standard"
     if mode not in caps["optimize_modes"]:
@@ -673,6 +687,17 @@ def _build_request_body(
         if not reference_images:
             _die("Layer decomposition requires one reference image.")
         body["layer_decomposition"] = True
+        if max_images is not None or text_recognition:
+            if not caps.get("layer_options"):
+                _die("Layer count control and rich-text OCR require Seedream 5.5.")
+            if max_images is not None and not 2 <= max_images <= 100:
+                _die("--max-images must be 2–100, including the base image.")
+            options: dict[str, Any] = {}
+            if max_images is not None:
+                options["max_images"] = max_images
+            if text_recognition:
+                options["text_recognition"] = True
+            body["layer_decomposition_options"] = options
     else:
         body["background"] = background
     return body
@@ -722,6 +747,7 @@ def _write_metadata(
     marker_rects: Optional[list[str]] = None,
     outpaint_specs: Optional[list[str]] = None,
     reported_size: Optional[str] = None,
+    reported_background: Optional[str] = None,
     elapsed_ms: Optional[int] = None,
     revised_prompt: Optional[str] = None,
     usage: Optional[dict] = None,
@@ -750,6 +776,8 @@ def _write_metadata(
     }
     # Callers pass reference_count explicitly so we don't confuse "single string data URL"
     # (which would give a byte-length len() in Python) with 1 image.
+    if reported_background is not None:
+        meta["reported_background"] = reported_background
     if reported_size:
         meta["reported_size"] = reported_size
     if elapsed_ms is not None:
@@ -880,7 +908,8 @@ async def _generate_single(
             raise _APIError(200, "MissingImage", "API result contains no downloadable image.")
         images.append(ImageOutput(content, item.get("size"), item.get("output_format"),
                                   item.get("z_index"), item.get("bounding_box"),
-                                  item.get("name"), item.get("description")))
+                                  item.get("name"), item.get("description"),
+                                  item.get("text_recognition"), item.get("background")))
         revised_prompt = item.get("revised_prompt") or revised_prompt
     if not images:
         raise _APIError(200, "EmptyImages", "API returned no images; generation will not be replayed.")
@@ -947,8 +976,8 @@ def _cmd_list_models(_args: argparse.Namespace) -> int:
         print()
     print("Default model: " + DEFAULT_MODEL)
     print()
-    print("Use --model <id> (or pro/flash alias) to override. Any other model id is passed through")
-    print("verbatim with Pro-capability defaults (useful for fresh dated Pro builds).")
+    print("Use --model <id> (or 5.5/pro/flash alias) to override. Any other model id is passed through")
+    print("verbatim with 5.5 capability defaults; verify the model contract before use.")
     return 0
 
 
@@ -960,10 +989,10 @@ def _cmd_list_models(_args: argparse.Namespace) -> int:
 def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) -> None:
     """Args shared by generate, edit, and batch (latter uses a subset)."""
     p.add_argument("--model", default=DEFAULT_MODEL,
-                   help=f"Model id or alias (pro|flash). Default: {DEFAULT_MODEL}.")
+                   help=f"Model id or alias (5.5|pro|flash). Default: {DEFAULT_MODEL}.")
     p.add_argument("--size", default=None,
                    help="Image size preset (1K/1.5K/2K) or WIDTHxHEIGHT "
-                        "(e.g. 1792x1024). Default: 2K on both models.")
+                        "(e.g. 1792x1024). Default: 2K.")
     p.add_argument("--output-format", default=DEFAULT_OUTPUT_FORMAT, choices=list(ALLOWED_OUTPUT_FORMATS),
                    help=f"Output image format (default: {DEFAULT_OUTPUT_FORMAT}).")
     p.add_argument("--wechat-header", action="store_true",
@@ -981,12 +1010,12 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) 
     p.add_argument("--phone", "--stories", "--wechat", action="store_true",
                    help="Shorthand for 9:16 phone/Stories/WeChat-UI vertical output "
                         "(1152x2048). Aliases: --stories, --wechat.")
-    p.add_argument("--background", choices=["opaque", "transparent"], default="opaque",
-                   help="Transparent requires exactly one alpha-bearing input and PNG output.")
+    p.add_argument("--background", choices=["opaque", "transparent", "auto"], default="opaque",
+                   help="5.5 supports text or up to 10 references to RGBA; transparent requires PNG.")
     p.add_argument("--watermark", action="store_true",
                    help="Include Seedream watermark (default: off).")
     p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None,
-                   help="Prompt optimization: Pro standard/fast; Flash standard only.")
+                   help="5.5/Flash: standard only; legacy Pro: standard/fast.")
     p.add_argument("--no-auto-upscale", action="store_true",
                    help="Disable auto-upscale for WxH sizes below the model's pixel floor "
                         "(Pro ~0.92MP / 921600). Default: generate at the smallest valid "
@@ -1032,9 +1061,16 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
     background = getattr(args, "background", "opaque")
     if background == "transparent":
         refs_for_alpha = list(getattr(args, "reference_image", []) or [])
-        _validate_transparent_input(refs_for_alpha, args.output_format)
+        if caps.get("native_rgba"):
+            if args.output_format != "png":
+                _die("Transparent generation requires PNG output, not JPEG.")
+        else:
+            _validate_transparent_input(refs_for_alpha, args.output_format)
         if getattr(args, "outpaint", None):
             _die("Transparent editing cannot use the opaque outpaint canvas; edit an alpha layer directly.")
+
+    if background == "auto" and not caps.get("native_rgba"):
+        _die("Automatic background selection requires Seedream 5.5.")
 
     # Prompt
     prompt = _read_prompt(getattr(args, "prompt", None), getattr(args, "prompt_file", None)) \
@@ -1188,7 +1224,7 @@ def _add_generate_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--prompt", "-p", help="Text description for the image.")
     p.add_argument("--prompt-file", help="Read prompt from a UTF-8 file.")
     p.add_argument("--reference-image", action="append", default=[],
-                   help="Reference image path or URL (repeatable; max 10 on Pro/Flash).")
+                   help="Reference image path or URL (repeatable; max 10).")
     p.add_argument("--out", help="Output file path (default: <out-dir>/<ts>-<slug>.<ext>).")
     p.add_argument("--out-dir", default=DEFAULT_OUTPUT_DIR,
                    help=f"Output directory (default: {DEFAULT_OUTPUT_DIR}).")
@@ -1269,7 +1305,7 @@ async def _generate_one(
             web_search=r["web_search"], reference_count=r["reference_count"],
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"), base_url=base_url, dry_run=False,
             marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
-            reported_size=reported_size, elapsed_ms=elapsed_ms,
+            reported_size=reported_size, reported_background=asset.background, elapsed_ms=elapsed_ms,
             revised_prompt=revised_prompt, usage=usage,
             background=r["background"],
         )
@@ -1328,7 +1364,7 @@ async def _generate_concurrent(
                 web_search=r["web_search"], reference_count=r["reference_count"],
                 optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"), base_url=base_url, dry_run=False,
                 marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
-                reported_size=reported_size, elapsed_ms=elapsed_ms,
+                reported_size=reported_size, reported_background=asset.background, elapsed_ms=elapsed_ms,
                 revised_prompt=revised_prompt, usage=usage,
                 background=r["background"],
             )
@@ -1435,11 +1471,11 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--landscape", action="store_true", help="Default to 16:9 horizontal output.")
     p.add_argument("--phone", "--stories", "--wechat", action="store_true",
                    help="Default to 9:16 phone/Stories/WeChat-UI output.")
-    p.add_argument("--background", choices=["opaque", "transparent"], default="opaque",
-                   help="Transparent requires exactly one alpha-bearing input and PNG output.")
+    p.add_argument("--background", choices=["opaque", "transparent", "auto"], default="opaque",
+                   help="5.5 supports text or up to 10 references to RGBA; transparent requires PNG.")
     p.add_argument("--watermark", action="store_true", help="Default watermark on.")
     p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None,
-                   help="Pro standard/fast; Flash standard only.")
+                   help="5.5/Flash standard only; legacy Pro standard/fast.")
     p.add_argument("--no-auto-upscale", action="store_true",
                    help="Disable auto-upscale for sizes below the model pixel floor.")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help=f"Timeout (default: {DEFAULT_TIMEOUT}).")
@@ -1580,7 +1616,7 @@ async def _run_batch(
                         optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
                         base_url=base_url, dry_run=False,
                         marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
-                        reported_size=reported_size, elapsed_ms=elapsed_ms,
+                        reported_size=reported_size, reported_background=asset.background, elapsed_ms=elapsed_ms,
                         revised_prompt=revised_prompt, usage=usage,
                         background=r["background"],
                     )
@@ -1614,6 +1650,8 @@ def _add_decompose_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--output-format", choices=list(ALLOWED_OUTPUT_FORMATS), default="png",
                    help="Base format only; foreground layers are always PNG.")
     p.add_argument("--optimize-prompt", choices=["standard", "fast"], default=None)
+    p.add_argument("--max-images", type=int, help="5.5 only: maximum output count, 2–100 including base (API default: 30).")
+    p.add_argument("--text-recognition", action="store_true", help="5.5 only: return rich-text OCR for regular text layers.")
     p.add_argument("--out-dir", help="Output folder; defaults to a fresh timestamped layers folder.")
     p.add_argument("--watermark", action="store_true")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
@@ -1647,6 +1685,7 @@ def _cmd_decompose(args: argparse.Namespace) -> int:
         model=model, caps=caps, prompt=prompt, size=args.size, output_format=output_format,
         watermark=args.watermark, reference_images=_resolve_reference_images(paths),
         optimize_prompt=args.optimize_prompt, layer_decomposition=True,
+        max_images=args.max_images, text_recognition=args.text_recognition,
     )
     if args.dry_run:
         print(json.dumps(body, ensure_ascii=False, indent=2))
@@ -1670,7 +1709,8 @@ async def _decompose(args: argparse.Namespace, body: dict[str, Any], out_dir: Pa
     indices = [image.z_index for image in images]
     if any(type(index) is not int for index in indices) or indices.count(0) != 1 or len(set(indices)) != len(indices):
         _die("Layer response is missing unique z_index values and one base; do not replay generation automatically.")
-    if any(index < 0 or index > 16 for index in indices):
+    max_layers = MODELS.get(body["model"], MODELS[DEFAULT_MODEL]).get("max_layers", 16)
+    if any(index < 0 or index > max_layers for index in indices):
         _die("Layer response exceeds the documented index range; do not replay generation automatically.")
     planned = []
     for asset in sorted(images, key=lambda image: image.z_index):
@@ -1688,7 +1728,7 @@ async def _decompose(args: argparse.Namespace, body: dict[str, Any], out_dir: Pa
             "file": filename, "z_index": asset.z_index, "output_format": fmt,
             "size": f"{width}x{height}", "reported_size": asset.size,
         }
-        for field in ("bounding_box", "name", "description"):
+        for field in ("bounding_box", "name", "description", "text_recognition", "background"):
             value = getattr(asset, field)
             if value is not None:
                 record[field] = value
@@ -1699,7 +1739,8 @@ async def _decompose(args: argparse.Namespace, body: dict[str, Any], out_dir: Pa
         print(f"Layer: {path}")
     manifest = {
         "model": body["model"], "prompt": body.get("prompt"), "size": body["size"],
-        "layer_decomposition": True, "created_at": _now_iso(), "api_elapsed_ms": api_ms,
+        "layer_decomposition": True, "layer_decomposition_options": body.get("layer_decomposition_options", {}),
+        "created_at": _now_iso(), "api_elapsed_ms": api_ms,
         "usage": {key: usage[key] for key in ("generated_images", "input_images", "output_tokens", "total_tokens")
                   if usage and key in usage},
         "layers": [record for _path, _content, record in planned],
@@ -1718,9 +1759,9 @@ def main() -> int:
     _load_dotenv()
 
     parser = argparse.ArgumentParser(
-        description="Generate and edit images with Seedream 5.0 Pro (default) via Volcengine Ark API.\n"
-                    "Pro ships SOTA Chinese+English text rendering and marker-based region editing.\n"
-                    "Docs: https://www.volcengine.com/docs/82379/1824121",
+        description="Generate and edit images with Seedream 5.5 (default) via Volcengine Ark API.\n"
+                    "Native RGBA, precise editing, layers and rich-text OCR; legacy Pro/Flash opt-in.\n"
+                    "Docs: https://console.volcengine.com/ark/region:cn-beijing/docs/seedream-5-5",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     subparsers = parser.add_subparsers(dest="command", help="Subcommands.")

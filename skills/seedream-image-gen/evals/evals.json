@@ -3,14 +3,14 @@
   "evals": [
     {
       "id": 1,
-      "name": "pro-chinese-poster",
-      "prompt": "用 seedream-image-gen 的默认 Pro 生成2K横版海报，准确写“新绿计划”，奶油白和青绿色，清晰无衬线标题，不加其他文字或水印。保存图片和元数据。",
-      "expected_output": "One PNG and metadata identifying the dated Pro model; visible title is checked manually.",
+      "name": "seedream55-chinese-poster",
+      "prompt": "用 seedream-image-gen 的默认 Seedream 5.5 生成2K横版海报，准确写“新绿计划”，奶油白和青绿色，清晰无衬线标题，不加其他文字或水印。保存图片和元数据。",
+      "expected_output": "One PNG and metadata identifying the dated Seedream 5.5 model; visible title is checked manually.",
       "files": [],
       "assertions": [
         {
-          "name": "default stays Pro",
-          "description": "Metadata model equals doubao-seedream-5-0-pro-260628."
+          "name": "default is 5.5",
+          "description": "Metadata model equals doubao-seedream-5-5-261028."
         },
         {
           "name": "required text is accurate",
@@ -177,6 +177,45 @@
         {
           "name": "download remains cheap",
           "description": "GET retry exhaustion never re-enters generation."
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "text-to-rgba",
+      "prompt": "默认模型从文字生成透明背景的“新绿 STUDIO”标志，下载PNG并检查Alpha。",
+      "expected_output": "Uses 5.5 without an input image, background transparent and PNG; inspect real alpha and text.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "usable artifact",
+          "description": "Uses 5.5 without an input image, background transparent and PNG; inspect real alpha and text."
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "rgb-to-rgba",
+      "prompt": "把普通RGB商品照片中的杯子直接提取成透明PNG。",
+      "expected_output": "5.5 direct edit, without requiring preexisting alpha or mandatory decomposition; inspect contours.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "usable artifact",
+          "description": "5.5 direct edit, without requiring preexisting alpha or mandatory decomposition; inspect contours."
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "ocr-localize",
+      "prompt": "拆分一张英文海报，保留富文本OCR；利用文字行坐标和本地字体把标题改成中文，不调用第二次生图。",
+      "expected_output": "5.5 decompose with max_images 2–100 and text_recognition true; preserve OCR in layers.json, omit old title layer and typeset local replacement in base-coordinate bbox; disclose font approximation.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "usable artifact",
+          "description": "5.5 decompose with max_images 2–100 and text_recognition true; preserve OCR in layers.json, omit old title layer and typeset local replacement in base-coordinate bbox; disclose font approximation."
         }
       ]
     }
