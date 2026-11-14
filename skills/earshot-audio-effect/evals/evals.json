@@ -1,0 +1,256 @@
+{
+  "skill_name": "earshot-audio-effect",
+  "evals": [
+    {
+      "id": 1,
+      "name": "lightweight-runtime",
+      "automated": true,
+      "prompt": "在干净环境用 uv run 启动音效工具，确认只准备CPU音效生成依赖，不装Torch或Transformers。",
+      "expected_output": "doctor成功，固定Earshot 0.3.0/提交，未安装也未加载重型模型库。",
+      "assertions": [
+        "PEP 723入口真实执行成功",
+        "runtime.forbidden_packages与forbidden_modules_loaded均为空",
+        "列出源提交和bank版本"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "dynamic-catalog",
+      "automated": true,
+      "prompt": "找一组适合短转场的Whoosh，先查实际ID和支持的参数，不要凭空编名字。",
+      "expected_output": "动态目录包含201个固定版本音色；按kind/category过滤可用ID与knobs。",
+      "assertions": [
+        "完整目录来自实际bank",
+        "分类过滤不包含其他类别",
+        "每条音色包含支持的knobs"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "whoosh-alignment",
+      "automated": true,
+      "prompt": "给3秒处的镜头移动配一个0.8秒whoosh，声音峰值在源文件0.32秒，使用seed 42。",
+      "expected_output": "交付PCM_24 WAV和元数据，独立读取音频确认长度及5ms RMS峰值；按实测峰值计算放置时间。",
+      "assertions": [
+        "38400帧/48kHz",
+        "实测峰值误差不超过5ms",
+        "start_s+anchor_s=3.0",
+        "WAV哈希与元数据一致"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "repeatable-seed",
+      "automated": true,
+      "prompt": "用同一音色、参数和seed再生成一次，核对是否可以复现。",
+      "expected_output": "两次独立生成WAV的SHA-256相同。",
+      "assertions": [
+        "确实执行两次渲染",
+        "参数和实际seed保留",
+        "文件SHA-256相同"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "resampled-pitch",
+      "automated": true,
+      "prompt": "生成E5的kalimba提示音，总长0.65秒，输出44.1kHz WAV。",
+      "expected_output": "使用支持pitch的pluck配方；交付28665帧PCM并保留音高调整结果。",
+      "assertions": [
+        "输出采样率44100",
+        "文件帧数28665",
+        "音高调整记录被保留",
+        "没有加载音频模型"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "fitted-bank-entry",
+      "automated": true,
+      "prompt": "从bank中的fit类别选一个预置音效并直接生成，不做新录音拟合。",
+      "expected_output": "pure-DSP重建成功，来源信息可查，无Torch/Transformers。",
+      "assertions": [
+        "实际渲染一条fit类型bank音色",
+        "写出可解码非静音PCM",
+        "保持轻量依赖"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "kit-and-cache",
+      "automated": true,
+      "prompt": "给视频准备成套点击、开关、短转场和提示音，然后重复执行，保留实测锚点。",
+      "expected_output": "video-ui kit成功渲染，kit.lock与manifest齐全，重复执行复用缓存。",
+      "assertions": [
+        "所有manifest路径可读",
+        "每个take的实际seed/align/电平与时长保留",
+        "第二次渲染数为0"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "custom-wooden-tap",
+      "automated": true,
+      "prompt": "现成音色不合适，用可编辑的DSP配方设计0.24秒木质轻敲，body_hz=180，seed=17。",
+      "expected_output": "项目配方被执行，WAV和代码hash/参数/seed齐全。",
+      "assertions": [
+        "自定义render函数真实执行",
+        "11520帧/48kHz",
+        "配方hash匹配",
+        "技术检查不被冒充审美评分"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "unsupported-pitch",
+      "automated": true,
+      "prompt": "对whoosh_fast/crisp设置C5音高，若不支持就明确拒绝，不要假装已调音高。",
+      "expected_output": "非零退出并说明拒绝，无误导性输出文件。",
+      "assertions": [
+        "没有偷偷改用另一个音色",
+        "没有输出成功元数据",
+        "无WAV产生"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "preserve-existing-output",
+      "automated": true,
+      "prompt": "输出位置已有文件，未经force不要覆盖。",
+      "expected_output": "保留已有WAV，给出可操作错误。",
+      "assertions": [
+        "非零退出",
+        "原文件字节不变"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "negative-placement",
+      "automated": true,
+      "prompt": "把0.32秒处最强的whoosh对齐到画面0.1秒，说明起点如何处理。",
+      "expected_output": "保留负起点和pre_roll_s，不静默截成0。",
+      "assertions": [
+        "start_s<0",
+        "start_s+anchor_s=0.1",
+        "元数据保留pre-roll"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "invalid-custom-audio",
+      "automated": true,
+      "prompt": "检查一个返回NaN的自定义DSP配方，不要把它写成WAV。",
+      "expected_output": "配方失败明确返回，输出文件不存在。",
+      "assertions": [
+        "拒绝非有限波形",
+        "失败退出",
+        "无WAV或成功sidecar"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "author-new-recipe",
+      "automated": false,
+      "prompt": "用这个skill给卡通小球做一个先弹起再衰减的弹簧boing，长0.6秒，给我两个不同力度候选。预置不够就编写新的项目配方。",
+      "expected_output": "Agent阅读自定义指南，在临时视频项目创建可编辑配方、实际渲染两条候选并交付播放与参数。",
+      "assertions": [
+        "没有改上游安装源码",
+        "没有forge/CLAP或云端打分",
+        "参数变化真实作用于波形",
+        "代码、实际seed、WAV及元数据可追溯",
+        "不把技术通过当作更好听的证明"
+      ],
+      "files": []
+    },
+    {
+      "id": 14,
+      "name": "tune-within-capabilities",
+      "automated": false,
+      "prompt": "把转场做得更短、更柔和，最强一刻对齐画面4.2秒。请自己查适合的音色，不要让我挑DSP参数。",
+      "expected_output": "Agent按需查询实际目录，选择音色并调整支持的参数，使用实测峰值计算放置，不发明warmth之类通用旋钮。",
+      "assertions": [
+        "有真实目录查询",
+        "只有配方支持的控制项",
+        "读取实际PCM元数据后给出放置时间",
+        "交付可试听候选"
+      ],
+      "files": []
+    },
+    {
+      "id": 15,
+      "name": "route-speech-and-scenes",
+      "automated": false,
+      "prompt": "我需要两人对白、雨声环境和BGM的一段完整场景；你可以用Earshot直接根据这句话生成吗？",
+      "expected_output": "解释当前skill适合程序化音效；将完整场景路由到可用的场景音频工具，不尝试用DSP模拟对白或擅自调用付费生成。",
+      "assertions": [
+        "保留Earshot能力边界",
+        "未声称自然语言直接进入Earshot音频模型",
+        "没有为普通音效引入理解或打分模型"
+      ],
+      "files": []
+    },
+    {
+      "id": 16,
+      "name": "hyperframes-handoff",
+      "automated": false,
+      "prompt": "给我的HyperFrames项目做一个按钮声和转场声，按钮动作在2.0秒，转场最强在4.2秒。返回音频资产与可用于时间线的起点；不要修改画面或渲染视频。",
+      "expected_output": "只在项目内生成音频与元数据；按钮按onset、whoosh按peak对齐，交付路径和计算依据。",
+      "assertions": [
+        "产物是独立WAV与metadata",
+        "没有未经请求改HyperFrames项目代码",
+        "没有擅自启动整片混音或发布",
+        "说明单音效电平与最终混音电平不同"
+      ],
+      "files": []
+    },
+    {
+      "id": 17,
+      "name": "resampling-peak-target",
+      "automated": true,
+      "prompt": "把pro_click/glass输出为96kHz、0dBFS峰值；再验证自定义配方的同一输出条件。",
+      "expected_output": "最终重采样后重新归一化，合法请求成功，输出峰值符合目标且没有满幅拒绝。",
+      "assertions": [
+        "bank与custom两条路径都真实生成",
+        "实际PCM峰值符合请求",
+        "不通过放宽削波检查掩盖问题"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "invalid-kit-check",
+      "automated": true,
+      "prompt": "检查缺失kit文件与包含不存在音色的kit，给自动化调用者可靠的失败状态。",
+      "expected_output": "两种无效配置都非零退出且顶层ok为false；有效配置的技术warning单独报告。",
+      "assertions": [
+        "缺失文件非零退出",
+        "无效sound非零退出",
+        "不会把配置失败包装成命令成功"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "resampled-kit",
+      "automated": true,
+      "prompt": "生成96kHz的pro_click/glass Kit，分别使用0dBFS与weight=0.5；重复执行并迁移旧版缓存。",
+      "expected_output": "写PCM前保持有效峰值目标；Kit锁文件和manifest描述最终PCM；有效缓存复用，旧版重采样缓存重新生成。",
+      "assertions": [
+        "Kit与相同实际seed、参数的归一化单音效字节一致",
+        "weighted目标保持",
+        "最终锚点、时长与峰值写回Kit锁文件",
+        "旧缓存不会保留削波产物"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "custom-recipe-diagnostics",
+      "automated": true,
+      "prompt": "执行在模块加载和render函数中打印诊断的自定义配方，保持CLI输出可被程序解析。",
+      "expected_output": "stdout只有合法JSON，配方诊断保留在stderr，实际音频可解码。",
+      "assertions": [
+        "模块与render打印不污染stdout",
+        "诊断未丢失",
+        "实际生成2400帧PCM_24 WAV"
+      ]
+    }
+  ]
+}
