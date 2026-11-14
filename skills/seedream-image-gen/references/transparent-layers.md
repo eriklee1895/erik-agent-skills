@@ -58,7 +58,48 @@ for item in items[1:]:
 base.save("recomposed.png")
 ```
 
+Resizing straight-alpha RGBA with LANCZOS bleeds fully transparent pixels' colors into anti-aliased edges (the official ComfyUI Seedream node premultiplies before scaling). Use this edge-safe variant when crops are enlarged:
+
+```python
+import numpy as np
+
+def resize_premultiplied(crop, size):
+    arr = np.asarray(crop, dtype=np.float32)
+    alpha = arr[..., 3:4] / 255.0
+    arr[..., :3] *= alpha
+    scaled = np.asarray(
+        Image.fromarray(arr.astype(np.uint8), "RGBA").resize(size, Image.Resampling.LANCZOS),
+        dtype=np.float32,
+    )
+    a = scaled[..., 3:4]
+    scaled[..., :3] = np.divide(scaled[..., :3], np.maximum(a / 255.0, 1e-6), where=a > 0)
+    return Image.fromarray(np.clip(scaled, 0, 255).astype(np.uint8), "RGBA")
+```
+
 This reconstructs generated layers, not pixel-identical recovery of the source. Check inpainted background, inter-object shadows, halos, haze and occlusions. PSD packaging and native editable text objects require a downstream tool.
+
+## Measured decomposition failure modes
+
+The base is a **new painting**, not the recovered original — colors, materials and fine detail can shift even where no layer was removed. Independent measured runs (XinYu, five 2K images; this skill's 2026-11-14 poster/product checks) consistently show:
+
+- Fog, smoke and steam never get their own layer and stay baked into the base; misty scenes reassemble like paper cut-outs and objects inside deep fog return as semi-transparent smudges.
+- Cast shadows and lamp light can disappear between layers and base (a lamp may keep only a halo). Plan manual repainting of atmosphere and contact shadows for photoreal scenes.
+- Content is repainted during splitting: water colors shift, leaf angles and outlines move. Layer crop aspect matches its bbox (within about 1–2%) but the crop file is usually larger than the box, so scaling is always required.
+- Inter-layer bleed happens: one object's layer can include strips of a neighboring object or frame; inspect crop edges before reuse.
+- Fit is strong for posters, flat illustration, graphic design and clean-background products, and weak for heavy-shadow/fog/water/glass photography.
+- A text-bearing non-text object does not get OCR: in the live poster split, the round "CAFÉ" badge and the brush calligraphy title returned semantic names but no `text_recognition`, while typeset English and Chinese lines did (matched fonts `Times New Roman` and `汉仪中宋`, colors approximated).
+
+## Grouping variance and prompt hygiene
+
+The model plans each split from the input complexity, the prompt and `max_images`; the docs promise no stability across retries. Native-Ark reruns on the same 2K poster confirm this directly: two identical requests both returned eight outputs but grouped differently (one run merged the cup and tray into a single layer while the other split them) with reordered, reworded `name` strings. Treat the result as one valid decomposition, not a deterministic parse:
+
+- Set `max_images` above the number of elements you explicitly name. A live over-cap probe named 12 distinct elements with `max_images: 6` and got six outputs with HTTP 200 — elements were silently merged into the base or dropped, not rejected. Name what you need, keep the cap generous, and verify every requested element appears in the manifest.
+- Avoid "leave everything else in the base image" phrasing: wrapper tests saw it produce an extra full-frame opaque duplicate layer (and an extra billed output) in most reruns. Name the wanted layers and leave the base unmentioned instead.
+- `name` / `description` language and wording can change across reruns even when the prompt language is fixed; downstream parsers should key on `z_index` and `bounding_box`, not exact name strings, and tolerate missing OCR.
+- Keep `watermark: false` for decomposition (the CLI default). The server stamps "AI 生成" onto every generated image, including individual layer crops; a live seven-layer run with `watermark: true` found the mark on the base and every foreground PNG, including partial marks clipped by crop edges. Recompositing those crops via their bbox scatters shrunken watermark fragments across the middle of the rebuilt canvas.
+- A live PNG-vs-JPEG chain comparison on one edit: routing the previous round through a quality-90 JPEG before re-upload raised protected-region MAE from 1.07 to 1.80 and the changed-`>8`-pixel fraction from 0.25% to 1.39%; the bare JPEG re-encode alone already changes ~0.9% of protected pixels. Keep every chain intermediate as PNG.
+
+For unattended pipelines that must keep artifacts beyond the 24-hour signed-URL window, the documented option is Volcano Engine TOS data subscription, which auto-transfers inference outputs into your own bucket; the CLI instead downloads every asset synchronously and never persists signed URLs.
 
 ## Select and classify layers
 

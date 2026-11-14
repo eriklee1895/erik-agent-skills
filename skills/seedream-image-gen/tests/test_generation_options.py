@@ -148,6 +148,145 @@ class GenerationOptionTests(unittest.TestCase):
                     self.assertEqual(metadata["size"], requested)
                     self.assertFalse(output.exists())
 
+    def test_outpaint_uses_explicit_padded_size_when_canvas_fits_contract(self):
+        source = self.root / "large.png"
+        Image.new("RGB", (1024, 1024), "navy").save(source)
+        status, stdout, error = self.invoke(
+            "edit", "--prompt", "extend left", "--reference-image", str(source),
+            "--outpaint", "left:200", "--dry-run",
+        )
+        self.assertEqual(status, 0, error)
+        self.assertEqual(json.loads(stdout)["size"], "1224x1024")
+
+    def test_outpaint_respects_an_explicit_user_size(self):
+        source = self.root / "large.png"
+        Image.new("RGB", (1024, 1024), "navy").save(source)
+        status, stdout, error = self.invoke(
+            "edit", "--prompt", "extend left", "--reference-image", str(source),
+            "--outpaint", "left:200", "--size", "1K", "--dry-run",
+        )
+        self.assertEqual(status, 0, error)
+        self.assertEqual(json.loads(stdout)["size"], "1K")
+        self.assertNotIn("outside the", error)
+
+    def test_outpaint_dry_run_metadata_records_effective_padded_size(self):
+        source = self.root / "meta.png"
+        Image.new("RGB", (1024, 1024), "navy").save(source)
+        output = self.root / "outpaint-preview.png"
+        status, _, error = self.invoke(
+            "edit", "--prompt", "extend left", "--reference-image", str(source),
+            "--outpaint", "left:200", "--dry-run", "--out", str(output),
+        )
+        self.assertEqual(status, 0, error)
+        metadata = json.loads(output.with_suffix(".json").read_text())
+        self.assertEqual(metadata["size"], "1224x1024")
+
+    def test_outpaint_over_pixel_cap_keeps_preset_and_warns(self):
+        source = self.root / "wide.png"
+        Image.new("RGB", (2816, 1584), "white").save(source)
+        status, stdout, error = self.invoke(
+            "edit", "--prompt", "extend left", "--reference-image", str(source),
+            "--outpaint", "left:400", "--dry-run",
+        )
+        self.assertEqual(status, 0, error)
+        self.assertEqual(json.loads(stdout)["size"], "2K")
+        self.assertIn("outside the", error)
+
+    def test_jpeg_edit_warns_about_chain_artifacts(self):
+        status, _, error = self.invoke(
+            "edit", "--prompt", "recolor", "--reference-image", str(self.reference),
+            "--output-format", "jpeg", "--dry-run",
+        )
+        self.assertEqual(status, 0)
+        self.assertIn("JPEG output", error)
+        status, _, error = self.invoke(
+            "edit", "--prompt", "recolor", "--reference-image", str(self.reference),
+            "--output-format", "png", "--dry-run",
+        )
+        self.assertEqual(status, 0)
+        self.assertNotIn("JPEG output", error)
+
+    def test_prompt_length_nudge_uses_official_guidance_not_hard_limit(self):
+        status, _, error = self.invoke("generate", "--prompt", "短提示词", "--dry-run")
+        self.assertEqual(status, 0)
+        self.assertNotIn("Chinese characters", error)
+        status, _, error = self.invoke("generate", "--prompt", "细节 " * 200, "--dry-run")
+        self.assertEqual(status, 0)
+        self.assertIn("characters", error)
+        self.assertIn("about 300", error)
+
+    def test_prompt_length_warning_covers_english_bilingual_and_kana(self):
+        status, _, error = self.invoke(
+            "generate", "--prompt", " ".join(["word"] * 700), "--dry-run")
+        self.assertEqual(status, 0)
+        self.assertIn("600 English words", error)
+        status, _, error = self.invoke(
+            "generate", "--prompt", "汉字 " * 10 + " ".join(["word"] * 700), "--dry-run")
+        self.assertEqual(status, 0)
+        self.assertIn("600 English words", error)
+        status, _, error = self.invoke("generate", "--prompt", "あ" * 400, "--dry-run")
+        self.assertEqual(status, 0)
+        self.assertIn("CJK/kana/hangul", error)
+
+    def test_outpaint_under_floor_keeps_tier_and_warns(self):
+        source = self.root / "small.png"
+        Image.new("RGB", (800, 800), "white").save(source)
+        status, stdout, error = self.invoke(
+            "edit", "--prompt", "extend left", "--reference-image", str(source),
+            "--outpaint", "left:100", "--dry-run",
+        )
+        self.assertEqual(status, 0, error)
+        self.assertEqual(json.loads(stdout)["size"], "2K")
+        self.assertIn("outside the", error)
+
+    def test_outpaint_with_marker_keeps_padded_size(self):
+        source = self.root / "marked.png"
+        Image.new("RGB", (1024, 1024), "teal").save(source)
+        status, stdout, error = self.invoke(
+            "edit", "--prompt", "extend left and recolor the box",
+            "--reference-image", str(source),
+            "--outpaint", "left:200", "--marker-rect", "10%,10%,30%,30%", "--dry-run",
+        )
+        self.assertEqual(status, 0, error)
+        self.assertEqual(json.loads(stdout)["size"], "1224x1024")
+
+    def test_batch_phone_shortcut_falls_back_to_cli_default(self):
+        jobs = self.jobs("phone", [{"prompt": "scene one"}])
+        status, stdout, error = self.invoke(
+            "generate-batch", "--input", str(jobs), "--phone", "--dry-run",
+        )
+        self.assertEqual(status, 0, error)
+        decoder = json.JSONDecoder()
+        start = stdout.find("{")
+        body = decoder.raw_decode(stdout[start:])[0]
+        self.assertEqual(body["size"], "1152x2048")
+
+    def test_batch_non_string_safety_identifier_fails_cleanly(self):
+        jobs = self.jobs("badsafety", [{"prompt": "scene", "safety_identifier": 12345}])
+        status, _, error = self.invoke("generate-batch", "--input", str(jobs), "--dry-run")
+        self.assertNotEqual(status, 0)
+        self.assertIn("safety-identifier", error)
+
+    def test_batch_per_job_safety_identifier_overrides_cli_default(self):
+        jobs = self.jobs("safety", [
+            {"prompt": "scene one", "safety_identifier": "job-user-9"},
+            {"prompt": "scene two"},
+        ])
+        status, stdout, error = self.invoke(
+            "generate-batch", "--input", str(jobs), "--dry-run",
+            "--safety-identifier", "batch-default-1",
+        )
+        self.assertEqual(status, 0, error)
+        decoder = json.JSONDecoder()
+        bodies = []
+        for segment in stdout.split("--- Job"):
+            start = segment.find("{")
+            if start >= 0:
+                bodies.append(decoder.raw_decode(segment[start:])[0])
+        self.assertEqual(len(bodies), 2)
+        self.assertEqual(bodies[0]["safety_identifier"], "job-user-9")
+        self.assertEqual(bodies[1]["safety_identifier"], "batch-default-1")
+
 
 if __name__ == "__main__":
     unittest.main()

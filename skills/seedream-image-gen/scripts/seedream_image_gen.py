@@ -161,6 +161,19 @@ def _looks_chinese(text: str) -> bool:
     return cjk >= 2
 
 
+def _prompt_length_warning(prompt: str) -> Optional[str]:
+    """Official guidance is about 300 Chinese characters or 600 English words."""
+    cjk = sum(1 for ch in prompt if "一" <= ch <= "鿿" or "぀" <= ch <= "ヿ" or "가" <= ch <= "힣")
+    words = len(prompt.split())
+    if cjk >= 300:
+        return f"Prompt contains {cjk} CJK/kana/hangul characters; official guidance is about 300. Longer prompts may drop elements."
+    if words >= 600:
+        return f"Prompt contains {words} whitespace-separated words; official guidance is about 600 English words. Longer prompts may drop elements."
+    if len(prompt) >= 2000:
+        return f"Prompt is {len(prompt)} characters long; official guidance is about 300 Chinese characters or 600 English words. Longer prompts may drop elements."
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Model resolution
 # ---------------------------------------------------------------------------
@@ -174,6 +187,20 @@ def _resolve_model(model_arg: str) -> tuple[str, dict[str, Any]]:
         return MODEL_55, caps
     _die(f"This skill only supports Seedream 5.5 ({MODEL_55}); unsupported model: {model_arg!r}. No request was submitted.")
     raise AssertionError("unreachable")
+
+
+def _validate_safety_identifier(value: Optional[str]) -> Optional[str]:
+    """Validate the optional end-user compliance id (ASCII, <=64 chars)."""
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        _die("--safety-identifier must be a single ASCII string of at most 64 characters; hash the user id or email and never put PII in it.")
+    value = value.strip()
+    if not value:
+        return None
+    if len(value) > 64 or not value.isascii() or any(ch.isspace() for ch in value):
+        _die("--safety-identifier must be a single ASCII string of at most 64 characters; hash the user id or email and never put PII in it.")
+    return value
 
 
 # ---------------------------------------------------------------------------
@@ -209,22 +236,11 @@ def _get_api_settings() -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 
 
-_SIZE_STRING_PIXELS: dict[str, int] = {
-    # Resolutions here are nominal buckets — the server picks the exact pixel
-    # dimensions. We only need total pixels for client-side range validation.
-    "1K": 1_048_576,   # ~1MP, 1024²
-    "1.5K": 2_359_296,
-    "2K": 4_194_304,   # ~4MP, 2048²
-    "3K": 9_437_184,   # ~9MP, 3072²
-    "4K": 16_777_216,  # 16MP, 4096²
-}
-
-
 def _apply_size_shortcuts(
     size: Optional[str], wechat_header: bool, square: bool, wide: bool,
     portrait: bool, landscape: bool, phone: bool, caps: dict[str, Any],
 ) -> str:
-    """Both active models share the same explicit-size bounds and shortcuts."""
+    """Apply size convenience flags for the single supported model."""
     if phone:
         return "1152x2048"
     if wechat_header or wide:
@@ -255,13 +271,6 @@ def _validate_size(
     if size_upper in caps["size_strings"]:
         return (0, 0)  # preset, server resolves
 
-    # Common shortcuts
-    if size_upper == "1K" and size_upper not in caps["size_strings"]:
-        _die(
-            f"Size '1K' is not supported by model {model_id}. "
-            f"Allowed presets: {sorted(caps['size_strings'])}. "
-            f"Use an explicit WxH (e.g. 2560x1440) or pick a larger preset."
-        )
     if size_upper in {"3K", "4K"} and size_upper not in caps["size_strings"]:
         _die(
             f"Size '{size_upper}' is not supported by model {model_id}. "
@@ -601,6 +610,7 @@ def _build_request_body(
     optimize_prompt: Optional[str],
     background: str = "opaque", layer_decomposition: bool = False,
     max_images: Optional[int] = None, text_recognition: bool = False,
+    safety_identifier: Optional[str] = None,
 ) -> dict[str, Any]:
     mode = optimize_prompt or "standard"
     if mode not in caps["optimize_modes"]:
@@ -633,6 +643,8 @@ def _build_request_body(
             body["layer_decomposition_options"] = options
     else:
         body["background"] = background
+    if safety_identifier:
+        body["safety_identifier"] = safety_identifier
     return body
 
 
@@ -671,7 +683,6 @@ def _write_metadata(
     size: str,
     output_format: str,
     watermark: bool,
-    web_search: bool,
     reference_count: int,
     optimize_prompt: Optional[str],
     base_url: str,
@@ -694,12 +705,9 @@ def _write_metadata(
         "size": size,
         "output_format": output_format,
         "watermark": watermark,
-        "web_search": False,
         "background": background,
         "optimize_prompt": optimize_prompt,
         "reference_images_count": reference_count,
-        # Don't persist data URLs — they're huge and can contain secrets-adjacent material
-        "reference_images_are_data_urls": None,  # populated below only when refs exist
         "marker_rects": marker_rects or [],
         "outpaint": outpaint_specs or [],
         "base_url": base_url,
@@ -946,6 +954,9 @@ def _add_common_gen_args(p: argparse.ArgumentParser, *, include_variants: bool) 
                    help="5.5 supports text or up to 10 references to RGBA; transparent requires PNG.")
     p.add_argument("--watermark", action="store_true",
                    help="Include Seedream watermark (default: off).")
+    p.add_argument("--safety-identifier", default=None,
+                   help="Optional hashed end-user id (single ASCII token, <=64 chars) sent as "
+                        "safety_identifier for platform abuse monitoring. Not written to local metadata.")
     p.add_argument("--optimize-prompt", choices=["standard"], default=None,
                    help="Seedream 5.5 supports standard optimization only.")
     p.add_argument("--no-auto-upscale", action="store_true",
@@ -1002,6 +1013,10 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         if require_prompt else ""
     if len(prompt) > MAX_PROMPT_CHARS:
         _warn("Very long prompt: the official guide recommends concise prompts (about 300 Chinese characters or 600 English words).")
+    else:
+        length_note = _prompt_length_warning(prompt)
+        if length_note:
+            _warn(length_note)
 
     # Reference images (used by both generate (optional) and edit (required))
     ref_paths = list(getattr(args, "reference_image", []) or [])
@@ -1030,6 +1045,28 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
             prompt,
             (OUTPAINT_FILL_ZH if _looks_chinese(prompt) else OUTPAINT_FILL_EN).format(aspect_word=aspect_word),
         )
+        # A preset size lets the server normalize dimensions, so the extension
+        # is rescaled instead of truly adding the padded pixels. Switch to an
+        # explicit size when no size was explicitly chosen and the padded
+        # canvas fits the native contract.
+        size_chosen_explicitly = bool(
+            getattr(args, "size", None)
+            or any(getattr(args, flag, False) for flag in
+                   ("wechat_header", "square", "wide", "portrait", "landscape", "phone"))
+        )
+        if wh == (0, 0) and not size_chosen_explicitly:
+            padded_w, padded_h = new_dims
+            padded_pixels = padded_w * padded_h
+            padded_aspect = max(new_dims) / min(new_dims)
+            if caps["pixel_min"] <= padded_pixels <= caps["pixel_max"] and padded_aspect <= caps["aspect_max"]:
+                size = f"{padded_w}x{padded_h}"
+                downscale_to = None
+            else:
+                _warn(
+                    f"Padded canvas {padded_w}x{padded_h} ({padded_pixels:,} px) is outside the "
+                    f"{caps['pixel_min']:,}-{caps['pixel_max']:,} px / {caps['aspect_max']}:1 contract; "
+                    f"keeping size {size!r}, so the output follows that resolution tier rather than the padded dimensions."
+                )
 
     # Marker rectangles — draw on the reference image and append cleanup suffix.
     if marker_specs:
@@ -1110,9 +1147,13 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
     if n < 1 or n > DEFAULT_MAX_N:
         _die(f"--n must be 1-{DEFAULT_MAX_N} (got {n}).")
 
+    safety_identifier = _validate_safety_identifier(getattr(args, "safety_identifier", None))
+
     output_format = args.output_format
     if output_format == "jpg":
         output_format = "jpeg"
+    if output_format == "jpeg" and ref_paths:
+        _warn("JPEG output on an edit/reference call adds compression artifacts; keep edit-chain intermediates as PNG and export JPEG only for final delivery.")
 
     return {
         "model_id": model_id,
@@ -1122,7 +1163,6 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         "requested_size": requested_size,
         "output_format": output_format,
         "watermark": bool(args.watermark),
-        "web_search": False,
         "background": background,
         "optimize_prompt": args.optimize_prompt,
         "downscale_to": downscale_to,
@@ -1136,6 +1176,7 @@ def _resolve_common(args: argparse.Namespace, *, require_prompt: bool = True) ->
         "timeout": int(args.timeout),
         "dry_run": bool(args.dry_run),
         "force": bool(args.force),
+        "safety_identifier": safety_identifier,
     }
 
 
@@ -1163,7 +1204,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
         output_format=r["output_format"], watermark=r["watermark"],
         reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-        background=r["background"],
+        background=r["background"], safety_identifier=r.get("safety_identifier"),
     )
 
     out = getattr(args, "out", None)
@@ -1175,9 +1216,13 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         print(json.dumps(body, ensure_ascii=False, indent=2))
         # Best-effort dry-run metadata path
         image_path = _make_output_path(r["prompt"], out, out_dir, r["output_format"])
+        preview_size = (
+            f"{r['downscale_to'][0]}x{r['downscale_to'][1]}"
+            if r.get("downscale_to") else r["size"]
+        )
         _write_metadata(
-            image_path, prompt=r["prompt"], model=r["model_id"], size=r["requested_size"],
-            output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
+            image_path, prompt=r["prompt"], model=r["model_id"], size=preview_size,
+            output_format=r["output_format"], watermark=r["watermark"],
             reference_count=len(r.get("reference_image_paths", []) or []) or (1 if r["reference_images"] else 0),
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
             base_url=DEFAULT_BASE_URL, dry_run=True,
@@ -1227,7 +1272,7 @@ async def _generate_one(
             image_path,
             prompt=r["prompt"], model=r["model_id"], size=meta_size,
             output_format=r["output_format"], watermark=r["watermark"],
-            web_search=r["web_search"], reference_count=r["reference_count"],
+            reference_count=r["reference_count"],
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"), base_url=base_url, dry_run=False,
             marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
             reported_size=reported_size, reported_background=asset.background, elapsed_ms=elapsed_ms,
@@ -1286,7 +1331,7 @@ async def _generate_concurrent(
                 image_path,
                 prompt=r["prompt"], model=r["model_id"], size=meta_size,
                 output_format=r["output_format"], watermark=r["watermark"],
-                web_search=r["web_search"], reference_count=r["reference_count"],
+                reference_count=r["reference_count"],
                 optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"), base_url=base_url, dry_run=False,
                 marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
                 reported_size=reported_size, reported_background=asset.background, elapsed_ms=elapsed_ms,
@@ -1347,7 +1392,7 @@ def _cmd_edit(args: argparse.Namespace) -> int:
         model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
         output_format=r["output_format"], watermark=r["watermark"],
         reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-        background=r["background"],
+        background=r["background"], safety_identifier=r.get("safety_identifier"),
     )
 
     out = getattr(args, "out", None)
@@ -1356,9 +1401,13 @@ def _cmd_edit(args: argparse.Namespace) -> int:
     if r["dry_run"]:
         print(json.dumps(body, ensure_ascii=False, indent=2))
         image_path = _make_output_path(r["prompt"], out, out_dir, r["output_format"])
+        preview_size = (
+            f"{r['downscale_to'][0]}x{r['downscale_to'][1]}"
+            if r.get("downscale_to") else r["size"]
+        )
         _write_metadata(
-            image_path, prompt=r["prompt"], model=r["model_id"], size=r["requested_size"],
-            output_format=r["output_format"], watermark=r["watermark"], web_search=r["web_search"],
+            image_path, prompt=r["prompt"], model=r["model_id"], size=preview_size,
+            output_format=r["output_format"], watermark=r["watermark"],
             reference_count=r["reference_count"],
             optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
             base_url=DEFAULT_BASE_URL, dry_run=True,
@@ -1399,6 +1448,8 @@ def _add_batch_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--background", choices=["opaque", "transparent", "auto"], default="opaque",
                    help="5.5 supports text or up to 10 references to RGBA; transparent requires PNG.")
     p.add_argument("--watermark", action="store_true", help="Default watermark on.")
+    p.add_argument("--safety-identifier", default=None,
+                   help="Optional hashed end-user id (single ASCII token, <=64 chars); per-job JSONL overrides this default.")
     p.add_argument("--optimize-prompt", choices=["standard"], default=None,
                    help="Seedream 5.5 supports standard optimization only.")
     p.add_argument("--no-auto-upscale", action="store_true",
@@ -1461,6 +1512,7 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         ns.portrait = bool(job.get("portrait", args.portrait))
         ns.landscape = bool(job.get("landscape", args.landscape))
         ns.watermark = bool(job.get("watermark", args.watermark))
+        ns.safety_identifier = job.get("safety_identifier", getattr(args, "safety_identifier", None))
         ns.optimize_prompt = job.get("optimize_prompt", args.optimize_prompt)
         ns.background = job.get("background", args.background)
         ns.no_auto_upscale = bool(job.get("no_auto_upscale", getattr(args, "no_auto_upscale", False)))
@@ -1481,14 +1533,14 @@ def _cmd_batch(args: argparse.Namespace) -> int:
         ns.force = bool(args.force)
         ns.out = None
         # Size shortcuts
-        ns.phone = bool(job.get("phone", False))
+        ns.phone = bool(job.get("phone", getattr(args, "phone", False)))
 
         r = _resolve_common(ns, require_prompt=True)
         body = _build_request_body(
             model=r["model_id"], caps=r["caps"], prompt=r["prompt"], size=r["size"],
             output_format=r["output_format"], watermark=r["watermark"],
             reference_images=r["reference_images"], optimize_prompt=r["optimize_prompt"],
-            background=r["background"],
+            background=r["background"], safety_identifier=r.get("safety_identifier"),
         )
         bodies.append((job["prompt"], body, r))
 
@@ -1537,7 +1589,7 @@ async def _run_batch(
                         image_path,
                         prompt=prompt, model=body["model"], size=meta_size,
                         output_format=r["output_format"], watermark=body.get("watermark", False),
-                        web_search="tools" in body, reference_count=r["reference_count"],
+                        reference_count=r["reference_count"],
                         optimize_prompt=body.get("optimize_prompt_options", {}).get("mode"),
                         base_url=base_url, dry_run=False,
                         marker_rects=r["marker_specs"], outpaint_specs=r["outpaint_specs"],
@@ -1579,6 +1631,8 @@ def _add_decompose_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--text-recognition", action="store_true", help="Return rich-text OCR for regular text layers.")
     p.add_argument("--out-dir", help="Output folder; defaults to a fresh timestamped layers folder.")
     p.add_argument("--watermark", action="store_true")
+    p.add_argument("--safety-identifier", default=None,
+                   help="Optional hashed end-user id (single ASCII token, <=64 chars).")
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--force", action="store_true")
@@ -1611,6 +1665,7 @@ def _cmd_decompose(args: argparse.Namespace) -> int:
         watermark=args.watermark, reference_images=_resolve_reference_images(paths),
         optimize_prompt=args.optimize_prompt, layer_decomposition=True,
         max_images=args.max_images, text_recognition=args.text_recognition,
+        safety_identifier=_validate_safety_identifier(args.safety_identifier),
     )
     if args.dry_run:
         print(json.dumps(body, ensure_ascii=False, indent=2))

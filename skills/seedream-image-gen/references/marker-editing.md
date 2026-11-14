@@ -2,6 +2,8 @@
 
 Prefer natural-language targeting or prompt `<bbox>` / `<point>` tags when the intended region is clear. A visible marker can help identify ambiguous regions, but it changes the reference itself and may leave residue. It does not impose a hard pixel mask.
 
+The editing contract also understands freehand arrows, circles and scribbles drawn yourself on the reference, not just the CLI's rectangles — describe each mark's meaning in the prompt and always end with an explicit “remove all marker lines/sketches” instruction. Marker leakage is the most common beginner failure: without the cleanup sentence, colored strokes tend to survive into the output. The CLI's auto-appended cleanup wording covers its own rectangles; self-drawn marks need the sentence in your own prompt.
+
 ```bash
 uv run scripts/seedream_image_gen.py edit --reference-image poster.png \
   --marker-rect '5%,6%,90%,20%' \
