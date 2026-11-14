@@ -93,6 +93,28 @@ class Seedream55ContractTests(unittest.TestCase):
         self.assertTrue((output / 'layer-018.png').is_file())
         self.assertNotIn('b64_json', (output / 'layers.json').read_text())
 
+    def test_safety_identifier_is_sent_on_every_operation_but_never_persisted(self):
+        for command, extra in (
+            ('generate', ['--prompt', 'logo']),
+            ('edit', ['--prompt', 'recolor', '--reference-image', str(self.reference)]),
+            ('decompose', ['--reference-image', str(self.reference)]),
+        ):
+            with self.subTest(command=command):
+                code, out, err = self.invoke(command, '--safety-identifier', 'hashed-user-001',
+                                             '--dry-run', *extra)
+                self.assertEqual(code, 0, err)
+                self.assertEqual(json.loads(out)['safety_identifier'], 'hashed-user-001')
+        for bad in ('has space', 'x' * 65, 'tab\tname', '用户哈希值'):
+            code, _, _ = self.invoke('generate', '--prompt', 'logo', '--safety-identifier', bad, '--dry-run')
+            self.assertNotEqual(code, 0)
+        output = self.root / 'compliance.png'
+        code, _, err = self.invoke('generate', '--prompt', 'logo',
+                                   '--safety-identifier', 'hashed-user-001', '--dry-run', '--out', str(output))
+        self.assertEqual(code, 0, err)
+        metadata = json.loads(output.with_suffix('.json').read_text())
+        self.assertNotIn('safety_identifier', metadata)
+        self.assertNotIn('web_search', metadata)
+
     def test_auto_response_background_is_recorded(self):
         original = self.respond
         def response(request):
