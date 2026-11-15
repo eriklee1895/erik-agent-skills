@@ -61,28 +61,21 @@ MAX_IMAGE_SIDE_PX = 6000
 IMAGE_RATIO_MIN = 0.4
 IMAGE_RATIO_MAX = 2.5
 
-# Seedance 2.5 + 2.0 (same /contents/generations/tasks API; model-specific limits).
-# - 2.5 (260628): GA 2026-08-07. 480p/720p/1080p (1080p=10-bit HEVC), 4–30s, mp4+mov.
-#   No 4k. No fast/mini sibling. Audio-only reference allowed. Up to 50 refs.
-# - 2.0 Standard (260128): 4k/1080p/720p/480p, 4–15s, mp4 only. Unique 4k path.
-# - 2.0 Fast (260128): 720p/480p only. Same token count as standard at
-#   identical params (measured 40,594 at 4s 480p for standard/fast/mini);
-#   the saving is the lower per-token UNIT PRICE (list 37 vs 46 元/M tokens),
-#   never lower token consumption.
-# - 2.0 Mini (260615): 720p/480p only; cheapest unit price for bulk work
-#   (list 23 vs 46 元/M tokens), same token count at identical params.
+# Seedance 2.5 family, official API/docs checked 2026-11-15.
+# Both: 4–30s, mp4/mov, audio-only references, edit/extend.
+# Standard: up to 1080p and Draft. Flash: up to 720p, no Draft.
 MODEL_2_5 = "doubao-seedance-2-5-260628"
-MODEL_2_0 = "doubao-seedance-2-0-260128"
-MODEL_2_0_FAST = "doubao-seedance-2-0-fast-260128"
-MODEL_2_0_MINI = "doubao-seedance-2-0-mini-260615"
+MODEL_2_5_FLASH = "doubao-seedance-2-5-flash-261115"
 DEFAULT_MODEL = MODEL_2_5
 
-VALID_MODELS = {MODEL_2_5, MODEL_2_0, MODEL_2_0_FAST, MODEL_2_0_MINI}
-MODELS_2_5 = {MODEL_2_5}
-NO_1080P_MODELS = {MODEL_2_0_FAST, MODEL_2_0_MINI}
-NO_4K_MODELS = {MODEL_2_0_FAST, MODEL_2_0_MINI, MODEL_2_5}
+VALID_MODELS = {MODEL_2_5, MODEL_2_5_FLASH}
+MODELS_2_5 = VALID_MODELS
+MODEL_RESOLUTIONS = {
+    MODEL_2_5: {"480p", "720p", "1080p"},
+    MODEL_2_5_FLASH: {"480p", "720p"},
+}
 VALID_RATIOS = {"16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"}
-VALID_RESOLUTIONS = {"480p", "720p", "1080p", "4k"}
+VALID_RESOLUTIONS = {"480p", "720p", "1080p"}
 VALID_OUTPUT_FORMATS = {"mp4", "mov"}
 VALID_OMNI_TASK_TYPES = {"auto", "reference", "edit", "extend"}
 SUPPORTED_IMAGE_ROLES = {"first_frame", "last_frame", "reference_image"}
@@ -91,8 +84,10 @@ SUPPORTED_AUDIO_ROLES = {"reference_audio"}
 IMAGE_EXTS = {"png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff", "heic", "heif"}
 VIDEO_EXTS = {"mp4", "mov"}
 AUDIO_EXTS = {"mp3", "wav"}
-MEDIA_LIMITS_2_0 = {"image": 9, "video": 3, "audio": 3, "total": 15}
 MEDIA_LIMITS_2_5 = {"image": 30, "video": 10, "audio": 10, "total": 50}
+MEDIA_LIMITS_2_5_FLASH = {"image": 10, "video": 5, "audio": 5, "total": 20}
+# 2026-10-28 10:00 UTC+8: newly created Draft IDs became valid for 14 days.
+DRAFT_VALIDITY_CUTOVER = int(dt.datetime(2026, 10, 28, 2, tzinfo=dt.timezone.utc).timestamp())
 
 # --- Validation helpers (shared between build_payload and build_payload_from_shot) ---
 
@@ -101,11 +96,13 @@ def is_seedance_25(model: str) -> bool:
 
 
 def max_duration_for_model(model: str) -> int:
-    return 30 if is_seedance_25(model) else 15
+    validate_model(model)
+    return 30
 
 
 def media_limits_for_model(model: str) -> dict[str, int]:
-    return MEDIA_LIMITS_2_5 if is_seedance_25(model) else MEDIA_LIMITS_2_0
+    validate_model(model)
+    return MEDIA_LIMITS_2_5_FLASH if model == MODEL_2_5_FLASH else MEDIA_LIMITS_2_5
 
 
 def validate_model(model: str) -> None:
@@ -114,7 +111,7 @@ def validate_model(model: str) -> None:
 
 def validate_duration(duration: int, model: str) -> None:
     max_d = max_duration_for_model(model)
-    if duration != -1 and not (4 <= duration <= max_d):
+    if type(duration) is not int or (duration != -1 and not (4 <= duration <= max_d)):
         raise SystemExit(
             f"Error: duration for '{model}' must be between 4 and {max_d}, or -1 for adaptive."
         )
@@ -124,22 +121,12 @@ def validate_ratio(ratio: str) -> None:
         raise SystemExit(f"Error: unsupported ratio '{ratio}'. Valid: {sorted(VALID_RATIOS)}")
 
 def validate_resolution(model: str, resolution: str) -> None:
-    if resolution not in VALID_RESOLUTIONS:
-        raise SystemExit(f"Error: unsupported resolution '{resolution}'. Valid: {sorted(VALID_RESOLUTIONS)}")
-    if resolution == "4k" and model in NO_4K_MODELS:
-        if is_seedance_25(model):
-            raise SystemExit(
-                f"Error: model '{model}' does not support 4k (max 1080p, 10-bit HEVC). "
-                f"Use --model {MODEL_2_0} for 4k, or --resolution 1080p."
-            )
+    validate_model(model)
+    if resolution not in MODEL_RESOLUTIONS[model]:
         raise SystemExit(
-            f"Error: model '{model}' does not support 4k (capped at 720p). "
-            f"Use --resolution 720p or 480p."
-        )
-    if resolution == "1080p" and model in NO_1080P_MODELS:
-        raise SystemExit(
-            f"Error: model '{model}' does not support 1080p (capped at 720p). "
-            f"Use --resolution 720p or 480p."
+            f"Error: model '{model}' does not support resolution '{resolution}'. "
+            f"Supported: {sorted(MODEL_RESOLUTIONS[model])}. "
+            "No model in this skill supports 4k; do not silently change the requested model."
         )
 
 
@@ -151,9 +138,9 @@ def resolve_resolution(resolution: str | None, draft: bool) -> str:
 def validate_draft(model: str, draft: bool, resolution: str) -> None:
     if not draft:
         return
-    if not is_seedance_25(model):
+    if model != MODEL_2_5:
         raise SystemExit(
-            f"Error: Draft mode is Seedance 2.5 only. Use --model {MODEL_2_5}."
+            f"Error: Draft mode requires Seedance 2.5 standard ({MODEL_2_5}); flash does not support Draft."
         )
     if resolution != "480p":
         raise SystemExit(
@@ -250,11 +237,12 @@ def add_media_to_content(
 
 
 def check_total_body_size(content: list[dict[str, Any]], raw_bytes: int) -> None:
-    """Hard-fail if estimated request body exceeds the 60 MB safety margin (official 64 MB)."""
-    if raw_bytes <= 0:
-        return
-    # base64 inflates ~33%; +50 bytes per data URL prefix.
-    estimated_body = raw_bytes * 4 // 3 + 50 * sum(1 for c in content if c.get("type") != "text")
+    """Measure encoded content, including pre-encoded data URLs and prompt text.
+
+    The 60 MB guard leaves room for the remaining fields under the official
+    64 MB request limit. raw_bytes is retained for existing positional callers.
+    """
+    estimated_body = len(json.dumps(content, ensure_ascii=False).encode("utf-8"))
     if estimated_body > MAX_BODY_BYTES:
         mb = estimated_body / 1024 / 1024
         raise SystemExit(
@@ -414,6 +402,10 @@ def validate_mode_constraints(content: list[dict[str, Any]], model: str) -> None
         raise SystemExit(
             "Error: first/last frame mode and reference mode are mutually exclusive."
         )
+    first_count = roles.count("first_frame")
+    last_count = roles.count("last_frame")
+    if first_count > 1 or last_count > 1 or (last_count and not first_count):
+        raise SystemExit("Error: frame mode requires exactly one first_frame and at most one last_frame.")
     images = [r for r in roles if r in SUPPORTED_IMAGE_ROLES]
     videos = [r for r in roles if r in SUPPORTED_VIDEO_ROLES]
     audios = [r for r in roles if r in SUPPORTED_AUDIO_ROLES]
@@ -434,13 +426,7 @@ def validate_mode_constraints(content: list[dict[str, Any]], model: str) -> None
         raise SystemExit(
             f"Error: total reference media must be <= {limits['total']} for '{model}'."
         )
-    # 2.5 audio-only is allowed by Ark (live 2026-09-03: create+succeeded).
-    # 2.0 still requires at least one image or video alongside audio.
-    if audios and not (images or videos) and not is_seedance_25(model):
-        raise SystemExit(
-            "Error: Seedance 2.0 audio reference requires at least one image or video. "
-            f"Use --model {MODEL_2_5} for audio-only reference."
-        )
+    # Both supported models allow audio-only references.
 
 
 def validate_25_task_params(
@@ -535,8 +521,8 @@ def build_promote_draft_payload(
     """
     if not draft_task_id.strip():
         raise SystemExit("Error: --task-id must be a non-empty Draft task ID.")
-    if not is_seedance_25(model):
-        raise SystemExit("Error: only Seedance 2.5 Draft tasks can be promoted.")
+    if model != MODEL_2_5:
+        raise SystemExit("Error: only Seedance 2.5 standard Draft tasks can be promoted; flash has no Draft mode.")
     if output_format is not None and output_format not in VALID_OUTPUT_FORMATS:
         raise SystemExit(
             f"Error: unsupported output_format '{output_format}'. Valid: {sorted(VALID_OUTPUT_FORMATS)}"
@@ -557,6 +543,10 @@ def build_promote_draft_payload(
     if priority is not None:
         payload["priority"] = priority
     return payload
+
+
+def draft_validity_seconds(created_at: float) -> int:
+    return (14 if created_at >= DRAFT_VALIDITY_CUTOVER else 7) * 86400
 
 
 def _image_mime(ext: str) -> str:
@@ -641,6 +631,8 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
     if args.return_last_frame:
         payload["return_last_frame"] = True
     if args.priority is not None:
+        if not 0 <= args.priority <= 9:
+            raise SystemExit("Error: --priority must be between 0 and 9.")
         payload["priority"] = args.priority
     if args.enable_web_search:
         payload["tools"] = [{"type": "web_search"}]
@@ -942,7 +934,6 @@ async def _wait_download_and_record(
 
 
 async def cmd_generate_async(args: argparse.Namespace) -> int:
-    api_key, base_url = get_auth()
     payload = build_payload(args)
 
     prompt = payload["content"][0]["text"]
@@ -968,6 +959,7 @@ async def cmd_generate_async(args: argparse.Namespace) -> int:
         print(f"Manifest: {manifest_path}")
         return 0
 
+    api_key, base_url = get_auth()
     async with httpx.AsyncClient() as client:
         print(f"Creating task at {base_url} ...")
         task = await _create_task_async(client, api_key, base_url, payload)
@@ -986,11 +978,11 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
 
 def cmd_create(args: argparse.Namespace) -> int:
-    api_key, base_url = get_auth()
     payload = build_payload(args)
     if args.dry_run:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
+    api_key, base_url = get_auth()
     async def _run():
         async with httpx.AsyncClient() as client:
             return await _create_task_async(client, api_key, base_url, payload)
@@ -1024,8 +1016,9 @@ async def cmd_promote_draft_async(args: argparse.Namespace) -> int:
         if source.get("draft") is not True:
             raise SystemExit(f"Error: task {args.task_id} is not a Draft task.")
         created_at = source.get("created_at")
-        if isinstance(created_at, (int, float)) and time.time() - created_at >= 7 * 86400:
-            raise SystemExit("Error: Draft task ID has expired after 7 days; create a new Draft task.")
+        if isinstance(created_at, (int, float)) and time.time() - created_at >= draft_validity_seconds(created_at):
+            days = draft_validity_seconds(created_at) // 86400
+            raise SystemExit(f"Error: Draft task ID has expired after {days} days; create a new Draft task.")
         payload = build_promote_draft_payload(
             args.task_id,
             model=source.get("model", ""),
@@ -1164,7 +1157,7 @@ async def cmd_cancel_task_async(args: argparse.Namespace) -> int:
         "succeeded": "had succeeded -> record deleted (history gone)",
         "failed": "had failed -> record deleted (history gone)",
         "expired": "had expired -> record deleted (history gone)",
-        "cancelled": "was already cancelled -> no-op",
+        "cancelled": "was cancelled -> record deleted (history gone)",
     }
     msg = transitions.get(prev_state, f"was in state {prev_state} -> DELETE returned 200")
     print(f"Task {args.task_id}: {msg}.")
@@ -1346,7 +1339,7 @@ def cmd_batch_submit(args: argparse.Namespace) -> int:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate videos with Seedance 2.5 / 2.0.")
+    parser = argparse.ArgumentParser(description="Generate videos with Seedance 2.5 standard (default) or explicit flash.")
     subparsers = parser.add_subparsers(dest="command", help="Command")
 
     # Default subcommand: generate. Insert it when the first argument is not a known
@@ -1371,7 +1364,7 @@ def parse_args() -> argparse.Namespace:
             type=int,
             default=5,
             help=(
-                "Seconds, or -1. 2.5: 4-30; 2.0: 4-15. "
+                "Seconds: 4-30, or -1 (both models). "
                 "For 2.5 extend this is TOTAL output length "
                 "(source 5s + 7s more → 12), not the extension amount. "
                 "For 2.5 edit this must be -1."
@@ -1384,7 +1377,7 @@ def parse_args() -> argparse.Namespace:
         )
         p.add_argument(
             "--draft", action="store_true",
-            help="Seedance 2.5 only: create a 480p Draft preview for later 1080p promotion.",
+            help="Standard only (not flash): create a 480p Draft preview for later 1080p promotion.",
         )
         p.add_argument("--generate-audio", action=argparse.BooleanOptionalAction, default=True)
         p.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=False)
@@ -1427,7 +1420,7 @@ def parse_args() -> argparse.Namespace:
     promote = subparsers.add_parser(
         "promote-draft", help="Generate a 1080p final video from a succeeded Seedance 2.5 Draft task"
     )
-    promote.add_argument("--task-id", required=True, help="Succeeded Draft task ID, valid for 7 days")
+    promote.add_argument("--task-id", required=True, help="Succeeded standard Draft ID: valid 14 days since 2026-10-28 10:00 UTC+8; older IDs 7 days")
     promote.add_argument("--output-format", choices=sorted(VALID_OUTPUT_FORMATS), default=None)
     promote.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=None)
     promote.add_argument("--return-last-frame", action="store_true")
@@ -1468,7 +1461,7 @@ def parse_args() -> argparse.Namespace:
     batch.add_argument("--duration", type=int, default=5)
     batch.add_argument("--ratio", default="16:9", choices=sorted(VALID_RATIOS))
     batch.add_argument("--resolution", default=None, choices=sorted(VALID_RESOLUTIONS))
-    batch.add_argument("--draft", action="store_true", help="Create Seedance 2.5 Draft previews; defaults to 480p")
+    batch.add_argument("--draft", action="store_true", help="Standard only (not flash): create Draft previews; defaults to 480p")
     batch.add_argument("--generate-audio", action=argparse.BooleanOptionalAction, default=True)
     batch.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=False)
     batch.add_argument("--return-last-frame", action="store_true")

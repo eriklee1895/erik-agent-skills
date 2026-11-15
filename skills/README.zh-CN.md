@@ -26,7 +26,7 @@
 | [animated-image-gen](./animated-image-gen/SKILL.md) | 将文字、参考图或已有帧制作成 WebP/GIF 动图，生图使用 Seedream 5.0 Pro，提供创作模板、字幕与局部运动处理，并核对实际时序和透明度。 |
 | [avatar-creator](./avatar-creator/SKILL.md) | 制作静态头像、不同角色家族、同角色套图及固定 Seedance GIF/MP4 动画。图片使用可用图像工具；动图需 Ark 凭据、uv 和 ffmpeg，不依赖其他 skill。不负责交互式 3D 程序。 |
 | [live-avatar-3d](./live-avatar-3d/SKILL.md) | 将角色图制作成无需构建步骤的交互式 3D 网页头像，支持环视、动作和可选的本地麦克风嘴型。 |
-| [seedance-video-gen](./seedance-video-gen/SKILL.md) | 使用 Seedance 根据文本、图片或多模态参考生成视频。 |
+| [seedance-video-gen](./seedance-video-gen/SKILL.md) | 使用 Seedance 2.5 标准版（默认）或明确指定的 flash，根据文本、图片或多模态参考生成、编辑和延长视频。 |
 | [volcengine-bigmusic-bgm](./volcengine-bigmusic-bgm/SKILL.md) | 为视频和文章媒体工作流生成无人声背景音乐。 |
 | [volcengine-tts](./volcengine-tts/SKILL.md) | 使用火山引擎语音合成模型生成语音音频。 |
 | [volcengine-transcribe](./volcengine-transcribe/SKILL.md) | 用火山引擎语音识别将音视频转写为文本并生成 SRT/VTT 字幕；内置说话人分离与 ffmpeg 视频抽音轨。 |

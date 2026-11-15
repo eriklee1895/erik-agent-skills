@@ -6,7 +6,7 @@
 # ]
 # ///
 
-"""Seedance 2.0 concurrent running capacity benchmark.
+"""Seedance 2.5 family concurrent running capacity benchmark.
 
 Adaptive stepped ramp: submit batches of N tasks, observe running count, double N
 on each step until saturation is reached or the cap is hit. Also measures whether
@@ -21,7 +21,7 @@ Output: a timestamped directory under --output-dir (default: SEEDANCE_OUTPUT_DIR
   - summary.json          headlined numbers: ceiling, submit success rate, etc.
   - timeseries.csv        per-poll samples: t, running, queued, succeeded counts
   - submit_log.jsonl      per-submit POST: status_code, latency_ms, task_id, error
-  - manifest.json         test parameters, model, account key prefix, base URL
+  - manifest.json         test parameters, model, base URL
   - ramp_summary.txt      human-readable per-batch table
 
 Usage:
@@ -46,10 +46,9 @@ import httpx
 DEFAULT_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 DEFAULT_PROMPT = "一只橘猫在阳光下缓慢眨眼"
 DEFAULT_OUTPUT_ROOT = os.environ.get("SEEDANCE_OUTPUT_DIR", "output") + "/benchmarks"
-# Default to FAST model: standard 5s 720p actually takes 5-10 min per task on the
-# server, which makes a stepped ramp impractical. Fast 4s 480p completes in
-# ~30-60s, which gives clean signal within 60s observation windows.
-DEFAULT_MODEL = "doubao-seedance-2-0-fast-260128"
+# Keep standard as the default, including benchmarks; flash requires explicit selection.
+DEFAULT_MODEL = "doubao-seedance-2-5-260628"
+FLASH_MODEL = "doubao-seedance-2-5-flash-261115"
 DEFAULT_RESOLUTION = "480p"
 DEFAULT_DURATION = 4
 
@@ -184,7 +183,7 @@ async def submit_batch(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--model", default=DEFAULT_MODEL, help=f"Model ID (default: {DEFAULT_MODEL})")
+    p.add_argument("--model", default=DEFAULT_MODEL, choices=[DEFAULT_MODEL, FLASH_MODEL], help=f"Model ID (default: {DEFAULT_MODEL})")
     p.add_argument("--prompt", default=DEFAULT_PROMPT, help="Prompt text (kept identical across batches for clean signal)")
     p.add_argument("--duration", type=int, default=DEFAULT_DURATION)
     p.add_argument("--ratio", default="16:9")
@@ -259,7 +258,6 @@ async def run_benchmark(args: argparse.Namespace) -> int:
             "poll_interval": args.poll_interval,
             "saturation_ratio": args.saturation_ratio,
         },
-        "api_key_prefix": api_key[:8],
         "base_url": base_url,
     }
     (out_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")

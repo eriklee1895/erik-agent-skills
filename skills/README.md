@@ -27,7 +27,7 @@ with usage instructions, requirements, and supporting references.
 | [animated-image-gen](./animated-image-gen/SKILL.md) | Create animated WebP and GIF from text, references or existing frames, using Seedream 5.0 Pro, scoped creative templates, local captions and motion, and decoded timing/alpha checks. |
 | [avatar-creator](./avatar-creator/SKILL.md) | Create static avatar images, distinct-character families, same-character sets, and fixed Seedance GIF/MP4 animations. Uses available image tools; animation requires Ark credentials, uv, and ffmpeg with no other skill dependency. Does not build interactive 3D runtimes. |
 | [live-avatar-3d](./live-avatar-3d/SKILL.md) | Turn a character image into a no-build interactive 3D browser avatar with orbit, gestures, and optional local microphone mouth motion. |
-| [seedance-video-gen](./seedance-video-gen/SKILL.md) | Generate videos with Seedance from text, images, or multimodal references. |
+| [seedance-video-gen](./seedance-video-gen/SKILL.md) | Generate, edit, and extend videos with Seedance 2.5 standard (default) or explicitly requested flash, using text, images, or multimodal references. |
 | [volcengine-bigmusic-bgm](./volcengine-bigmusic-bgm/SKILL.md) | Generate instrumental background music for video and article media workflows. |
 | [volcengine-tts](./volcengine-tts/SKILL.md) | Synthesize speech audio with Volcano Engine's text-to-speech models. |
 | [volcengine-transcribe](./volcengine-transcribe/SKILL.md) | Transcribe audio/video to text with Volcano Engine's speech recognition and generate SRT/VTT subtitles; speaker diarization and ffmpeg video extraction built in. |
