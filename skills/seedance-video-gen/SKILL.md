@@ -12,12 +12,12 @@ description: >
 
 | 模型 | Model ID | 输出分辨率 | 图 / 视频 / 音频上限 | Draft |
 |---|---|---|---|---|
-| **标准版（默认）** | `doubao-seedance-2-5-260628` | 480p / 720p / 1080p | 30 / 10 / 10 | 480p 样片 → 同模型 1080p |
+| **标准版（默认）** | `doubao-seedance-2-5-260628` | 480p / 720p / 1080p / 4k | 30 / 10 / 10 | 480p 样片 → 同模型 1080p / 4k |
 | **flash（明确指定）** | `doubao-seedance-2-5-flash-261115` | 480p / 720p | 10 / 5 / 5 | 不支持 |
 
-两者都支持 4–30 秒 / `-1` 智能时长、仅音频参考、编辑、延长、MP4/MOV、联网搜索（仅纯文本）。均无 4K。flash 的「速度约翻倍、成本约降低 34%」是发布介绍，实际耗时和费用以任务结果与实时价格为准，不能套用旧模型测速数据。
+两者都支持 4–30 秒 / `-1` 智能时长、仅音频参考、编辑、延长、MP4/MOV、联网搜索（仅纯文本）。标准版支持 4K，flash 最高 720p。flash 的「速度约翻倍、成本约降低 34%」是发布介绍，实际耗时和费用以任务结果与实时价格为准，不能套用旧模型测速数据。
 
-用户指定 flash 又要 1080p/Draft，或要求 4K：说明能力冲突，确认要调整哪项；不要静默换模型或降规格。完整能力和参数锁定见 [references/seedance-2.5.md](references/seedance-2.5.md)。
+用户指定 flash 又要 1080p、4K 或 Draft：说明能力冲突，确认要调整哪项；不要静默换模型或降规格。完整能力和参数锁定见 [references/seedance-2.5.md](references/seedance-2.5.md)。
 
 ## 前置条件与边界
 
@@ -43,10 +43,10 @@ uv run scripts/generate_seedance_video.py \
   --prompt '红纸船沿林间溪流漂过，低机位跟拍，阳光在水面闪动。' \
   --duration 8 --resolution 720p
 
-# 标准版 1080p 终稿（10-bit HEVC）
+# 标准版 4K 终稿（10-bit HEVC）
 uv run scripts/generate_seedance_video.py \
   --prompt '城市雨夜，霓虹倒映在路面，低机位缓慢前推。' \
-  --duration 5 --ratio 9:16 --resolution 1080p
+  --duration 5 --ratio 9:16 --resolution 4k
 
 # 首帧（两款模型均必须 adaptive；先把输入图裁成目标画幅）
 uv run scripts/generate_seedance_video.py \
@@ -80,8 +80,8 @@ uv run scripts/generate_seedance_video.py \
 uv run scripts/generate_seedance_video.py --draft \
   --prompt '红纸船顺着溪流漂过，低机位跟拍。' --duration 4
 
-# 看过并选定成功 Draft 后，凭 task ID 生成同模型 1080p
-uv run scripts/generate_seedance_video.py promote-draft --task-id cgt-xxx
+# 看过并选定成功 Draft 后，凭 task ID 生成同模型 4K；省略 resolution 默认 1080p
+uv run scripts/generate_seedance_video.py promote-draft --task-id cgt-xxx --resolution 4k
 ```
 
 ### 批量独立镜头
@@ -134,13 +134,13 @@ uv run scripts/generate_seedance_video.py create --dry-run \
 3. 多素材：按各类型传入顺序写「图片1锁角色外观，视频1参考运镜，音频1参考音色」，不用图片里的文字代替绑定。
 4. 编辑：写「将视频1的 A 改为 B」，限定时间段、对象与需保留的内容。延长：写前/后方向与紧接边界的具体事件。
 5. 对白用引号并明确说话人；「无 bgm，只保留环境音」「不要额外字幕」可直接写入 prompt。括号标记是组织习惯，不是 API 控制符；无声视频用 `--no-generate-audio`。
-6. 看完整成片后针对一个问题修改。标准版若最终要 1080p 且需要挑多个方向，可先 Draft；flash 预览是普通 480p/720p 生成，没有 task ID 升版路径。
+6. 看完整成片后针对一个问题修改。标准版若最终要 1080p / 4K 且需要挑多个方向，可先 Draft；flash 预览是普通 480p/720p 生成，没有 task ID 升版路径。
 
 详细写法见 [references/prompt-guide.md](references/prompt-guide.md)，场景示例见 [references/scene-cookbook.md](references/scene-cookbook.md)，素材传输和稳定性建议见 [references/multimodal-reference.md](references/multimodal-reference.md)。
 
 ## Draft 与交付
 
-标准版 Draft 生成 480p，选中后 `promote-draft` 生成 1080p；两步独立计费，升版继承原 prompt、素材、时长等，不能同时修改。需要改输入时创建新 Draft。用户要求挑片时先展示样片供选择；已授权自动挑选时可自行比较再升版。详见 [references/draft-mode.md](references/draft-mode.md)。
+标准版 Draft 生成 480p，选中后 `promote-draft` 生成 1080p 或 4K；两步独立计费，升版继承原 prompt、素材、时长等，不能同时修改。需要改输入时创建新 Draft。用户要求挑片时先展示样片供选择；已授权自动挑选时可自行比较再升版。详见 [references/draft-mode.md](references/draft-mode.md)。
 
 **留存期**：2026-10-28 10:00（UTC+8）及之后创建的 Draft ID 有效 14 天，更早的为 7 天；其他任务 ID 为 7 天。产物 URL 有效 24 小时、最多下载 100 次，成功后及时下载。
 
@@ -161,13 +161,13 @@ output/seedance/YYYY-MM-DD-<slug>/
 | `--model` | 标准版；仅明确要求 flash 时使用其完整 ID |
 | `--duration` | `5`；支持整数 4–30 或 `-1`。编辑必须 -1，延长为成片总时长 |
 | `--ratio` | `16:9`；支持 16:9/4:3/1:1/3:4/9:16/21:9/adaptive；首帧、编辑、延长必须 adaptive |
-| `--resolution` | 普通生成 720p；Draft 480p；flash 不支持 1080p |
+| `--resolution` | 普通生成 720p；Draft 480p；标准版支持 4k；flash 不支持 1080p / 4k |
 | `--prompt` / `--prompt-file` | 文本 / UTF-8 文件；中文建议 ≤500 字、英文 ≤1000 词 |
 | `--first-frame` / `--last-frame` | 本地文件或 URL/asset；首尾帧模式与 reference_* 互斥 |
 | `--reference-image/video/audio` | 可重复；按所选模型分别校验上限 |
 | `--output-format` | API 默认 mp4；可指定 mov，两模型均支持 |
 | `--omni-reference-task-type` | auto/reference/edit/extend；显式指定可提前校验，仍需匹配 prompt |
-| `--draft` / `promote-draft` | 仅标准版；480p → 同模型 1080p |
+| `--draft` / `promote-draft` | 仅标准版；480p → 同模型 1080p / 4k；升版默认 1080p，可显式 `--resolution 4k` |
 | `--generate-audio` / `--no-generate-audio` | 默认 true，生成双声道音频 |
 | `--watermark` / `--return-last-frame` | 默认 false；尾帧 JPEG |
 | `--priority` | 0–9，同 Endpoint 内优先级 |
@@ -177,3 +177,5 @@ output/seedance/YYYY-MM-DD-<slug>/
 | `--dry-run` | generate/create/promote-draft 的本地请求检查；升版 dry-run 不查询来源 ID |
 
 输入媒体体积、格式与时长，以及 API 专有字段见 [references/key-constraints.md](references/key-constraints.md) 和 [references/api-reference.md](references/api-reference.md)。速率与并发以当前账号配额为准，不用旧模型压测结果推断 flash 配额。
+
+4K 输出采用 10-bit HEVC；16:9 为 3840×2160，9:16 为 2160×3840。官方教程列出标准版 4K 企业/个人均为 15 RPM、最大并发 1；实际限流与价格以账号配置和[官方价格](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)为准。
