@@ -1,8 +1,8 @@
 # Seedance 2.5 Draft 模式
 
-Draft 是 **Seedance 2.5 标准版专属**的创意预览和挑片流程：先以 480p 检查镜头方向，确认后从相同 Draft task ID 生成原生 1080p。它更适合提前验证场景结构、构图、主体动作、运镜和节奏；不适合用来确认 1080p 才看得清的小字或细纹理。
+Draft 是 **Seedance 2.5 标准版专属**的创意预览和挑片流程：先以 480p 检查镜头方向，确认后从相同 Draft task ID 生成原生 1080p 或 4K。它更适合提前验证场景结构、构图、主体动作、运镜和节奏；不适合用来确认 1080p 才看得清的小字或细纹理。
 
-**flash 不支持 Draft**；其普通480p/720p预览不能凭任务ID升版，也不能跨模型继承为标准版1080p。
+**flash 不支持 Draft**；其普通480p/720p预览不能凭任务ID升版，也不能跨模型继承为标准版1080p或4K。
 
 ## 什么时候用
 
@@ -38,14 +38,14 @@ uv run scripts/generate_seedance_video.py \
   --duration 4 --ratio 16:9 --no-generate-audio
 ```
 
-### 用户选中样片后生成 1080p
+### 用户选中样片后生成 1080p 或 4K
 
 ```bash
 uv run scripts/generate_seedance_video.py promote-draft \
-  --task-id cgt-20260923xxxxx-xxxx
+  --task-id cgt-20260923xxxxx-xxxx --resolution 4k
 ```
 
-`promote-draft` 会查询来源任务，要求来源为标准版、已成功且 `draft=true`，并仍在有效期内，随后提交升版并默认等待、下载终稿。`--create-only` 只提交终稿任务并返回新的 task ID。Draft ID 从 `created_at` 起计算：2026-10-28 10:00（UTC+8）及之后创建的有效14天，此前创建的有效7天；视频 URL 有效 24 小时，样片和成片都应及时下载。
+`promote-draft` 会查询来源任务，要求来源为标准版、已成功且 `draft=true`，并仍在有效期内，随后提交升版并默认等待、下载终稿。`--resolution` 可选 1080p 或 4k，默认 1080p；`--create-only` 只提交终稿任务并返回新的 task ID。Draft ID 从 `created_at` 起计算：2026-10-28 10:00（UTC+8）及之后创建的有效14天，此前创建的有效7天；视频 URL 有效 24 小时，样片和成片都应及时下载。
 
 ### 批量候选
 
@@ -53,7 +53,7 @@ uv run scripts/generate_seedance_video.py promote-draft \
 
 ## 成本与价值
 
-Draft 480p 按普通 480p 视频的 token 用量和单价计费；升版 1080p 按普通 1080p 推理计费。若生成 `N` 个候选，只升版一个：
+Draft 480p 按普通 480p 视频的 token 用量和单价计费；升版按目标 1080p 或 4K 分辨率计费。若生成 `N` 个候选，只升版一个：
 
 ```text
 Draft 路径 = N × 480p + 1 × 1080p

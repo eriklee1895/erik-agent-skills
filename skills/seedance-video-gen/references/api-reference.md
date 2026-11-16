@@ -24,7 +24,7 @@
 |---|---|
 | model | 必填；本 skill 仅接受上述两个完整 Model ID |
 | content | 必填数组，文本/图片/视频/音频或标准版的 draft_task |
-| resolution | 默认720p；标准版480p/720p/1080p，flash480p/720p；均无4K |
+| resolution | 默认720p；标准版480p/720p/1080p/4k，flash480p/720p；标准版1080p和4k为10-bit HEVC |
 | ratio | 默认adaptive；16:9/4:3/1:1/3:4/9:16/21:9/adaptive |
 | duration | 默认-1；整数4–30或-1；CLI 默认5。查询返回时长约数，不保证等于媒体精确时长 |
 | generate_audio | 默认true，生成双声道有声视频；false生成无声视频 |
@@ -63,7 +63,7 @@
 
 ### Draft 升版请求的字段边界
 
-仅标准版，来源必须成功且draft=true；model与来源一致，resolution固定1080p，draft省略或false：
+仅标准版，来源必须成功且draft=true；model与来源一致，resolution为1080p或4k，draft省略或false：
 
 ```json
 {
@@ -74,6 +74,8 @@
 ```
 
 禁止重传text、参考图/视频/音频、duration、ratio、seed、generate_audio、omni_reference_task_type；由服务端继承。可重设return_last_frame、output_format、watermark、execution_expires_after、priority、callback_url、safety_identifier，省略时使用模型默认值，不继承来源。教程也列出service_tier可重设，但本系列不支持flex，勿据此启用离线模式。
+
+升版时可选择 `resolution=1080p` 或 `resolution=4k`，CLI 默认1080p。
 
 Draft从2026-10-28 10:00（UTC+8）起新建ID有效14天，之前ID仍7天。两次任务独立计费；成片token单价按Draft原始请求是否有视频确定，输入时长仅计算原始参考视频，不把Draft视频重复计入。操作见 [draft-mode.md](draft-mode.md)。
 

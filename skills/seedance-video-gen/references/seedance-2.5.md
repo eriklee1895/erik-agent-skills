@@ -1,6 +1,6 @@
 # Seedance 2.5 标准版与 flash
 
-按 2026-11-15 的[官方系列教程](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5)、[创建任务 API](https://console.volcengine.com/ark/region:cn-beijing/docs/create-video-generation-task-api)与[系列提示词指南](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5-prompt-guide)维护。
+按 2026-11-16 的[官方系列教程](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5)、[创建任务 API](https://console.volcengine.com/ark/region:cn-beijing/docs/create-video-generation-task-api)与[系列提示词指南](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5-prompt-guide)维护。
 
 ## 选择规则
 
@@ -10,9 +10,9 @@
 |---|---|---|
 | 定位 | 旗舰视听品质与创作表现 | 接近旗舰效果，侧重速度与成本 |
 | 时长 | 4–30 秒 / -1 | 同左 |
-| 分辨率 | 480p / 720p / 1080p | 480p / 720p |
+| 分辨率 | 480p / 720p / 1080p / 4k | 480p / 720p |
 | 1080p 编码 | 10-bit HEVC | 不支持 |
-| 4K 输出 | 不支持 | 不支持 |
+| 4K 输出 | 支持，10-bit HEVC | 不支持 |
 | 参考图片 | ≤30 | ≤10 |
 | 参考视频 | ≤10 | ≤5 |
 | 参考音频 | ≤10 | ≤5 |
@@ -20,7 +20,7 @@
 | 仅音频参考 | 支持 | 支持 |
 | 编辑 / 延长 / 时间戳 | 支持 | 支持 |
 | 输出格式 | mp4 / mov | 同左 |
-| Draft | 480p → 同模型1080p | 不支持 |
+| Draft | 480p → 同模型1080p或4k | 不支持 |
 | web_search | 仅纯文本 | 同左 |
 
 flash 的「生成速度翻倍、成本降低约34%」来自发布介绍，是定位信息；不构成每任务时延或账单保证。本 skill 未提供 flash 的实测耗时/计费结论，实际按 `usage` 与[实时价格](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)计算。
