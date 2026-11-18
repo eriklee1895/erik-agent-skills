@@ -1,6 +1,6 @@
 # 文件管理 API 与 Seedance 输入的边界
 
-按2026-11-15官方API核对。Files API用于上传、预处理、管理文件；Seedance视频生成API当前列出的来源是公网URL、data URL（仅图/音频）、asset://。**Files API返回的file-...不能直接写成asset://file-...，也没有文档化的file_id/file://输入方式。**
+按2026-11-18官方API核对。Files API用于上传、预处理、管理文件；Seedance视频生成API当前列出的来源是公网URL、data URL（仅图/音频）、asset://。**Files API返回的file-...不能直接写成asset://file-...，也没有文档化的file_id/file://输入方式。**
 
 本skill没有Files CLI子命令；需要管理文件时按以下REST接口操作。不要因为提供了Files API文档，就把所有本地视频自动上传并宣称可直接作为生成输入。
 

@@ -11,10 +11,35 @@ def read(relative_path: str) -> str:
 
 
 class ReferenceContract(unittest.TestCase):
-    def test_1080p_bit_depth_is_not_mislabeled_as_universal_hevc(self):
+    def test_output_codec_claims_are_format_scoped(self):
         matrix = read("references/seedance-2.5.md")
-        self.assertNotIn("10-bit HEVC", read("SKILL.md") + matrix)
-        self.assertIn("1080p（10-bit）", matrix)
+        api = read("references/api-reference.md")
+        docs = read("SKILL.md") + matrix + api + read("references/key-constraints.md")
+        self.assertIn("HEVC 10-bit", docs)
+        self.assertIn("H.264+yuv444p+PCM", docs)
+        self.assertNotIn("1080p 编码 | 10-bit HEVC", matrix)
+        self.assertIn("1080p / 4k 为 10-bit", matrix)
+
+    def test_four_k_support_and_limits_are_documented(self):
+        skill = read("SKILL.md")
+        matrix = read("references/seedance-2.5.md")
+        constraints = read("references/key-constraints.md")
+        self.assertNotIn("均无 4K", skill)
+        self.assertIn("480p / 720p / 1080p / 4k", matrix)
+        self.assertIn("15 RPM", constraints)
+        self.assertIn("3840×2160", skill)
+        self.assertIn("3326×2494", skill)
+        self.assertIn("4398×1886", skill)
+        self.assertIn("4K", read("references/draft-mode.md"))
+
+    def test_output_fps_is_reported_not_hardcoded(self):
+        docs = read("references/api-reference.md") + read("references/prompt-guide.md")
+        self.assertNotIn("输出24fps", docs)
+        self.assertIn("以字段为准", read("references/api-reference.md"))
+
+    def test_privacy_rejection_error_is_documented(self):
+        docs = read("SKILL.md") + read("references/api-reference.md")
+        self.assertIn("InputImageSensitiveContentDetected.PrivacyInformation", docs)
 
     def test_edit_duration_documents_source_tolerance(self):
         api = read("references/api-reference.md")

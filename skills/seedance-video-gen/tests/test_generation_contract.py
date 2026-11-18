@@ -69,6 +69,16 @@ class GenerationContract(unittest.TestCase):
                 payload = json.loads(result.stdout)
                 self.assertEqual((payload["model"], payload["duration"]), (model, 30))
 
+            for command in (
+                ["create", "--prompt", "海岸", "--resolution", "4k"],
+                ["promote-draft", "--task-id", "cgt-test", "--resolution", "4k"],
+            ):
+                result = subprocess.run([sys.executable, str(SCRIPT), *command, "--dry-run"],
+                                        cwd=workdir, env={**os.environ, "ARK_API_KEY": ""},
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout)["resolution"], "4k")
+
     def test_flash_30_seconds_and_mov(self):
         for builder in (lambda: single(model=FLASH, duration=30, output_format="mov"),
                         lambda: sd.build_payload_from_shot(
@@ -80,7 +90,9 @@ class GenerationContract(unittest.TestCase):
 
     def test_resolution_boundaries(self):
         single(resolution="1080p")
-        for model, resolution in ((FLASH, "1080p"), (FLASH, "4k"), (STANDARD, "4k")):
+        self.assertEqual(single(resolution="4k")["resolution"], "4k")
+        self.assertEqual(sd.build_payload_from_shot({"prompt": "海岸", "resolution": "4k"}, {})["resolution"], "4k")
+        for model, resolution in ((FLASH, "1080p"), (FLASH, "4k")):
             with self.subTest(model=model, resolution=resolution), self.assertRaises(SystemExit):
                 single(model=model, resolution=resolution)
             with self.assertRaises(SystemExit):
@@ -132,9 +144,14 @@ class GenerationContract(unittest.TestCase):
         with self.assertRaises(SystemExit):
             single(model=FLASH, draft=True)
         with self.assertRaises(SystemExit):
+            single(draft=True, resolution="4k")
+        with self.assertRaises(SystemExit):
             sd.build_payload_from_shot({"prompt": "海岸", "model": FLASH, "draft": True}, {})
         with self.assertRaises(SystemExit):
             sd.build_promote_draft_payload("cgt-flash", model=FLASH)
+        self.assertEqual(sd.build_promote_draft_payload("cgt-standard", resolution="4k")["resolution"], "4k")
+        with self.assertRaises(SystemExit):
+            sd.build_promote_draft_payload("cgt-standard", resolution="720p")
         p = sd.build_promote_draft_payload("cgt-standard")
         self.assertEqual(set(p), {"model", "content", "resolution"})
         self.assertEqual(p["content"], [{"type": "draft_task", "draft_task": {"id": "cgt-standard"}}])

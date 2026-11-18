@@ -61,9 +61,9 @@ MAX_IMAGE_SIDE_PX = 6000
 IMAGE_RATIO_MIN = 0.4
 IMAGE_RATIO_MAX = 2.5
 
-# Seedance 2.5 family, official API/docs checked 2026-11-15.
+# Seedance 2.5 family, official API/docs checked 2026-11-18.
 # Both: 4–30s, mp4/mov, audio-only references, edit/extend.
-# Standard: up to 1080p and Draft. Flash: up to 720p, no Draft.
+# Standard: up to 4k and Draft. Flash: up to 720p, no Draft.
 MODEL_2_5 = "doubao-seedance-2-5-260628"
 MODEL_2_5_FLASH = "doubao-seedance-2-5-flash-261115"
 DEFAULT_MODEL = MODEL_2_5
@@ -71,11 +71,11 @@ DEFAULT_MODEL = MODEL_2_5
 VALID_MODELS = {MODEL_2_5, MODEL_2_5_FLASH}
 MODELS_2_5 = VALID_MODELS
 MODEL_RESOLUTIONS = {
-    MODEL_2_5: {"480p", "720p", "1080p"},
+    MODEL_2_5: {"480p", "720p", "1080p", "4k"},
     MODEL_2_5_FLASH: {"480p", "720p"},
 }
 VALID_RATIOS = {"16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"}
-VALID_RESOLUTIONS = {"480p", "720p", "1080p"}
+VALID_RESOLUTIONS = {"480p", "720p", "1080p", "4k"}
 VALID_OUTPUT_FORMATS = {"mp4", "mov"}
 VALID_OMNI_TASK_TYPES = {"auto", "reference", "edit", "extend"}
 SUPPORTED_IMAGE_ROLES = {"first_frame", "last_frame", "reference_image"}
@@ -126,7 +126,7 @@ def validate_resolution(model: str, resolution: str) -> None:
         raise SystemExit(
             f"Error: model '{model}' does not support resolution '{resolution}'. "
             f"Supported: {sorted(MODEL_RESOLUTIONS[model])}. "
-            "No model in this skill supports 4k; do not silently change the requested model."
+            "Choose a supported resolution without silently changing the requested model."
         )
 
 
@@ -509,6 +509,7 @@ def build_promote_draft_payload(
     draft_task_id: str,
     model: str = MODEL_2_5,
     *,
+    resolution: str = "1080p",
     output_format: str | None = None,
     watermark: bool | None = None,
     return_last_frame: bool = False,
@@ -523,6 +524,8 @@ def build_promote_draft_payload(
         raise SystemExit("Error: --task-id must be a non-empty Draft task ID.")
     if model != MODEL_2_5:
         raise SystemExit("Error: only Seedance 2.5 standard Draft tasks can be promoted; flash has no Draft mode.")
+    if resolution not in {"1080p", "4k"}:
+        raise SystemExit("Error: Draft promotion resolution must be 1080p or 4k.")
     if output_format is not None and output_format not in VALID_OUTPUT_FORMATS:
         raise SystemExit(
             f"Error: unsupported output_format '{output_format}'. Valid: {sorted(VALID_OUTPUT_FORMATS)}"
@@ -532,7 +535,7 @@ def build_promote_draft_payload(
     payload: dict[str, Any] = {
         "model": model,
         "content": [{"type": "draft_task", "draft_task": {"id": draft_task_id}}],
-        "resolution": "1080p",
+        "resolution": resolution,
     }
     if output_format is not None:
         payload["output_format"] = output_format
@@ -997,6 +1000,7 @@ async def cmd_promote_draft_async(args: argparse.Namespace) -> int:
     if args.dry_run:
         payload = build_promote_draft_payload(
             args.task_id,
+            resolution=getattr(args, "resolution", "1080p"),
             output_format=args.output_format,
             watermark=args.watermark,
             return_last_frame=args.return_last_frame,
@@ -1022,12 +1026,13 @@ async def cmd_promote_draft_async(args: argparse.Namespace) -> int:
         payload = build_promote_draft_payload(
             args.task_id,
             model=source.get("model", ""),
+            resolution=getattr(args, "resolution", "1080p"),
             output_format=args.output_format,
             watermark=args.watermark,
             return_last_frame=args.return_last_frame,
             priority=args.priority,
         )
-        print(f"Promoting Draft task {args.task_id} to 1080p ...")
+        print(f"Promoting Draft task {args.task_id} to {payload['resolution']} ...")
         task = await _create_task_async(client, api_key, base_url, payload)
         task_id = task.get("id")
         if not task_id:
@@ -1379,7 +1384,7 @@ def parse_args() -> argparse.Namespace:
         )
         p.add_argument(
             "--draft", action="store_true",
-            help="Standard only (not flash): create a 480p Draft preview for later 1080p promotion.",
+            help="Standard only (not flash): create a 480p Draft preview for later 1080p or 4k promotion.",
         )
         p.add_argument("--generate-audio", action=argparse.BooleanOptionalAction, default=True)
         p.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=False)
@@ -1420,9 +1425,10 @@ def parse_args() -> argparse.Namespace:
     _add_common(create)
 
     promote = subparsers.add_parser(
-        "promote-draft", help="Generate a 1080p final video from a succeeded Seedance 2.5 Draft task"
+        "promote-draft", help="Generate a 1080p or 4k final video from a succeeded Seedance 2.5 Draft task"
     )
     promote.add_argument("--task-id", required=True, help="Succeeded standard Draft ID: valid 14 days since 2026-10-28 10:00 UTC+8; older IDs 7 days")
+    promote.add_argument("--resolution", choices=["1080p", "4k"], default="1080p", help="Final resolution (default: 1080p)")
     promote.add_argument("--output-format", choices=sorted(VALID_OUTPUT_FORMATS), default=None)
     promote.add_argument("--watermark", action=argparse.BooleanOptionalAction, default=None)
     promote.add_argument("--return-last-frame", action="store_true")
@@ -1431,7 +1437,7 @@ def parse_args() -> argparse.Namespace:
     promote.add_argument("--poll-interval", type=int, default=DEFAULT_POLL_INTERVAL)
     promote.add_argument("--max-wait", type=int, default=DEFAULT_MAX_WAIT)
     promote.add_argument("--create-only", action="store_true", help="Submit final task and return its ID without polling")
-    promote.add_argument("--dry-run", action="store_true", help="Print the minimal 1080p request without calling the API")
+    promote.add_argument("--dry-run", action="store_true", help="Print the minimal promotion request without calling the API")
     promote.add_argument("--verbose", action="store_true")
 
     poll = subparsers.add_parser("poll", help="Poll an existing task")

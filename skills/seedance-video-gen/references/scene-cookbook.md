@@ -1,6 +1,6 @@
 # Seedance 场景 Cookbook
 
-适用于 **Seedance 2.5 标准版与 flash**；默认标准版，只有明确要求 flash 才切换。两者共用提示词，flash素材上限10图/5视频/5音频、最高720p，无Draft。分段骨架、时间戳规则与named locks只在 [prompt-guide.md](prompt-guide.md) **§2** 写一份，这里不重复公式。能力边界见 [key-constraints.md](key-constraints.md)。下文括号/花括号只是示例的组织习惯；自然语言与引号也可用，详见prompt-guide §4。
+适用于 **Seedance 2.5 标准版与 flash**；默认标准版，只有明确要求 flash 才切换。两者共用提示词；标准版可选1080p/4K输出，flash素材上限10图/5视频/5音频、最高720p，无Draft。分段骨架、时间戳规则与named locks只在 [prompt-guide.md](prompt-guide.md) **§2** 写一份，这里不重复公式。能力边界见 [key-constraints.md](key-constraints.md)。下文括号/花括号只是示例的组织习惯；自然语言与引号也可用，详见prompt-guide §4。
 
 **2.5 主示例**（整数秒时间戳；需要切镜时写「硬切 / Hard cut」并描述新镜头，必要时短 `GLOBAL STYLE` / named lock）：§1 知识口播、§2–3 短剧、§4 产品、§5 竖屏/社媒、§9 对话气泡与旁白、§10 编辑、§11 延长、§13 变形、§15 的 30s 叙事、§16 无缝转场。每个 2.5 多镜示例都标了建议 `duration` / `ratio` / 是否必须 `adaptive`。
 

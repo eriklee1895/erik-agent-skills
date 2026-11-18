@@ -1,6 +1,6 @@
 # Seedance 2.5 系列多模态参考
 
-标准版与flash共用role与任务锁定规则；数量按模型校验。详见[官方创建API](https://console.volcengine.com/ark/region:cn-beijing/docs/create-video-generation-task-api)与[提示词指南](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5-prompt-guide)，核对日期2026-11-15。
+标准版与flash共用role与任务锁定规则；数量按模型校验。详见[官方创建API](https://console.volcengine.com/ark/region:cn-beijing/docs/create-video-generation-task-api)与[提示词指南](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5-prompt-guide)，核对日期2026-11-18。
 
 ## 容量与格式
 
@@ -12,7 +12,7 @@
 
 图像宽高各300–6000px，宽高比[0.4,2.5]。视频同宽高/宽高比，24–60fps，总像素407696–8295044；H.264/AVC或H.265/HEVC视频，MP4音轨AAC/MP3，MOV另允许PCM。
 
-视频每段2–30秒（待编辑视频4–30秒），总时长≤30秒；音频每段2–30秒，总时长≤30秒。参考视频可到4K，但**输出**仍服从模型上限。30/10/10与10/5/5是输入条数限制，不是推荐堆满数量。
+视频每段2–30秒（待编辑视频4–30秒），总时长≤30秒；音频每段2–30秒，总时长≤30秒。参考视频可到4K，但**输出**分辨率按模型与参数设置：标准版最高4K，flash最高720p。30/10/10与10/5/5是输入条数限制，不是推荐堆满数量。
 
 ## 传输方式
 
