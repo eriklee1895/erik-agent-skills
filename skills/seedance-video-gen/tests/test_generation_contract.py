@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/generate_seedance_video.py"
 spec = importlib.util.spec_from_file_location("seedance", SCRIPT)
@@ -152,6 +152,54 @@ class GenerationContract(unittest.TestCase):
         for priority in (-1, 10):
             with self.assertRaises(SystemExit):
                 single(priority=priority)
+
+
+class TaskListContract(unittest.IsolatedAsyncioTestCase):
+    def test_list_tasks_help_uses_endpoint_terminology(self):
+        stdout = io.StringIO()
+        with patch.object(sys, "argv", ["seedance", "--help"]), \
+             contextlib.redirect_stdout(stdout), self.assertRaises(SystemExit) as exited:
+            sd.parse_args()
+        self.assertEqual(exited.exception.code, 0)
+        self.assertNotIn("status/model/task-ids", stdout.getvalue())
+
+    def test_list_tasks_cli_uses_endpoint_id_not_model_id(self):
+        for option, endpoint_id in (("--endpoint-id", "ep-123"), ("--model", "ep-legacy")):
+            with self.subTest(option=option), patch.object(
+                sys, "argv", ["seedance", "list-tasks", option, endpoint_id]
+            ):
+                try:
+                    args = sd.parse_args()
+                except SystemExit:
+                    args = None
+                self.assertIsNotNone(args)
+                self.assertEqual(args.endpoint_id, endpoint_id)
+
+    @staticmethod
+    def list_args(endpoint_id):
+        return argparse.Namespace(endpoint_id=endpoint_id, model=None, status=None,
+                                  task_ids=None, page_num=1, page_size=20, json_only=True)
+
+    @staticmethod
+    def list_response():
+        response = Mock(status_code=200)
+        response.json.return_value = {"items": [], "total": 0}
+        return response
+
+    async def test_list_tasks_sends_endpoint_id_in_official_filter(self):
+        with patch.object(sd, "get_auth", return_value=("test-only", "https://example.com")), \
+             patch.object(sd, "_request_with_retry", AsyncMock(return_value=self.list_response())) as request, \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(await sd.cmd_list_tasks_async(self.list_args("ep-123")), 0)
+        params = request.call_args.kwargs["params"]
+        self.assertEqual(params.get("filter.model"), "ep-123")
+
+    async def test_list_tasks_rejects_model_id_as_endpoint_filter(self):
+        with patch.object(sd, "get_auth", return_value=("test-only", "https://example.com")), \
+             patch.object(sd, "_request_with_retry", AsyncMock(return_value=self.list_response())) as request:
+            with self.assertRaisesRegex(SystemExit, "ep-"):
+                await sd.cmd_list_tasks_async(self.list_args(STANDARD))
+        request.assert_not_called()
 
 
 class DraftPromotionContract(unittest.IsolatedAsyncioTestCase):

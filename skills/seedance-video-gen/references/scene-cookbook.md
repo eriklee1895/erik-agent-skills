@@ -1,10 +1,12 @@
 # Seedance 场景 Cookbook
 
-适用于 **Seedance 2.5 标准版与 flash**；默认标准版，只有明确要求 flash 才切换。两者共用提示词，flash素材上限10图/5视频/5音频、最高720p，无Draft。分段骨架、时间戳规则、`Hard cut.`、named locks 只在 [prompt-guide.md](prompt-guide.md) **§2** 写一份，这里不重复公式。能力边界见 [key-constraints.md](key-constraints.md)。下文括号/花括号只是示例的组织习惯；自然语言与引号也可用，详见prompt-guide §4。
+适用于 **Seedance 2.5 标准版与 flash**；默认标准版，只有明确要求 flash 才切换。两者共用提示词，flash素材上限10图/5视频/5音频、最高720p，无Draft。分段骨架、时间戳规则与named locks只在 [prompt-guide.md](prompt-guide.md) **§2** 写一份，这里不重复公式。能力边界见 [key-constraints.md](key-constraints.md)。下文括号/花括号只是示例的组织习惯；自然语言与引号也可用，详见prompt-guide §4。
 
-**2.5 主示例**（整数秒时间戳；多镜加 `Hard cut.`，必要时短 `GLOBAL STYLE` / named lock）：§1 知识口播、§2–3 短剧、§4 产品、§5 竖屏/社媒、§9 对话气泡与旁白、§10 编辑、§11 延长、§13 变形、§15 的 30s 叙事、§16 无缝转场。每个 2.5 多镜示例都标了建议 `duration` / `ratio` / 是否必须 `adaptive`。
+**2.5 主示例**（整数秒时间戳；需要切镜时写「硬切 / Hard cut」并描述新镜头，必要时短 `GLOBAL STYLE` / named lock）：§1 知识口播、§2–3 短剧、§4 产品、§5 竖屏/社媒、§9 对话气泡与旁白、§10 编辑、§11 延长、§13 变形、§15 的 30s 叙事、§16 无缝转场。每个 2.5 多镜示例都标了建议 `duration` / `ratio` / 是否必须 `adaptive`。
 
 **两款共用**：简单 4–5s 单镜不必硬拆时间戳（§1 教育动画、§4 单镜产品、§5 单镜竖屏、§6–8、§12、§14 连续环绕）。
+
+**明确选择 flash 后的变量试拍**：固定参考素材、镜头骨架和对白，每个候选只改变一个创意方向（表演情绪、受众/场景或视觉风格），再决定哪个方向值得精修。不要把社区样例的「一次成功」当稳定保证，也不要因低成本/批量意图自动切 flash。
 
 
 ## 1. 教育动画 / 知识口播
@@ -52,7 +54,7 @@ encouraging mood.
 
 ## 2. 短剧（文戏 / 对话）
 
-**角色锚定优先**。每个角色必须明确定义，全程使用同一标签。示例用 `{}` 标注台词，也可直接使用引号。
+**角色锚定优先**。每个角色必须明确定义，全程使用同一标签。示例用 `{}` 标注台词，也可直接使用引号。双人对话写清听者先听完再回应、不跟读对方台词，并跟踪钥匙、外套、泪水等关键状态，避免只写说话人而忽略反应连续性。
 
 **2.5 参数**：`--duration 12 --ratio 16:9`，文生不必 `adaptive`。有参考图/视频时仍按素材绑定，不必为了参考而改 `adaptive`（`adaptive` 只锁首帧/编辑/延长）。
 
@@ -82,10 +84,12 @@ AUDIO：无额外 bgm，只要环境与对白，不要字幕
 
 **2.5 参数**：`--duration 12 --ratio 16:9`，文生不必 `adaptive`。
 
+动作/攻防场景按「进攻 → 防守 → 接触 → 恢复」写清顺序与轴线；镜头尽量保留接触点和支撑脚，不在关键接触瞬间无故切走。多人状态与道具也要跨镜连续。
+
 ```
 GLOBAL STYLE：3D 国风 CG 仙侠，冷色调低饱和，16:9，不要字幕
 SCENE：悬崖古松前，白衣与黑衣剑客对峙
-CHARACTERS：白衣剑客；黑衣剑客。全程同一人，禁止中途换脸
+CHARACTERS：白衣剑客；黑衣剑客。两名角色各自身份保持不变，禁止中途换脸
 COUNT LOCK：正好 2 人
 SCREEN DIRECTION：古松在画左，悬崖云海在画右
 FIRST FRAME AND BLOCKING：开场白衣剑客在古松前收剑，面向右侧云海
@@ -137,6 +141,20 @@ Soft rim light highlights the matte white texture. Camera performs a slow
 侧面以及背面。无文字，无Logo，无人脸。Premium commercial look。
 ```
 
+### 固定版式动态海报（社区实践）
+
+把约束分为「固定 / 运动 / 光线变化」三组，避免所有元素一起漂移。关键文字仍需逐镜检查，不能保证准确排版。
+
+**参数**：`--duration 8 --ratio 9:16`；标准版默认，只有用户明确选flash时才用flash。
+
+```text
+@图片1是香水瓶与石材台面的外观参考。
+固定：固定机位，产品、台面、构图和右上文字安全区不变。
+运动：左侧花枝轻摆，花影缓慢掠过背景，产品不位移、不变形。
+光线：0-2秒清晨柔光；2-6秒日光缓慢变暖；6-8秒日落侧光，镜头始终固定。
+不要新增物体，不要字幕或Logo。
+```
+
 ## 5. 社交媒体竖屏（9:16）
 
 ### 竖屏多镜（2.5 主示例）
@@ -144,7 +162,7 @@ Soft rim light highlights the matte white texture. Camera performs a slow
 **2.5 参数**：`--duration 12 --ratio 9:16`，文生不必 `adaptive`。
 
 ```
-GLOBAL STYLE：竖屏 9:16 社媒，暖金早晨，主体居中并避开底部字幕安全区，不要烧字幕，不要 Logo
+GLOBAL STYLE：竖屏 9:16 社媒，暖金午后，主体居中并避开底部字幕安全区，不要烧字幕，不要 Logo
 SCENE：一杯热咖啡从蒸汽特写到被端离桌面
 STILLNESS LOCK：桌面只有这只杯子；不要出现人脸
 
@@ -198,6 +216,8 @@ Warm golden light, slow push-in, close-up. Cozy and inviting mood. 无文字叠�
 
 ## 9. 文字生成场景
 
+社区实测中，主招牌短字可读并不代表复杂背景小字稳定。逐镜检查远景、近景和遮挡后的文字；关键品牌文案用正确文字参考图或后期排版，不把「4K」「超清」等词当作文字准确或输出分辨率的证据。
+
 ### 广告语（4–5s 单镜，两款共用）
 
 ```
@@ -240,9 +260,9 @@ Shot 3: 8-12s 女孩中近景，语气轻快说{Yes!}，气泡跟说话者。
 
 编辑句式见 prompt-guide **§5**。指代用 `@视频1`，**不要**写成「参考视频1」（否则容易变成按参考重新生成）。
 
-**2.5 参数（整节）**：`--ratio adaptive --duration -1 --omni-reference-task-type edit`。**必须** `adaptive`；时长跟源片，不要自己填秒数。建议 `--output-format mov`。运镜未必锁死；删路人时写死「不要新增人物」。
+**2.5 参数（整节）**：`--ratio adaptive --duration -1 --omni-reference-task-type edit`。**必须** `adaptive`；时长基本跟随源片，外部输入可能出现约0.3–0.4秒差异，严格等长时按prompt-guide使用`8n+1`帧并验证。建议 `--output-format mov`。运镜未必锁死；删路人时写死「不要新增人物」。
 
-### 增加 / 删除 / 替换（操作短，两代句式相同）
+### 增加 / 删除 / 替换（短编辑句式）
 
 ```
 @视频1 在台面上添加炸鸡、披萨等小吃。保持人物、运镜、时长不变。不要新增人物。不要字幕。
@@ -287,7 +307,7 @@ STILLNESS LOCK：原片里没有的人物不要出现
 
 ## 11. 视频延长（含 BGM / 轨道补齐）
 
-延长句式见 prompt-guide **§5**。`--duration` 是**成片总时长**（源 5s 再续 7s → `12`），不是「再延长 N 秒」。prompt 必须写「紧接结尾/开头的具体动作」，不要只写「延续同一场景」。
+延长句式见 prompt-guide **§5**。`--duration` 是**成片总时长**（源 5s 再续 7s → `12`），不是「再延长 N 秒」。建议写清「紧接结尾/开头的具体动作」，不要只写「延续同一场景」。
 
 **2.5 参数**：`--ratio adaptive --omni-reference-task-type extend`。**必须** `adaptive`。下面示例按「源约 5s、成片 12s」来写时间戳，按你的源片改数字。
 
@@ -359,7 +379,7 @@ just stressed. Everyone goes through this, you just need to keep going.}
 
 ## 13. 复杂多模态转场 + 物体变形
 
-**要点**：参考素材绑定清晰，变形过程要有过渡动作（光效/粒子/旋转）。2.5 多镜用硬切分开「人 / 变 / 鹤」，不要含糊转场。
+**要点**：参考素材绑定清晰，变形过程要有过渡动作（光效/粒子/旋转）。本例用硬切分开「人 / 变 / 鹤」，也可按创作需要改成连续变形长镜，避免含糊转场。
 
 **2.5 参数**：`--duration 12 --ratio 16:9`，多参考文生不必 `adaptive`（若用first_frame角色指定图片1为首帧，则必须 adaptive）。
 
@@ -408,6 +428,8 @@ Shot 3: 8-12s 白色仙鹤从光效中展翅飞起，穿过飘落花瓣飞向天
 
 **2.5 参数**：`--duration 30 --ratio 16:9`，不必 `adaptive`。景别写清（全景/中景/特写/俯拍），不要只写「航拍拉升」。
 
+30秒直出仍是素材而非免剪辑保证。保留不同候选，选每段最强的动作与表演节拍；关键文字、音乐、音效和字幕可在后期精修，不为凑满30秒堆事件。
+
 ```
 GLOBAL STYLE：电影感写实，暖金黄昏，16:9，不要字幕，不要 Logo
 SCENE：女人沿海边栈道走来拍照，最后拉成大全景
@@ -453,6 +475,18 @@ uv run scripts/generate_seedance_video.py \
 
 ## 来源
 
+### 官方
+
 - [Doubao Seedance 2.5 提示词指南](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5-prompt-guide)
 - [火山方舟视频生成 API 参考](https://www.volcengine.com/docs/82379/1520758)
 - [视频生成教程](https://www.volcengine.com/docs/82379/2298881)
+
+### 社区实践（仅作迭代启发）
+
+- [参考素材的采用/排除范围与优先级](https://youmind.com/landing/x-viral-articles/seedance-2-5-ai-video-guide)
+- [AppSo：短片资产、逐镜动作与后期选段工作流](https://c.m.163.com/news/a/L65JRAI60511CSAO.html)
+- [梧桉AI：动作接触、对话反应与固定版式动态海报](https://view.inews.qq.com/k/20261113A06QO900?no-redirect=1)
+- [翘翘日志：明确选择flash后的创意方向变量试拍](http://news.qq.com/rain/a/20261113A081IV00)
+- [智东西：主文字与复杂背景文字的稳定性差异](http://m.toutiao.com/group/7707516236640371215/)
+
+社区内容是特定素材与账号下的样例经验，不构成一次成功、画质一致、速度、价格或文字准确性的保证；不据此扩展官方API能力。

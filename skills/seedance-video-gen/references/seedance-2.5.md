@@ -11,7 +11,7 @@
 | 定位 | 旗舰视听品质与创作表现 | 接近旗舰效果，侧重速度与成本 |
 | 时长 | 4–30 秒 / -1 | 同左 |
 | 分辨率 | 480p / 720p / 1080p | 480p / 720p |
-| 1080p 编码 | 10-bit HEVC | 不支持 |
+| 输出位深 | 480p / 720p 为 8-bit，1080p（10-bit） | 480p / 720p 为 8-bit |
 | 4K 输出 | 不支持 | 不支持 |
 | 参考图片 | ≤30 | ≤10 |
 | 参考视频 | ≤10 | ≤5 |
@@ -36,6 +36,8 @@ flash 的「生成速度翻倍、成本降低约34%」来自发布介绍，是�
 | 延长 | ≥1 reference_video，prompt 表达前/后续写 | ratio=adaptive；duration 是成片总时长 |
 
 `omni_reference_task_type=auto`（默认）由模型判定；显式 `reference/edit/extend` 会在创建时提前校验。实际处理仍结合 prompt 判定；即使前置校验通过，也可能因意图不符异步报 `TaskTypeMismatch`。
+
+全模态参考但**不区分子任务**时，官方推荐 `auto + ratio=adaptive + duration=-1`；含参考视频时建议单段4–30秒。需要明确输出画幅或固定时长的参考生视频仍可指定 ratio/duration；编辑与延长按上表锁定。
 
 两段视频衔接可用 auto + adaptive + duration=-1，并写清视频1→视频2的过渡动作；检查实际输出，不承诺每次均严格等于输入时长之和。
 
