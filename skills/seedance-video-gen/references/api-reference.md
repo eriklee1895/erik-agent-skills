@@ -1,6 +1,6 @@
 # Seedance 2.5 系列 API
 
-核对日期：2026-11-15。只维护标准版与 flash。服务基址 `https://ark.cn-beijing.volces.com/api/v3`；请求使用 `Authorization: Bearer $ARK_API_KEY`，JSON 请求使用 `Content-Type: application/json`。
+核对日期：2026-11-18。只维护标准版与 flash。服务基址 `https://ark.cn-beijing.volces.com/api/v3`；请求使用 `Authorization: Bearer $ARK_API_KEY`，JSON 请求使用 `Content-Type: application/json`。
 
 ## 创建任务
 
@@ -24,10 +24,10 @@
 |---|---|
 | model | 必填；本 skill 仅接受上述两个完整 Model ID |
 | content | 必填数组，文本/图片/视频/音频或标准版的 draft_task |
-| resolution | 默认720p；标准版480p/720p/1080p/4k，flash480p/720p；标准版1080p和4k为10-bit HEVC |
+| resolution | 默认720p；标准版480p/720p/1080p/4k，flash480p/720p；1080p/4k为10-bit（实测MP4为HEVC 10-bit，480p/720p为H.264 8-bit；MOV为H.264+yuv444p+PCM） |
 | ratio | 默认adaptive；16:9/4:3/1:1/3:4/9:16/21:9/adaptive |
-| duration | 默认-1；整数4–30或-1；CLI 默认5。查询返回时长约数，不保证等于媒体精确时长 |
-| generate_audio | 默认true，生成双声道有声视频；false生成无声视频 |
+| duration | 默认-1；整数4–30或-1；CLI 默认5。编辑输出与源片基本一致，可为非整数秒；官方不同章节给出约0.3–0.4 秒误差说明，并称2.5自产源无此差距（实测2.5 flash自产源仍短约0.33秒）。`8n+1`只能作为官方建议尝试；严格等长优先参考生成+显式duration，并用ffprobe检查媒体元数据；查询返回时长仍为约数 |
+| generate_audio | 默认true，生成同步音轨；false生成无声视频 |
 | output_format | 默认mp4；可选mov（H.264+yuv444p+PCM，推荐编辑/延长） |
 | omni_reference_task_type | 默认auto；reference/edit/extend；显式指定会提前校验，但实际意图仍需匹配 |
 | draft | 默认false；**仅标准版**支持true，分辨率必须480p |
@@ -37,7 +37,7 @@
 | tools | `[{"type":"web_search"}]`；只支持一个text的纯文本输入，由模型决定调用次数 |
 | execution_expires_after | 默认172800秒；3600–259200秒，从created_at计算，超时expired；CLI未暴露 |
 | callback_url | 任务状态变化时POST通知；不是仅成功时回调；CLI未暴露 |
-| safety_identifier | 最多64字符的终端用户标识；CLI未暴露 |
+| safety_identifier | 最多64字符、固定唯一的英文终端用户标识；推荐哈希用户名/ID/邮箱，勿传原始隐私值；CLI未暴露 |
 
 **不支持的请求字段**：frames、seed、camera_fixed、service_tier=flex。seed可在响应返回，但不能作为本系列入参复现。参数写入JSON字段，不在prompt末尾使用弱校验 `--rs` 等方式。
 
@@ -87,21 +87,22 @@ Draft从2026-10-28 10:00（UTC+8）起新建ID有效14天，之前ID仍7天。�
 |---|---|
 | id/model/status | 任务标识、实际模型、状态 |
 | content.video_url | 成功视频URL；24小时有效、最多下载100次 |
-| content.last_frame_url | 请求尾帧时返回；及时下载 |
+| content.last_frame_url | 请求尾帧时返回；24小时有效、最多下载100次，及时下载 |
 | duration/ratio/resolution/output_format | 实际生效输出参数；adaptive比例可返回非预设比值 |
-| framespersecond | 输出24fps |
+| framespersecond | 响应中的实际输出帧率；本 skill 实测 480p/720p/1080p/4K/编辑/延长均为 24fps，其他规格仍以字段为准 |
 | generate_audio | 是否生成音频 |
 | seed | 服务端实际使用种子，只读 |
 | draft/draft_task_id | 区分标准版样片、升版及来源 |
 | usage.completion_tokens/total_tokens | 生成计费用量，成功后据实际usage算费用 |
 | usage.tool_usage.web_search/tools | 搜索次数及实际工具调用 |
 | created_at/updated_at | Unix秒 |
+| safety_identifier | 创建时提供的终端用户标识原样返回 |
 | execution_expires_after/priority/service_tier | 超时、优先级、实际服务等级 |
 | error | 失败的code和message |
 
 状态：queued → running → succeeded/failed；queued可取消为cancelled；排队或运行超时为expired。脚本为兼容接受completed，但官方状态名为succeeded。本地max-wait超时不取消服务端任务。
 
-其他任务ID保留7天，Draft按上述7/14天规则；URL仍只有24小时。`duration`按实际总帧数/24向下取整，是约数；精确片长看下载媒体元数据。
+其他任务ID保留7天，cancelled任务仅保留24小时；Draft按上述7/14天规则。视频与尾帧URL仍只有24小时。`duration`按实际帧率换算向下取整，是约数；精确片长看下载媒体元数据。
 
 ## 查询列表
 
@@ -111,11 +112,11 @@ Draft从2026-10-28 10:00（UTC+8）起新建ID有效14天，之前ID仍7天。�
 |---|---|
 | page_num/page_size | 默认1/20，各1–500 |
 | filter.status | queued/running/succeeded/failed/cancelled/expired |
-| filter.model | 精确模型名 |
+| filter.model | 精确筛选推理Endpoint ID（`ep-...`），不是doubao模型ID；CLI用`--endpoint-id` |
 | filter.task_ids | 多ID重复同名参数，例如 `filter.task_ids=cgt-a&filter.task_ids=cgt-b` |
-| filter.service_tier | default/flex筛选历史任务；本系列生成不能启用flex；CLI未暴露 |
+| filter.service_tier | 默认default；历史flex任务需显式传flex，本系列生成不能启用flex；CLI未暴露 |
 
-响应为total和items，items字段与单任务查询一致。留存期按任务类型区分，不能把Draft一律当7天。轮询使用单任务端点，避免用列表逐条轮询；请求频率与并发按当前账号/Endpoint配额控制。
+响应为total和items，items字段与单任务查询一致。cancelled任务仅保留24小时，其他留存期按任务类型区分，不能把Draft一律当7天。轮询使用单任务端点，避免用列表逐条轮询；账号级上限为单任务查询20 QPS、任务列表1 QPS、取消或删除20 QPS。创建与running限额见 [key-constraints.md](key-constraints.md#联网搜索与配额)，并服从账号/Endpoint最新配额。
 
 ## 取消或删除
 
@@ -129,9 +130,9 @@ Draft从2026-10-28 10:00（UTC+8）起新建ID有效14天，之前ID仍7天。�
 
 ## 错误与计费
 
-参数错误检查模型×分辨率、数量、模式互斥、ratio/duration锁定。同步参数错误不会创建任务；异步 `TaskTypeConstraint` / `TaskTypeMismatch` 需结合prompt和omni类型检查。401查密钥，403看实际审核/权限错误，404查ID与有效期；429降低请求频率、检查返回错误，不把所有429都当余额不足。
+参数错误检查模型×分辨率、数量、模式互斥、ratio/duration锁定。同步参数错误不会创建任务；异步 `TaskTypeConstraint` / `TaskTypeMismatch` 需结合prompt和omni类型检查。401查密钥，403看实际审核/权限错误，404查ID与有效期；429降低请求频率、检查返回错误，不把所有429都当余额不足。图片输入被隐私检测拦截时返回 `InputImageSensitiveContentDetected.PrivacyInformation`，应改用非真人、虚拟人像或已授权素材。
 
-按completion_tokens与实时单价计费，仅成功任务计费；含参考视频时存在最低用量限制。token估算受输入视频时长、输出时长、分辨率与帧率影响；不能把「flash成本降低34%」当token数固定减少34%。价格见[实时价格页](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)。
+按completion_tokens与实时单价计费，仅成功任务计费；含参考视频时存在最低用量限制。token估算受输入视频时长、输出时长、分辨率与帧率影响；不能把「flash成本降低34%」当token数固定减少34%——实测同请求token数相同，34%来自官方单价差（480p/720p文生46 vs 70元/M token）。价格见[实时价格页](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)。
 
 脚本使用httpx直调；临时HTTP错误有退避重试。创建任务POST没有文档化的幂等键，连接中断后结果不明时可能已经创建任务；再次提交前结合已保存ID和列表核对，避免盲目重跑整批。
 

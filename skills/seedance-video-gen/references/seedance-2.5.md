@@ -1,6 +1,6 @@
 # Seedance 2.5 标准版与 flash
 
-按 2026-11-16 的[官方系列教程](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5)、[创建任务 API](https://console.volcengine.com/ark/region:cn-beijing/docs/create-video-generation-task-api)与[系列提示词指南](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5-prompt-guide)维护。
+按 2026-11-18 的[官方系列教程](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5)、[创建任务 API](https://console.volcengine.com/ark/region:cn-beijing/docs/create-video-generation-task-api)与[系列提示词指南](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-5-prompt-guide)维护。
 
 ## 选择规则
 
@@ -11,8 +11,9 @@
 | 定位 | 旗舰视听品质与创作表现 | 接近旗舰效果，侧重速度与成本 |
 | 时长 | 4–30 秒 / -1 | 同左 |
 | 分辨率 | 480p / 720p / 1080p / 4k | 480p / 720p |
-| 1080p 编码 | 10-bit HEVC | 不支持 |
-| 4K 输出 | 支持，10-bit HEVC | 不支持 |
+| 输出位深 | 480p / 720p 为 8-bit，1080p / 4k 为 10-bit | 480p / 720p 为 8-bit |
+| 输出编码（实测） | MP4：1080p/4k 为 HEVC 10-bit，480p/720p 为 H.264 8-bit；MOV：H.264+yuv444p+PCM | MP4 480p/720p 为 H.264 8-bit |
+| 4K 输出 | 支持（10-bit 位深） | 不支持 |
 | 参考图片 | ≤30 | ≤10 |
 | 参考视频 | ≤10 | ≤5 |
 | 参考音频 | ≤10 | ≤5 |
@@ -23,7 +24,9 @@
 | Draft | 480p → 同模型1080p或4k | 不支持 |
 | web_search | 仅纯文本 | 同左 |
 
-flash 的「生成速度翻倍、成本降低约34%」来自发布介绍，是定位信息；不构成每任务时延或账单保证。本 skill 未提供 flash 的实测耗时/计费结论，实际按 `usage` 与[实时价格](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)计算。
+flash 的「速度翻倍、成本降低约34%」是定位信息。官方价格页（2026-11-18）显示 480p/720p 文生 token 单价：标准版 70 元/M、flash 46 元/M（约低34%）；含视频输入为 42/28 元/M。实测同请求两者 token 数相同，成本差来自单价；速度不保证固定倍数，实际以任务 `usage`、[实时价格](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)与账单为准。
+
+4K 按输出分辨率单独定价：文生 31 元/M token（输入含视频 19 元/M），5s 16:9 约 30.13 元/个；以价格页为准。
 
 ## 任务参数锁定（两款共用）
 
@@ -37,6 +40,8 @@ flash 的「生成速度翻倍、成本降低约34%」来自发布介绍，是�
 
 `omni_reference_task_type=auto`（默认）由模型判定；显式 `reference/edit/extend` 会在创建时提前校验。实际处理仍结合 prompt 判定；即使前置校验通过，也可能因意图不符异步报 `TaskTypeMismatch`。
 
+全模态参考但**不区分子任务**时，官方推荐 `auto + ratio=adaptive + duration=-1`；含参考视频时建议单段4–30秒。需要明确输出画幅或固定时长的参考生视频仍可指定 ratio/duration；编辑与延长按上表锁定。
+
 两段视频衔接可用 auto + adaptive + duration=-1，并写清视频1→视频2的过渡动作；检查实际输出，不承诺每次均严格等于输入时长之和。
 
 ## CLI 与 API 默认值
@@ -46,13 +51,13 @@ flash 的「生成速度翻倍、成本降低约34%」来自发布介绍，是�
 | model | 必填 | 标准版 |
 | duration | -1 | 5，控制单次生成长度 |
 | ratio | adaptive | 16:9；锁定任务需显式 adaptive |
-| resolution | 720p | 720p；--draft 时480p |
+| resolution | 720p | 720p；--draft 时480p；标准版可显式 1080p/4k |
 | generate_audio | true | true |
 | output_format | mp4 | 不传，遵循 API |
 | draft | false | 不传；仅标准版 --draft 传 true |
 
 ## Draft 有效期
 
-仅标准版有 Draft；flash 的普通480p视频不具有 Draft 升版资格，也不能把 task ID 换模型升为标准版1080p。
+仅标准版有 Draft；flash 的普通480p/720p视频不具有 Draft 升版资格，也不能把 task ID 换模型升为标准版1080p或4k。
 
 2026-10-28 10:00（UTC+8）及之后创建的 Draft ID 有效14天，更早的仍7天；其他任务 ID 为7天。两阶段参数继承、计费与展示流程见 [draft-mode.md](draft-mode.md)。

@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/generate_seedance_video.py"
 spec = importlib.util.spec_from_file_location("seedance", SCRIPT)
@@ -171,6 +171,73 @@ class GenerationContract(unittest.TestCase):
                 single(priority=priority)
 
 
+class TaskListContract(unittest.IsolatedAsyncioTestCase):
+    def test_list_tasks_help_uses_endpoint_terminology(self):
+        stdout = io.StringIO()
+        with patch.object(sys, "argv", ["seedance", "list-tasks", "--help"]), \
+             contextlib.redirect_stdout(stdout), self.assertRaises(SystemExit) as exited:
+            sd.parse_args()
+        self.assertEqual(exited.exception.code, 0)
+        sub_help = stdout.getvalue()
+        self.assertIn("--endpoint-id", sub_help)
+        self.assertIn("Endpoint ID", sub_help)
+        self.assertNotIn("--model", sub_help)
+        stdout = io.StringIO()
+        with patch.object(sys, "argv", ["seedance", "--help"]), \
+             contextlib.redirect_stdout(stdout), self.assertRaises(SystemExit):
+            sd.parse_args()
+        self.assertNotIn("status/model/task-ids", stdout.getvalue())
+
+    def test_list_tasks_cli_uses_endpoint_id_not_model_id(self):
+        for option, endpoint_id in (("--endpoint-id", "ep-123"), ("--model", "ep-legacy")):
+            with self.subTest(option=option), patch.object(
+                sys, "argv", ["seedance", "list-tasks", option, endpoint_id]
+            ):
+                try:
+                    args = sd.parse_args()
+                except SystemExit:
+                    args = None
+                self.assertIsNotNone(args)
+                self.assertEqual(args.endpoint_id, endpoint_id)
+
+    @staticmethod
+    def list_args(endpoint_id, task_ids=None):
+        return argparse.Namespace(endpoint_id=endpoint_id, model=None, status=None,
+                                  task_ids=task_ids, page_num=1, page_size=20, json_only=True)
+
+    @staticmethod
+    def list_response():
+        response = Mock(status_code=200)
+        response.json.return_value = {"items": [], "total": 0}
+        return response
+
+    async def test_list_tasks_sends_endpoint_id_in_official_filter(self):
+        with patch.object(sd, "get_auth", return_value=("test-only", "https://example.com")), \
+             patch.object(sd, "_request_with_retry", AsyncMock(return_value=self.list_response())) as request, \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(await sd.cmd_list_tasks_async(self.list_args("ep-123")), 0)
+        params = request.call_args.kwargs["params"]
+        self.assertEqual(params.get("filter.model"), "ep-123")
+
+    async def test_list_tasks_rejects_model_id_as_endpoint_filter(self):
+        with patch.object(sd, "get_auth", return_value=("test-only", "https://example.com")), \
+             patch.object(sd, "_request_with_retry", AsyncMock(return_value=self.list_response())) as request:
+            with self.assertRaisesRegex(SystemExit, "ep-"):
+                await sd.cmd_list_tasks_async(self.list_args(STANDARD))
+        request.assert_not_called()
+
+    async def test_endpoint_filter_survives_task_ids_branch(self):
+        args = self.list_args("ep-123", ["cgt-a", "cgt-b"])
+        with patch.object(sd, "get_auth", return_value=("test-only", "https://example.com")), \
+             patch.object(sd, "_request_with_retry", AsyncMock(return_value=self.list_response())) as request, \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(await sd.cmd_list_tasks_async(args), 0)
+        params = request.call_args.kwargs["params"]
+        self.assertIn(("filter.model", "ep-123"), params)
+        self.assertIn(("filter.task_ids", "cgt-a"), params)
+        self.assertIn(("filter.task_ids", "cgt-b"), params)
+
+
 class DraftPromotionContract(unittest.IsolatedAsyncioTestCase):
     async def test_ten_day_new_draft_promotes_with_minimal_payload(self):
         now = sd.DRAFT_VALIDITY_CUTOVER + 11 * 86400
@@ -186,6 +253,21 @@ class DraftPromotionContract(unittest.IsolatedAsyncioTestCase):
         payload = create.call_args.args[-1]
         self.assertEqual(payload, {"model": STANDARD, "resolution": "1080p",
                                    "content": [{"type": "draft_task", "draft_task": {"id": "cgt-source"}}]})
+
+    async def test_four_k_promotion_passes_resolution(self):
+        now = sd.DRAFT_VALIDITY_CUTOVER + 11 * 86400
+        source = dict(model=STANDARD, draft=True, status="succeeded", created_at=now - 10 * 86400)
+        args = argparse.Namespace(task_id="cgt-source", dry_run=False, create_only=True,
+                                  resolution="4k", output_format=None, watermark=None,
+                                  return_last_frame=False, priority=None)
+        with patch.object(sd, "get_auth", return_value=("test-only", "https://example.com")), \
+             patch.object(sd, "_get_task_async", AsyncMock(return_value=source)), \
+             patch.object(sd, "_create_task_async", AsyncMock(return_value={"id": "cgt-final"})) as create, \
+             patch.object(sd.time, "time", return_value=now), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(await sd.cmd_promote_draft_async(args), 0)
+        payload = create.call_args.args[-1]
+        self.assertEqual(payload["resolution"], "4k")
+        self.assertEqual(payload["model"], STANDARD)
 
     async def test_expired_new_draft_does_not_submit(self):
         created_at = sd.DRAFT_VALIDITY_CUTOVER

@@ -61,7 +61,7 @@ MAX_IMAGE_SIDE_PX = 6000
 IMAGE_RATIO_MIN = 0.4
 IMAGE_RATIO_MAX = 2.5
 
-# Seedance 2.5 family, official API/docs checked 2026-11-15.
+# Seedance 2.5 family, official API/docs checked 2026-11-18.
 # Both: 4–30s, mp4/mov, audio-only references, edit/extend.
 # Standard: up to 4k and Draft. Flash: up to 720p, no Draft.
 MODEL_2_5 = "doubao-seedance-2-5-260628"
@@ -359,15 +359,15 @@ def validate_image_dimensions(path: Path) -> None:
 
 
 def prompt_length_advisory(prompt: str) -> None:
-    """Warn (never fail) when a prompt exceeds official length guidance:
-    <=500 Chinese chars or <=1000 English words (1520757). Long prompts lose
-    details because model attention scatters."""
+    """Warn (never fail) when a prompt exceeds this skill's length heuristic:
+    <=500 Chinese chars or <=1000 English words. Long prompts lose details
+    because model attention scatters."""
     cjk = sum(1 for ch in prompt if "\u4e00" <= ch <= "\u9fff")
     words = len(prompt.split())
     if cjk > 500 or words > 1000:
         print(
             f"Advisory: prompt length ({cjk} CJK chars / {words} words) exceeds "
-            "official guidance (<=500 Chinese chars / <=1000 English words); "
+            "skill guidance (<=500 Chinese chars / <=1000 English words); "
             "the model may drop details. Consider trimming or splitting.",
             file=sys.stderr,
         )
@@ -1083,6 +1083,8 @@ def cmd_download(args: argparse.Namespace) -> int:
 
 
 async def cmd_list_tasks_async(args: argparse.Namespace) -> int:
+    if args.endpoint_id and not args.endpoint_id.startswith("ep-"):
+        raise SystemExit("Error: --endpoint-id must be an inference Endpoint ID starting with 'ep-'.")
     api_key, base_url = get_auth()
     base_params: dict[str, Any] = {
         "page_num": args.page_num,
@@ -1090,8 +1092,8 @@ async def cmd_list_tasks_async(args: argparse.Namespace) -> int:
     }
     if args.status:
         base_params["filter.status"] = args.status
-    if args.model:
-        base_params["filter.model"] = args.model
+    if args.endpoint_id:
+        base_params["filter.model"] = args.endpoint_id
     if args.task_ids:
         params_list: list[tuple[str, str]] = [
             (k, str(v)) for k, v in base_params.items()
@@ -1450,9 +1452,10 @@ def parse_args() -> argparse.Namespace:
                           help="Output root directory (default: SEEDANCE_OUTPUT_DIR env var, or 'output/seedance/')")
     download.add_argument("--verbose", action="store_true")
 
-    list_tasks = subparsers.add_parser("list-tasks", help="List video generation tasks (filter by status/model/task-ids)")
+    list_tasks = subparsers.add_parser("list-tasks", help="List video generation tasks (filter by status/endpoint/task-ids)")
     list_tasks.add_argument("--status", choices=["queued", "running", "succeeded", "failed", "cancelled", "expired"], help="Filter by task status")
-    list_tasks.add_argument("--model", help="Filter by model name (e.g. doubao-seedance-2-5-260628)")
+    list_tasks.add_argument("--endpoint-id", help="Filter by inference Endpoint ID (ep-...); sent as filter.model")
+    list_tasks.add_argument("--model", dest="endpoint_id", help=argparse.SUPPRESS)
     list_tasks.add_argument("--task-ids", nargs="+", help="Filter by specific task IDs (space-separated)")
     list_tasks.add_argument("--page-num", type=int, default=1)
     list_tasks.add_argument("--page-size", type=int, default=20)
