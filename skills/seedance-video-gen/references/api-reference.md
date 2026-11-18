@@ -132,7 +132,7 @@ Draft从2026-10-28 10:00（UTC+8）起新建ID有效14天，之前ID仍7天。�
 
 参数错误检查模型×分辨率、数量、模式互斥、ratio/duration锁定。同步参数错误不会创建任务；异步 `TaskTypeConstraint` / `TaskTypeMismatch` 需结合prompt和omni类型检查。401查密钥，403看实际审核/权限错误，404查ID与有效期；429降低请求频率、检查返回错误，不把所有429都当余额不足。图片输入被隐私检测拦截时返回 `InputImageSensitiveContentDetected.PrivacyInformation`，应改用非真人、虚拟人像或已授权素材。
 
-按completion_tokens与实时单价计费，仅成功任务计费；含参考视频时存在最低用量限制。token估算受输入视频时长、输出时长、分辨率与帧率影响；不能把「flash成本降低34%」当token数固定减少34%。价格见[实时价格页](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)。
+按completion_tokens与实时单价计费，仅成功任务计费；含参考视频时存在最低用量限制。token估算受输入视频时长、输出时长、分辨率与帧率影响；不能把「flash成本降低34%」当token数固定减少34%——实测同请求token数相同，34%来自官方单价差（480p/720p文生46 vs 70元/M token）。价格见[实时价格页](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)。
 
 脚本使用httpx直调；临时HTTP错误有退避重试。创建任务POST没有文档化的幂等键，连接中断后结果不明时可能已经创建任务；再次提交前结合已保存ID和列表核对，避免盲目重跑整批。
 

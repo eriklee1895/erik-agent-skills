@@ -24,7 +24,9 @@
 | Draft | 480p → 同模型1080p或4k | 不支持 |
 | web_search | 仅纯文本 | 同左 |
 
-flash 的「生成速度翻倍、成本降低约34%」来自发布介绍，是定位信息；不构成每任务时延或账单保证。本 skill 未提供 flash 的实测耗时/计费结论，实际按 `usage` 与[实时价格](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)计算。
+flash 的「速度翻倍、成本降低约34%」是定位信息。官方价格页（2026-11-18）显示 480p/720p 文生 token 单价：标准版 70 元/M、flash 46 元/M（约低34%）；含视频输入为 42/28 元/M。实测同请求两者 token 数相同，成本差来自单价；速度不保证固定倍数，实际以任务 `usage`、[实时价格](https://console.volcengine.com/ark/region:cn-beijing/docs/model-pricing)与账单为准。
+
+4K 按输出分辨率单独定价：文生 31 元/M token（输入含视频 19 元/M），5s 16:9 约 30.13 元/个；以价格页为准。
 
 ## 任务参数锁定（两款共用）
 

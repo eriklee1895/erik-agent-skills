@@ -37,6 +37,11 @@ class ReferenceContract(unittest.TestCase):
         self.assertNotIn("输出24fps", docs)
         self.assertIn("以字段为准", read("references/api-reference.md"))
 
+    def test_flash_cost_claim_explains_unit_price(self):
+        matrix = read("references/seedance-2.5.md")
+        self.assertIn("成本差来自单价", matrix)
+        self.assertIn("46 元/M", matrix)
+
     def test_privacy_rejection_error_is_documented(self):
         docs = read("SKILL.md") + read("references/api-reference.md")
         self.assertIn("InputImageSensitiveContentDetected.PrivacyInformation", docs)
