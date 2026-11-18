@@ -51,6 +51,18 @@ class ReferenceContract(unittest.TestCase):
         self.assertIn("基本一致", api)
         self.assertIn("0.4 秒", api)
 
+    def test_edit_duration_live_tolerance_is_documented(self):
+        guide = read("references/prompt-guide.md")
+        self.assertIn("97帧", guide)
+        self.assertIn("89帧", guide)
+
+    def test_official_subtitle_marker_is_correct(self):
+        guide = read("references/prompt-guide.md")
+        self.assertIn("字幕用 `【】`", guide)
+
+    def test_multimodal_uses_selected_model_cap(self):
+        self.assertIn("所选模型硬上限", read("references/multimodal-reference.md"))
+
     def test_generate_audio_does_not_invent_stereo_contract(self):
         docs = "".join(read(path) for path in (
             "SKILL.md", "references/api-reference.md", "references/key-constraints.md",

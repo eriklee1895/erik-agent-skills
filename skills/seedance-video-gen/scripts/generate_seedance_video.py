@@ -359,15 +359,15 @@ def validate_image_dimensions(path: Path) -> None:
 
 
 def prompt_length_advisory(prompt: str) -> None:
-    """Warn (never fail) when a prompt exceeds official length guidance:
-    <=500 Chinese chars or <=1000 English words (1520757). Long prompts lose
-    details because model attention scatters."""
+    """Warn (never fail) when a prompt exceeds this skill's length heuristic:
+    <=500 Chinese chars or <=1000 English words. Long prompts lose details
+    because model attention scatters."""
     cjk = sum(1 for ch in prompt if "\u4e00" <= ch <= "\u9fff")
     words = len(prompt.split())
     if cjk > 500 or words > 1000:
         print(
             f"Advisory: prompt length ({cjk} CJK chars / {words} words) exceeds "
-            "official guidance (<=500 Chinese chars / <=1000 English words); "
+            "skill guidance (<=500 Chinese chars / <=1000 English words); "
             "the model may drop details. Consider trimming or splitting.",
             file=sys.stderr,
         )

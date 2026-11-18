@@ -26,7 +26,7 @@
 | content | 必填数组，文本/图片/视频/音频或标准版的 draft_task |
 | resolution | 默认720p；标准版480p/720p/1080p/4k，flash480p/720p；1080p/4k为10-bit（实测MP4为HEVC 10-bit，480p/720p为H.264 8-bit；MOV为H.264+yuv444p+PCM） |
 | ratio | 默认adaptive；16:9/4:3/1:1/3:4/9:16/21:9/adaptive |
-| duration | 默认-1；整数4–30或-1；CLI 默认5。编辑输出与源片基本一致，可为非整数秒；官方不同章节给出约0.3–0.4 秒误差说明。严格等长时按指南将输入帧数调为8n+1并检查媒体元数据；查询返回时长仍为约数 |
+| duration | 默认-1；整数4–30或-1；CLI 默认5。编辑输出与源片基本一致，可为非整数秒；官方不同章节给出约0.3–0.4 秒误差说明，并称2.5自产源无此差距（实测2.5 flash自产源仍短约0.33秒）。`8n+1`只能作为官方建议尝试；严格等长优先参考生成+显式duration，并用ffprobe检查媒体元数据；查询返回时长仍为约数 |
 | generate_audio | 默认true，生成同步音轨；false生成无声视频 |
 | output_format | 默认mp4；可选mov（H.264+yuv444p+PCM，推荐编辑/延长） |
 | omni_reference_task_type | 默认auto；reference/edit/extend；显式指定会提前校验，但实际意图仍需匹配 |
