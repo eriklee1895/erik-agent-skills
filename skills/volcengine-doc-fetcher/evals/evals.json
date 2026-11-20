@@ -4,19 +4,31 @@
     {
       "id": 1,
       "prompt": "帮我看一下火山引擎豆包语音的模型列表文档：https://www.volcengine.com/docs/6561/2499930?lang=zh 有哪些模型？把文档内容抓下来给我。",
-      "expected_output": "Clean Markdown doc content with model list, tables preserved, no base64 image noise",
+      "expected_output": "Clean Markdown model list with tables preserved, fetched via the native Markdown route after following the legacy numeric redirect (method=markdown), no HTML/base64 noise",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "I need to check the Seedance video generation API reference. Here are a few URLs from volcengine docs I need: https://www.volcengine.com/docs/6561/163032 and https://www.volcengine.com/docs/6561/1257544 - can you fetch both of these and give me clean markdown?",
-      "expected_output": "Two clean Markdown docs fetched concurrently, both with correct titles and content",
+      "prompt": "I need the Seedance video generation API reference from these two legacy URLs: https://www.volcengine.com/docs/6561/163032 and https://www.volcengine.com/docs/6561/1257544 — fetch both as clean markdown, concurrently.",
+      "expected_output": "Two clean Markdown docs fetched concurrently through the redirect bridge, correct titles/content, one .md + .meta.json pair per URL when saved",
       "files": []
     },
     {
       "id": 3,
-      "prompt": "我在写代码接入火山方舟的联网搜索API，需要查一下这个接口文档确认参数：https://www.volcengine.com/docs/87772/2272953 帮我把这个页面的API文档抓成markdown，特别是表格和代码示例要保持格式。",
-      "expected_output": "Clean Markdown with API reference content, tables and code blocks preserved",
+      "prompt": "抓一下方舟 Managed Agents 控制台快速入门：https://docs.volcengine.com/docs/ark/quick-start-console?lang=zh ，注意这个页面直接加 .md 是 404，需要正确的 Markdown 地址。",
+      "expected_output": "Markdown body of the console quick-start via the /docs/zh/ark/quick-start-console.md transform (method=markdown), not the SPA HTML or a NoSuchKey error",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "把这篇方舟托管智能体概述抓成 markdown：https://ark.volcengine.com/region:cn-beijing/docs/overview ，顺便确认有没有用浏览器渲染。",
+      "expected_output": "Native Markdown from the .md endpoint via curl with method=markdown (no browser launched), clean Chinese doc content starting with the 概述 heading",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "我想系统读火山方舟的文档，先把方舟产品的 llms.txt 索引拉下来给我，再从里面挑一篇 Managed Agents 文档用正确链接抓取。",
+      "expected_output": "Fetches the product llms.txt index (passthrough .txt) and then a linked .md doc; demonstrates using the index to resolve canonical Markdown URLs rather than guessing transforms",
       "files": []
     }
   ]
