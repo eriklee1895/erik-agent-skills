@@ -14,7 +14,12 @@ FIXTURE_NAMES = (
     "conditional-routing.svg",
     "workflow-variants.svg",
     "overview-detail-loop.svg",
+    "orchestrator-swimlane.svg",
 )
+PARSER_WARNING_BUDGETS = {
+    # The small display-data label backing intentionally spans two lanes.
+    "orchestrator-swimlane.svg": 1,
+}
 
 
 def native_endpoints(node):
@@ -68,7 +73,11 @@ class ArticlePatternFixtureTests(unittest.TestCase):
                 )
                 check = json.loads(completed.stdout)["data"]["check"]
                 self.assertEqual(0, check["errors"], check["issues"])
-                self.assertEqual(0, check["warnings"], check["issues"])
+                self.assertEqual(
+                    PARSER_WARNING_BUDGETS.get(name, 0),
+                    check["warnings"],
+                    check["issues"],
+                )
 
     def test_conditional_routing_preserves_native_branches_merge_and_feedback(self):
         name = "conditional-routing.svg"

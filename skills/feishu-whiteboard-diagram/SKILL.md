@@ -56,6 +56,7 @@ metadata:
 | 确定字号、间距、对比度和显示宽度 | [视觉系统](references/visual-system.md) |
 | 多图统一、共享输入、跨层协作、阶段到指标映射，或学习参考图 | [成套技术图](references/technical-article-figures.md) |
 | 来源 → 分析 → 行动，包含反馈或直达 | [语义分区价值链](references/semantic-columns.md) |
+| 编排者纵向主链 + 多角色请求 / 响应 | [纵向职责泳道](references/orchestrator-swimlane.md) |
 | 静态指标 / 基准报告 | [定量报告规则](references/data-report-style.md) |
 
 ## 3. 制作本地候选

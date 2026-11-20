@@ -218,6 +218,31 @@
         "Groups assets by the supplied categories with a repeated name/purpose/artifact structure",
         "Does not add catalog arrows or assets without source support"
       ]
+    },
+    {
+      "id": 20,
+      "prompt": "客户端发起刷新，编排服务先准入，再向数据服务查询；数据服务返回原始字段后，编排服务转换并汇入多个候选，交决策服务选择，最后打包返回客户端。跨服务请求和响应标明交换内容，底部注明单一素材失败不阻断其他候选。制作前给出介质、构图、节点槽位、连线和验证方案，不生成 SVG、不写飞书。",
+      "expected_output": "A native editable responsibility design with a clear orchestrator spine; orchestrator-swimlane is one valid option.",
+      "files": [],
+      "expectations": [
+        "Uses a native editable responsibility layout without requiring a particular lane orientation, unequal widths, or numbering",
+        "Keeps the orchestrator's multi-step main chain visually primary and preserves its actual stage order",
+        "Labels cross-role payloads and preserves native arrow direction; separate request/response channels are optional",
+        "Keeps the supplied failure-isolation note without inventing additional branches or business facts",
+        "Includes local fit, lint, parser, PNG, and document-width checks without live Feishu or drag claims"
+      ]
+    },
+    {
+      "id": 21,
+      "prompt": "我要画客户端、网关、后端和工具之间的一次调用时序，重点是精确的请求/返回先后、两个条件分支和一次重试回路。正式制作前，先给出介质与构图方案，不实际生成文件、不写飞书。",
+      "expected_output": "A Mermaid or PlantUML sequence design that is not rerouted into the orchestrator swimlane.",
+      "files": [],
+      "expectations": [
+        "Preserves a sequence-diagram source format (Mermaid or PlantUML) rather than selecting the orchestrator swimlane or SVG architecture",
+        "Uses lifelines and vertical message order for exact request/return sequencing",
+        "Represents two conditional fragments and one retry loop without inventing business criteria",
+        "Leaves conversion and client behavior unverified in this design-only task"
+      ]
     }
   ]
 }
