@@ -215,3 +215,26 @@ The forward reviewer noted that Mermaid local validation was less explicit than 
 - The three original synthetic fixtures [`conditional-routing.svg`](fixtures/conditional-routing.svg), [`workflow-variants.svg`](fixtures/workflow-variants.svg) and [`overview-detail-loop.svg`](fixtures/overview-detail-loop.svg) passed fit-check, lint and parser 0.2.13 checks with 0 errors / 0 warnings. OpenAPI conversion kept all structural elements native, with 7 / 6 / 10 directed connectors respectively and no `image` / `svg` fallback. Tests also check branch criteria, exact native endpoints for the gate-to-input feedback, both merge routes and the request-B zoom link, shared variant geometry, and representative-instance navigation.
 - Full PNGs and approximately 900px-wide copies were visually inspected. The first overview render hid the zoom arrow beneath the detail panel; a paint-order regression assertion now covers it, and the corrected PNG shows the complete navigation arrow. These individual artifacts reach `local-render-valid`; no Feishu write, client edit or drag test was performed.
 - The complete skill suite passed 57 tests. The three prompts above remain behavioral scenario specifications, not claims of fresh agent runs or repeated reliability.
+
+## 21. Orchestrator-driven vertical responsibility lanes
+
+**Prompt.** “客户端发起刷新，编排服务先准入，再向数据服务查询；数据服务返回原始字段后，编排服务转换并汇入多个候选，交决策服务选择，最后打包返回客户端。跨服务请求和响应标明交换内容，底部注明单一素材失败不阻断其他候选。制作前给出介质、构图、节点槽位、连线和验证方案，不生成 SVG、不写飞书。”
+
+**Pass.** Uses `orchestrator-swimlane` or an equivalent native responsibility layout that fits the content and document. The orchestrator's multi-step main chain remains the organizing spine; a wider lane with vertical numbered stages is an example default, not a requirement. Cross-role payloads and native arrow direction stay clear, with split request / response channels optional. The footer contains only the supplied failure-isolation boundary. Local checks and evidence limits remain explicit.
+
+**Fail.** Loses the orchestrator main chain as the organizing spine, forces the fixture's geometry despite a clearer alternative, uses independent triangle images as arrows, invents a global timestamp from vertical alignment, or adds unsupported business rules.
+
+## 22. Sequence near-miss for the vertical lane template
+
+**Prompt.** “我要画客户端、网关、后端和工具之间的一次调用时序，重点是精确的请求/返回先后、两个条件分支和一次重试回路。正式制作前，先给出介质与构图方案，不实际生成文件、不写飞书。”
+
+**Pass.** Preserves Mermaid `sequenceDiagram` or PlantUML sequence source, lifelines and vertical message order; represents two conditional fragments and one retry loop without inventing criteria. Does not select `orchestrator-swimlane` merely because four roles exchange requests and responses.
+
+**Fail.** Converts exact timing, branches and retry semantics into a static responsibility-lane diagram or SVG architecture.
+
+### 2026-11-20 baseline and fixture scope
+
+- The old-skill orchestrator baseline chose native SVG with roles on the left and time moving right. Review later clarified that horizontal orientation is not itself a failure; the concrete gaps were the orchestrator-owned main chain being replaced by a generic time axis, query ownership drifting to the data lane, and no explicit native `marker-end` direction. Under the reviewed semantic criteria it scores 3 / 5, not because its geometry differs from the fixture.
+- The old-skill sequence near-miss correctly selected Mermaid with two conditional fragments and one retry loop, and labeled all conversion / client evidence unverified. The scenario now accepts equivalent PlantUML source as well.
+- The independent generic fixture [`orchestrator-swimlane.svg`](fixtures/orchestrator-swimlane.svg) and its parser regression are local artifacts. Detailed checks and warning explanations live in the [template reference](../references/orchestrator-swimlane.md#2026-11-20-本地证据); they do not establish live Feishu or drag validation.
+- Fresh post-review design runners passed 5 / 5 orchestrator assertions and 4 / 4 sequence assertions. A separate creative-boundary check confirmed that equal-width horizontal lanes, no numeric badges and shared corridors are acceptable when the orchestrator spine, source facts, native direction and payload labels remain clear. These are single-run design samples, not repeated reliability or artifact-quality measurements. Original prompts, outputs, grading and timing remain in the local evaluation workspace.

@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1280" width="1600" height="1280">
+<!-- Synthetic layout fixture; generic example content, no internal source nodes. -->
+<defs>
+  <marker id="arrow-slate" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#52667A"/></marker>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#2463BD"/></marker>
+  <marker id="arrow-green" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#0D8067"/></marker>
+  <marker id="arrow-purple" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 4 L0 8 z" fill="#8050AE"/></marker>
+</defs>
+<rect x="0" y="0" width="1600" height="1280" rx="0" fill="#F8FAFC" stroke="none"/>
+<rect x="64" y="48" width="8" height="48" rx="4" fill="#2463BD" stroke="none"/>
+<text x="88" y="82" font-size="38" font-weight="700" fill="#1F2937" data-bg="#F8FAFC" text-anchor="start">从请求到卡片：编排者如何组织跨服务协作</text>
+<text x="88" y="122" font-size="22" font-weight="400" fill="#52667A" data-bg="#F8FAFC" text-anchor="start">通用构图示例 · 主链向下，跨职责请求与响应走独立通道</text>
+
+<rect x="64" y="160" width="220" height="980" rx="16" fill="#F1F5F9" stroke="none"/>
+<rect x="316" y="160" width="560" height="980" rx="16" fill="#EEF5FF" stroke="none"/>
+<rect x="908" y="160" width="300" height="980" rx="16" fill="#EFFAF7" stroke="none"/>
+<rect x="1240" y="160" width="296" height="980" rx="16" fill="#F7F1FD" stroke="none"/>
+<rect x="64" y="160" width="220" height="64" rx="12" fill="#334155" stroke="none"/>
+<rect x="316" y="160" width="560" height="64" rx="12" fill="#2463BD" stroke="none"/>
+<rect x="908" y="160" width="300" height="64" rx="12" fill="#0D8067" stroke="none"/>
+<rect x="1240" y="160" width="296" height="64" rx="12" fill="#8050AE" stroke="none"/>
+<text x="174" y="202" font-size="26" font-weight="700" fill="#FFFFFF" data-bg="#334155" text-anchor="middle">客户端</text>
+<text x="596" y="202" font-size="26" font-weight="700" fill="#FFFFFF" data-bg="#2463BD" text-anchor="middle">编排服务</text>
+<text x="1058" y="202" font-size="26" font-weight="700" fill="#FFFFFF" data-bg="#0D8067" text-anchor="middle">数据服务</text>
+<text x="1388" y="202" font-size="26" font-weight="700" fill="#FFFFFF" data-bg="#8050AE" text-anchor="middle">决策服务</text>
+<text x="174" y="254" font-size="20" font-weight="400" fill="#52667A" data-bg="#F1F5F9" text-anchor="middle">触发与展示</text>
+<text x="596" y="254" font-size="20" font-weight="400" fill="#52667A" data-bg="#EEF5FF" text-anchor="middle">准入 · 加工 · 打包</text>
+<text x="1058" y="254" font-size="20" font-weight="400" fill="#52667A" data-bg="#EFFAF7" text-anchor="middle">读取与返回</text>
+<text x="1388" y="254" font-size="20" font-weight="400" fill="#52667A" data-bg="#F7F1FD" text-anchor="middle">比较与选择</text>
+
+<ellipse cx="174" cy="355" rx="90" ry="40" fill="#FFFFFF" stroke="#52667A" stroke-width="2"/>
+<text x="174" y="364" font-size="24" font-weight="700" fill="#334155" data-bg="#FFFFFF" text-anchor="middle">刷新请求</text>
+
+<rect x="376" y="290" width="440" height="130" rx="12" fill="#FFFFFF" stroke="#2463BD" stroke-width="2"/>
+<circle cx="404" cy="330" r="18" fill="#2463BD" stroke="none"/>
+<text x="404" y="337" font-size="20" font-weight="700" fill="#FFFFFF" data-bg="#2463BD" text-anchor="middle">1</text>
+<text x="436" y="340" font-size="26" font-weight="700" fill="#1F2937" data-bg="#FFFFFF" text-anchor="start">准入检查</text>
+<text x="404" y="390" font-size="22" font-weight="400" fill="#52667A" data-bg="#FFFFFF" text-anchor="start">按当前规则决定是否继续</text>
+
+<rect x="376" y="480" width="440" height="110" rx="12" fill="#FFFFFF" stroke="#2463BD" stroke-width="2"/>
+<circle cx="404" cy="510" r="18" fill="#2463BD" stroke="none"/>
+<text x="404" y="517" font-size="20" font-weight="700" fill="#FFFFFF" data-bg="#2463BD" text-anchor="middle">2</text>
+<text x="436" y="540" font-size="26" font-weight="700" fill="#1F2937" data-bg="#FFFFFF" text-anchor="start">查询下游素材</text>
+<text x="404" y="574" font-size="20" font-weight="400" fill="#52667A" data-bg="#FFFFFF" text-anchor="start">携带本次请求上下文</text>
+
+<rect x="940" y="475" width="236" height="120" rx="12" fill="#FFFFFF" stroke="#0D8067" stroke-width="2"/>
+<text x="1058" y="527" font-size="24" font-weight="700" fill="#0D8067" data-bg="#FFFFFF" text-anchor="middle">读取并返回素材</text>
+<text x="1058" y="564" font-size="20" font-weight="400" fill="#52667A" data-bg="#FFFFFF" text-anchor="middle">响应本次查询</text>
+
+<rect x="376" y="650" width="440" height="140" rx="12" fill="#FFFFFF" stroke="#2463BD" stroke-width="2"/>
+<circle cx="404" cy="680" r="18" fill="#2463BD" stroke="none"/>
+<text x="404" y="687" font-size="20" font-weight="700" fill="#FFFFFF" data-bg="#2463BD" text-anchor="middle">3</text>
+<text x="436" y="710" font-size="26" font-weight="700" fill="#1F2937" data-bg="#FFFFFF" text-anchor="start">转换并生成候选</text>
+<text x="404" y="750" font-size="22" font-weight="700" fill="#2463BD" data-bg="#FFFFFF" text-anchor="start">统一字段与格式</text>
+<text x="404" y="780" font-size="20" font-weight="400" fill="#52667A" data-bg="#FFFFFF" text-anchor="start">形成可比较的候选</text>
+
+<ellipse cx="1058" cy="705" rx="118" ry="55" fill="#FFFFFF" stroke="#0D8067" stroke-width="2"/>
+<text x="1058" y="701" font-size="24" font-weight="700" fill="#0D8067" data-bg="#FFFFFF" text-anchor="middle">原始素材</text>
+<text x="1058" y="733" font-size="20" font-weight="400" fill="#52667A" data-bg="#FFFFFF" text-anchor="middle">原始字段</text>
+
+<rect x="376" y="850" width="440" height="100" rx="12" fill="#DCEAFF" stroke="#2463BD" stroke-width="2"/>
+<circle cx="404" cy="880" r="18" fill="#2463BD" stroke="none"/>
+<text x="404" y="887" font-size="20" font-weight="700" fill="#FFFFFF" data-bg="#2463BD" text-anchor="middle">4</text>
+<text x="436" y="910" font-size="26" font-weight="700" fill="#1F2937" data-bg="#DCEAFF" text-anchor="start">汇入多任务候选池</text>
+<text x="404" y="940" font-size="20" font-weight="400" fill="#52667A" data-bg="#DCEAFF" text-anchor="start">当前素材 + 其他合格候选</text>
+
+<rect x="1264" y="840" width="248" height="130" rx="12" fill="#F3E8FF" stroke="#8050AE" stroke-width="2"/>
+<text x="1388" y="890" font-size="26" font-weight="700" fill="#8050AE" data-bg="#F3E8FF" text-anchor="middle">比较并选择</text>
+<text x="1388" y="928" font-size="20" font-weight="400" fill="#52667A" data-bg="#F3E8FF" text-anchor="middle">比较多个候选</text>
+<text x="1388" y="956" font-size="20" font-weight="400" fill="#52667A" data-bg="#F3E8FF" text-anchor="middle">返回选中结果</text>
+
+<rect x="376" y="1000" width="440" height="110" rx="12" fill="#2463BD" stroke="#2463BD" stroke-width="2"/>
+<circle cx="404" cy="1030" r="18" fill="#FFFFFF" stroke="none"/>
+<text x="404" y="1037" font-size="20" font-weight="700" fill="#2463BD" data-bg="#FFFFFF" text-anchor="middle">5</text>
+<text x="436" y="1060" font-size="26" font-weight="700" fill="#FFFFFF" data-bg="#2463BD" text-anchor="start">按选中结果打包</text>
+<text x="404" y="1094" font-size="20" font-weight="400" fill="#FFFFFF" data-bg="#2463BD" text-anchor="start">输出展示所需字段</text>
+
+<rect x="84" y="1000" width="180" height="110" rx="12" fill="#FFFFFF" stroke="#52667A" stroke-width="2"/>
+<text x="174" y="1050" font-size="24" font-weight="700" fill="#334155" data-bg="#FFFFFF" text-anchor="middle">展示卡片</text>
+<text x="174" y="1084" font-size="20" font-weight="400" fill="#52667A" data-bg="#FFFFFF" text-anchor="middle">选中结果</text>
+
+<rect x="830" y="492" width="96" height="30" rx="8" fill="#FFFFFF" stroke="none"/>
+<text x="878" y="514" font-size="20" font-weight="400" fill="#2463BD" data-bg="#FFFFFF" text-anchor="middle">查询请求</text>
+<rect x="830" y="662" width="96" height="30" rx="8" fill="#FFFFFF" stroke="none"/>
+<text x="878" y="684" font-size="20" font-weight="400" fill="#0D8067" data-bg="#FFFFFF" text-anchor="middle">原始字段</text>
+<text x="1040" y="878" font-size="20" font-weight="400" fill="#8050AE" data-bg="#EFFAF7" text-anchor="middle">候选 + 特征</text>
+<text x="1102" y="1035" font-size="20" font-weight="400" fill="#8050AE" data-bg="#EFFAF7" text-anchor="middle">选中结果</text>
+<rect x="278" y="1014" width="84" height="30" rx="8" fill="#FFFFFF" stroke="none"/>
+<text x="320" y="1036" font-size="18" font-weight="400" fill="#2463BD" data-bg="#FFFFFF" text-anchor="middle">展示数据</text>
+<text x="616" y="458" font-size="20" font-weight="400" fill="#2463BD" data-bg="#EEF5FF" text-anchor="start">通过</text>
+<text x="616" y="830" font-size="20" font-weight="400" fill="#2463BD" data-bg="#EEF5FF" text-anchor="start">合格候选</text>
+
+<polyline data-role="edge" points="264,355 376,355" fill="none" stroke="#52667A" stroke-width="2" marker-end="url(#arrow-slate)"/>
+<polyline data-role="edge" points="596,420 596,480" fill="none" stroke="#2463BD" stroke-width="2" marker-end="url(#arrow-blue)"/>
+<polyline data-role="edge" points="816,535 940,535" fill="none" stroke="#2463BD" stroke-width="2" marker-end="url(#arrow-blue)"/>
+<polyline data-role="edge" points="1058,595 1058,650" fill="none" stroke="#0D8067" stroke-width="2" marker-end="url(#arrow-green)"/>
+<polyline data-role="edge" points="940,705 816,705" fill="none" stroke="#0D8067" stroke-width="2" marker-end="url(#arrow-green)"/>
+<polyline data-role="edge" points="596,590 596,650" fill="none" stroke="#2463BD" stroke-width="2" marker-end="url(#arrow-blue)"/>
+<polyline data-role="edge" points="596,790 596,850" fill="none" stroke="#2463BD" stroke-width="2" marker-end="url(#arrow-blue)"/>
+<polyline data-role="edge" points="816,900 1264,900" fill="none" stroke="#8050AE" stroke-width="2" marker-end="url(#arrow-purple)"/>
+<polyline data-role="edge" points="1388,970 1388,1055 816,1055" fill="none" stroke="#8050AE" stroke-width="2" marker-end="url(#arrow-purple)"/>
+<polyline data-role="edge" points="376,1055 264,1055" fill="none" stroke="#2463BD" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+<line data-role="divider" x1="64" y1="1180" x2="1536" y2="1180" stroke="#D8E0E8" stroke-width="1.5"/>
+<circle cx="84" cy="1220" r="8" fill="#D97706" stroke="none"/>
+<text x="104" y="1228" font-size="22" font-weight="400" fill="#52667A" data-bg="#F8FAFC" text-anchor="start">单一素材处理失败时，其他合格候选继续。</text>
+</svg>
